@@ -37,26 +37,26 @@ export const cartSlice = createSlice({
           orderQuantity: 1,
           volumes: payload.volumes || 1, // Ensure volumes is always saved
           addedAt: new Date().toISOString(),
-           imageUrl: payload.imageUrl
+          imageUrl: payload.imageUrl
         };
         state.cart_products = [...state.cart_products, newItem];
         notifySuccess(`Sample added to cart`);
       } else {
-       state.cart_products = state.cart_products.map((item) => {
-  if (item.id === payload.id) {
-    if (item.quantity >= item.orderQuantity + 1) {
-      notifySuccess(`${item.Analyte} quantity updated in cart`);
-      return {
-        ...item,
-        orderQuantity: item.orderQuantity + 1,
-      };
-    } else {
-      notifyError("No more quantity available for this product!");
-      return item;
-    }
-  }
-  return item;
-});
+        state.cart_products = state.cart_products.map((item) => {
+          if (item.id === payload.id) {
+            if (item.quantity >= item.orderQuantity + 1) {
+              notifySuccess(`${item.Analyte} quantity updated in cart`);
+              return {
+                ...item,
+                orderQuantity: item.orderQuantity + 1,
+              };
+            } else {
+              notifyError("No more quantity available for this product!");
+              return item;
+            }
+          }
+          return item;
+        });
 
       }
 
@@ -132,7 +132,13 @@ export const cartSlice = createSlice({
         setsessionStorage(CART_STORAGE_KEY, state.cart_products);
       }
     },
+    set_cart_products: (state, { payload }) => {
+      state.cart_products = payload;
+      setsessionStorage(CART_STORAGE_KEY, state.cart_products);
+    },
   },
+
+
 });
 
 export const {
@@ -145,6 +151,7 @@ export const {
   quantityDecrement,
   initialOrderQuantity,
   updateQuantity,
+  set_cart_products,
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

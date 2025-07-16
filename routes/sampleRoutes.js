@@ -46,4 +46,6 @@ router.put('/sample/updatetestresultandunit/:id',
         { name: 'logo', maxCount: 1 },
         { name: 'samplepdf', maxCount: 1 },
     ]), SampleController.updatetestResultandUnit)
+
+    router.get('/sample/getSingleSample/:sampleId',SampleController.getsingleSamples)
 module.exports = router;

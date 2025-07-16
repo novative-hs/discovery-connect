@@ -35,6 +35,15 @@ const getBiobankSamples = (req, res) => {
     });
   });
 };
+const getPriceRequest = (req, res) => {
+  BioBankModel.getPriceRequest((err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching Price Request" });
+    }
+    res.status(200).json(results); // send full array
+  });
+};
+
 
 const getBiobankSamplesPooled = (req, res) => {
   const id = parseInt(req.params.id);
@@ -148,6 +157,7 @@ module.exports = {
   getBiobankVisibilitySamples,
   UpdateSampleStatus,
   getPrice,
-  getBiobankSamplesPooled
+  getBiobankSamplesPooled,
+  getPriceRequest
 
 };

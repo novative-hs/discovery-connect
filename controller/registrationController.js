@@ -63,6 +63,22 @@ const verifyOTP = (req, res) => {
   });
 };
 
+const sendEmail = (req, res) => {
+  console.log("REQ BODY:", req.body);
+
+  accountModel.sendEmailForOrder(req, (err, result) => {
+    if (err) {
+      if (err === "Email already exists") {
+        return res.status(400).json({ message: err });
+      }
+      return res.status(500).json({ message: err });
+    }
+
+    // ✅ This line was missing
+    return res.status(200).json({ message: result || "Quote request sent successfully" });
+  });
+};
+
 
 const createAccount = (req, res) => {
 
@@ -202,6 +218,6 @@ module.exports = {
   updateAccount,
   getEmail,
   sendOTP,
-  verifyOTP
-
+  verifyOTP,
+sendEmail
 };

@@ -122,6 +122,23 @@ const getSampleById = (req, res) => {
     res.status(200).json(results[0]);
   });
 };
+const getsingleSamples = (req, res) => {
+  const { sampleId } = req.params;
+
+  SampleModel.getsingleSamples(sampleId, (err, sample) => {
+    if (err) {
+      console.error("❌ Error in fetching sample:", err);
+      return res.status(500).json({ error: "Error fetching sample" });
+    }
+
+    if (!sample) {
+      return res.status(404).json({ error: "Sample not found" });
+    }
+
+    res.status(200).json(sample);
+  });
+};
+
 
 const getPoolSampleDetails = (req, res) => {
   const { id } = req.params;
@@ -269,5 +286,6 @@ module.exports = {
   getAllVolumnUnits,
   getAllSampleinIndex,
   getPoolSampleDetails,
-  updatetestResultandUnit
+  updatetestResultandUnit,
+  getsingleSamples
 };

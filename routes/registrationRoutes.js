@@ -15,7 +15,7 @@ router.post(
     ]),    
     registrationController.createAccount
   );
-  
+  router.post('/send-email',registrationController.sendEmail)
 router.post('/login', registrationController.loginAccount);
 router.get('/:id', registrationController.getUserEmail); 
 router.post("/check-email", registrationController.getEmail); 

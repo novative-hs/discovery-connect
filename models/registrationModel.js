@@ -959,6 +959,141 @@ const sendOTP = (req, callback) => {
   });
 };
 
+
+
+const sendEmailForOrder = async (req, callback) => {
+  const { userID, products } = req.body;
+
+  try {
+    // ✅ Get Biobank Email
+    const [biobankRows] = await mysqlConnection
+      .promise()
+      .query(`SELECT email FROM user_account WHERE accountType = 'biobank' LIMIT 1`);
+
+    if (biobankRows.length === 0) {
+      return callback("Biobank email not found");
+    }
+
+    const biobankEmail = biobankRows[0].email;
+
+    // ✅ Get Researcher Email + Details
+    const [researcherRows] = await mysqlConnection
+      .promise()
+      .query(
+        `
+        SELECT ua.email, r.ResearcherName
+        FROM user_account ua
+        JOIN researcher r ON ua.id = r.user_account_id
+        WHERE ua.id = ?
+      `,
+        [userID]
+      );
+
+    if (researcherRows.length === 0) {
+      return callback("Researcher not found");
+    }
+
+    const researcherEmail = researcherRows[0].email;
+    const researcherName = researcherRows[0].ResearcherName;
+
+    // ✅ Filter unpriced products
+    const unpricedProducts = products.filter(
+      (item) => item.price === null || item.price === 0
+    );
+
+    // ✅ Prepare sample IDs to check for duplicates
+    const sampleIds = unpricedProducts.map((item) => item.id);
+
+    // ✅ Get already requested quote sample IDs
+    const [existingQuotes] = await mysqlConnection.promise().query(
+      `SELECT sample_id FROM quote_requests WHERE researcher_id = ? AND sample_id IN (?) AND status = 'pending'`,
+      [userID, sampleIds]
+    );
+
+    const alreadyRequestedIds = existingQuotes.map((row) => row.sample_id);
+
+    // ✅ Filter only new unrequested quotes
+    const newQuotes = unpricedProducts.filter(
+      (item) => !alreadyRequestedIds.includes(item.id)
+    );
+
+    // ✅ Insert new quote requests into DB
+    for (const item of newQuotes) {
+      await mysqlConnection.promise().query(
+        `INSERT INTO quote_requests (researcher_id, sample_id, status) VALUES (?, ?, 'pending')`,
+        [userID, item.id]
+      );
+    }
+
+    // ✅ Email Table (only for new requests)
+    const biobankEmailTable = `
+      <h3>Quote Request: Products Missing Price</h3>
+      <p>Kindly update the prices for the following products submitted by <strong>${researcherName}</strong> (User ID: ${userID}).</p>
+      <table border="1" cellspacing="0" cellpadding="5" style="border-collapse: collapse;">
+        <thead>
+          <tr style="background-color: #f2f2f2;">
+            <th>No.</th>
+            <th>Specimen ID</th>
+            <th>Analyte</th>
+            <th>Volume (unit)</th>
+            <th>Test Result/Unit</th>
+            <th>Price</th>
+            <th>Sub Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${newQuotes
+            .map(
+              (item, index) => `
+              <tr>
+                <td>${index + 1}</td>
+                <td>${item.masterid || "-"}</td>
+                <td>${item.analyte || "-"}</td>
+                <td>${item.Volume || "-"} ${item.VolumeUnit || ""}</td>
+                <td>${item.TestResult || "-"} ${item.TestResultUnit || ""}</td>
+                <td>${item.price || "-"}</td>
+                <td>-</td>
+              </tr>
+            `
+            )
+            .join("")}
+        </tbody>
+      </table>
+    `;
+
+    const researcherEmailText = `
+      <p>Dear ${researcherName},</p>
+      <p>Thank you for your submission.</p>
+      <p>Some items in your cart are awaiting price confirmation from the Biobank. You will be notified once pricing is updated so you can proceed with checkout.</p>
+      <p>Thank you for your patience.</p>
+    `;
+
+    // ✅ Only send email if there were new quotes added
+    if (newQuotes.length > 0) {
+      await sendEmail(biobankEmail, "Missing Product Prices", biobankEmailTable)
+        .then(() => console.log("Biobank email sent"))
+        .catch((err) => console.error("Biobank email error:", err));
+
+      await sendEmail(researcherEmail, "Awaiting Price Update", researcherEmailText)
+        .then(() => {
+          console.log("Researcher email sent");
+          callback(null, "Emails sent successfully");
+        })
+        .catch((err) => {
+          console.error("Researcher email error:", err);
+          callback(err);
+        });
+    } else {
+      callback(null, "No new quote requests. Skipped sending email.");
+    }
+  } catch (err) {
+    console.error("Error in sendEmailForOrder:", err);
+    callback(err);
+  }
+};
+
+
+
 module.exports = {
   createuser_accountTable,
   changepassword,
@@ -969,5 +1104,6 @@ module.exports = {
   updateAccount,
   getEmail,
   sendOTP,
-  verifyOTP
+  verifyOTP,
+  sendEmailForOrder
 };

@@ -17,7 +17,9 @@ import NiceSelect from "@ui/NiceSelect";
 import InputMask from "react-input-mask";
 
 const BioBankSampleArea = () => {
+
   const id = sessionStorage.getItem("userID");
+  
   const [mode, setMode] = useState("Individual");
   const [showActionModal, setShowActionModal] = useState(false);
   const [statusmode, setstatusMode] = useState("");
@@ -96,6 +98,7 @@ const BioBankSampleArea = () => {
   const [PoolSampleHistoryModal, setPoolSampleHistoryModal] = useState(false);
 
   const tableHeaders = [
+    { label: "Specimen ID", key: "masterID" },
     { label: "Patient Name", key: "PatientName" },
     { label: "Patient Location", key: "PatientLocation" },
     { label: "Age", key: "age" },

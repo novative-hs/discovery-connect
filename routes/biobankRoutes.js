@@ -14,4 +14,5 @@ router.get('/biobank/getvisibilitysamples/:id', BioBankController.getBiobankVisi
 router.put('/biobank/UpdateSampleStatus/:id', BioBankController.UpdateSampleStatus);
 router.get("/sample/getprice/:name", BioBankController.getPrice);
 router.get('/biobank/getsamplespooled/:id',BioBankController.getBiobankSamplesPooled)
+router.get('/biobank/getPriceCount',BioBankController.getPriceRequest)
 module.exports = router;

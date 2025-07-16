@@ -28,7 +28,7 @@ const sampleReturnModel = require("../models/sampleReturnModel")
 
 // Function to initialize all tables
 function Database() {
-
+sampleModel.createPriceRequest()
 sampleModel.createPoolSampleTable();
   cityModel.createCityTable();
   historyModel.registrationadmin_history();

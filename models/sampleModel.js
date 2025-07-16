@@ -87,6 +87,25 @@ const createPoolSampleTable = () => {
     }
   });
 };
+const createPriceRequest=()=>{
+  const createrequesttable= `
+  CREATE TABLE quote_requests (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  researcher_id INT,
+  sample_id VARCHAR(36),
+  status ENUM('pending', 'priced') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+`
+mysqlConnection.query(createrequesttable, (err, results) => {
+    if (err) {
+      console.error("❌ Error creating request table:", err);
+    } else {
+      console.log("✅ Request table created or already exists");
+    }
+  });
+
+}
 
 // Function to get all samples with 'In Stock' status
 const getSamples = (user_account_id, page, pageSize, searchField, searchValue, callback) => {
@@ -232,9 +251,13 @@ const getAllSamples = (callback) => {
     if (err) return callback(err, null);
 console.log("Res",results)
     const updatedResults = results.map(sample => {
-      if (sample.analyteImage) {
-        sample.imageUrl = sample.analyteImage;
-      } else {
+     
+        if (sample.analyteImage) {
+        imageUrl = sample.analyteImage.startsWith('/')
+  ? sample.analyteImage
+  : `/${sample.analyteImage}`;
+
+        } else {
         sample.imageUrl = null; // or fallback image
       }
       delete sample.analyteImage; // optional: remove raw image buffer from the object
@@ -443,7 +466,7 @@ const getAllCSSamples = (limit, offset, callback) => {
         console.error("❌ Data Query Error:", dataErr);
         return callback(dataErr, null);
       }
-console.log(results)
+
       const updatedResults = results.map((sample) => {
         let imageUrl = null;
 
@@ -463,6 +486,24 @@ console.log(results)
 
       callback(null, { data: updatedResults, totalCount });
     });
+  });
+};
+const getsingleSamples = (sampleId, callback) => {
+  const query = 'SELECT * FROM sample WHERE id = ?';
+
+  mysqlConnection.query(query, [sampleId], (err, results) => {
+    if (err) {
+      console.error("MySQL Query Error:", err);
+      return callback(err, null);
+    }
+
+    if (results.length === 0) {
+      // No sample found
+      return callback(null, null);
+    }
+
+    // Return only the first sample (id is unique)
+    callback(null, results[0]);
   });
 };
 
@@ -946,6 +987,6 @@ module.exports = {
   getAllSampleinIndex,
   getPoolSampleDetails,
   updatetestResultandUnit,
-
-
+createPriceRequest,
+getsingleSamples
 };

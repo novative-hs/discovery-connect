@@ -1,70 +1,94 @@
 import React from "react";
-import { useSelector } from "react-redux";
-import Link from "next/link";
-// internal
-import SingleCartItem from "./single-cart-item";
-import useCartInfo from "@hooks/use-cart-info";
-import EmptyCart from "./empty-cart";
 
-
-const CartSidebar = ({ isCartOpen, setIsCartOpen }) => {
-  const { cart_products } = useSelector((state) => state.cart);
-  const {total} = useCartInfo();
-
+const CartSidebar = ({ isCartOpen, setIsCartOpen, pendingQuotes = [] }) => {
   return (
-    <React.Fragment>
-      <div className={`cartmini__area ${isCartOpen ? "cartmini-opened" : ""}`}>
-        <div className="cartmini__wrapper d-flex justify-content-between flex-column">
-          <div className="cartmini__top-wrapper ">
-            <div className="cartmini__top p-relative">
-              <div className="cartmini__title">
-                <h4>Shopping cart</h4>
+    <>
+      <div
+        className={`cartmini__area ${isCartOpen ? "cartmini-opened" : ""}`}
+        style={{
+          width: "350px",
+          position: "fixed",
+          right: 0,
+          top: 0,
+          height: "100vh",
+          backgroundColor: "#fff",
+          boxShadow: "-2px 0 8px rgba(0,0,0,0.1)",
+          zIndex: 1050,
+          transform: isCartOpen ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 0.3s ease-in-out",
+        }}
+      >
+        <div className="d-flex flex-column h-100">
+          {/* Header */}
+          <div
+            className="d-flex justify-content-between align-items-center px-4 py-3 border-bottom"
+            style={{ backgroundColor: "#f8f9fa" }}
+          >
+            <h5 className="mb-0 text-primary">🔔 Price Requests</h5>
+            <button
+              className="btn btn-sm btn-light"
+              onClick={() => setIsCartOpen(false)}
+              title="Close"
+            >
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="flex-grow-1 overflow-auto p-3">
+            {pendingQuotes.length > 0 ? (
+              <>
+                <p className="text-muted mb-2">
+                  You have <strong>{pendingQuotes.length}</strong> pending sample
+                  {pendingQuotes.length > 1 ? "s" : ""}.
+                </p>
+                <ul className="list-group">
+                  {pendingQuotes.map((item, index) => (
+                    <li
+                      key={index}
+                      className="list-group-item d-flex justify-content-between align-items-start"
+                    >
+                      <div>
+                        <div><strong>Specimen:</strong> {item.masterID}</div>
+                        <small className="text-muted">Price: {item.status}</small>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <div className="text-muted text-center mt-4">
+                No pending price requests.
               </div>
-              <div className="cartmini__close">
-                <button
-                  onClick={() => setIsCartOpen(false)}
-                  type="button"
-                  className="cartmini__close-btn cartmini-close-btn"
-                >
-                  <i className="fal fa-times"></i>
-                </button>
-              </div>
-            </div>
-            {cart_products.length >  0 && (
-              <div className="cartmini__widget">
-                {cart_products.map((item, i) => (
-                  <SingleCartItem key={i} item={item} />
-                ))}
-              </div>
-            )}
-            {/* <!-- if no item in cart --> */}
-            {cart_products.length === 0 && (
-              <EmptyCart/>
             )}
           </div>
-          <div className="cartmini__checkout">
-            {/* <div className="cartmini__checkout-title mb-30">
-              <h4>Subtotal:</h4>
-              <span>${total.toFixed(2)}</span>
-            </div> */}
-            <div className="cartmini__checkout-btn">
-              <Link href="/cart" className="tp-btn mb-10 w-100">
-                <span></span> view cart
-              </Link>
-              <Link href="/checkout" className="tp-btn-border w-100 cursor-pointer">
-                <span></span> checkout
-              </Link>
-            </div>
+
+          {/* Footer */}
+          <div className="p-3 border-top">
+            <button
+              className="btn btn-outline-secondary w-100"
+              onClick={() => setIsCartOpen(false)}
+            >
+              Close Panel
+            </button>
           </div>
         </div>
       </div>
 
-      {/* overlay */}
-      <div
-        onClick={() => setIsCartOpen(false)}
-        className={`body-overlay ${isCartOpen ? "opened" : ""}`}
-      ></div>
-    </React.Fragment>
+      {/* Overlay */}
+      {isCartOpen && (
+        <div
+          onClick={() => setIsCartOpen(false)}
+          className="body-overlay"
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.3)",
+            zIndex: 1040,
+          }}
+        ></div>
+      )}
+    </>
   );
 };
 

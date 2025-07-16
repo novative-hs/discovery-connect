@@ -1,7 +1,7 @@
 const mysqlConnection = require("../config/db");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
-
+const { sendEmail } = require("../config/email");
 const create_biobankTable = () => {
   const create_biobankTable = `
   CREATE TABLE IF NOT EXISTS biobank (
@@ -310,31 +310,86 @@ const postSamplePrice = (data, callback) => {
     [data.price, data.SamplePriceCurrency, data.sampleId],
     (err, results) => {
       if (err) {
-        console.error("Error adding price and currency into sample:", err);
+        console.error("❌ Error adding price and currency into sample:", err);
         return callback(err, null);
       }
 
-      // Insert into sample_history table
+      // ✅ Insert into sample_history table
       const historyQuery = `
-      INSERT INTO sample_history (sample_id)
-      VALUES (?)
-    `;
+        INSERT INTO sample_history (sample_id)
+        VALUES (?)
+      `;
 
-      mysqlConnection.query(
-        historyQuery,
-        [data.sampleId],
-        (err, historyResults) => {
+      mysqlConnection.query(historyQuery, [data.sampleId], (err, historyResults) => {
+        if (err) {
+          console.error("❌ Error inserting into sample_history:", err);
+          return callback(err, null);
+        }
+
+        // ✅ Check if sample is in quote_requests
+       const checkQuoteQuery = `
+  SELECT 
+    qr.*, 
+    ua.email, 
+    r.ResearcherName,
+    s.masterID
+  FROM quote_requests qr
+  JOIN researcher r ON qr.researcher_id = r.user_account_id
+  JOIN user_account ua ON ua.id = r.user_account_id
+  JOIN sample s ON s.id = qr.sample_id
+  WHERE qr.sample_id = ? AND qr.status = 'pending'
+`;
+
+
+        mysqlConnection.query(checkQuoteQuery, [data.sampleId], async (err, quoteResults) => {
           if (err) {
-            console.error("Error inserting into sample_history:", err);
+            console.error("❌ Error checking quote_requests:", err);
             return callback(err, null);
           }
 
+          if (quoteResults.length > 0) {
+            const quote = quoteResults[0];
+
+            // ✅ Update quote status to 'priced'
+            const updateQuoteStatus = `
+              UPDATE quote_requests SET status = 'priced' WHERE id = ?
+            `;
+
+            mysqlConnection.query(updateQuoteStatus, [quote.id], async (err) => {
+              if (err) {
+                console.error("❌ Error updating quote_requests status:", err);
+                return callback(err, null);
+              }
+
+              // ✅ Send email to researcher
+              const emailBody = `
+                <p>Dear ${quote.ResearcherName},</p>
+                <p>The price for one of your requested samples (ID: <strong>${data.masterID}</strong>) has been updated.</p>
+                <p>You can now proceed to order this sample from your dashboard.</p>
+                <p>Regards,<br/>Biobank Team</p>
+              `;
+
+              try {
+                await sendEmail(
+                  quote.email,
+                  "Sample Price Updated - Ready to Order",
+                  emailBody
+                );
+                console.log("✅ Email sent to researcher");
+              } catch (emailErr) {
+                console.error("❌ Error sending email to researcher:", emailErr);
+              }
+            });
+          }
+
+          // ✅ Final callback
           return callback(null, { insertId: data.sampleId });
-        }
-      );
+        });
+      });
     }
   );
 };
+
 
 const UpdateSampleStatus = (id, status, callback) => {
   const query = `
@@ -363,6 +418,26 @@ const getQuarantineStock = (callback) => {
     return callback(null, results);
   });
 };
+
+const getPriceRequest = (callback) => {
+  const query = `
+    SELECT 
+      qr.sample_id,
+      qr.status,
+      qr.created_at,
+      s.masterID,
+      s.analyte
+    FROM quote_requests qr
+    LEFT JOIN sample s ON qr.sample_id = s.id
+    WHERE qr.status = 'pending'
+  `;
+
+  mysqlConnection.query(query, (err, results) => {
+    if (err) return callback(err, null);
+    return callback(null, results); // full joined data
+  });
+};
+
 
 // Function to get samples with price > 0 in sample visibility page
 const getBiobankVisibilitySamples = (
@@ -445,5 +520,6 @@ module.exports = {
   getBiobankVisibilitySamples,
   UpdateSampleStatus,
   getPrice,
-  getBiobankSamplesPooled
+  getBiobankSamplesPooled,
+  getPriceRequest
 };
