@@ -249,7 +249,7 @@ const getAllSamples = (callback) => {
 
   mysqlConnection.query(query, (err, results) => {
     if (err) return callback(err, null);
-console.log("Res",results)
+
     const updatedResults = results.map(sample => {
      
         if (sample.analyteImage) {

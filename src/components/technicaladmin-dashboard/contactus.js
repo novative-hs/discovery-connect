@@ -81,7 +81,7 @@ const ContactUS = () => {
     return <div>Loading...</div>;
   }
 
-  console.log("Contact us Id :", id);
+  
 
   const currentData = filteredContactus.slice(
     currentPage * itemsPerPage,

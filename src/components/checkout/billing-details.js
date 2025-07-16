@@ -13,7 +13,7 @@ const BillingDetails = () => {
             `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
           );
           const data = await response.json();
-console.log(data[0])
+
           if (response.ok && data.length > 0) {
          const minimalData = {
   name: data[0].ResearcherName,

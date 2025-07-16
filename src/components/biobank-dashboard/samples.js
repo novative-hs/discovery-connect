@@ -388,7 +388,7 @@ const BioBankSampleArea = () => {
         .filter(Boolean);
 
       const uniqueAnalytes = [...new Set(selectedAnalytes)];
-      console.log("🔍 Unique analytes:", uniqueAnalytes); // ✅
+    
 
       setAnalyteOptions(uniqueAnalytes);
 
@@ -458,7 +458,7 @@ const BioBankSampleArea = () => {
 
   useEffect(() => {
     if (selectedSampleName) {
-      console.log("Fetching price for:", selectedSampleName);
+     
       getSamplePrice(selectedSampleName);
     }
   }, [selectedSampleName]);
@@ -494,9 +494,7 @@ let effectiveMode = mode;
       formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
     }
 
-    for (let key in formData) {
-      console.log(key, formData[key]);
-    }
+    
 
     try {
       const response = await axios.post(
@@ -675,7 +673,7 @@ let effectiveMode = mode;
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-sample-history/${id}`
       );
       const data = await response.json();
-      console.log(data)
+      
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -689,7 +687,7 @@ let effectiveMode = mode;
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getpoolsamplehistory/${id}`
       );
       const data = await response.json();
-      console.log(data)
+      
       setPoolHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);

@@ -41,7 +41,7 @@ const refreshCartPrices = async (cartItems, dispatch) => {
       );
 
       const updatedSample = response.data;
-      console.log("Updated",updatedSample)
+    
       updatedItems.push({
         ...item,
         price: updatedSample.price,
@@ -128,7 +128,7 @@ useEffect(() => {
     });
 
     const responseData = await response.json();
-    console.log("Email API response:", response.status, responseData);
+   
 
     if (response.ok) {
       sessionStorage.setItem(quoteSentKey, "true"); // ✅ prevent duplicate requests

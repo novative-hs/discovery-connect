@@ -1071,12 +1071,15 @@ const sendEmailForOrder = async (req, callback) => {
     // ✅ Only send email if there were new quotes added
     if (newQuotes.length > 0) {
       await sendEmail(biobankEmail, "Missing Product Prices", biobankEmailTable)
-        .then(() => console.log("Biobank email sent"))
+        .then(() => {
+           
+          callback(null, "Emails sent successfully");
+        })
         .catch((err) => console.error("Biobank email error:", err));
 
       await sendEmail(researcherEmail, "Awaiting Price Update", researcherEmailText)
         .then(() => {
-          console.log("Researcher email sent");
+          
           callback(null, "Emails sent successfully");
         })
         .catch((err) => {

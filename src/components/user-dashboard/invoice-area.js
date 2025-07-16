@@ -12,7 +12,7 @@ const invoiceRef = useRef(null);
   if (user) {
     const parsedUser = JSON.parse(user); // ✅ Parse the string
     setUserData(parsedUser);
-    console.log("Product", cart_products); // ✅ Will show the full object
+   
   }
   document.title = "Invoice";
 }, []);

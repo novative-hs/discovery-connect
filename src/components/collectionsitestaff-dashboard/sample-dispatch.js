@@ -289,10 +289,7 @@ const SampleDispatchArea = () => {
 
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
-  } else {
-    console.log("Collection site Id on sample page is:", id);
   }
-
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
