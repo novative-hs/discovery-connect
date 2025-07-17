@@ -10,24 +10,24 @@ const HeroBanner = () => {
 
   ];
 
-useEffect(() => {
-  const videoElement = videoRef.current;
+  useEffect(() => {
+    const videoElement = videoRef.current;
 
-  const handleEnded = () => {
-    setVideoIndex((prevIndex) => (prevIndex + 1) % videoSources.length);
-  };
+    const handleEnded = () => {
+      setVideoIndex((prevIndex) => (prevIndex + 1) % videoSources.length);
+    };
 
-  if (videoElement) {
-    videoElement.addEventListener("ended", handleEnded);
-    videoElement.playbackRate = 1.5;
-  }
-
-  return () => {
     if (videoElement) {
-      videoElement.removeEventListener("ended", handleEnded);
+      videoElement.addEventListener("ended", handleEnded);
+      videoElement.playbackRate = 1.5;
     }
-  };
-}, [videoSources.length]);
+
+    return () => {
+      if (videoElement) {
+        videoElement.removeEventListener("ended", handleEnded);
+      }
+    };
+  }, [videoSources.length]);
 
 
 
@@ -50,9 +50,11 @@ useEffect(() => {
           autoPlay
           muted
           playsInline
-          loop={false} // we'll control looping manually
+          loop={false}
+          preload="none"  // ← Add this
           className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover z-0"
         >
+
           <source src={videoSources[videoIndex]} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
