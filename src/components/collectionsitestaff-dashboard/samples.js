@@ -1374,7 +1374,7 @@ const SampleArea = () => {
                               ? "-----"
                               : `${sample.age} years`;
                           } else if (key === "TestResult") {
-                            return `${sample.TestResult} ${sample.TestResultUnit || "----"}`;
+                            return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
                           } else {
                             return sample[key] || "----";
                           }
