@@ -477,6 +477,7 @@ const fetchUserDetail = async () => {
                   >
                     {userType !== "technicaladmin" &&
                       userType !== "biobank" &&
+                      userType !== "csr" &&
                       userType !== "registrationadmin" &&
                       userType !== "collectionsitesstaff" && (
                         <li>
