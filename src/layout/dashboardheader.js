@@ -56,15 +56,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   }, [router]);
   const actions = staffAction?.split(",").map(a => a.trim());
   const dropdownRef = useRef(null);
-useEffect(() => {
-  fetchPriceRequest();
 
-  const interval = setInterval(() => {
-    fetchPriceRequest();
-  }, 5000); // 5sec
-
-  return () => clearInterval(interval); // ✅ Cleanup
-}, []);
 
 useEffect(() => {
   if (id !== null) {
@@ -73,19 +65,33 @@ useEffect(() => {
   }
 }, [id]);
 
-const fetchPriceRequest = async () => {
-  try {
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getPriceCount`
-    );
+useEffect(() => {
+  if (userType !== "biobank") return;
 
-    const pendingQuotes = response.data;
-    setPendingQuotes(pendingQuotes);
-    setPriceRequestCount(pendingQuotes.length);
-  } catch (error) {
-    console.error("Error fetching quote requests:", error);
-  }
-};
+  const fetchPriceRequest = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getPriceCount`
+      );
+      const pendingQuotes = response.data;
+      setPendingQuotes(pendingQuotes);
+      setPriceRequestCount(pendingQuotes.length);
+    } catch (error) {
+      console.error("Error fetching quote requests:", error);
+    }
+  };
+
+  // Initial fetch
+  fetchPriceRequest();
+
+  // Set up polling every 5 seconds
+  const interval = setInterval(() => {
+    fetchPriceRequest();
+  }, 5000);
+
+  // Clean up the interval
+  return () => clearInterval(interval);
+}, [userType]); // <— Only runs when userType is set
 
 const fetchCart = async () => {
   try {
