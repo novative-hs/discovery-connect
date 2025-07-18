@@ -67,7 +67,7 @@ const SampleArea = () => {
     DateOfSampling: "",
     ConcurrentMedicalConditions: "",
     ConcurrentMedications: "",
-    // DiagnosisTestParameter: "",
+    
     TestResult: "",
     TestResultUnit: "",
     TestMethod: "",
@@ -97,7 +97,7 @@ const SampleArea = () => {
     { label: "Date Of Collection", key: "DateOfSampling" },
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    // { label: "Diagnosis Test Parameter", key: "DiagnosisTestParameter" },
+    
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
@@ -144,7 +144,7 @@ const SampleArea = () => {
         DateOfSampling: sample.DateOfSampling,
         ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
         ConcurrentMedications: sample.ConcurrentMedications,
-        // DiagnosisTestParameter: sample.DiagnosisTestParameter,
+        
         TestResult: sample.TestResult,
         TestResultUnit: sample.TestResultUnit,
         TestMethod: sample.TestMethod,

@@ -364,7 +364,7 @@ const postSamplePrice = (data, callback) => {
               // ✅ Send email to researcher
               const emailBody = `
                 <p>Dear ${quote.ResearcherName},</p>
-                <p>The price for one of your requested samples (ID: <strong>${data.masterID}</strong>) has been updated.</p>
+                <p>The price for one of your requested samples has been updated.</p>
                 <p>You can now proceed to order this sample from your dashboard.</p>
                 <p>Regards,<br/>Biobank Team</p>
               `;

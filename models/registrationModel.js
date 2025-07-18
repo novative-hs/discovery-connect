@@ -960,7 +960,6 @@ const sendOTP = (req, callback) => {
 };
 
 
-
 const sendEmailForOrder = async (req, callback) => {
   const { userID, products } = req.body;
 
@@ -1001,10 +1000,9 @@ const sendEmailForOrder = async (req, callback) => {
       (item) => item.price === null || item.price === 0
     );
 
-    // ✅ Prepare sample IDs to check for duplicates
     const sampleIds = unpricedProducts.map((item) => item.id);
 
-    // ✅ Get already requested quote sample IDs
+    // ✅ Check for already requested samples
     const [existingQuotes] = await mysqlConnection.promise().query(
       `SELECT sample_id FROM quote_requests WHERE researcher_id = ? AND sample_id IN (?) AND status = 'pending'`,
       [userID, sampleIds]
@@ -1012,12 +1010,12 @@ const sendEmailForOrder = async (req, callback) => {
 
     const alreadyRequestedIds = existingQuotes.map((row) => row.sample_id);
 
-    // ✅ Filter only new unrequested quotes
+    // ✅ Filter only new requests
     const newQuotes = unpricedProducts.filter(
       (item) => !alreadyRequestedIds.includes(item.id)
     );
 
-    // ✅ Insert new quote requests into DB
+    // ✅ Insert new quote requests
     for (const item of newQuotes) {
       await mysqlConnection.promise().query(
         `INSERT INTO quote_requests (researcher_id, sample_id, status) VALUES (?, ?, 'pending')`,
@@ -1025,10 +1023,10 @@ const sendEmailForOrder = async (req, callback) => {
       );
     }
 
-    // ✅ Email Table (only for new requests)
+    // ✅ Email content
     const biobankEmailTable = `
       <h3>Quote Request: Products Missing Price</h3>
-      <p>Kindly update the prices for the following products submitted by <strong>${researcherName}</strong> (User ID: ${userID}).</p>
+      <p>Kindly update the prices for the following products submitted by <strong>${researcherName}.</strong></p>
       <table border="1" cellspacing="0" cellpadding="5" style="border-collapse: collapse;">
         <thead>
           <tr style="background-color: #f2f2f2;">
@@ -1068,32 +1066,27 @@ const sendEmailForOrder = async (req, callback) => {
       <p>Thank you for your patience.</p>
     `;
 
-    // ✅ Only send email if there were new quotes added
+    // ✅ Send emails if new quotes exist
     if (newQuotes.length > 0) {
-      await sendEmail(biobankEmail, "Missing Product Prices", biobankEmailTable)
-        .then(() => {
-           
-          callback(null, "Emails sent successfully");
-        })
-        .catch((err) => console.error("Biobank email error:", err));
-
-      await sendEmail(researcherEmail, "Awaiting Price Update", researcherEmailText)
-        .then(() => {
-          
-          callback(null, "Emails sent successfully");
-        })
-        .catch((err) => {
-          console.error("Researcher email error:", err);
-          callback(err);
-        });
+      try {
+        await Promise.all([
+          sendEmail(biobankEmail, "Missing Product Prices", biobankEmailTable),
+          sendEmail(researcherEmail, "Awaiting Price Update", researcherEmailText),
+        ]);
+        return callback(null, "Emails sent successfully");
+      } catch (emailErr) {
+        console.error("Email sending error:", emailErr);
+        return callback(emailErr.message || "Failed to send one or more emails");
+      }
     } else {
-      callback(null, "No new quote requests. Skipped sending email.");
+      return callback(null, "No new quote requests. Skipped sending email.");
     }
   } catch (err) {
     console.error("Error in sendEmailForOrder:", err);
-    callback(err);
+    return callback(err.message || "Server error");
   }
 };
+
 
 
 

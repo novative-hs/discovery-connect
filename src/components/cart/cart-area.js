@@ -1,9 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import EmptyCart from "@components/common/sidebar/cart-sidebar/empty-cart";
-import { remove_product,set_cart_products } from "src/redux/features/cartSlice";
+import { remove_product, set_cart_products } from "src/redux/features/cartSlice";
 import { notifyError, notifySuccess } from "@utils/toast";
 
 const CartArea = () => {
@@ -11,139 +11,138 @@ const CartArea = () => {
   const dispatch = useDispatch();
   const { cart_products } = useSelector((state) => state.cart);
   const [loading, setLoading] = React.useState(false);
-const [hasTriggeredCheckout, setHasTriggeredCheckout] = React.useState(false);
-  const userID =
-    typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
 
-  // ✅ Automatically trigger checkout after login if query param exists
+  const userID = typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
+  const hasTriggeredCheckoutRef = useRef(false); // ✅ Prevent double trigger
 
-useEffect(() => {
-  const interval = setInterval(() => {
-    const unpriced = cart_products.filter(item => !item.price || item.price === 0);
-    if (unpriced.length > 0) {
-      refreshCartPrices(cart_products, dispatch);
-    } else {
-      clearInterval(interval); // ✅ Stop checking once all are priced
+  // ✅ Refresh cart prices every 30s until all are priced
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const unpriced = cart_products.filter(item => !item.price || item.price === 0);
+      if (unpriced.length > 0) {
+        refreshCartPrices(cart_products, dispatch);
+      } else {
+        clearInterval(interval);
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [cart_products]);
+
+  const refreshCartPrices = async (cartItems, dispatch) => {
+    try {
+      const updatedItems = [];
+      for (let item of cartItems) {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getSingleSample/${item.id}`
+        );
+        const updatedSample = response.data;
+        updatedItems.push({
+          ...item,
+          price: updatedSample.price,
+          SamplePriceCurrency: updatedSample.SamplePriceCurrency,
+        });
+      }
+      dispatch(set_cart_products(updatedItems));
+    } catch (error) {
+      console.error("Error refreshing cart prices:", error);
     }
-  }, 30000); // every 30 seconds
+  };
 
-  return () => clearInterval(interval); // cleanup
-}, [cart_products]);
-
-
-const refreshCartPrices = async (cartItems, dispatch) => {
-  try {
-    const updatedItems = [];
-
-    for (let item of cartItems) {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getSingleSample/${item.id}`
-      );
-
-      const updatedSample = response.data;
-    
-      updatedItems.push({
-        ...item,
-        price: updatedSample.price,
-        SamplePriceCurrency: updatedSample.SamplePriceCurrency,
-      });
+  // ✅ Trigger checkout after login (only once)
+  useEffect(() => {
+    if (
+      router.query.triggerCheckout === "true" &&
+      !hasTriggeredCheckoutRef.current
+    ) {
+      hasTriggeredCheckoutRef.current = true;
+      handleProceedToCheckout();
+      router.replace("/cart", undefined, { shallow: true });
     }
-
-    dispatch(set_cart_products(updatedItems));
-  } catch (error) {
-    console.error("Error refreshing cart prices:", error);
-  }
-};
-
-
-useEffect(() => {
-  if (router.query.triggerCheckout === "true" && !hasTriggeredCheckout) {
-    handleProceedToCheckout();
-    setHasTriggeredCheckout(true);  // ✅ Prevent repeat
-    router.replace("/cart", undefined, { shallow: true });
-  }
-}, [router.query, hasTriggeredCheckout]);
-
+  }, [router.query]);
 
   const getCartHash = (items) => {
     return items.map((item) => item.id).sort().join("-");
   };
 
   const handleProceedToCheckout = async () => {
-  if (loading) return;
+    if (loading) return;
 
-  const pricedItems = cart_products.filter(
-    (item) => item.price !== null && item.price > 0
-  );
+    const pricedItems = cart_products.filter(
+      (item) => item.price !== null && item.price > 0
+    );
+    const unpricedItems = cart_products.filter(
+      (item) => item.price === null || item.price === 0
+    );
 
-  const unpricedItems = cart_products.filter(
-    (item) => item.price === null || item.price === 0
-  );
+    const cartHash = getCartHash(unpricedItems);
+    const quoteSentKey = `quoteSent_${userID}_${cartHash}`;
 
-  const cartHash = getCartHash(unpricedItems);
-  const quoteSentKey = `quoteSent_${userID}_${cartHash}`;
-
-  // ✅ If already sent, skip API call
-  const alreadySent = sessionStorage.getItem(quoteSentKey);
-  if (alreadySent === "true") {
-    notifySuccess("Quote already requested. Await Biobank response.");
-    return; // ✅ Exit early
-  }
-
-  setLoading(true); // ✅ only set loading AFTER passing checks
-
-  if (!userID) {
-    router.push("/login?from=cart");
-    setLoading(false);
-    return;
-  }
-
-  // ✅ Case 1: All items priced or all unpriced
-  if (unpricedItems.length === 0 || pricedItems.length === 0) {
-    router.push("/dashboardheader?tab=Checkout");
-    setLoading(false);
-    return;
-  }
-
-  // ✅ Send quote email only if not previously requested
-  try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        userID,
-        products: unpricedItems.map((item) => ({
-          id: item.id,
-          masterid: item.masterid,
-          analyte: item.Analyte,
-          Volume: item.Volume,
-          VolumeUnit: item.VolumeUnit,
-          TestResult: item.TestResult,
-          TestResultUnit: item.TestResultUnit,
-          price: item.price,
-        })),
-      }),
-    });
-
-    const responseData = await response.json();
-   
-
-    if (response.ok) {
-      sessionStorage.setItem(quoteSentKey, "true"); // ✅ prevent duplicate requests
-      notifySuccess("Quote request sent to Biobank. Please wait for price updates.");
-    } else {
-      notifyError(`Failed to request quote: ${responseData.message || "Unknown error"}`);
+    const alreadySent = sessionStorage.getItem(quoteSentKey);
+    if (alreadySent === "true") {
+      
+      notifySuccess("Quote already requested. Await Biobank response.");
+      return;
     }
-  } catch (error) {
-    console.error("Quote Request Error (frontend):", error);
-    notifyError("Something went wrong. Try again.");
-  }
 
-  setLoading(false);
-};
+    if (!userID) {
+      // ✅ Save flag to trigger after login
+      sessionStorage.setItem("triggerCheckoutAfterLogin", "true");
+      router.push("/login?from=cart&triggerCheckout=true");
+      return;
+    }
 
+    setLoading(true);
+
+    if (unpricedItems.length === 0 || pricedItems.length === 0) {
+      router.push("/dashboardheader?tab=Checkout");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userID,
+          products: unpricedItems.map((item) => ({
+            id: item.id,
+            masterid: item.masterid,
+            analyte: item.Analyte,
+            Volume: item.Volume,
+            VolumeUnit: item.VolumeUnit,
+            TestResult: item.TestResult,
+            TestResultUnit: item.TestResultUnit,
+            price: item.price,
+          })),
+        }),
+      });
+
+      const responseData = await response.json();
+
+      if (response.ok) {
+        sessionStorage.setItem(quoteSentKey, "true");
+        notifySuccess("Quote request sent to Biobank. Please wait for price updates.");
+      } else {
+        notifyError(`Failed to request quote: ${responseData.message || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Quote Request Error:", error);
+      notifyError("Something went wrong. Try again.");
+    }
+
+    setLoading(false);
+  };
+
+  // ✅ If user logged in and quote trigger flag was set, trigger checkout ONCE
+  useEffect(() => {
+    const shouldTrigger = sessionStorage.getItem("triggerCheckoutAfterLogin") === "true";
+    if (shouldTrigger && !hasTriggeredCheckoutRef.current) {
+      sessionStorage.removeItem("triggerCheckoutAfterLogin");
+      hasTriggeredCheckoutRef.current = true;
+      handleProceedToCheckout();
+    }
+  }, []);
 
   const handleRemoveProduct = (item) => {
     dispatch(remove_product(item));
@@ -153,7 +152,6 @@ useEffect(() => {
     (item) => item.price !== null && item.price !== 0
   );
   const subtotal = validItems.reduce((acc, item) => acc + item.price * 1, 0);
-
   const allItemsHavePrice = cart_products.every(
     (item) => item.price && item.price > 0
   );
@@ -170,9 +168,7 @@ useEffect(() => {
                     <table className="table table-bordered rounded shadow-sm bg-white">
                       <thead className="table-light text-dark text-center">
                         <tr>
-                          <th colSpan="6" className="text-center fs-6 py-3">
-                            Sample Cart Detail
-                          </th>
+                          <th colSpan="6" className="text-center fs-6 py-3">Sample Cart Detail</th>
                         </tr>
                         <tr>
                           <th>Serial No.</th>
@@ -217,7 +213,6 @@ useEffect(() => {
                   <div className="card shadow-sm">
                     <div className="card-body">
                       <h5 className="card-title">Cart Totals</h5>
-
                       {validItems.length > 0 ? (
                         <ul className="list-group list-group-flush mb-3">
                           <li className="list-group-item d-flex justify-content-between">
@@ -232,7 +227,6 @@ useEffect(() => {
                       ) : (
                         <div className="alert alert-warning p-2">Pricing not available.</div>
                       )}
-
                       <button
                         className="tp-btn cursor-pointer w-100"
                         onClick={handleProceedToCheckout}
@@ -247,10 +241,9 @@ useEffect(() => {
                         {loading
                           ? "Please wait..."
                           : allItemsHavePrice
-                            ? "Proceed to Checkout"
-                            : "Request Quote"}
+                          ? "Proceed to Checkout"
+                          : "Request Quote"}
                       </button>
-
                     </div>
                   </div>
                 </div>

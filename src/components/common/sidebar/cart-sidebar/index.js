@@ -50,6 +50,7 @@ const CartSidebar = ({ isCartOpen, setIsCartOpen, pendingQuotes = [] }) => {
                     >
                       <div>
                         <div><strong>Specimen:</strong> {item.masterID}</div>
+                        <div><strong>Analyte:</strong> {item.analyte}</div>
                         <small className="text-muted">Price: {item.status}</small>
                       </div>
                     </li>

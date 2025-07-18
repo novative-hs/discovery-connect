@@ -589,10 +589,7 @@ useEffect(() => {
                       <strong>Sample Type:</strong>{" "}
                       {selectedSample.SampleTypeMatrix}
                     </p>
-                    {/* <p>
-                      <strong>Diagnosis Test Parameter:</strong>{" "}
-                      {selectedSample.DiagnosisTestParameter}
-                    </p> */}
+                  
                     <p>
                       <strong>Test Result:</strong> {selectedSample.TestResult}{" "}
                       {selectedSample.TestResultUnit}
