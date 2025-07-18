@@ -111,11 +111,11 @@ const SampleArea = () => {
 
   const tableHeaders = [
     { label: "Patient Name", key: "PatientName" },
-    // { label: "Patient Location", key: "PatientLocation" },
+    { label: "Patient Location", key: "PatientLocation" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "MRNumber", key: "MRNumber" },
-    { label: "Location", key: "locationids" },
+    // { label: "Location", key: "locationids" },
     { label: "Analyte", key: "Analyte" },
     { label: "Test Result & Unit", key: "TestResult" },
     { label: "Volume", key: "volume" },

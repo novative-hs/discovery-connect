@@ -28,40 +28,27 @@ export const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    add_cart_product: (state, { payload }) => {
-      const isExist = state.cart_products.some((item) => item.id === payload.id);
+   add_cart_product: (state, { payload }) => {
+  const isExist = state.cart_products.some((item) => item.id === payload.id);
 
-      if (!isExist) {
-        const newItem = {
-          ...payload,
-          orderQuantity: 1,
-          volumes: payload.volumes || 1, // Ensure volumes is always saved
-          addedAt: new Date().toISOString(),
-          imageUrl: payload.imageUrl
-        };
-        state.cart_products = [...state.cart_products, newItem];
-        notifySuccess(`Sample added to cart`);
-      } else {
-        state.cart_products = state.cart_products.map((item) => {
-          if (item.id === payload.id) {
-            if (item.quantity >= item.orderQuantity + 1) {
-              notifySuccess(`${item.Analyte} quantity updated in cart`);
-              return {
-                ...item,
-                orderQuantity: item.orderQuantity + 1,
-              };
-            } else {
-              notifyError("No more quantity available for this product!");
-              return item;
-            }
-          }
-          return item;
-        });
+  if (!isExist) {
+    const newItem = {
+      ...payload,
+      isLocked: true,
+      orderQuantity: 1,
+      volumes: payload.volumes || 1,
+      addedAt: new Date().toISOString(),
+      imageUrl: payload.imageUrl,
+    };
+    state.cart_products = [...state.cart_products, newItem];
+    notifySuccess(`Sample added to cart`);
+  } else {
+    // ❌ Do nothing, just show warning or ignore silently
+    notifyError("This sample is already in your cart.");
+  }
 
-      }
-
-      setsessionStorage(CART_STORAGE_KEY, state.cart_products);
-    },
+  setsessionStorage(CART_STORAGE_KEY, state.cart_products);
+},
 
     increment: (state, { payload }) => {
       const cartItem = state.cart_products.find(item => item.id === payload.id);
