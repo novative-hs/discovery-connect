@@ -104,7 +104,7 @@ const BioBankSampleArea = () => {
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "MRNumber", key: "MRNumber" },
-    { label: "Location", key: "locationids" },
+    // { label: "Location", key: "locationids" },
     { label: "Analyte", key: "Analyte" },
     { label: "Test Result", key: "TestResult" },
     { label: "Volume", key: "volume" },
@@ -1458,7 +1458,7 @@ Box ID=${sample.box_id || "----"} `;
                                 className="btn btn-outline-primary btn-sm"
                                 onClick={() => {
                                   setSelectedBarcodeId(sample.id);
-                                  handlePrint(sample.id); // Pass the ID directly
+                                  handlePrint(sample.masterID); // Pass the ID directly
                                 }}
                               >
                                 Print Barcode

@@ -187,7 +187,7 @@ const fetchUserDetail = async () => {
   const menuItems =
     userType == "researcher"
       ? [
-        { label: "Book Samples", tab: "Booksamples" },
+        { label: "Discover", tab: "Booksamples" },
         { label: "My Order Samples", tab: "my-samples" },
       ]
       : userType == "registrationadmin"

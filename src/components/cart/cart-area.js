@@ -13,35 +13,43 @@ const CartArea = () => {
   const [loading, setLoading] = React.useState(false);
 
   const userID = typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
-  const hasTriggeredCheckoutRef = useRef(false); // ✅ Prevent double trigger
+  const hasTriggeredCheckoutRef = useRef(false);
+  const priceIntervalRef = useRef(null); // ✅ Store interval reference
 
   // ✅ Refresh cart prices every 30s until all are priced
   useEffect(() => {
-    const interval = setInterval(() => {
-      const unpriced = cart_products.filter(item => !item.price || item.price === 0);
-      if (unpriced.length > 0) {
-        refreshCartPrices(cart_products, dispatch);
-      } else {
-        clearInterval(interval);
+    const unpriced = cart_products.filter(item => !item.price || item.price === 0);
+    if (unpriced.length > 0) {
+      priceIntervalRef.current = setInterval(() => {
+        refreshCartPrices(cart_products);
+      }, 30000);
+    }
+
+    return () => {
+      if (priceIntervalRef.current) {
+        clearInterval(priceIntervalRef.current);
       }
-    }, 30000);
-    return () => clearInterval(interval);
+    };
   }, [cart_products]);
 
-  const refreshCartPrices = async (cartItems, dispatch) => {
+  const refreshCartPrices = async (cartItems) => {
     try {
-      const updatedItems = [];
-      for (let item of cartItems) {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getSingleSample/${item.id}`
-        );
-        const updatedSample = response.data;
-        updatedItems.push({
+      const requests = cartItems.map((item) =>
+        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getSingleSample/${item.id}`)
+      );
+
+      const responses = await Promise.all(requests);
+
+      const updatedItems = cartItems.map((item, idx) => {
+        const updatedSample = responses[idx]?.data;
+        if (!updatedSample || typeof updatedSample.price === "undefined") return item;
+        return {
           ...item,
           price: updatedSample.price,
           SamplePriceCurrency: updatedSample.SamplePriceCurrency,
-        });
-      }
+        };
+      });
+
       dispatch(set_cart_products(updatedItems));
     } catch (error) {
       console.error("Error refreshing cart prices:", error);
@@ -67,25 +75,19 @@ const CartArea = () => {
   const handleProceedToCheckout = async () => {
     if (loading) return;
 
-    const pricedItems = cart_products.filter(
-      (item) => item.price !== null && item.price > 0
-    );
-    const unpricedItems = cart_products.filter(
-      (item) => item.price === null || item.price === 0
-    );
+    const pricedItems = cart_products.filter(item => item.price && item.price > 0);
+    const unpricedItems = cart_products.filter(item => !item.price || item.price === 0);
 
     const cartHash = getCartHash(unpricedItems);
     const quoteSentKey = `quoteSent_${userID}_${cartHash}`;
-
     const alreadySent = sessionStorage.getItem(quoteSentKey);
+
     if (alreadySent === "true") {
-      
       notifySuccess("Quote already requested. Await Biobank response.");
       return;
     }
 
     if (!userID) {
-      // ✅ Save flag to trigger after login
       sessionStorage.setItem("triggerCheckoutAfterLogin", "true");
       router.push("/login?from=cart&triggerCheckout=true");
       return;
@@ -134,7 +136,7 @@ const CartArea = () => {
     setLoading(false);
   };
 
-  // ✅ If user logged in and quote trigger flag was set, trigger checkout ONCE
+  // ✅ Trigger after login if flag was set
   useEffect(() => {
     const shouldTrigger = sessionStorage.getItem("triggerCheckoutAfterLogin") === "true";
     if (shouldTrigger && !hasTriggeredCheckoutRef.current) {
@@ -148,13 +150,9 @@ const CartArea = () => {
     dispatch(remove_product(item));
   };
 
-  const validItems = cart_products.filter(
-    (item) => item.price !== null && item.price !== 0
-  );
+  const validItems = cart_products.filter(item => item.price && item.price > 0);
   const subtotal = validItems.reduce((acc, item) => acc + item.price * 1, 0);
-  const allItemsHavePrice = cart_products.every(
-    (item) => item.price && item.price > 0
-  );
+  const allItemsHavePrice = cart_products.every(item => item.price && item.price > 0);
 
   return (
     <section className="cart-area py-5" style={{ backgroundColor: "#f4f8fb", minHeight: "100vh" }}>
@@ -187,12 +185,12 @@ const CartArea = () => {
                             <td>
                               <div>{item.Analyte}</div>
                               <div>
-                                {[item.gender, item.age, `${item.TestResult}${item.TestResultUnit}`, `${item.Volume}${item.VolumeUnit}`]
+                                {[item.gender, `${item.age} year`, `${item.TestResult}${item.TestResultUnit}`]
                                   .filter(Boolean)
                                   .join(", ")}
                               </div>
                             </td>
-                            <td>{item.quantity}</td>
+                           <td>{`${item.quantity} x ${item.Volume}${item.VolumeUnit}`}</td>
                             <td>{item.price && item.price > 0 ? item.price : "Please Quote"}</td>
                             <td>
                               <button

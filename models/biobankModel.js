@@ -133,8 +133,8 @@ const getBiobankSamples = (
     ) AS countCombined
   `;
 
- const finalParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id, pageSizeInt, offset];
-const countParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id];
+  const finalParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id, pageSizeInt, offset];
+  const countParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id];
 
 
   mysqlConnection.query(dataQuery, finalParams, (err, results) => {
@@ -271,8 +271,8 @@ const getBiobankSamplesPooled = (
     ) AS countCombined
   `;
 
- const finalParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id, pageSizeInt, offset];
-const countParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id];
+  const finalParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id, pageSizeInt, offset];
+  const countParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id];
 
 
   mysqlConnection.query(dataQuery, finalParams, (err, results) => {
@@ -316,18 +316,19 @@ const postSamplePrice = (data, callback) => {
 
       // ✅ Insert into sample_history table
       const historyQuery = `
-        INSERT INTO sample_history (sample_id)
-        VALUES (?)
-      `;
+  INSERT INTO sample_history (sample_id, action_type)
+  VALUES (?, ?)
+`;
 
-      mysqlConnection.query(historyQuery, [data.sampleId], (err, historyResults) => {
+
+      mysqlConnection.query(historyQuery, [data.sampleId, 'update'], (err, historyResults) => {
         if (err) {
           console.error("❌ Error inserting into sample_history:", err);
           return callback(err, null);
         }
 
         // ✅ Check if sample is in quote_requests
-       const checkQuoteQuery = `
+        const checkQuoteQuery = `
   SELECT 
     qr.*, 
     ua.email, 
@@ -392,6 +393,7 @@ const postSamplePrice = (data, callback) => {
 
 
 const UpdateSampleStatus = (id, status, callback) => {
+  
   const query = `
     UPDATE sample
     SET sample_visibility = ?
@@ -402,13 +404,27 @@ const UpdateSampleStatus = (id, status, callback) => {
 
   mysqlConnection.query(query, values, (err, result) => {
     if (err) {
-      console.error("Error updating sample:", err);
+      console.error("❌ Error updating sample:", err);
       return callback(err, null);
     }
 
-    callback(null, { message: "Sample status updated successfully." });
+    // ✅ Insert into sample_history after update
+    const historyQuery = `
+      INSERT INTO sample_history (sample_id, action_type)
+      VALUES (?, 'update')
+    `;
+
+    mysqlConnection.query(historyQuery, [id], (historyErr, historyResult) => {
+      if (historyErr) {
+        console.error("❌ Error inserting into sample_history:", historyErr);
+        return callback(historyErr, null);
+      }
+
+      callback(null, { message: "✅ Sample status updated successfully and history recorded." });
+    });
   });
 };
+
 
 const getQuarantineStock = (callback) => {
   const query = `SELECT * FROM sample WHERE status =  "Quarantine" and is_deleted = false`;

@@ -111,7 +111,7 @@ const SampleArea = () => {
 
   const tableHeaders = [
     { label: "Patient Name", key: "PatientName" },
-    { label: "Patient Location", key: "PatientLocation" },
+    // { label: "Patient Location", key: "PatientLocation" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
     { label: "MRNumber", key: "MRNumber" },
@@ -1068,6 +1068,7 @@ const SampleArea = () => {
 
 
   const handlePrint = (barcodeId) => {
+    
     const barcodeString = barcodeId?.toString() || "";
 
     const printWindow = window.open("", "", "width=300,height=200");
@@ -1363,7 +1364,7 @@ const SampleArea = () => {
                                 className="btn btn-outline-primary btn-sm"
                                 onClick={() => {
                                   setSelectedBarcodeId(sample.id);
-                                  handlePrint(sample.id);
+                                  handlePrint(sample.masterID);
                                 }}
                               >
                                 Print Barcode
