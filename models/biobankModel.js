@@ -2,6 +2,8 @@ const mysqlConnection = require("../config/db");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 const { sendEmail } = require("../config/email");
+const { decryptAndShort} = require("../config/encryptdecrptUtils");
+
 const create_biobankTable = () => {
   const create_biobankTable = `
   CREATE TABLE IF NOT EXISTS biobank (
@@ -143,12 +145,20 @@ const getBiobankSamples = (
       return callback(err);
     }
 
-    const enrichedResults = results.map((sample) => ({
-      ...sample,
-      locationids: [sample.room_number, sample.freezer_id, sample.box_id]
-        .filter(Boolean)
-        .join("-"),
-    }));
+    const enrichedResults = results.map(sample => {
+  let shortMasterID = null;
+  try {
+    shortMasterID = decryptAndShort(sample.masterID);
+  } catch (e) {
+    console.error("⚠️ Failed to decrypt masterID for sample:", sample.id);
+  }
+
+  return {
+    ...sample,
+    locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-'),
+    masterID: shortMasterID,
+  };
+});
 
     mysqlConnection.query(countQuery, countParams, (err, countResults) => {
       if (err) return callback(err);

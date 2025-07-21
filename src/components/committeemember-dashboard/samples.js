@@ -23,7 +23,7 @@ const SampleArea = () => {
 
   const [viewedDocuments, setViewedDocuments] = useState({});
   const tableHeaders = [
-    { label: "Order ID", key: "cart_id" },
+    { label: "Order ID", key: "tracking_id" },
     { label: "Researcher Name", key: "researcher_name" },
     { label: "Analyte", key: "Analyte" },
     // { label: "Age", key: "age" },

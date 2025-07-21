@@ -134,7 +134,7 @@ const OrderRejectedPage = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                    { label: "Order Id", field: "order_id" },
+                    { label: "Order Id", field: "tracking_id" },
                     { label: "Researcher Name", field: "researcher_name" },
                     { label: "Organization Name", field: "organization_name" },
                     { label: "Analyte", field: "Analyte" },
@@ -176,7 +176,7 @@ const OrderRejectedPage = () => {
                 {currentOrders.length > 0 ? (
                   currentOrders.map((order) => (
                     <tr key={order.order_id}>
-                      <td>{order.order_id}</td>
+                      {order.tracking_id || "----"}
                       <td>{order.researcher_name}</td>
                       <td>{order.organization_name}</td>
                       <td

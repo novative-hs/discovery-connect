@@ -101,7 +101,7 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
 
 
         const getEmailQuery = `
-          SELECT ua.email 
+          SELECT ua.email,c.tracking_id
           FROM user_account ua
           JOIN cart c ON ua.id = c.user_id
           WHERE c.id = ?
@@ -114,8 +114,9 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
           }
 
           const userEmail = emailResults?.[0]?.email;
+          const tracking_id=emailResults?.[0]?.tracking_id;
           const subject = "Committee Status Update";
-          const text = `Dear User,\n\nYour sample request (Cart ID: ${cartId}) is now under review by the committee.\n\nPlease check your dashboard for further updates.\n\nRegards,\nDiscovery Connect Team`;
+          const text = `Dear User,\n\nYour sample request (Tracking ID: ${tracking_id}) is now under review by the committee.\n\nPlease check your dashboard for further updates.\n\nRegards,\nDiscovery Connect Team`;
 
           if (userEmail) {
             sendEmail(userEmail, subject, text)
@@ -208,7 +209,7 @@ const updateCartStatusToShipping = (cartId, callback) => {
             if (updateErr) return callback(updateErr, null);
 
             const getResearcherEmailQuery = `
-              SELECT ua.email, c.created_at, c.id AS cartId
+              SELECT ua.email, c.tracking_id,c.created_at, c.id AS cartId
               FROM user_account ua
               JOIN cart c ON ua.id = c.user_id
               WHERE c.id = ?`;
@@ -221,9 +222,9 @@ const updateCartStatusToShipping = (cartId, callback) => {
                 return callback(null, updateResults);
               }
 
-              const { email: researcherEmail, created_at: cartCreatedAt } = emailResults[0];
+              const { email: researcherEmail, tracking_id,created_at: cartCreatedAt } = emailResults[0];
               const subject = "Sample Request Status Update";
-              const message = `Dear Researcher,\n\nYour sample request is now being processed for <b>Dispatched</b>.\n\nDetails:\nCart ID: ${cartId} (Created At: ${cartCreatedAt})\n\nBest regards,\nYour Team`;
+              const message = `Dear Researcher,\n\nYour sample request is now being processed for <b>Dispatched</b>.\n\nDetails:\nCart ID: ${tracking_id} (Created At: ${cartCreatedAt})\n\nBest regards,\nYour Team`;
 
               setImmediate(() => {
                 sendEmail(researcherEmail, subject, message, (emailSendErr) => {
@@ -277,7 +278,7 @@ const updateCommitteeStatus = async (cartId, committee_member_id, committee_stat
     }
 
     const getEmailQuery = `
-      SELECT ua.email 
+      SELECT ua.email,c.tracking_id
       FROM user_account ua
       JOIN cart c ON ua.id = c.user_id
       WHERE c.id = ?`;
@@ -287,8 +288,9 @@ const updateCommitteeStatus = async (cartId, committee_member_id, committee_stat
         console.error("Error fetching email:", emailErr);
       } else if (emailResults.length > 0) {
         const userEmail = emailResults[0].email;
+        const tracking_id=emailResults[0].tracking_id;
         const subject = `Committee Status Update`;
-        const text = `<b>Dear Researcher,</b><br><br>Your sample request for <b>Cart ID: ${cartId}</b> has been <b>${committee_status}</b> by a committee member.<br><br>📝 <b>Comments:</b> ${comments}<br><br>Please check your <b>dashboard</b> for more details. 🚀`;
+        const text = `<b>Dear Researcher,</b><br><br>Your sample request for <b>Tracking_id ID: ${tracking_id}</b> has been <b>${committee_status}</b> by a committee member.<br><br>📝 <b>Comments:</b> ${comments}<br><br>Please check your <b>dashboard</b> for more details. 🚀`;
 
         setImmediate(() => {
           sendEmail(userEmail, subject, text, (emailSendErr) => {
@@ -371,40 +373,40 @@ const revertSampleQuantity = (cartId) => {
 
 
 // Helper function to fetch email and send notification
-const sendUserEmail = (id, committee_status, comments, callback) => {
-  const getEmailQuery = `
-    SELECT ua.email 
-    FROM user_account ua
-    JOIN cart c ON ua.id = c.user_id
-    WHERE c.id = ?
-  `;
+// const sendUserEmail = (id, committee_status, comments, callback) => {
+//   const getEmailQuery = `
+//     SELECT ua.email 
+//     FROM user_account ua
+//     JOIN cart c ON ua.id = c.user_id
+//     WHERE c.id = ?
+//   `;
 
-  mysqlConnection.query(getEmailQuery, [id], (emailErr, emailResults) => {
-    if (emailErr) {
-      console.error("Error fetching user email:", emailErr);
-      return callback(emailErr, null);
-    }
+//   mysqlConnection.query(getEmailQuery, [id], (emailErr, emailResults) => {
+//     if (emailErr) {
+//       console.error("Error fetching user email:", emailErr);
+//       return callback(emailErr, null);
+//     }
 
-    if (emailResults.length > 0) {
-      const userEmail = emailResults[0].email;
-      const subject = `Committee Status Update`;
-      const text = `Dear User, your sample request for cart ID ${id} has been updated by a committee member.\n\nStatus: ${committee_status}\nComments: ${comments}\n\nPlease check your dashboard for details.`;
+//     if (emailResults.length > 0) {
+//       const userEmail = emailResults[0].email;
+//       const subject = `Committee Status Update`;
+//       const text = `Dear User, your sample request for cart ID ${id} has been updated by a committee member.\n\nStatus: ${committee_status}\nComments: ${comments}\n\nPlease check your dashboard for details.`;
 
-      sendEmail(userEmail, subject, text)
-        .then(() => {
+//       sendEmail(userEmail, subject, text)
+//         .then(() => {
 
-          callback(null, { message: "Committee status updated successfully!" });
-        })
-        .catch((emailError) => {
-          console.error("Failed to send email:", emailError);
-          callback(emailError, null);
-        });
-    } else {
+//           callback(null, { message: "Committee status updated successfully!" });
+//         })
+//         .catch((emailError) => {
+//           console.error("Failed to send email:", emailError);
+//           callback(emailError, null);
+//         });
+//     } else {
 
-      callback(null, { message: "Committee status updated successfully!" });
-    }
-  });
-};
+//       callback(null, { message: "Committee status updated successfully!" });
+//     }
+//   });
+// };
 
 module.exports = {
   createcommitteesampleapprovalTable,

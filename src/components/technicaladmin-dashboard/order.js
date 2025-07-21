@@ -219,7 +219,7 @@ const OrderPage = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                    { label: "Order Id", field: "order_id" },
+                    { label: "Order Id", field: "tracking_id" },
                     { label: "Analyte", field: "Analyte" },
                     { label: "Order Status", field: "order_status" },
                     {
@@ -294,7 +294,7 @@ const OrderPage = () => {
                             transition: "color 0.2s",
                           }}
                         >
-                          {order.order_id || "----"}
+                          {order.tracking_id || "----"}
                         </span>
                       </td>
 

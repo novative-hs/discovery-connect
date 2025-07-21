@@ -2,6 +2,8 @@
 const mysqlConnection = require("../config/db");
 const fs = require('fs');
 const crypto = require('crypto');
+const { encrypt, decrypt, decryptAndShort } = require("../config/encryptdecrptUtils");
+
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
 // Function to create the sample table
@@ -87,8 +89,8 @@ const createPoolSampleTable = () => {
     }
   });
 };
-const createPriceRequest=()=>{
-  const createrequesttable= `
+const createPriceRequest = () => {
+  const createrequesttable = `
   CREATE TABLE quote_requests (
   id INT AUTO_INCREMENT PRIMARY KEY,
   researcher_id INT,
@@ -97,7 +99,7 @@ const createPriceRequest=()=>{
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 `
-mysqlConnection.query(createrequesttable, (err, results) => {
+  mysqlConnection.query(createrequesttable, (err, results) => {
     if (err) {
       console.error("❌ Error creating request table:", err);
     } else {
@@ -202,6 +204,7 @@ const getSamples = (user_account_id, page, pageSize, searchField, searchValue, c
       const enrichedResults = results.map(sample => ({
         ...sample,
         locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-'),
+        masterID: sample.masterID ? decryptAndShort(sample.masterID) : null,
       }));
 
       mysqlConnection.query(countQuery, countParams, (err, countResult) => {
@@ -209,6 +212,7 @@ const getSamples = (user_account_id, page, pageSize, searchField, searchValue, c
 
         callback(null, {
           results: enrichedResults,
+
           totalCount: countResult[0].totalCount,
         });
       });
@@ -244,23 +248,27 @@ const getAllSamples = (callback) => {
     WHERE 
       s.status = 'In Stock' 
       AND s.Quantity > 0
-      AND sample_visibility="Public"
+      AND sample_visibility = "Public"
   `;
 
   mysqlConnection.query(query, (err, results) => {
     if (err) return callback(err, null);
 
     const updatedResults = results.map(sample => {
-     
-        if (sample.analyteImage) {
-        imageUrl = sample.analyteImage.startsWith('/')
-  ? sample.analyteImage
-  : `/${sample.analyteImage}`;
+      // Decrypt masterID
+      sample.masterID = sample.masterID ? decryptAndShort(sample.masterID) : null;
 
-        } else {
-        sample.imageUrl = null; // or fallback image
+      // Handle analyte image URL
+      if (sample.analyteImage) {
+        sample.imageUrl = sample.analyteImage.startsWith('/')
+          ? sample.analyteImage
+          : `/${sample.analyteImage}`;
+      } else {
+        sample.imageUrl = null; // fallback or null
       }
-      delete sample.analyteImage; // optional: remove raw image buffer from the object
+
+      delete sample.analyteImage; // Remove raw field if needed
+
       return sample;
     });
 
@@ -268,74 +276,76 @@ const getAllSamples = (callback) => {
   });
 };
 
+
 const getResearcherSamples = (userId, callback) => {
   const query = `
- SELECT
-  s.*,
-  sm.Analyte,
-  sm.age,
-  sm.gender,
-  sm.ethnicity,
-  sm.samplecondition,
-  sm.storagetemp,
-  sm.ContainerType,
-  sm.CountryOfCollection,
-  country.name AS CountryName,
-  sm.price,
-  sm.SamplePriceCurrency,
-  sm.SampleTypeMatrix,
-  sm.SmokingStatus,
-  sm.AlcoholOrDrugAbuse,
-  sm.InfectiousDiseaseTesting,
-  sm.InfectiousDiseaseResult,
-  sm.FreezeThawCycles,
-  sm.DateOfSampling,
-  sm.ConcurrentMedicalConditions,
-  sm.ConcurrentMedications,
-  sm.TestResult,
-  sm.TestResultUnit,
-  sm.TestMethod,
-  sm.TestKitManufacturer,
-  sm.TestSystem,
-  sm.TestSystemManufacturer,
-  sm.status,
-  sm.sample_visibility,
-  sm.logo,
-  cs.CollectionSiteName,
-  bb.Name AS BiobankName,
-  c.name AS CityName,
-  d.name AS DistrictName,
-  p.payment_type AS payment_method,
-  p.payment_status AS payment_status,
-  s.quantity AS orderquantity,
- 
-  ra.technical_admin_status,
+    SELECT
+      s.*,
+      sm.Analyte,
+      sm.age,
+      sm.gender,
+      sm.ethnicity,
+      sm.samplecondition,
+      sm.storagetemp,
+      sm.ContainerType,
+      sm.CountryOfCollection,
+      country.name AS CountryName,
+      sm.price,
+      sm.SamplePriceCurrency,
+      sm.SampleTypeMatrix,
+      sm.SmokingStatus,
+      sm.AlcoholOrDrugAbuse,
+      sm.InfectiousDiseaseTesting,
+      sm.InfectiousDiseaseResult,
+      sm.FreezeThawCycles,
+      sm.DateOfSampling,
+      sm.ConcurrentMedicalConditions,
+      sm.ConcurrentMedications,
+      sm.TestResult,
+      sm.TestResultUnit,
+      sm.TestMethod,
+      sm.TestKitManufacturer,
+      sm.TestSystem,
+      sm.TestSystemManufacturer,
+      sm.status,
+      sm.sample_visibility,
+      sm.logo,
+      cs.CollectionSiteName,
+      bb.Name AS BiobankName,
+      c.name AS CityName,
+      d.name AS DistrictName,
+      p.payment_type AS payment_method,
+      p.payment_status AS payment_status,
+      s.quantity AS orderquantity,
+      ra.technical_admin_status,
 
-  CASE
-      WHEN COUNT(ca.committee_status) = 0 THEN NULL
-      WHEN SUM(CASE WHEN ca.committee_status = 'refused' THEN 1 ELSE 0 END) > 0 THEN 'rejected'
-      WHEN SUM(CASE WHEN ca.committee_status = 'UnderReview' THEN 1 ELSE 0 END) > 0 THEN 'UnderReview'
-      ELSE 'accepted'
-  END AS committee_status
+      sm.masterID,
 
-FROM cart s
-JOIN user_account ua ON s.user_id = ua.id
-LEFT JOIN sample sm ON s.sample_id = sm.id
-LEFT JOIN collectionsitestaff css ON sm.user_account_id = css.user_account_id
-LEFT JOIN collectionsite cs ON cs.id = css.collectionsite_id
-LEFT JOIN biobank bb ON sm.user_account_id = bb.id
-LEFT JOIN city c ON cs.city = c.id
-LEFT JOIN district d ON cs.district = d.id
-LEFT JOIN country ON sm.CountryOfCollection = country.id
-JOIN payment p ON s.payment_id = p.id
-LEFT JOIN technicaladminsampleapproval ra ON s.id = ra.cart_id
-LEFT JOIN committeesampleapproval ca ON s.id = ca.cart_id
+      CASE
+          WHEN COUNT(ca.committee_status) = 0 THEN NULL
+          WHEN SUM(CASE WHEN ca.committee_status = 'refused' THEN 1 ELSE 0 END) > 0 THEN 'rejected'
+          WHEN SUM(CASE WHEN ca.committee_status = 'UnderReview' THEN 1 ELSE 0 END) > 0 THEN 'UnderReview'
+          ELSE 'accepted'
+      END AS committee_status
 
-WHERE s.user_id = ?
+    FROM cart s
+    JOIN user_account ua ON s.user_id = ua.id
+    LEFT JOIN sample sm ON s.sample_id = sm.id
+    LEFT JOIN collectionsitestaff css ON sm.user_account_id = css.user_account_id
+    LEFT JOIN collectionsite cs ON cs.id = css.collectionsite_id
+    LEFT JOIN biobank bb ON sm.user_account_id = bb.id
+    LEFT JOIN city c ON cs.city = c.id
+    LEFT JOIN district d ON cs.district = d.id
+    LEFT JOIN country ON sm.CountryOfCollection = country.id
+    JOIN payment p ON s.payment_id = p.id
+    LEFT JOIN technicaladminsampleapproval ra ON s.id = ra.cart_id
+    LEFT JOIN committeesampleapproval ca ON s.id = ca.cart_id
 
-GROUP BY s.id, sm.id, cs.id, bb.id, c.id, d.id, country.id, ra.technical_admin_status
+    WHERE s.user_id = ?
 
-ORDER BY s.id DESC;
+    GROUP BY s.id, sm.id, cs.id, bb.id, c.id, d.id, country.id, ra.technical_admin_status
+
+    ORDER BY s.id DESC;
   `;
 
   mysqlConnection.query(query, [userId], (err, results) => {
@@ -344,16 +354,20 @@ ORDER BY s.id DESC;
       return callback(err, null);
     }
 
-    // Check if no samples found
     if (results.length === 0) {
       return callback(null, { error: "No samples found" });
     }
 
-    // If samples exist, return the results
-    callback(null, results);
-  });
+    // Decrypt masterID for each result
+    const decryptedResults = results.map(sample => ({
+      ...sample,
+      masterID: sample.masterID ? decryptAndShort(sample.masterID) : null
+    }));
 
+    callback(null, decryptedResults);
+  });
 };
+
 
 const getAllVolumnUnits = (name, callback) => {
   const query = 'SELECT id, quantity, volume, VolumeUnit FROM sample WHERE Analyte = ? and quantity>0';
@@ -387,20 +401,28 @@ const getAllVolumnUnits = (name, callback) => {
 const getAllSampleinIndex = (name, callback) => {
   const query = 'SELECT * FROM sample WHERE Analyte = ? AND quantity > 0 AND sample_visibility="Public" AND status="In Stock"';
 
-
   mysqlConnection.query(query, [name], (err, results) => {
     if (err) {
       console.error("MySQL Query Error:", err);
       callback(err, null);
+      return;
     }
+
     if (results.length === 0) {
       return callback(null, { error: "No samples found" });
     }
 
-    // If samples exist, return the results
-    callback(null, results);
+    // Decrypt masterID for each result
+    const modifiedResults = results.map(sample => ({
+      ...sample,
+      masterID: sample.masterID ? decryptAndShort(sample.masterID) : null
+    }));
+
+    // Return modified results
+    callback(null, modifiedResults);
   });
-}
+};
+
 const getAllCSSamples = (limit, offset, callback) => {
   const dataQuery = `
     SELECT 
@@ -471,15 +493,16 @@ const getAllCSSamples = (limit, offset, callback) => {
         let imageUrl = null;
 
         if (sample.analyteImage) {
-        imageUrl = sample.analyteImage.startsWith('/')
-  ? sample.analyteImage
-  : `/${sample.analyteImage}`;
+          imageUrl = sample.analyteImage.startsWith('/')
+            ? sample.analyteImage
+            : `/${sample.analyteImage}`;
 
         }
 
         return {
           ...sample,
           imageUrl,
+          masterID: sample.masterID ? decryptAndShort(sample.masterID) : null,
           total_remaining: Math.max(0, (sample.total_quantity || 0) - (sample.total_allocated || 0))
         };
       });
@@ -498,12 +521,23 @@ const getsingleSamples = (sampleId, callback) => {
     }
 
     if (results.length === 0) {
-      // No sample found
       return callback(null, null);
     }
 
-    // Return only the first sample (id is unique)
-    callback(null, results[0]);
+    const sample = results[0];
+
+    // 🔐 Decrypt master_id if it exists
+    if (sample.masterID) {
+      try {
+        sample.masterID = decryptAndShort(sample.masterID);
+      } catch (decryptionErr) {
+        console.error("Master ID Decryption Error:", decryptionErr);
+        // You can optionally still return encrypted master_id or null
+        sample.masterID = null;
+      }
+    }
+
+    callback(null, sample);
   });
 };
 
@@ -512,8 +546,27 @@ const getsingleSamples = (sampleId, callback) => {
 // Function to get a sample by its ID
 const getSampleById = (id, callback) => {
   const query = 'SELECT * FROM sample WHERE id = ?';
+
   mysqlConnection.query(query, [id], (err, results) => {
-    callback(err, results);
+    if (err) {
+      return callback(err, null);
+    }
+
+    if (results.length > 0) {
+      try {
+        const sample = results[0];
+        if (sample.masterID) {
+          sample.masterID = decryptAndShort(sample.masterID);
+        }
+        return callback(null, [sample]); // keeping original structure: results in array
+      } catch (decryptionErr) {
+        console.error("Decryption error:", decryptionErr);
+        return callback(decryptionErr, null);
+      }
+    }
+
+    // If no sample found
+    return callback(null, []);
   });
 };
 
@@ -541,7 +594,8 @@ GROUP BY s.id
 
 const createSample = (data, callback) => {
   const id = uuidv4(); // ID for the new sample (individual or pool)
-  const masterID = uuidv4();
+  const rawmasterid = uuidv4()
+  const masterID = encrypt(rawmasterid);
 
   let room_number = null;
   let freezer_id = null;
@@ -987,6 +1041,6 @@ module.exports = {
   getAllSampleinIndex,
   getPoolSampleDetails,
   updatetestResultandUnit,
-createPriceRequest,
-getsingleSamples
+  createPriceRequest,
+  getsingleSamples
 };

@@ -64,7 +64,7 @@ const handleSubmit = async (paymentId) => {
         sample_id:item.id,
         price: Number(item.price),
         samplequantity: Number(item.orderQuantity),
-        volume: item.volume,
+        volume: item.Volume,
         VolumeUnit: item.VolumeUnit,
         total: Number(item.orderQuantity) * Number(item.price),
       }))
@@ -78,44 +78,39 @@ const handleSubmit = async (paymentId) => {
   if (sampleCopyData.nbcFile) {
     formData.append("nbc_file", sampleCopyData.nbcFile);
   }
+try {
+  const response = await axios.post(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
+    formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    }
+  );
 
-  try {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
-      formData,
-      {
-        headers: { "Content-Type": "multipart/form-data" },
-      }
-    );
+  const result = response.data;
+  const trackingId = result.tracking_id;
 
-    const result = response.data;
-    const cartIds = result.result.results.map((item) => item.cartId);
-    const created_at = result.result.results[0].created_at;
+  sessionStorage.setItem("tracking_id", trackingId); // ✅ store tracking ID
 
-    sessionStorage.setItem("cartIDs", JSON.stringify(cartIds));
-    sessionStorage.setItem("created_at", JSON.stringify(created_at));
+  dispatch(clear_cart());
+  notifySuccess("Order placed successfully!");
 
-    dispatch(clear_cart());
-    notifySuccess("Order placed successfully! Now your cart is empty");
+  setTimeout(() => {
+    router.push({
+      pathname: "/order-confirmation",
+      query: { id: trackingId }, // ✅ optional: pass it to confirmation page
+    });
+  }, 1000);
 
-    setTimeout(() => {
-      router.push({
-        pathname: "/order-confirmation",
-        query: {
-          id: JSON.stringify(cartIds),
-          created_at: created_at,
-        },
-      });
-    }, 1000);
+  return true;
+} catch (error) {
+  console.error("Error placing order:", error);
+  notifyError(
+    error.response?.data?.error || "Failed to place order. Please try again."
+  );
+  return false;
+}
 
-    return true;
-  } catch (error) {
-    console.error("Error placing order:", error);
-    notifyError(
-      error.response?.data?.error || "Failed to place order. Please try again."
-    );
-    return false;
-  }
 };
 
 

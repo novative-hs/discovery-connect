@@ -26,7 +26,7 @@ const DashboardFooter = () => {
                                     <span className="d-flex align-items-center gap-2">
                                         <i className="bi bi-telephone text-danger"></i>
                                         <a className="text-dark text-decoration-none text-nowrap" href="tel:+15057922430">
-                                            0369-6666665
+                                            0300-5079709
                                         </a>
                                     </span>
                                     {/* Added mx-3 to increase space before website */}

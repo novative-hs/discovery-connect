@@ -45,6 +45,17 @@ const tablesAndColumns = [
         nullable: true,
       },
     ]
+  },
+   {
+     table: "cart",
+    columnsToAdd: [
+
+      {
+        column: "tracking_id",
+        type: "VARCHAR(10)",
+        nullable: true,
+      },
+    ]
   }
   // {
   //   table: "registrationadmin_history",

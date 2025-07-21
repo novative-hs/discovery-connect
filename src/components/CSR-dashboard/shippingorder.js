@@ -33,7 +33,7 @@ const ShippingSampleArea = () => {
   };
 
   const tableHeaders = [
-    { label: "Order ID", key: "id" },
+    { label: "Order ID", key: "tracking_id" },
     { label: "Researcher Name", key: "researcher_name" },
     { label: "Analyte", key: "Analyte" },
     { label: "Order Date", key: "created_at" },
@@ -183,7 +183,7 @@ const ShippingSampleArea = () => {
               {groupedList.length > 0 ? (
                 groupedList.map(([researcher, records]) => (
                   <tr key={researcher}>
-                    <td>{records[0].id}</td>
+                    <td>{records[0].tracking_id || "---"}</td>
                     <td>{researcher}</td>
                     <td>{records.map((r) => r.Analyte).join(", ")}</td>
                     <td>{new Date(records[0].created_at).toLocaleString()}</td>

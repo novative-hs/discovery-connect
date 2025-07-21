@@ -101,37 +101,37 @@ const CartArea = () => {
       return;
     }
 
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userID,
-          products: unpricedItems.map((item) => ({
-            id: item.id,
-            masterid: item.masterid,
-            analyte: item.Analyte,
-            Volume: item.Volume,
-            VolumeUnit: item.VolumeUnit,
-            TestResult: item.TestResult,
-            TestResultUnit: item.TestResultUnit,
-            price: item.price,
-          })),
-        }),
-      });
+    // try {
+    //   const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({
+    //       userID,
+    //       products: unpricedItems.map((item) => ({
+    //         id: item.id,
+    //         masterid: item.masterid,
+    //         analyte: item.Analyte,
+    //         Volume: item.Volume,
+    //         VolumeUnit: item.VolumeUnit,
+    //         TestResult: item.TestResult,
+    //         TestResultUnit: item.TestResultUnit,
+    //         price: item.price,
+    //       })),
+    //     }),
+    //   });
 
-      const responseData = await response.json();
+    //   const responseData = await response.json();
 
-      if (response.ok) {
-        sessionStorage.setItem(quoteSentKey, "true");
-        notifySuccess("Quote request sent to Biobank. Please wait for price updates.");
-      } else {
-        notifyError(`Failed to request quote: ${responseData.message || "Unknown error"}`);
-      }
-    } catch (error) {
-      console.error("Quote Request Error:", error);
-      notifyError("Something went wrong. Try again.");
-    }
+    //   if (response.ok) {
+    //     sessionStorage.setItem(quoteSentKey, "true");
+    //     notifySuccess("Quote request sent to Biobank. Please wait for price updates.");
+    //   } else {
+    //     notifyError(`Failed to request quote: ${responseData.message || "Unknown error"}`);
+    //   }
+    // } catch (error) {
+    //   console.error("Quote Request Error:", error);
+    //   notifyError("Something went wrong. Try again.");
+    // }
 
     setLoading(false);
   };

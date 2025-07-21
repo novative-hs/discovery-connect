@@ -48,7 +48,7 @@ const notifyResearcher = (cartIds, message, subject) => {
 
 const updateCartStatusToCompleted = (cartId, callback) => {
   const getCartDetailsQuery = `
-    SELECT delivered_at, order_status
+    SELECT delivered_at, order_status,tracking_id
     FROM cart
     WHERE id = ?`;
 
@@ -61,7 +61,7 @@ const updateCartStatusToCompleted = (cartId, callback) => {
     if (results.length === 0) {
       return callback(new Error("Cart not found"), null);
     }
-
+const tracking_id=results[0].tracking_id;
     const deliveredAt = results[0].delivered_at;
     const currentOrderStatus = results[0].order_status;
 
@@ -92,7 +92,7 @@ const updateCartStatusToCompleted = (cartId, callback) => {
           return callback(updateErr, null);
         }
 
-        notifyResearcher(cartId, "Your sample request has been completed.<br/>", "Sample Request Status Update", (notifyErr) => {
+        notifyResearcher(tracking_id, "Your sample request has been completed.<br/>", "Sample Request Status Update", (notifyErr) => {
           if (notifyErr) {
             return callback(notifyErr, null);
           }
@@ -112,6 +112,7 @@ const createCartTable = () => {
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
     sample_id VARCHAR(36) NOT NULL,
+    tracking_id VARCHAR(10),
     price FLOAT NOT NULL,
     quantity INT NOT NULL,
     VolumeUnit VARCHAR(20),
@@ -134,6 +135,9 @@ const createCartTable = () => {
     }
   });
 };
+function generateTrackingId() {
+  return Math.floor(10000 + Math.random() * 90000).toString();
+}
 
 const createCart = (data, callback) => {
   const {
@@ -145,7 +149,7 @@ const createCart = (data, callback) => {
     irb_file,
     nbc_file,
   } = data;
-
+const tracking_id = generateTrackingId();
   // Validate required fields
   if (
     !researcher_id ||
@@ -175,12 +179,13 @@ const createCart = (data, callback) => {
 
     // Insert each cart item
     const insertPromises = cart_items.map((item) => {
+      
       return new Promise((resolve, reject) => {
         const sample_id = item.sample_id;
 
         const insertCartQuery = `
-          INSERT INTO cart (user_id, sample_id, price, quantity, volume, VolumeUnit, payment_id, totalpayment)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO cart (user_id, sample_id, price, quantity, volume, VolumeUnit, payment_id, totalpayment,tracking_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)
         `;
 
         const cartValues = [
@@ -192,6 +197,7 @@ const createCart = (data, callback) => {
           item.VolumeUnit,
           payment_id,
           item.total,
+          tracking_id
         ];
 
         mysqlConnection.query(insertCartQuery, cartValues, (err, cartResult) => {
@@ -241,7 +247,7 @@ const createCart = (data, callback) => {
                 mysqlConnection.query(updateQuery, updateValues, (err) => {
                   if (err) return reject(err);
 
-                  resolve({ cartId, created_at });
+                  resolve({ tracking_id, created_at });
                 });
               });
             });
@@ -250,47 +256,43 @@ const createCart = (data, callback) => {
       });
     });
 
-    Promise.all(insertPromises)
-      .then((results) => {
-        const cartIds = results.map((result) => result.cartId);
+   Promise.all(insertPromises)
+  .then(() => {
+    const message =
+      "Your sample request has been <b>successfully created</b>. Please check your dashboard for more details.";
+    const subject = "Sample Request Status Update";
 
-        const message =
-          "Your sample request has been <b>successfully created</b>. Please check your dashboard for more details.";
-        const subject = "Sample Request Status Update";
+    const getResearcherEmailQuery = `
+      SELECT ua.email, c.created_at, c.id AS cartId
+      FROM user_account ua
+      JOIN cart c ON ua.id = c.user_id
+      WHERE c.tracking_id = ?
+    `;
 
-        const placeholders = cartIds.map(() => "?").join(",");
-        const getResearcherEmailQuery = `
-          SELECT ua.email, c.created_at, c.id AS cartId
-          FROM user_account ua
-          JOIN cart c ON ua.id = c.user_id
-          WHERE c.id IN (${placeholders})
-        `;
+    mysqlConnection.query(getResearcherEmailQuery, [tracking_id], (emailErr, emailResults) => {
+      if (emailErr) return callback(emailErr);
 
-        mysqlConnection.query(getResearcherEmailQuery, cartIds, (emailErr, emailResults) => {
-          if (emailErr) return callback(emailErr);
+      if (emailResults.length === 0) {
+        return callback(new Error("No data found for provided tracking ID"));
+      }
 
-          if (emailResults.length === 0) {
-            return callback(new Error("No data found for provided cart IDs"));
-          }
+      const researcherEmail = emailResults[0].email;
+      const cartIdsList = emailResults
+        .map((detail) => `Cart ID: ${detail.cartId} (Created At: ${detail.created_at})`)
+        .join("<br/>");
 
-          const researcherEmail = emailResults[0].email;
-          const cartIdsList = emailResults
-            .map((detail) => `Cart ID: ${detail.cartId} (Created At: ${detail.created_at})`)
-            .join("<br/>");
+      const emailMessage = `Dear Researcher,<br/>${message}<br/>Tracking ID: <b>${tracking_id}</b><br/>Best regards,<br/>Discovery Connect`;
 
-          const emailMessage = `Dear Researcher,<br/>${message}<br/>Details for the following carts:<br/>${cartIdsList}<br/>Best regards,<br/>Lab Hazir`;
-
-          sendEmail(researcherEmail, subject, emailMessage)
-            .then(() => {
-              callback(null, { message: "Cart created successfully", results });
-            })
-            .catch((emailSendErr) => {
-              console.error("Failed to send researcher email:", emailSendErr);
-              callback(emailSendErr);
-            });
+      sendEmail(researcherEmail, subject, emailMessage)
+        .then(() => {
+          callback(null, { message: "Cart created successfully", tracking_id });
+        })
+        .catch((emailSendErr) => {
+          console.error("Failed to send researcher email:", emailSendErr);
+          callback(emailSendErr);
         });
-      })
-      .catch((error) => callback(error));
+    });
+  })
   });
 };
 
@@ -421,7 +423,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
 
   // Map searchField to actual DB fields
   const searchFieldMap = {
-    order_id: 'c.id',
+    order_id: 'c.tracking_id',
     Analyte: 's.Analyte',
     researcher_name: 'r.ResearcherName',
     organization_name: 'org.OrganizationName',
@@ -454,6 +456,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
   const sqlQuery = `
     SELECT 
       c.id AS order_id, 
+      c.tracking_id,
       c.user_id, 
       u.email AS user_email,
       r.ResearcherName AS researcher_name, 
@@ -548,8 +551,8 @@ const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, ca
     let dbField = searchField;
 
     // Mapping fields to DB fields
-    if (searchField === "cart_id") {
-      dbField = "c.id";
+    if (searchField === "tracking_id") {
+      dbField = "c.tracking_id";
     } else if (searchField === "researcher_name") {
       dbField = "r.ResearcherName";
     } else if (searchField === "user_email") {
@@ -565,6 +568,7 @@ const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, ca
   const sqlQuery = `
     SELECT 
       c.id AS cart_id, 
+      c.tracking_id,
       c.user_id, 
       u.email AS user_email,
       r.ResearcherName AS researcher_name, 

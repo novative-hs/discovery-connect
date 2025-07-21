@@ -28,7 +28,7 @@ const Header = ({ style_2 = false }) => {
 
   const headerStyle = {
     height: "90px",
-    backgroundColor:"#ffffff",
+    backgroundColor: "#ffffff",
     boxShadow: sticky ? "0 4px 8px rgba(0, 0, 0, 0.05)" : "none",
     transition: "all 0.3s ease-in-out",
   };
@@ -42,9 +42,8 @@ const Header = ({ style_2 = false }) => {
       <header>
         <div className={`header__area ${style_2 ? "" : "header__transparent"}`}>
           <div
-            className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${
-              style_2 ? "header__bottom-13-white" : "grey-bg-17"
-            } header__sticky ${sticky ? "header-sticky" : ""}`}
+            className={`header__bottom-13 header__padding-7 header__black-3 header__bottom-border-4 ${style_2 ? "header__bottom-13-white" : "grey-bg-17"
+              } header__sticky ${sticky ? "header-sticky" : ""}`}
             style={headerStyle}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -68,7 +67,7 @@ const Header = ({ style_2 = false }) => {
                           style={{
                             width: "200px",
                             height: "90px",
-                          
+
                           }}
                         />
                       </Link>
@@ -93,7 +92,7 @@ const Header = ({ style_2 = false }) => {
                   <div className="col-xxl-3 col-xl-3 col-lg-8 col-md-8 col-sm-7 col-4">
                     <div className="header__bottom-right-13 d-flex justify-content-end align-items-center pl-30">
                       <div className="header__action-13 d-none d-md-block">
-                        <ul>
+                        <ul className="flex items-center gap-4">
                           {userInfo?.imageURL ? (
                             <li>
                               <Link href="/user-dashboard">
@@ -119,29 +118,32 @@ const Header = ({ style_2 = false }) => {
                             </li>
                           ) : (
                             <li>
-                              <Link href="/login">
-                                <span>
-                                  <User />
-                                </span>
-                              </Link>
+                             <Link
+  href="/login"
+  className="flex items-center gap-2 no-underline text-black hover:text-blue-600"
+>
+  <span className="inline-flex">
+    <User className="w-4 h-4" />
+  </span>
+  {/* <span className="text-sm font-medium">Login</span> */}
+</Link>
+
+
                             </li>
+
+
                           )}
                           <li>
-  <button
-    className="cartmini-open-btn"
-    onClick={handleProceedToCart}
-  >
-    <Cart />
-    {Number(sampleCount) > 0 && (
-      <span className="tp-item-count">
-        {sampleCount}
-      </span>
-    )}
-  </button>
-</li>
-
+                            <button className="cartmini-open-btn" onClick={handleProceedToCart}>
+                              <Cart />
+                              {Number(sampleCount) > 0 && (
+                                <span className="tp-item-count">{sampleCount}</span>
+                              )}
+                            </button>
+                          </li>
                         </ul>
                       </div>
+
                       <div className="header__hamburger ml-30 d-xl-none">
                         <button
                           onClick={() => setIsOffCanvasOpen(true)}

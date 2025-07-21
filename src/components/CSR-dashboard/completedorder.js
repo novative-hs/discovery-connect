@@ -95,7 +95,7 @@ const CompletedSampleArea = () => {
             <thead className="table-primary text-white">
               <tr>
                 {[
-                  { label: "Order ID", key: "id" },
+                  { label: "Order ID", key: "tracking_id" },
                   { label: "User Name", key: "researcher_name" },
                   { label: "Analyte", key: "Analyte" },
                   { label: "Order Date", key: "created_at" },
@@ -122,7 +122,7 @@ const CompletedSampleArea = () => {
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
                   <tr key={sample.id}>
-                    <td>{sample.id || "----"}</td>
+                    <td>{sample.tracking_id || "----"}</td>
                     <td>{sample.researcher_name}</td>
                     <td>{sample.Analyte}</td>
                     <td>{new Date(sample.created_at).toLocaleString()}</td>

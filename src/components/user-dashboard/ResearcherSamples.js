@@ -296,7 +296,7 @@ const SampleArea = () => {
                             router.push({
                               pathname: "/order-confirmation",
                               query: {
-                                id: sample.id,
+                                id: sample.tracking_id,
                                 created_at: sample.created_at,
                                 orderStatus: sample.order_status || "Placed",
                                 technical_admin_status: sample.technical_admin_status,
