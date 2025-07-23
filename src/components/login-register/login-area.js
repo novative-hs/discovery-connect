@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import LoginForm from "@components/forms/login-form";
-import cleanBg from "@assets/img/slider/13/sampleloginimg.png"; // Replace with the clean background image
+import cleanBg from "@assets/img/slider/13/samplelogin.jpg"; // Replace with the clean background image
 import Image from "next/image";
 
 const LoginArea = () => {
@@ -33,8 +33,8 @@ const LoginArea = () => {
           <div className="col-xl-5 col-lg-6 col-md-8">
             <div className="bg-dark bg-opacity-75 p-4 p-md-5 rounded shadow text-white">
               <div className="text-center mb-4">
-                <h3 className="fw-bold text-white">Hello Again</h3>
-                <p className="mb-0 text-white">Enter your credentials to access your account.</p>
+                <h3 className="fw-bold text-white">Login</h3>
+                
               </div>
 
               {/* Login Form */}
