@@ -1,30 +1,21 @@
 import React, { useEffect, useState } from "react";
 // internal
 import SingleProduct from "@components/products/single-product";
-import Pagination from "@ui/Pagination";
 
 const ProductGridItems = ({ itemsPerPage, items, setShowingGridItems }) => {
-  const [currentItems, setCurrentItems] = useState(null);
-  const [pageCount, setPageCount] = useState(0);
-  const [itemOffset, setItemOffset] = useState(0);
-  // side effect
-  useEffect(() => {
-    const endOffset = itemOffset + itemsPerPage;
-    setCurrentItems(items?.slice(itemOffset, endOffset));
-    setPageCount(Math.ceil(items.length / itemsPerPage));
-  }, [itemOffset, itemsPerPage, items]);
+  const [visibleCount, setVisibleCount] = useState(itemsPerPage);
+
+  const handleLoadMore = () => {
+    setVisibleCount((prevCount) => prevCount + itemsPerPage);
+  };
+
+  const currentItems = items?.slice(0, visibleCount);
 
   useEffect(() => {
     if (currentItems && setShowingGridItems) {
       setShowingGridItems(currentItems.length);
     }
   }, [currentItems, setShowingGridItems]);
-
-  // handlePageClick
-  const handlePageClick = (event) => {
-    const newOffset = (event.selected * itemsPerPage) % items.length;
-    setItemOffset(newOffset);
-  };
 
   return (
     <>
@@ -34,7 +25,7 @@ const ProductGridItems = ({ itemsPerPage, items, setShowingGridItems }) => {
         role="tabpanel"
         aria-labelledby="nav-grid-tab"
       >
-        {/* shop grid*/}
+        {/* shop grid */}
         <div className="row">
           {currentItems &&
             currentItems.map((product) => (
@@ -42,24 +33,24 @@ const ProductGridItems = ({ itemsPerPage, items, setShowingGridItems }) => {
                 key={product._id}
                 className="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-4"
               >
-
                 <SingleProduct product={product} />
               </div>
             ))}
         </div>
-        {/* pagination start */}
-        <div className="row">
-          <div className="col-xxl-12">
 
-            <Pagination
-              handlePageClick={handlePageClick}
-              pageCount={pageCount}
-            />
+        {/* Load More Button */}
+        {visibleCount < items.length && (
+          <div className="row">
+            <div className="col-12 text-center mt-4">
+              <button className="fw-bold px-4 py-2 text-white text-decoration-none"
+                style={{ backgroundColor: "#003366" }} onClick={handleLoadMore}>
+                Load More
+              </button>
+
+            </div>
           </div>
-        </div>
-        {/* pagination end */}
+        )}
       </div>
-
     </>
   );
 };
