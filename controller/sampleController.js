@@ -8,15 +8,31 @@ const createSampleTable = (req, res) => {
 
   res.status(200).json({ message: "Sample table creation process started" });
 };
+
 const getAllSampleinIndex = (req, res) => {
   const { name } = req.params;
-  SampleModel.getAllSampleinIndex(name, (err, results) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
+
+  const searchField = req.query.field;
+  const searchValue = req.query.value;
+
+  console.log("Data:", name, page, limit, searchField, searchValue);
+
+  SampleModel.getAllSampleinIndex(name, limit, offset, searchField, searchValue, (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching samples detail" });
     }
-    res.status(200).json({ data: results });
+
+    res.status(200).json({
+      data: results.data,
+      total: results.total,
+    });
   });
-}
+};
+
+
 // Controller to get all samples
 const getSamples = (req, res) => {
   const id = req.params.id;
@@ -97,7 +113,23 @@ const getResearcherSamples = (req, res) => {
   });
 };
 
+const updateReservedSample = (req, res) => {
+  const sampleId = req.params.id;
+  const status=req.params.status
 
+  SampleModel.updateReservedSample(sampleId,status, (err, result) => {
+    if (err) {
+      console.error("Error updating sample:", err);
+      return res.status(500).json({ success: false, message: "Database error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Sample not found" });
+    }
+
+    return res.status(200).json({ success: true, message: "Sample reserved successfully" });
+  });
+};
 const getAllCSSamples = (req, res) => {
   const limit = parseInt(req.query.limit) || 30;
   const offset = parseInt(req.query.offset) || 0;
@@ -171,24 +203,24 @@ const createSample = (req, res) => {
   if (DateOfSampling >= today) {
     return res.status(400).json({ error: "DateOfSampling must be before today" });
   }
- SampleModel.createSample(sampleData, (err, result) => {
-  if (err) {
-    console.error("Error creating sample:", err);
+  SampleModel.createSample(sampleData, (err, result) => {
+    if (err) {
+      console.error("Error creating sample:", err);
 
-    if (
-      err.message === "Duplicate entry: This patient sample already exists."
-    ) {
-      return res.status(409).json({ error: err.message }); // <-- 409 Conflict
+      if (
+        err.message === "Duplicate entry: This patient sample already exists."
+      ) {
+        return res.status(409).json({ error: err.message }); // <-- 409 Conflict
+      }
+
+      return res.status(500).json({ error: "Error creating sample" });
     }
 
-    return res.status(500).json({ error: "Error creating sample" });
-  }
-
-  res.status(201).json({
-    message: "Sample created successfully",
-    id: result.insertId,
+    res.status(201).json({
+      message: "Sample created successfully",
+      id: result.insertId,
+    });
   });
-});
 
 };
 
@@ -255,22 +287,22 @@ const updateQuarantineSamples = (req, res) => {
   });
 };
 
-const updatetestResultandUnit=(req,res)=>{
-    
-    const {id}=req.params;
-    const data=req.body;
-    data.samplepdf = req.body?.samplepdf?.[0]?.buffer || null;
-    
-    SampleModel.updatetestResultandUnit(id,data,(err,result)=>{
-       if (err) {
+const updatetestResultandUnit = (req, res) => {
+
+  const { id } = req.params;
+  const data = req.body;
+  data.samplepdf = req.body?.samplepdf?.[0]?.buffer || null;
+
+  SampleModel.updatetestResultandUnit(id, data, (err, result) => {
+    if (err) {
       console.error("Error in updating Test Result and Unit:", err);
       return res.status(500).json({ error: 'Error in updating Sample status' });
     }
 
     return res.status(200).json({ message: 'Sample mode status updated' });
-  
-    })
-  }
+
+  })
+}
 module.exports = {
   createSampleTable,
   getFilteredSamples,
@@ -287,5 +319,6 @@ module.exports = {
   getAllSampleinIndex,
   getPoolSampleDetails,
   updatetestResultandUnit,
-  getsingleSamples
+  getsingleSamples,
+  updateReservedSample
 };

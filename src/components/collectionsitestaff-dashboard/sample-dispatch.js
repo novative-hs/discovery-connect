@@ -218,7 +218,7 @@ const SampleDispatchArea = () => {
     setSelectedSampleTransfer("");
   };
   const handleTransferClick = (sample) => {
-  
+
     setSelectedSampleTransfer(sample);
     setSelectedSampleId(sample.id); // Assuming `id` is the key for sample ID
     setShowReceiveModal(true); // Show the modal
@@ -306,22 +306,22 @@ const SampleDispatchArea = () => {
             <table className="table table-bordered table-hover text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
-                 {tableHeaders.map(({ label, key }, index) => (
-  <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
-    <div className="d-flex flex-column align-items-center">
-      <input
-        type="text"
-        className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
-        placeholder={`Search ${label}`}
-        onChange={(e) => handleFilterChange(key, e.target.value)}
-        style={{ minWidth: "110px" }}
-      />
-      <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
-        {label}
-      </span>
-    </div>
-  </th>
-))}
+                  {tableHeaders.map(({ label, key }, index) => (
+                    <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
+                      <div className="d-flex flex-column align-items-center">
+                        <input
+                          type="text"
+                          className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
+                          placeholder={`Search ${label}`}
+                          onChange={(e) => handleFilterChange(key, e.target.value)}
+                          style={{ minWidth: "110px" }}
+                        />
+                        <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
+                          {label}
+                        </span>
+                      </div>
+                    </th>
+                  ))}
 
                   <th className="p-2 text-center" style={{ minWidth: "50px" }}>
                     Action
@@ -362,7 +362,7 @@ const SampleDispatchArea = () => {
                           ) : key === "volume" ? (
                             `${sample.volume || "----"} ${sample.VolumeUnit || ""}`
                           ) : key === "age" ? (
-                            `${sample.age || "----"} years`
+                            sample.age ? `${sample.age} years` : "----"
                           ) : key === "TestResult" ? (
                             `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
                           ) : (

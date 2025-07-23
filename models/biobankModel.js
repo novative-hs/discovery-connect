@@ -460,9 +460,17 @@ const getPriceRequest = (callback) => {
 
   mysqlConnection.query(query, (err, results) => {
     if (err) return callback(err, null);
-    return callback(null, results); // full joined data
+
+    // Apply decryption/transformation to each result's masterID
+    const transformedResults = results.map(sample => ({
+      ...sample,
+      masterID: decryptAndShort(sample.masterID)
+    }));
+
+    return callback(null, transformedResults);
   });
 };
+
 
 
 // Function to get samples with price > 0 in sample visibility page

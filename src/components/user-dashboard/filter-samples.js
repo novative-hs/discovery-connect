@@ -1,49 +1,46 @@
+// Corrected and optimized React component
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import Modal from "react-bootstrap/Modal";
-import Pagination from "@ui/Pagination"; // Your custom pagination component
-import { Cart } from "@svg/index"; // Your cart icon svg
+import Pagination from "@ui/Pagination";
+import { Cart } from "@svg/index";
 import { add_cart_product } from "src/redux/features/cartSlice";
-import { notifySuccess } from "@utils/toast"; // Your toast notification utility
-import Header from "@layout/header";
-import DashboardHeader from "@layout/dashboardheader";
+import { notifyError } from "@utils/toast";
 import axios from "axios";
 import { useRouter } from "next/router";
 
-const FilterProductArea = ({ selectedProduct, closeModals }) => {
-
-
+const FilterProductArea = ({ selectedProduct }) => {
   const dispatch = useDispatch();
-  const router = useRouter();
   const cartItems = useSelector((state) => state.cart?.cart_products || []);
+
   const [userID, setUserID] = useState(null);
   const [products, setProduct] = useState([]);
   const [filteredSamples, setFilteredSamples] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("Booksamples");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalCount, setTotalCount] = useState(0);
+  const [filters, setFilters] = useState({});
 
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
   const [image_url, setImageURL] = useState();
-
-  // For debounce timeout
   const filterTimeoutRef = useRef(null);
-
+  const [selectedAnalyte, setSelectedAnalyte] = useState(null);
   const tableHeaders = [
     { label: "Analyte", key: "Analyte" },
-    { label: "Volume", key: "volume" },
+    { label: "Qty × Volume", key: "volume" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-    { label: "Quantity", key: "quantity" },
     { label: "Test Result", key: "TestResult" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Price", key: "price" },
   ];
 
   const fieldsToShowInOrder = [
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
@@ -54,10 +51,7 @@ const FilterProductArea = ({ selectedProduct, closeModals }) => {
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Freeze Thaw Cycles", key: "FreezeThawCycles" },
     { label: "Date Of Collection", key: "DateOfSampling" },
-    {
-      label: "Concurrent Medical Conditions",
-      key: "ConcurrentMedicalConditions",
-    },
+    { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
@@ -66,38 +60,47 @@ const FilterProductArea = ({ selectedProduct, closeModals }) => {
   ];
 
   useEffect(() => {
-    const storedUserID = sessionStorage.getItem("userID");
-    setUserID(storedUserID);
-    
+    setUserID(sessionStorage.getItem("userID"));
   }, []);
 
-useEffect(() => {
-  if (selectedProduct) {
-    const Analyte = selectedProduct.Analyte;
-    const image_url = selectedProduct.imageUrl;
 
-    setProduct([selectedProduct]);
-    setFilteredSamples([selectedProduct]);
 
-    if (Analyte) {
-      getSample(Analyte);
-      setImageURL(image_url);
+  useEffect(() => {
+    if (selectedProduct?.Analyte) {
+      setImageURL(selectedProduct.imageUrl);
+      setSelectedAnalyte(selectedProduct.Analyte);
+      setCurrentPage(1);
     }
-  }
-}, [selectedProduct]);
+  }, [selectedProduct]);
 
 
-  const getSample = async (name) => {
+  useEffect(() => {
+    if (selectedAnalyte !== null) {
+      getSample(selectedAnalyte, currentPage, itemsPerPage);
+    }
+  }, [selectedAnalyte, currentPage]);
+
+  const getSample = async (name, page = 1, pageSize = 10, filters = {}) => {
+    const { searchField, searchValue } = filters;
     setLoading(true);
     try {
+      const encodedName = encodeURIComponent(name);
+      const query = `page=${page}&limit=${pageSize}${searchField && searchValue
+        ? `&field=${searchField}&value=${encodeURIComponent(searchValue)}`
+        : ""
+        }`;
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getAllSampleinindex/${name}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getAllSampleinindex/${encodedName}?${query}`
       );
 
-      setFilteredSamples(response.data.data);
-      setProduct(response.data.data);
+      const sampleData = response.data.data;
+      const totalCount = response.data.total;
+      const totalPages = Math.ceil(totalCount / pageSize);
 
-      setCurrentPage(0);
+      setFilteredSamples(sampleData);
+      setProduct(sampleData);
+      setTotalPages(totalPages);
+      setTotalCount(totalCount);
     } catch (error) {
       console.error("Error fetching samples:", error);
     } finally {
@@ -105,47 +108,28 @@ useEffect(() => {
     }
   };
 
-  const validSamples = Array.isArray(filteredSamples) ? filteredSamples : [];
-  const currentData = validSamples.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
 
-  const totalPages = Math.max(1, Math.ceil(validSamples.length / itemsPerPage));
 
   const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
+    const selectedPage = event.selected + 1; // Because react-paginate is 0-indexed
+    setCurrentPage(selectedPage); // Correct ✅
   };
 
   const handleFilterChange = (field, value) => {
     clearTimeout(filterTimeoutRef.current);
-
     filterTimeoutRef.current = setTimeout(() => {
-      if (!value.trim()) {
-        setFilteredSamples(products);
-        setCurrentPage(0);
+      const searchValue = value.trim();
+      if (!searchValue) {
+        getSample(selectedAnalyte, 1, itemsPerPage); // No filter
         return;
       }
-
-      const search = value.toLowerCase();
-
-      const filtered = products.filter((sample) => {
-        // Custom logic for composite fields
-        if (field === "volume") {
-          const volumeWithUnit = `${sample.volume || ""} ${
-            sample.VolumeUnit || ""
-          }`.toLowerCase();
-          return volumeWithUnit.includes(search);
-        }
-
-        // Default single field logic
-        return sample[field]?.toString().toLowerCase().includes(search);
+      getSample(selectedAnalyte, 1, itemsPerPage, {
+        searchField: field,
+        searchValue,
       });
-
-      setFilteredSamples(filtered);
-      setCurrentPage(0);
     }, 300);
   };
+
 
   const openModal = (sample) => {
     setSelectedSample(sample);
@@ -159,258 +143,188 @@ useEffect(() => {
 
   const isInCart = (sampleId) => cartItems.some((item) => item.id === sampleId);
 
-const handleAddToCart = (sample) => {
-
-  const defaultAge = sample.age || "";
-  const defaultGender = sample.gender || "";
-
-  dispatch(
-    add_cart_product({
-      id: sample.id,
-      masterid:sample.masterID,
-      age: defaultAge,
-      gender: defaultGender,
-      Analyte: sample.Analyte,
-      Volume: sample.volume,
-      ContainerType: sample.ContainerType,
-      SampleTypeMatrix: sample.SampleTypeMatrix,
-      VolumeUnit: sample.VolumeUnit,
-      TestResult: sample.TestResult,
-      TestResultUnit: sample.TestResultUnit,
-      quantity: sample.quantity ?? 1,
-      price: sample.price,
-      imageUrl: sample.image_url || "",
-    })
-  );
-
-  // closeModals();
-};
-
-
+  const handleAddToCart = async (sample) => {
+    dispatch(
+      add_cart_product({
+        id: sample.id,
+        masterid: sample.masterID,
+        age: sample.age || "",
+        gender: sample.gender || "",
+        Analyte: sample.Analyte,
+        Volume: sample.volume,
+        ContainerType: sample.ContainerType,
+        SampleTypeMatrix: sample.SampleTypeMatrix,
+        VolumeUnit: sample.VolumeUnit,
+        TestResult: sample.TestResult,
+        TestResultUnit: sample.TestResultUnit,
+        quantity: sample.quantity ?? 1,
+        price: sample.price,
+        imageUrl: sample.image_url || "",
+      })
+    );
+    try {
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/${sample.id}/reserve/1`
+      );
+      if (response.data.error) notifyError(response.data.error);
+    } catch (error) {
+      notifyError("Error reserving sample");
+    }
+  };
 
   return (
-    <>
-      <section className="policy__area pb-40 overflow-hidden p-3">
-        <div className="container">
-          <p className="text-danger fw-bold mt-3 mb-3">
-            Click on Analyte to get detail about sample.
-          </p>
+    <section className="policy__area pb-4 overflow-hidden p-3">
+      <div className="container">
+        <p className="text-danger fw-bold mt-3 mb-3">Click on Analyte to get detail about sample.</p>
+        <div className="table-responsive w-100">
+          {loading ? (
+            <div className="text-center p-5">Loading samples...</div>
+          ) : (
+            <table className="table table-bordered table-hover table-sm text-center align-middle">
+              <thead className="table-primary text-dark">
+                <tr>
+                  {tableHeaders.map(({ label, key }, index) => (
+                    <th key={index}>
+                      <div className="d-flex flex-column align-items-center">
+                        <input
+                          type="text"
+                          className="form-control form-control-sm text-center shadow-none"
+                          placeholder={`Search ${label}`}
+                          value={filters[key] || ""} // controlled input
+                          onChange={(e) => handleFilterChange(key, e.target.value)}
+                        />
+                        <span className="fw-bold mt-1 fs-6">{label}</span>
+                      </div>
+                    </th>
+                  ))}
+                  <th>Action</th>
+                </tr>
 
-          <div className="row justify-content-center">
-            <div className="table-responsive w-100">
-              {loading ? (
-                <div className="text-center p-5">Loading samples...</div>
-              ) : (
-                <table className="table table-bordered table-hover text-center align-middle w-auto border">
-                  <thead className="table-primary text-dark">
-                    <tr>
-                      {tableHeaders.map(({ label, key }, index) => (
-                        <th key={index} className="col-md-1 px-2">
-                          <div className="d-flex flex-column align-items-center">
-                            <input
-                              type="text"
-                              className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                              placeholder={`Search ${label}`}
-                              onChange={(e) =>
-                                handleFilterChange(key, e.target.value)
+              </thead>
+              <tbody>
+                {filteredSamples.length ? (
+                  filteredSamples.map((sample) => (
+                    <tr key={sample.id}>
+                      {tableHeaders.map(({ key }, idx) => {
+                        let content;
+                        switch (key) {
+                          case "price":
+                            content = sample.price
+                              ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
+                              : "Request the Quote";
+                            break;
+                          case "Analyte":
+                            content = (
+                              <span
+                                className="text-primary fw-semibold text-decoration-underline"
+                                role="button"
+                                onClick={() => openModal(sample)}
+                              >
+                                {sample.Analyte || "----"}
+                              </span>
+                            );
+                            break;
+                          case "volume":
+                            content = sample.quantity && sample.volume
+                              ? `${sample.quantity} x ${sample.volume}${sample.VolumeUnit || ""}`
+                              : "----";
+                            break;
+                          case "age":
+                            content = sample.age ? `${sample.age} years` : "----";
+                            break;
+                          case "TestResult": {
+                            const rawResult = sample.TestResult;
+                            const unit = sample.TestResultUnit;
+
+                            if (rawResult === null || rawResult === undefined || rawResult === "") {
+                              content = "----";
+                            } else if (!isNaN(Number(rawResult))) {
+                              // It's numeric
+                              const parsed = parseFloat(rawResult);
+
+                              // Format: remove trailing .0 if present, otherwise show decimal
+                              const formattedResult =
+                                parsed % 1 === 0 ? parsed.toFixed(0) : parsed.toString();
+
+                              // Only add unit if it's not a number
+                              if (unit && isNaN(Number(unit))) {
+                                content = `${formattedResult} ${unit}`;
+                              } else {
+                                content = formattedResult;
                               }
-                              style={{
-                                minWidth: "130px",
-                                maxWidth: "200px",
-                                width: "100px",
-                              }}
-                            />
-                            <span className="fw-bold mt-1 d-block text-nowrap align-items-center fs-6">
-                              {label}
-                            </span>
-                          </div>
-                        </th>
-                      ))}
-                      <th
-                        className="p-2 text-center"
-                        style={{ minWidth: "30px" }}
-                      >
-                        Action
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentData.length > 0 ? (
-                      currentData.map((sample) => (
-                        <tr key={sample.id}>
-                          {tableHeaders.map(({ key }, idx) => {
-                            let content;
-                            if (key === "price") {
-  content = sample.price
-    ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
-    : "Request the Quote";
-}
-else if (key === "Analyte") {
-                              content = (
-                                <span
-                                  className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-                                  role="button"
-                                  title="Sample Details"
-                                  onClick={() => openModal(sample)}
-                                  style={{
-                                    cursor: "pointer",
-                                    transition: "color 0.2s",
-                                  }}
-                                  onMouseOver={(e) =>
-                                    (e.target.style.color = "#0a58ca")
-                                  }
-                                  onMouseOut={(e) =>
-                                    (e.target.style.color = "")
-                                  }
-                                >
-                                  {sample.Analyte || "----"}
-                                </span>
-                              );
-                            } else if (key === "volume") {
-                              content = `${sample.volume || "----"} ${
-                                sample.VolumeUnit || ""
-                              }`;
-                            } else if (key === "age") {
-                              content = `${
-                                sample.age ? sample.age + " years" : "----"
-                              }`;
-                            } else if (key === "TestResult") {
-                              content = `${sample.TestResult || "----"} ${
-                                sample.TestResultUnit || ""
-                              }`;
                             } else {
-                              content = sample[key] || "----";
+                              // It's a non-numeric string like "Positive" or "Negative"
+                              content = rawResult;
                             }
 
-                            return (
-                              <td
-                                key={idx}
-                                className={
-                                  key === "price"
-                                    ? "text-end"
-                                    : key === "Analyte"
-                                    ? ""
-                                    : "text-center text-truncate"
-                                }
-                                style={{ maxWidth: "150px" }}
-                              >
-                                {content}
-                              </td>
-                            );
-                          })}
-                          <td className="w-auto" style={{ minWidth: "40px" }}>
-                            <div className="d-flex justify-content-around gap-3">
-                              {isInCart(sample.id) ? (
-                                <button
-                                  className="btn btn-secondary btn-sm"
-                                  disabled
-                                >
-                                  Added
-                                </button>
-                              ) : (
-                                <button
-                                  className="btn btn-primary btn-sm position-relative"
-                                  onClick={() => handleAddToCart(sample)}
-                                >
-                                  <Cart className="fs-7 text-white" />
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td
-                          colSpan={tableHeaders.length + 1}
-                          className="text-center"
-                        >
-                          No samples found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              )}
-            </div>
+                            break;
+                          }
 
-            {totalPages > 0 && (
-              <>
-                <Pagination
-                  pageCount={totalPages}
-                  onPageChange={handlePageChange}
-                  forcePage={currentPage}
-                />
-                {/* <div className="text-center mt-4">
-                  <button
-                    className="btn btn-outline-secondary"
-                    onClick={() =>
-                      router.push({
-                        pathname: "/dashboardheader",
-                        query: { tab: "Booksamples" },
-                      })
-                    }
-                  >
-                    ← Back to Samples
-                  </button>
-                </div> */}
-              </>
-            )}
-          </div>
+
+
+                          default:
+                            content = sample[key] || "----";
+                        }
+
+                        return <td key={idx}>{content}</td>;
+                      })}
+                      <td>
+                        {sample.reserved ? (
+                          <button className="btn btn-warning btn-sm" disabled>Reserved</button>
+                        ) : isInCart(sample.id) ? (
+                          <button className="btn btn-secondary btn-sm" disabled>Added</button>
+                        ) : (
+                          <button className="btn btn-primary btn-sm" onClick={() => handleAddToCart(sample)}>
+                            <Cart className="fs-7 text-white" />
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan={tableHeaders.length + 1}>No samples found.</td></tr>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
 
-        <Modal
-          show={showModal}
-          onHide={closeModal}
-          size="lg"
-          centered
-          backdrop="static"
-          keyboard={false}
-        >
-          <Modal.Header closeButton className="border-0">
-            <Modal.Title className="fw-bold text-danger">
-              {" "}
-              Sample Details
-            </Modal.Title>
-          </Modal.Header>
-
-          <Modal.Body
-            style={{ maxHeight: "500px", overflowY: "auto" }}
-            className="bg-light rounded"
-          >
-            {selectedSample ? (
-              <div className="p-3">
-                <div className="row g-3">
-                  {fieldsToShowInOrder.map(({ key, label }) => {
-                    const value = selectedSample[key];
-                    if (value === undefined || value === null || value === "")
-                      return null;
-
-                    return (
-                      <div className="col-md-6" key={key}>
-                        <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                          <span className="text-muted small fw-bold mb-1">
-                            {label}
-                          </span>
-                          <span className="fs-6 text-dark">
-                            {value.toString()}
-                          </span>
-                        </div>
+        {totalPages >= 0 && (
+          <Pagination
+            handlePageClick={handlePageChange}
+            pageCount={totalPages}
+            focusPage={currentPage - 1} // If using react-paginate, which is 0-based
+          />
+        )}
+      </div>
+      <Modal show={showModal} onHide={closeModal} size="lg" centered backdrop="static">
+        <Modal.Header closeButton>
+          <Modal.Title className="fw-bold text-danger">Sample Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="bg-light rounded overflow-auto" style={{ maxHeight: "500px" }}>
+          {selectedSample ? (
+            <div className="p-3">
+              <div className="row g-3">
+                {fieldsToShowInOrder.map(({ key, label }) => {
+                  const value = selectedSample[key];
+                  if (!value) return null;
+                  return (
+                    <div className="col-md-6" key={key}>
+                      <div className="p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                        <span className="text-muted small fw-bold mb-1">{label}</span>
+                        <span className="fs-6 text-dark">{value.toString()}</span>
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
-            ) : (
-              <div className="text-center text-muted p-3">
-                No details to show
-              </div>
-            )}
-          </Modal.Body>
-          <Modal.Footer className="border-0"></Modal.Footer>
-        </Modal>
-      </section>
-    </>
+            </div>
+          ) : (
+            <div className="text-center text-muted p-3">No details to show</div>
+          )}
+        </Modal.Body>
+      </Modal>
+    </section>
   );
 };
 

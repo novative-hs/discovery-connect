@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,21 +14,37 @@ const CartArea = () => {
 
   const userID = typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
   const hasTriggeredCheckoutRef = useRef(false);
-  const priceIntervalRef = useRef(null); // ✅ Store interval reference
+  const priceIntervalRef = useRef(null);
 
-  // ✅ Refresh cart prices every 30s until all are priced
+  const unpricedItems = cart_products.filter((item) => !item.price || item.price === 0);
+  const validItems = cart_products.filter((item) => item.price && item.price > 0);
+  const allItemsHavePrice = unpricedItems.length === 0;
+  const subtotal = validItems.reduce((acc, item) => acc + item.price, 0);
+
+  const getCartHash = (items) => {
+    return items.map((item) => item.id).sort().join("-");
+  };
+
+  const cartHash = getCartHash(unpricedItems);
+  const quoteSentKey = `quoteSent_${userID}_${cartHash}`;
+  const [quoteAlreadySent, setQuoteAlreadySent] = useState(false);
+
   useEffect(() => {
-    const unpriced = cart_products.filter(item => !item.price || item.price === 0);
-    if (unpriced.length > 0) {
+    const stored = sessionStorage.getItem(quoteSentKey) === "true";
+    setQuoteAlreadySent(stored);
+  }, [quoteSentKey]);
+
+
+  // ⏱ Refresh prices every 30s
+  useEffect(() => {
+    if (unpricedItems.length > 0) {
       priceIntervalRef.current = setInterval(() => {
         refreshCartPrices(cart_products);
       }, 30000);
     }
 
     return () => {
-      if (priceIntervalRef.current) {
-        clearInterval(priceIntervalRef.current);
-      }
+      if (priceIntervalRef.current) clearInterval(priceIntervalRef.current);
     };
   }, [cart_products]);
 
@@ -37,122 +53,102 @@ const CartArea = () => {
       const requests = cartItems.map((item) =>
         axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getSingleSample/${item.id}`)
       );
-
       const responses = await Promise.all(requests);
 
       const updatedItems = cartItems.map((item, idx) => {
-        const updatedSample = responses[idx]?.data;
-        if (!updatedSample || typeof updatedSample.price === "undefined") return item;
+        const updated = responses[idx]?.data;
+        if (!updated || typeof updated.price === "undefined") return item;
         return {
           ...item,
-          price: updatedSample.price,
-          SamplePriceCurrency: updatedSample.SamplePriceCurrency,
+          price: updated.price,
+          SamplePriceCurrency: updated.SamplePriceCurrency,
         };
       });
 
       dispatch(set_cart_products(updatedItems));
-    } catch (error) {
-      console.error("Error refreshing cart prices:", error);
+    } catch (err) {
+      console.error("Error updating prices", err);
     }
   };
 
-  // ✅ Trigger checkout after login (only once)
+  // 🔁 Auto-trigger after login
   useEffect(() => {
-    if (
-      router.query.triggerCheckout === "true" &&
-      !hasTriggeredCheckoutRef.current
-    ) {
-      hasTriggeredCheckoutRef.current = true;
-      handleProceedToCheckout();
-      router.replace("/cart", undefined, { shallow: true });
-    }
-  }, [router.query]);
+    const triggerFromQuery = router.query.triggerCheckout === "true";
+    const triggerFromStorage = sessionStorage.getItem("triggerCheckoutAfterLogin") === "true";
 
-  const getCartHash = (items) => {
-    return items.map((item) => item.id).sort().join("-");
-  };
+    if ((triggerFromQuery || triggerFromStorage) && !hasTriggeredCheckoutRef.current && userID) {
+      hasTriggeredCheckoutRef.current = true;
+
+      if (triggerFromStorage) sessionStorage.removeItem("triggerCheckoutAfterLogin");
+
+      handleProceedToCheckout();
+
+      if (triggerFromQuery) {
+        router.replace("/cart", undefined, { shallow: true });
+      }
+    }
+  }, [router.query, userID]);
 
   const handleProceedToCheckout = async () => {
     if (loading) return;
-
-    const pricedItems = cart_products.filter(item => item.price && item.price > 0);
-    const unpricedItems = cart_products.filter(item => !item.price || item.price === 0);
-
-    const cartHash = getCartHash(unpricedItems);
-    const quoteSentKey = `quoteSent_${userID}_${cartHash}`;
-    const alreadySent = sessionStorage.getItem(quoteSentKey);
-
-    if (alreadySent === "true") {
-      notifySuccess("Quote already requested. Await Biobank response.");
-      return;
-    }
 
     if (!userID) {
       sessionStorage.setItem("triggerCheckoutAfterLogin", "true");
       router.push("/login?from=cart&triggerCheckout=true");
       return;
     }
+    if (quoteAlreadySent) {
+      alert("Your quote request has already been sent. Please wait for Biobank's response.");
+      return;
+    }
+    if (unpricedItems.length > 0) {
 
-    setLoading(true);
+      try {
+        setLoading(true);
 
-    if (unpricedItems.length === 0 || pricedItems.length === 0) {
-      router.push("/dashboardheader?tab=Checkout");
-      setLoading(false);
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userID,
+            products: unpricedItems.map((item) => ({
+              id: item.id,
+              masterid: item.masterid,
+              analyte: item.Analyte,
+              Volume: item.Volume,
+              VolumeUnit: item.VolumeUnit,
+              TestResult: item.TestResult,
+              TestResultUnit: item.TestResultUnit,
+              price: item.price,
+            })),
+          }),
+        });
+
+        const resData = await response.json();
+
+        if (response.ok) {
+          sessionStorage.setItem(quoteSentKey, "true");
+          setQuoteAlreadySent(true); // ✅ triggers re-render
+          notifySuccess("Quote request has been sent to the Biobank. Please wait up to 24 hours for a price update.");
+        } else {
+          notifyError(`Quote request failed: ${resData.message || "Unknown error"}`);
+        }
+      } catch (err) {
+        console.error(err);
+        notifyError("Failed to request quote. Try again.");
+      } finally {
+        setLoading(false);
+      }
+
       return;
     }
 
-    // try {
-    //   const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       userID,
-    //       products: unpricedItems.map((item) => ({
-    //         id: item.id,
-    //         masterid: item.masterid,
-    //         analyte: item.Analyte,
-    //         Volume: item.Volume,
-    //         VolumeUnit: item.VolumeUnit,
-    //         TestResult: item.TestResult,
-    //         TestResultUnit: item.TestResultUnit,
-    //         price: item.price,
-    //       })),
-    //     }),
-    //   });
-
-    //   const responseData = await response.json();
-
-    //   if (response.ok) {
-    //     sessionStorage.setItem(quoteSentKey, "true");
-    //     notifySuccess("Quote request sent to Biobank. Please wait for price updates.");
-    //   } else {
-    //     notifyError(`Failed to request quote: ${responseData.message || "Unknown error"}`);
-    //   }
-    // } catch (error) {
-    //   console.error("Quote Request Error:", error);
-    //   notifyError("Something went wrong. Try again.");
-    // }
-
-    setLoading(false);
+    router.push("/dashboardheader?tab=Checkout");
   };
-
-  // ✅ Trigger after login if flag was set
-  useEffect(() => {
-    const shouldTrigger = sessionStorage.getItem("triggerCheckoutAfterLogin") === "true";
-    if (shouldTrigger && !hasTriggeredCheckoutRef.current) {
-      sessionStorage.removeItem("triggerCheckoutAfterLogin");
-      hasTriggeredCheckoutRef.current = true;
-      handleProceedToCheckout();
-    }
-  }, []);
 
   const handleRemoveProduct = (item) => {
     dispatch(remove_product(item));
   };
-
-  const validItems = cart_products.filter(item => item.price && item.price > 0);
-  const subtotal = validItems.reduce((acc, item) => acc + item.price * 1, 0);
-  const allItemsHavePrice = cart_products.every(item => item.price && item.price > 0);
 
   return (
     <section className="cart-area py-5" style={{ backgroundColor: "#f4f8fb", minHeight: "100vh" }}>
@@ -163,10 +159,10 @@ const CartArea = () => {
               <div className="row">
                 <div className="col-md-8">
                   <div className="table-responsive">
-                    <table className="table table-bordered rounded shadow-sm bg-white">
-                      <thead className="table-light text-dark text-center">
+                    <table className="table table-bordered bg-white rounded shadow-sm">
+                      <thead className="table-light text-center">
                         <tr>
-                          <th colSpan="6" className="text-center fs-6 py-3">Sample Cart Detail</th>
+                          <th colSpan="6" className="fs-6 py-3">Sample Cart Detail</th>
                         </tr>
                         <tr>
                           <th>Serial No.</th>
@@ -190,7 +186,7 @@ const CartArea = () => {
                                   .join(", ")}
                               </div>
                             </td>
-                           <td>{`${item.quantity} x ${item.Volume}${item.VolumeUnit}`}</td>
+                            <td>{`${item.quantity} x ${item.Volume}${item.VolumeUnit}`}</td>
                             <td>{item.price && item.price > 0 ? item.price : "Please Quote"}</td>
                             <td>
                               <button
@@ -225,23 +221,29 @@ const CartArea = () => {
                       ) : (
                         <div className="alert alert-warning p-2">Pricing not available.</div>
                       )}
-                      <button
-                        className="tp-btn cursor-pointer w-100"
-                        onClick={handleProceedToCheckout}
-                        disabled={loading}
-                        style={{
-                          backgroundColor: loading ? "#ccc" : "#003366",
-                          color: "white",
-                          border: "none",
-                          cursor: loading ? "not-allowed" : "pointer",
+
+                      <div
+                        onClick={() => {
+                          if (quoteAlreadySent && !loading && !allItemsHavePrice) {
+                            alert("Your quote request has already been sent. Please wait for Biobank's response.");
+                          }
                         }}
                       >
-                        {loading
-                          ? "Please wait..."
-                          : allItemsHavePrice
-                          ? "Proceed to Checkout"
-                          : "Request Quote"}
-                      </button>
+                        <button
+                          className="tp-btn cursor-pointer w-100"
+                          onClick={handleProceedToCheckout}
+                          disabled={loading || quoteAlreadySent}
+                        >
+                          {loading
+                            ? "Please wait..."
+                            : allItemsHavePrice
+                              ? "Proceed to Checkout"
+                              : quoteAlreadySent
+                                ? "Quote Requested"
+                                : "Request Quote"}
+                        </button>
+                      </div>
+
                     </div>
                   </div>
                 </div>

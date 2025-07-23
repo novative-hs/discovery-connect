@@ -19,7 +19,7 @@ import InputMask from "react-input-mask";
 const BioBankSampleArea = () => {
 
   const id = sessionStorage.getItem("userID");
-  
+
   const [mode, setMode] = useState("Individual");
   const [showActionModal, setShowActionModal] = useState(false);
   const [statusmode, setstatusMode] = useState("");
@@ -103,7 +103,7 @@ const BioBankSampleArea = () => {
     { label: "Patient Location", key: "PatientLocation" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-    { label: "MRNumber", key: "MRNumber" },
+    { label: "MR Number", key: "MRNumber" },
     // { label: "Location", key: "locationids" },
     { label: "Analyte", key: "Analyte" },
     { label: "Test Result", key: "TestResult" },
@@ -388,7 +388,7 @@ const BioBankSampleArea = () => {
         .filter(Boolean);
 
       const uniqueAnalytes = [...new Set(selectedAnalytes)];
-    
+
 
       setAnalyteOptions(uniqueAnalytes);
 
@@ -458,7 +458,7 @@ const BioBankSampleArea = () => {
 
   useEffect(() => {
     if (selectedSampleName) {
-     
+
       getSamplePrice(selectedSampleName);
     }
   }, [selectedSampleName]);
@@ -467,7 +467,7 @@ const BioBankSampleArea = () => {
     let isMounted = true;
     e.preventDefault();
 
-let effectiveMode = mode;
+    let effectiveMode = mode;
     if (
       mode !== "Individual" &&
       formData.TestResult?.trim() &&
@@ -494,7 +494,7 @@ let effectiveMode = mode;
       formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
     }
 
-    
+
 
     try {
       const response = await axios.post(
@@ -673,7 +673,7 @@ let effectiveMode = mode;
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-sample-history/${id}`
       );
       const data = await response.json();
-      
+
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -687,7 +687,7 @@ let effectiveMode = mode;
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getpoolsamplehistory/${id}`
       );
       const data = await response.json();
-      
+
       setPoolHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -808,63 +808,63 @@ let effectiveMode = mode;
     setShowPriceModal(true);
   };
 
- const handleUpdate = async (e) => {
-  e.preventDefault();
+  const handleUpdate = async (e) => {
+    e.preventDefault();
 
-  const formDataToSend = new FormData();
+    const formDataToSend = new FormData();
 
-  // ✅ If mode is AddtoPool and result fields are filled, change to Pooled
-  let updatedMode = mode;
-  if (
-    mode !== "Individual" &&
-    formData.TestResult?.trim() &&
-    formData.TestResultUnit?.trim()
-  ) {
-    updatedMode = "Pooled";
-    setMode("Pooled");
-  }
-
-  // Append all fields except logo
-  for (const key in formData) {
-    if (key !== "logo") {
-      formDataToSend.append(key, formData[key]);
+    // ✅ If mode is AddtoPool and result fields are filled, change to Pooled
+    let updatedMode = mode;
+    if (
+      mode !== "Individual" &&
+      formData.TestResult?.trim() &&
+      formData.TestResultUnit?.trim()
+    ) {
+      updatedMode = "Pooled";
+      setMode("Pooled");
     }
-  }
 
-  formDataToSend.append("mode", updatedMode);
+    // Append all fields except logo
+    for (const key in formData) {
+      if (key !== "logo") {
+        formDataToSend.append(key, formData[key]);
+      }
+    }
 
-  // Only append logo if it's a File
-  if (formData.logo instanceof File) {
-    formDataToSend.append("logo", formData.logo);
-  }
+    formDataToSend.append("mode", updatedMode);
 
-  try {
-    // 👇 Conditional API endpoint
-    const apiUrl = formData.TestResultUnit?.trim()
-      ?  `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/updatetestresultandunit/${selectedSampleId}`
-      : `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`;
+    // Only append logo if it's a File
+    if (formData.logo instanceof File) {
+      formDataToSend.append("logo", formData.logo);
+    }
 
-    await axios.put(apiUrl, formDataToSend, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    try {
+      // 👇 Conditional API endpoint
+      const apiUrl = formData.TestResultUnit?.trim()
+        ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/updatetestresultandunit/${selectedSampleId}`
+        : `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`;
 
-    // ✅ Refresh updated data
-    fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
+      await axios.put(apiUrl, formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-    setShowEditModal(false);
-    setShowEditPoolModal(false);
-    setSuccessMessage("Sample updated successfully.");
-    resetFormData();
+      // ✅ Refresh updated data
+      fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
 
-    setTimeout(() => {
-      setSuccessMessage("");
-    }, 3000);
-  } catch (error) {
-    console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
-  }
-};
+      setShowEditModal(false);
+      setShowEditPoolModal(false);
+      setSuccessMessage("Sample updated successfully.");
+      resetFormData();
+
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+    } catch (error) {
+      console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
+    }
+  };
 
 
   const handleVisibilityButtonClick = () => {
@@ -970,7 +970,7 @@ let effectiveMode = mode;
     setFormData({
       patientname: "",
       patientlocation: "",
-          finalConcentration: "",
+      finalConcentration: "",
       locationids: "",
       volume: "",
       Analyte: "",
@@ -1010,18 +1010,18 @@ let effectiveMode = mode;
     setLogoPreview(null);
   };
 
- const logoHandler = (file) => {
-  if (!file) return; // ✅ Don't proceed if no file selected
+  const logoHandler = (file) => {
+    if (!file) return; // ✅ Don't proceed if no file selected
 
-  const imageUrl = URL.createObjectURL(file);
+    const imageUrl = URL.createObjectURL(file);
 
-  setLogoPreview(imageUrl);
-  setLogo(imageUrl);
-  setFormData((prev) => ({
-    ...prev,
-    logo: file,
-  }));
-};
+    setLogoPreview(imageUrl);
+    setLogo(imageUrl);
+    setFormData((prev) => ({
+      ...prev,
+      logo: file,
+    }));
+  };
 
 
   const areMandatoryFieldsFilled = () => {
@@ -1126,7 +1126,7 @@ let effectiveMode = mode;
   return (
     <section className="profile__area pt-30 pb-120">
       <div className="container-fluid px-md-4">
-        
+
         {/* Success Message */}
         {successMessage && (
           <div className="alert alert-success text-center" role="alert">
@@ -1322,15 +1322,35 @@ let effectiveMode = mode;
           <table className="table table-bordered table-hover text-center align-middle w-auto border">
             <thead className="table-primary text-dark">
               <tr className="text-center">
-                {(poolMode || visibilitystatuschange) && (
-                  <th className="text-center">
-                    <div className="d-flex flex-column align-items-center">
-                      <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
-                        {visibilitystatuschange ? 'Public/Non-Public' : 'Pool'}
-                      </span>
-                    </div>
-                  </th>
-                )}
+             {(poolMode || visibilitystatuschange) && (
+  <th className="text-center" style={{ minWidth: "120px" }}>
+    <div className="d-flex align-items-center justify-content-center gap-2">
+      <span className="fw-bold fs-6">Select All</span>
+    <input
+  type="checkbox"
+  checked={
+    samples.length > 0 &&
+    samples.every((sample) => selectedSamples.includes(sample.id))
+  }
+  onChange={(e) => {
+    const currentPageIds = samples.map((sample) => sample.id);
+    if (e.target.checked) {
+      // Add current page sample IDs to selectedSamples, without duplication
+      setSelectedSamples((prevSelected) => [
+        ...new Set([...prevSelected, ...currentPageIds]),
+      ]);
+    } else {
+      // Remove current page sample IDs from selectedSamples
+      setSelectedSamples((prevSelected) =>
+        prevSelected.filter((id) => !currentPageIds.includes(id))
+      );
+    }
+  }}
+/>
+
+    </div>
+  </th>
+)}
 
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
@@ -1360,21 +1380,21 @@ let effectiveMode = mode;
               {currentData.length > 0 ? (
                 currentData.map((sample) => (
                   <tr key={sample.id}>
-                   {(poolMode || visibilitystatuschange) && (
-  <td className="text-center">
-      <input
-        type="checkbox"
-        checked={selectedSamples.includes(sample.id)}
-        onChange={() => {
-          setSelectedSamples((prev) =>
-            prev.includes(sample.id)
-              ? prev.filter((id) => id !== sample.id)
-              : [...prev, sample.id]
-          );
-        }}
-      />
-  </td>
-)}
+                    {(poolMode || visibilitystatuschange) && (
+                      <td className="text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedSamples.includes(sample.id)}
+                          onChange={() => {
+                            setSelectedSamples((prev) =>
+                              prev.includes(sample.id)
+                                ? prev.filter((id) => id !== sample.id)
+                                : [...prev, sample.id]
+                            );
+                          }}
+                        />
+                      </td>
+                    )}
 
 
 
@@ -2841,7 +2861,7 @@ Box ID=${sample.box_id || "----"} `;
                                     )}
                                   </InputMask>
                                 </div>
-                                  <div className="form-group col-md-6">
+                                <div className="form-group col-md-6">
                                   <label className="mb-2">
                                     Final Concentration <span className="text-danger">*</span>
                                   </label>

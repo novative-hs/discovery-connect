@@ -38,7 +38,7 @@ const BioBankSampleArea = () => {
     { label: "Patient Location", key: "PatientLocation" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-    { label: "MRNumber", key: "MRNumber" },
+    { label: "MR Number", key: "MRNumber" },
     { label: "Location", key: "locationids" },
     { label: "Analyte", key: "Analyte" },
     { label: "Test Result", key: "TestResult" },

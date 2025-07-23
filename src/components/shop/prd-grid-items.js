@@ -38,26 +38,26 @@ const ProductGridItems = ({ itemsPerPage, items, setShowingGridItems }) => {
         <div className="row">
           {currentItems &&
             currentItems.map((product) => (
-            <div
-  key={product._id}
-  className="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-4"
->
+              <div
+                key={product._id}
+                className="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-4"
+              >
 
                 <SingleProduct product={product} />
               </div>
             ))}
         </div>
-      {/* pagination start */}
-      <div className="row">
-        <div className="col-xxl-12">
-          
+        {/* pagination start */}
+        <div className="row">
+          <div className="col-xxl-12">
+
             <Pagination
               handlePageClick={handlePageClick}
               pageCount={pageCount}
             />
           </div>
-      </div>
-      {/* pagination end */}
+        </div>
+        {/* pagination end */}
       </div>
 
     </>

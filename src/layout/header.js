@@ -118,15 +118,15 @@ const Header = ({ style_2 = false }) => {
                             </li>
                           ) : (
                             <li>
-                             <Link
-  href="/login"
-  className="flex items-center gap-2 no-underline text-black hover:text-blue-600"
->
-  <span className="inline-flex">
-    <User className="w-4 h-4" />
-  </span>
-  {/* <span className="text-sm font-medium">Login</span> */}
-</Link>
+                              <Link
+                                href="/login"
+                                className="flex items-center gap-2 no-underline text-black hover:text-blue-600"
+                              >
+                                <span className="inline-flex">
+                                  <User className="w-4 h-4" />
+                                </span>
+                                {/* <span className="text-sm font-medium">Login</span> */}
+                              </Link>
 
 
                             </li>
@@ -157,7 +157,7 @@ const Header = ({ style_2 = false }) => {
                           ></span>
                           <span
                             style={{
-                              background: isHovered ? "#08048c" : "#ffffff",
+                              background: isHovered ? "#f50606ff" : "#ffffff",
                             }}
                           ></span>
                           <span

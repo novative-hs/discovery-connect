@@ -3,7 +3,12 @@ const tablesAndColumns = [
   {
     table: "sample",
     columnsToAdd: [
+      {
+        column:"reserved",
+        type:"BOOLEAN",
+        default:"FALSE"
 
+      },
       {
         column: "samplemode",
         type: "VARCHAR(30)",
@@ -20,17 +25,17 @@ const tablesAndColumns = [
       {
         column: "samplepdf",
         type: "LONGBLOB",
-        nullable: true  
+        nullable: true
       },
       {
         column: "finalConcentration",
         type: "VARCHAR(20)",
-        nullable: true  
+        nullable: true
       },
     ]
   },
   {
-     table: "analyte",
+    table: "analyte",
     columnsToAdd: [
 
       {
@@ -46,8 +51,8 @@ const tablesAndColumns = [
       },
     ]
   },
-   {
-     table: "cart",
+  {
+    table: "cart",
     columnsToAdd: [
 
       {

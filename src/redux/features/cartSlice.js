@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getsessionStorage, setsessionStorage } from "@utils/sessionStorage";
+import { getsessionStorage, setsessionStorage, getLocalStorage, setLocalStorage } from "@utils/sessionStorage";
 import { notifyError, notifySuccess } from "@utils/toast";
 
 const CART_STORAGE_KEY = "cart_products";
@@ -28,28 +28,52 @@ export const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-   add_cart_product: (state, { payload }) => {
-  const isExist = state.cart_products.some((item) => item.id === payload.id);
+    add_cart_product: (state, { payload }) => {
+      const now = new Date();
+      const cartItems = state.cart_products;
 
-  if (!isExist) {
-    const newItem = {
-      ...payload,
-      isLocked: true,
-      orderQuantity: 1,
-      volumes: payload.volumes || 1,
-      addedAt: new Date().toISOString(),
-      imageUrl: payload.imageUrl,
-    };
-    state.cart_products = [...state.cart_products, newItem];
-    notifySuccess(`Sample added to cart`);
-  } else {
-    // ❌ Do nothing, just show warning or ignore silently
-    notifyError("This sample is already in your cart.");
-  }
+      const isExpired = (item) => {
+        const addedTime = new Date(item.addedAt);
+        const diffHours = (now - addedTime) / (1000 * 60 * 60);
+        return diffHours > 48;
+      };
 
-  setsessionStorage(CART_STORAGE_KEY, state.cart_products);
-},
+      // Remove expired items and unreserve them
+      const updatedCart = cartItems.filter(item => {
+        if (isExpired(item)) {
+          // 👇 Call API to set reserved = 0
+          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/${item.id}/reserve/0`, {
+            method: "PUT"
+          }).catch((err) => {
+            console.error("Failed to unreserve sample:", err);
+          });
+          return false; // remove from cart
+        }
+        return true; // keep in cart
+      });
 
+      // Check if the new sample is already in the updated cart
+      const isExist = updatedCart.some((item) => item.id === payload.id);
+
+      if (!isExist) {
+        const newItem = {
+          ...payload,
+          isLocked: true,
+          orderQuantity: 1,
+          volumes: payload.volumes || 1,
+          addedAt: now.toISOString(),
+          imageUrl: payload.imageUrl,
+        };
+        state.cart_products = [...updatedCart, newItem];
+        notifySuccess(`Sample added to cart`);
+      } else {
+        state.cart_products = [...updatedCart]; // keep updated cart
+        notifyError("This sample is already in your cart.");
+      }
+
+      setsessionStorage("cart_products", state.cart_products);
+      setLocalStorage("cart_products", state.cart_products)
+    },
     increment: (state, { payload }) => {
       const cartItem = state.cart_products.find(item => item.id === payload.id);
       if (cartItem) {
@@ -61,6 +85,7 @@ export const cartSlice = createSlice({
       }
       state.cart_products = [...state.cart_products];
       setsessionStorage(CART_STORAGE_KEY, state.cart_products);
+      setLocalStorage(CART_STORAGE_KEY, state.cart_products);
     },
 
     decrement: (state, { payload }) => {
@@ -70,6 +95,7 @@ export const cartSlice = createSlice({
       }
       state.cart_products = [...state.cart_products];
       setsessionStorage(CART_STORAGE_KEY, state.cart_products);
+      setLocalStorage(CART_STORAGE_KEY, state.cart_products);
     },
 
     quantityDecrement: (state, { payload }) => {
@@ -80,21 +106,35 @@ export const cartSlice = createSlice({
         return { ...item };
       });
       setsessionStorage(CART_STORAGE_KEY, state.cart_products);
+      setLocalStorage(CART_STORAGE_KEY, state.cart_products);
     },
 
     remove_product: (state, { payload }) => {
-      state.cart_products = state.cart_products.filter(
-        (item) => item.id !== payload.id
-      );
+      const removedItem = state.cart_products.find(item => item.id === payload.id);
+
+      if (removedItem) {
+        // Call API to set reserved = 0
+        fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/${removedItem.id}/reserve/0`, {
+          method: "PUT"
+        }).catch((err) => {
+          console.error("Failed to unreserve sample:", err);
+        });
+      }
+
+      // Remove from cart
+      state.cart_products = state.cart_products.filter(item => item.id !== payload.id);
+
+      // Update session storage
       setsessionStorage(CART_STORAGE_KEY, state.cart_products);
+      setLocalStorage(CART_STORAGE_KEY, state.cart_products);
     },
 
     get_cart_products: (state) => {
-      const storedCart = getsessionStorage(CART_STORAGE_KEY) || [];
+      const storedCart = getLocalStorage(CART_STORAGE_KEY) || [];
 
       if (isCartExpired(storedCart)) {
         state.cart_products = [];
-        setsessionStorage(CART_STORAGE_KEY, []);
+        setLocalStorage(CART_STORAGE_KEY, []);
 
         notifyError("Your cart has been emptied because the items were not checked out within 2 days.");
 
@@ -110,6 +150,7 @@ export const cartSlice = createSlice({
     clear_cart: (state) => {
       state.cart_products = [];
       setsessionStorage(CART_STORAGE_KEY, []);
+      setLocalStorage(CART_STORAGE_KEY, [])
     },
 
     updateQuantity: (state, action) => {
@@ -117,11 +158,13 @@ export const cartSlice = createSlice({
       if (item) {
         item.orderQuantity = action.payload.quantity || 1;
         setsessionStorage(CART_STORAGE_KEY, state.cart_products);
+        setLocalStorage(CART_STORAGE_KEY, state.cart_products);
       }
     },
     set_cart_products: (state, { payload }) => {
       state.cart_products = payload;
       setsessionStorage(CART_STORAGE_KEY, state.cart_products);
+      setLocalStorage(CART_STORAGE_KEY, state.cart_products);
     },
   },
 

@@ -151,7 +151,7 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
               <div className="shop__tab-content mb-40">
                 <div className="tab-content" id="shop_tab_content">
                   <ProductGridItems
-                    itemsPerPage={9}
+                    itemsPerPage={12}
                     items={filteredProducts}
                     setShowingGridItems={setShowingGridItems}
                   />

@@ -22,6 +22,7 @@ router.get('/sample/getAll', SampleController.getAllSamples);
 router.get('/sample/getResearcherSamples/:id', SampleController.getResearcherSamples);
 router.get('/sample/getAllSamples', SampleController.getAllCSSamples);
 router.get('/sample/:id', SampleController.getSampleById);
+router.put("/sample/:id/reserve/:status", SampleController.updateReservedSample);
 router.post(
     '/samples/postsample',
     upload.fields([
@@ -47,5 +48,5 @@ router.put('/sample/updatetestresultandunit/:id',
         { name: 'samplepdf', maxCount: 1 },
     ]), SampleController.updatetestResultandUnit)
 
-    router.get('/sample/getSingleSample/:sampleId',SampleController.getsingleSamples)
+router.get('/sample/getSingleSample/:sampleId', SampleController.getsingleSamples)
 module.exports = router;

@@ -114,7 +114,7 @@ const SampleArea = () => {
     { label: "Patient Location", key: "PatientLocation" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-    { label: "MRNumber", key: "MRNumber" },
+    { label: "MR Number", key: "MRNumber" },
     // { label: "Location", key: "locationids" },
     { label: "Analyte", key: "Analyte" },
     { label: "Test Result & Unit", key: "TestResult" },
@@ -268,81 +268,82 @@ const SampleArea = () => {
     fetchCollectionSiteNames();
   }, [currentPage, searchField, searchValue]);
 
-  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-    try {
-      const { searchField, searchValue } = filters;
+const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+  try {
+    const { searchField, searchValue } = filters;
 
-      if (!id) {
-        console.error("ID is missing.");
-        return;
-      }
-
-      // Build URLs with pagination
-      let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
-      let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
-
-      if (searchField && searchValue) {
-        ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-        receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-      }
-
-      const [ownResponse, receivedResponse] = await Promise.all([
-        axios.get(ownResponseurl),
-        axios.get(receivedResponseurl),
-      ]);
-
-      const ownSamples = ownResponse.data.samples.map((s) => ({
-        ...s,
-        quantity: Number(s.quantity ?? s.Quantity ?? 0),
-        logo: s.logo?.data
-          ? `data:image/jpeg;base64,${Buffer.from(s.logo.data).toString("base64")}`
-          : "",
-        isReturn: false,
-      }));
-
-      const receivedSamples = receivedResponse.data.samples.map((s) => ({
-        ...s,
-        quantity: Number(s.quantity ?? s.Quantity ?? 0),
-        isReturn: true,
-      }));
-
-      // Merge & deduplicate
-      const sampleMap = new Map();
-      [...ownSamples, ...receivedSamples].forEach((sample) => {
-        const sampleId = sample.id;
-        if (sampleMap.has(sampleId)) {
-          const existing = sampleMap.get(sampleId);
-          existing.quantity += sample.quantity;
-          if (!sample.isReturn) existing.isReturn = false;
-          sampleMap.set(sampleId, existing);
-        } else {
-          sampleMap.set(sampleId, { ...sample });
-        }
-      });
-
-      const merged = Array.from(sampleMap.values());
-
-      // Use backend total count
-      const totalCount = ownResponse.data.totalCount + receivedResponse.data.totalCount;
-      const totalPages = Math.ceil(totalCount / pageSize);
-      const ownPageSize = ownResponse.data.pageSize || pageSize;
-      const receivedPageSize = receivedResponse.data.pageSize || pageSize;
-
-      // Choose the larger (or preferred) one — here we take the max
-      const serverPageSize = Math.max(ownPageSize, receivedPageSize);
-
-      setPageSize(serverPageSize);
-      // Show only current page data (already paginated by backend)
-      setSamples(merged);               // merged current page
-      setFilteredSamplename(merged);   // show current page
-      setTotalPages(totalPages);
-      setfiltertotal(totalCount);
-      setTotalCount(totalCount);
-      setPageSize(serverPageSize);
-    } catch (error) {
-      console.error("Fetch error:", error);
+    if (!id) {
+      console.error("ID is missing.");
+      return;
     }
-  };
+
+    let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
+    let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
+
+    if (searchField && searchValue) {
+      ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+      receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+    }
+
+    const [ownResponse, receivedResponse] = await Promise.all([
+      axios.get(ownResponseurl),
+      axios.get(receivedResponseurl),
+    ]);
+// Collect received sample IDs first
+
+
+    const receivedSamples = receivedResponse.data.samples.map((s) => ({
+      ...s,
+      quantity: Number(s.quantity ?? s.Quantity ?? 0),
+      sourceType: "received", // instead of isReturn: true
+    }));
+const receivedSampleIds = new Set(receivedSamples.map((s) => s.id));
+
+const ownSamples = ownResponse.data.samples.map((s) => ({
+  ...s,
+  quantity: Number(s.quantity ?? s.Quantity ?? 0),
+  logo: s.logo?.data
+    ? `data:image/jpeg;base64,${Buffer.from(s.logo.data).toString("base64")}`
+    : "",
+  sourceType: receivedSampleIds.has(s.id) ? "received" : "own", // Correct logic
+}));
+    const sampleMap = new Map();
+
+    [...ownSamples, ...receivedSamples].forEach((sample) => {
+      const sampleId = sample.id;
+      if (sampleMap.has(sampleId)) {
+        const existing = sampleMap.get(sampleId);
+        existing.quantity += sample.quantity;
+        if (sample.sourceType === "own") {
+          existing.sourceType = "own"; // overwrite only if it's own
+        }
+        sampleMap.set(sampleId, existing);
+      } else {
+        sampleMap.set(sampleId, { ...sample });
+      }
+    });
+
+    const merged = Array.from(sampleMap.values());
+
+
+    const totalCount = ownResponse.data.totalCount + receivedResponse.data.totalCount;
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    const ownPageSize = ownResponse.data.pageSize || pageSize;
+    const receivedPageSize = receivedResponse.data.pageSize || pageSize;
+    const serverPageSize = Math.max(ownPageSize, receivedPageSize);
+
+    setPageSize(serverPageSize);
+    setSamples(merged);
+    setFilteredSamplename(merged);
+    setTotalPages(totalPages);
+    setfiltertotal(totalCount);
+    setTotalCount(totalCount);
+  } catch (error) {
+    console.error("Fetch error:", error);
+  }
+};
+
 
   const fetchCollectionSiteNames = async () => {
     try {
@@ -1410,7 +1411,7 @@ const SampleArea = () => {
                                     </button>
                                   </li>
                                 )}
-                              {(actions.includes("edit") || actions.includes("all")) && (
+                              {(actions.includes("edit") || actions.includes("all")) && sample.sourceType === "own"  && (
                                 <li>
                                   <button
                                     className="dropdown-item text-success fw-semibold"
@@ -1432,7 +1433,7 @@ const SampleArea = () => {
                                   </button>
                                 </li>
                               )}
-                              {(actions.includes("history") || actions.includes("all")) && (
+                              {(actions.includes("history") || actions.includes("all")) && sample.sourceType === "own" && (
                                 <li>
                                   <button
                                     className="dropdown-item text-warning fw-semibold"
@@ -1443,7 +1444,7 @@ const SampleArea = () => {
                                   </button>
                                 </li>
                               )}
-                              {(actions.includes("history") || actions.includes("all")) &&
+                              {(actions.includes("history") || actions.includes("all")) && sample.sourceType === "own"  && 
                                 sample.samplemode !== "Individual" && (
                                   <li>
                                     <button

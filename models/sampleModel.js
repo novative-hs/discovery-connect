@@ -52,6 +52,7 @@ const createSampleTable = () => {
         TestSystemManufacturer VARCHAR(50),
         sample_visibility ENUM('Public', 'Non-Public') DEFAULT 'Non-Public',
          status ENUM('In Stock', 'In Transit', 'Quarantine','Pooled') NOT NULL DEFAULT 'In Stock',
+         reserved BOOLEAN DEFAULT FALSE,
         samplemode VARCHAR(30) DEFAULT 'Individual',
         logo LONGBLOB,
         samplepdf LONGBLOB NULL,
@@ -398,30 +399,64 @@ const getAllVolumnUnits = (name, callback) => {
   });
 };
 
-const getAllSampleinIndex = (name, callback) => {
-  const query = 'SELECT * FROM sample WHERE Analyte = ? AND quantity > 0 AND sample_visibility="Public" AND status="In Stock"';
+const getAllSampleinIndex = (analyte, limit, offset, field, value, callback) => {
+  let baseWhere = `Analyte = ? AND quantity > 0 AND sample_visibility = "Public" AND status = "In Stock"`;
+  let queryParams = [analyte];
 
-  mysqlConnection.query(query, [name], (err, results) => {
+  // If a filter field and value are provided, add it to the WHERE clause
+  if (field && value) {
+    baseWhere += ` AND ?? LIKE ?`;
+    queryParams.push(field, `%${value}%`);
+  }
+
+  const dataQuery = `SELECT * FROM sample WHERE ${baseWhere} LIMIT ? OFFSET ?`;
+  const countQuery = `SELECT COUNT(*) AS total FROM sample WHERE ${baseWhere}`;
+
+  queryParams.push(limit, offset);
+
+  mysqlConnection.query(dataQuery, queryParams, (err, dataResults) => {
     if (err) {
-      console.error("MySQL Query Error:", err);
-      callback(err, null);
-      return;
+      console.error("Database query error (data):", err);
+      return callback(err, null);
     }
 
-    if (results.length === 0) {
-      return callback(null, { error: "No samples found" });
-    }
+    // Remove limit & offset from count query params
+    const countParams = field && value ? [analyte, field, `%${value}%`] : [analyte];
 
-    // Decrypt masterID for each result
-    const modifiedResults = results.map(sample => ({
-      ...sample,
-      masterID: sample.masterID ? decryptAndShort(sample.masterID) : null
-    }));
+    mysqlConnection.query(countQuery, countParams, (err, countResults) => {
+      if (err) {
+        console.error("Database query error (count):", err);
+        return callback(err, null);
+      }
 
-    // Return modified results
-    callback(null, modifiedResults);
+      const total = countResults[0].total;
+
+      const modifiedResults = dataResults.map((sample) => {
+        let safeMasterID = null;
+        try {
+          safeMasterID = sample.masterID
+            ? decryptAndShort(sample.masterID)
+            : null;
+        } catch (err) {
+          console.error("Error decrypting masterID:", sample.masterID, err.message);
+          safeMasterID = null;
+        }
+
+        return {
+          ...sample,
+          masterID: safeMasterID,
+        };
+      });
+
+      callback(null, {
+        data: modifiedResults,
+        total,
+      });
+    });
   });
 };
+
+
 
 const getAllCSSamples = (limit, offset, callback) => {
   const dataQuery = `
@@ -461,7 +496,10 @@ const getAllCSSamples = (limit, offset, callback) => {
         AND sample_visibility = 'Public'
       GROUP BY Analyte
     ) AS q ON s.Analyte = q.Analyte
-    WHERE s.quantity > 0 OR s.quantity_allocated > 0
+    WHERE  
+  s.status = 'In Stock'
+  AND s.sample_visibility = 'Public'
+  AND (s.quantity > 0 OR s.quantity_allocated > 0)
     ORDER BY s.Analyte
     LIMIT ? OFFSET ?;
   `;
@@ -511,6 +549,11 @@ const getAllCSSamples = (limit, offset, callback) => {
     });
   });
 };
+const updateReservedSample = (sampleId,status, callback) => {
+  const query = "UPDATE sample SET reserved = ? WHERE id = ?";
+  mysqlConnection.query(query, [status,sampleId], callback);
+};
+
 const getsingleSamples = (sampleId, callback) => {
   const query = 'SELECT * FROM sample WHERE id = ?';
 
@@ -531,7 +574,7 @@ const getsingleSamples = (sampleId, callback) => {
       try {
         sample.masterID = decryptAndShort(sample.masterID);
       } catch (decryptionErr) {
-        console.error("Master ID Decryption Error:", decryptionErr);
+        // console.error("Master ID Decryption Error:", decryptionErr);
         // You can optionally still return encrypted master_id or null
         sample.masterID = null;
       }
@@ -560,7 +603,7 @@ const getSampleById = (id, callback) => {
         }
         return callback(null, [sample]); // keeping original structure: results in array
       } catch (decryptionErr) {
-        console.error("Decryption error:", decryptionErr);
+        // console.error("Decryption error:", decryptionErr);
         return callback(decryptionErr, null);
       }
     }
@@ -1042,5 +1085,6 @@ module.exports = {
   getPoolSampleDetails,
   updatetestResultandUnit,
   createPriceRequest,
-  getsingleSamples
+  getsingleSamples,
+  updateReservedSample
 };

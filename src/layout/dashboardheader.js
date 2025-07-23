@@ -23,7 +23,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   const [userlogo, setUserLogo] = useState(null);
   const [userType, setUserType] = useState(null);
   const [cartCount, setCartCount] = useState();
-  const [pricerequestCount,setPriceRequestCount]=useState(0)
+  const [pricerequestCount, setPriceRequestCount] = useState(0)
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [pendingQuotes, setPendingQuotes] = useState([]);
   useEffect(() => {
@@ -58,69 +58,69 @@ const Header = ({ setActiveTab, activeTab }) => {
   const dropdownRef = useRef(null);
 
 
-useEffect(() => {
-  if (id !== null) {
-    fetchCart();
-    fetchUserDetail();
-  }
-}, [id]);
+  useEffect(() => {
+    if (id !== null) {
+      fetchCart();
+      fetchUserDetail();
+    }
+  }, [id]);
 
-useEffect(() => {
-  if (userType !== "biobank") return;
+  useEffect(() => {
+    if (userType !== "biobank") return;
 
-  const fetchPriceRequest = async () => {
+    const fetchPriceRequest = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getPriceCount`
+        );
+        const pendingQuotes = response.data;
+        setPendingQuotes(pendingQuotes);
+        setPriceRequestCount(pendingQuotes.length);
+      } catch (error) {
+        console.error("Error fetching quote requests:", error);
+      }
+    };
+
+    // Initial fetch
+    fetchPriceRequest();
+
+    // Set up polling every 5 seconds
+    const interval = setInterval(() => {
+      fetchPriceRequest();
+    }, 5000);
+
+    // Clean up the interval
+    return () => clearInterval(interval);
+  }, [userType]); // <— Only runs when userType is set
+
+  const fetchCart = async () => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getPriceCount`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getCount/${id}`
       );
-      const pendingQuotes = response.data;
-      setPendingQuotes(pendingQuotes);
-      setPriceRequestCount(pendingQuotes.length);
+
+      if (response.data.length > 0 && typeof response.data[0].Count === "number") {
+        setCartCount(response.data[0].Count);
+        sessionStorage.setItem("cartCount", response.data[0].Count);
+      } else {
+        console.warn("Unexpected API response format");
+        sessionStorage.setItem("cartCount", 0);
+      }
     } catch (error) {
-      console.error("Error fetching quote requests:", error);
+      console.error("Error fetching cart:", error);
     }
   };
 
-  // Initial fetch
-  fetchPriceRequest();
-
-  // Set up polling every 5 seconds
-  const interval = setInterval(() => {
-    fetchPriceRequest();
-  }, 5000);
-
-  // Clean up the interval
-  return () => clearInterval(interval);
-}, [userType]); // <— Only runs when userType is set
-
-const fetchCart = async () => {
-  try {
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getCount/${id}`
-    );
-
-    if (response.data.length > 0 && typeof response.data[0].Count === "number") {
-      setCartCount(response.data[0].Count);
-      sessionStorage.setItem("cartCount", response.data[0].Count);
-    } else {
-      console.warn("Unexpected API response format");
-      sessionStorage.setItem("cartCount", 0);
+  const fetchUserDetail = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
+      );
+      setUser(response.data[0]);
+    } catch (error) {
+      console.error("Error fetching user detail:", error);
     }
-  } catch (error) {
-    console.error("Error fetching cart:", error);
-  }
-};
-
-const fetchUserDetail = async () => {
-  try {
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
-    );
-    setUser(response.data[0]);
-  } catch (error) {
-    console.error("Error fetching user detail:", error);
-  }
-};
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -388,60 +388,60 @@ const fetchUserDetail = async () => {
                   Welcome Committee Member!
                 </span>
               )}
-          {userType === "biobank" && (
-        <div
-          className="d-flex align-items-center px-3 py-2 shadow-sm rounded"
-          style={{
-            backgroundColor: "#f0f8ff",
-            fontFamily: "Montserrat",
-            maxWidth: "fit-content",
-          }}
-        >
-          <span
-            className="text-primary fw-bold fs-6 me-3"
-            style={{ whiteSpace: "nowrap" }}
-          >
-            Welcome BioBank!
-          </span>
+              {userType === "biobank" && (
+                <div
+                  className="d-flex align-items-center px-3 py-2 shadow-sm rounded"
+                  style={{
+                    backgroundColor: "#f0f8ff",
+                    fontFamily: "Montserrat",
+                    maxWidth: "fit-content",
+                  }}
+                >
+                  <span
+                    className="text-primary fw-bold fs-6 me-3"
+                    style={{ whiteSpace: "nowrap" }}
+                  >
+                    Welcome BioBank!
+                  </span>
 
-          <div
-            style={{ position: "relative", width: "24px", height: "24px", cursor: "pointer" }}
-            title="Notifications"
-            onClick={() => setIsCartOpen(true)} // ✅ Open sidebar
-          >
-            <i className="fas fa-bell fa-shake text-dark fs-5" style={{ fontSize: "20px" }}></i>
+                  <div
+                    style={{ position: "relative", width: "24px", height: "24px", cursor: "pointer" }}
+                    title="Notifications"
+                    onClick={() => setIsCartOpen(true)} // ✅ Open sidebar
+                  >
+                    <i className="fas fa-bell fa-shake text-dark fs-5" style={{ fontSize: "20px" }}></i>
 
-            {pricerequestCount > 0 && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "-6px",
-                  right: "-6px",
-                  backgroundColor: "red",
-                  color: "white",
-                  borderRadius: "50%",
-                  fontSize: "10px",
-                  minWidth: "16px",
-                  height: "16px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: "bold",
-                }}
-              >
-                {pricerequestCount}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
+                    {pricerequestCount > 0 && (
+                      <span
+                        style={{
+                          position: "absolute",
+                          top: "-6px",
+                          right: "-6px",
+                          backgroundColor: "red",
+                          color: "white",
+                          borderRadius: "50%",
+                          fontSize: "10px",
+                          minWidth: "16px",
+                          height: "16px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {pricerequestCount}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
 
-      {/* ✅ Sidebar for pending quotes */}
-      <CartSidebar
-        isCartOpen={isCartOpen}
-        setIsCartOpen={setIsCartOpen}
-        pendingQuotes={pendingQuotes}
-      />
+              {/* ✅ Sidebar for pending quotes */}
+              <CartSidebar
+                isCartOpen={isCartOpen}
+                setIsCartOpen={setIsCartOpen}
+                pendingQuotes={pendingQuotes}
+              />
               <div className="d-flex  align-items-center gap-0">
                 <div className="dropdown me-3" ref={dropdownRef}>
                   <button
