@@ -9,7 +9,7 @@ import { notifyError } from "@utils/toast";
 import axios from "axios";
 import { useRouter } from "next/router";
 
-const FilterProductArea = ({ selectedProduct }) => {
+const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart?.cart_products || []);
 
@@ -80,15 +80,44 @@ const FilterProductArea = ({ selectedProduct }) => {
     }
   }, [selectedAnalyte, currentPage]);
 
-  const getSample = async (name, page = 1, pageSize = 10, filters = {}) => {
-    const { searchField, searchValue } = filters;
+  const getSample = async (name, page = 1, pageSize = 10, additionalFilters = {}) => {
     setLoading(true);
+    console.log("🚀 additionalFilters", additionalFilters);
+
     try {
       const encodedName = encodeURIComponent(name);
-      const query = `page=${page}&limit=${pageSize}${searchField && searchValue
-        ? `&field=${searchField}&value=${encodeURIComponent(searchValue)}`
-        : ""
-        }`;
+      let queryParams = [`page=${page}`, `limit=${pageSize}`];
+
+      const filters = { ...selectedFilters, ...additionalFilters };
+
+      if (filters.gender) {
+        queryParams.push(`gender=${filters.gender}`);
+        console.log("✅ Gender Filter:", filters.gender);
+      }
+
+      if (filters.sampleType) queryParams.push(`sampleType=${filters.sampleType}`);
+      if (filters.smokingStatus) queryParams.push(`smokingStatus=${filters.smokingStatus}`);
+
+      if (filters.age) {
+        console.log("🔍 Age Filter:", filters.age);
+        if (typeof filters.age === "string" && filters.age.includes("-")) {
+          const [min, max] = filters.age.split("-").map(Number);
+          if (!isNaN(min)) queryParams.push(`ageMin=${min}`);
+          if (!isNaN(max)) queryParams.push(`ageMax=${max}`);
+        } else if (typeof filters.age === "object") {
+          if (filters.age.min !== undefined) queryParams.push(`ageMin=${filters.age.min}`);
+          if (filters.age.max !== undefined) queryParams.push(`ageMax=${filters.age.max}`);
+        }
+      }
+
+      if (filters.searchQuery) queryParams.push(`search=${encodeURIComponent(filters.searchQuery)}`);
+      if (filters.sampleNames?.length > 0) {
+        queryParams.push(`analytes=${encodeURIComponent(filters.sampleNames.join(','))}`);
+      }
+
+      const query = queryParams.join("&");
+      console.log("🌐 Final Query URL:", query);
+
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getAllSampleinindex/${encodedName}?${query}`
       );
@@ -102,11 +131,12 @@ const FilterProductArea = ({ selectedProduct }) => {
       setTotalPages(totalPages);
       setTotalCount(totalCount);
     } catch (error) {
-      console.error("Error fetching samples:", error);
+      console.error("❌ Error fetching samples:", error);
     } finally {
       setLoading(false);
     }
   };
+
 
 
 
@@ -152,7 +182,7 @@ const FilterProductArea = ({ selectedProduct }) => {
         gender: sample.gender || "",
         Analyte: sample.Analyte,
         Volume: sample.volume,
-        SamplePriceCurrency:sample.SamplePriceCurrency || "",
+        SamplePriceCurrency: sample.SamplePriceCurrency || "",
         ContainerType: sample.ContainerType,
         SampleTypeMatrix: sample.SampleTypeMatrix,
         VolumeUnit: sample.VolumeUnit,
@@ -210,10 +240,17 @@ const FilterProductArea = ({ selectedProduct }) => {
                         let content;
                         switch (key) {
                           case "price":
-                            content = sample.price
-                              ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
-                              : "Request the Quote";
+                            if (sample.reserved) {
+                              content = "----"; // or you can use "----" or empty string
+                            } else {
+                              content = sample.price
+                                ? `Rs: ${Number(sample.price).toLocaleString("en-PK", {
+                                  minimumFractionDigits: 2,
+                                })} ${sample.SamplePriceCurrency || ""}`
+                                : "Request the Quote";
+                            }
                             break;
+
                           case "Analyte":
                             content = (
                               <span

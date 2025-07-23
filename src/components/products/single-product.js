@@ -4,7 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import Modal from "react-bootstrap/Modal";
 import FilterProductArea from "@components/user-dashboard/filter-samples";
 
-const SingleProduct = ({ product }) => {
+const SingleProduct = ({ product, selectedFilters }) => {
+
   const { imageUrl, Analyte, total_allocated, total_quantity } = product || {};
   const dispatch = useDispatch();
   const [showModal, setShowModal] = useState(false);
@@ -25,14 +26,14 @@ const SingleProduct = ({ product }) => {
       >
         {/* Product Image */}
         <div className="product__thumb mb-3 rounded overflow-hidden">
-        <Image
-  src={imageUrl}
-  alt="product image"
-  width={250}
-  height={150}
-  className="w-100 object-fit-cover rounded"
-  unoptimized // ← Allow base64 and any custom URLs
-/>
+          <Image
+            src={imageUrl}
+            alt="product image"
+            width={250}
+            height={150}
+            className="w-100 object-fit-cover rounded"
+            unoptimized // ← Allow base64 and any custom URLs
+          />
 
         </div>
 
@@ -64,8 +65,11 @@ const SingleProduct = ({ product }) => {
           {selectedProduct && (
             <FilterProductArea
               selectedProduct={selectedProduct}
+              selectedFilters={selectedFilters}
               closeModals={() => setShowModal(false)}
             />
+
+
           )}
         </Modal.Body>
       </Modal>

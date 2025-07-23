@@ -10,7 +10,7 @@ import { setProduct } from "src/redux/features/productSlice";
 import Modal from "react-bootstrap/Modal";
 import FilterProductArea from "@components/user-dashboard/filter-samples";
 
-const SingleListProduct = ({ product }) => {
+const SingleListProduct = ({ product,selectedFilters }) => {
   const dispatch = useDispatch();
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
@@ -106,9 +106,10 @@ const SingleListProduct = ({ product }) => {
         </Modal.Header>
         <Modal.Body>
           {selectedProduct && (
-            <FilterProductArea
+           <FilterProductArea
               selectedProduct={selectedProduct}
-              closeModals={handleModalClose}
+              selectedFilters={selectedFilters}
+              closeModals={() => setShowModal(false)}
             />
           )}
         </Modal.Body>

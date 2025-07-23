@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 // internal
 import SingleProduct from "@components/products/single-product";
 
-const ProductGridItems = ({ itemsPerPage, items, setShowingGridItems }) => {
+const ProductGridItems = ({ itemsPerPage, items, setShowingGridItems, selectedFilters }) => {
   const [visibleCount, setVisibleCount] = useState(itemsPerPage);
 
   const handleLoadMore = () => {
@@ -33,7 +33,7 @@ const ProductGridItems = ({ itemsPerPage, items, setShowingGridItems }) => {
                 key={product._id}
                 className="col-xl-3 col-lg-3 col-md-4 col-sm-6 mb-4"
               >
-                <SingleProduct product={product} />
+                  <SingleProduct product={product} selectedFilters={selectedFilters} />
               </div>
             ))}
         </div>

@@ -399,14 +399,40 @@ const getAllVolumnUnits = (name, callback) => {
   });
 };
 
-const getAllSampleinIndex = (analyte, limit, offset, field, value, callback) => {
+const getAllSampleinIndex = (analyte, limit, offset, filters, callback) => {
   let baseWhere = `Analyte = ? AND quantity > 0 AND sample_visibility = "Public" AND status = "In Stock"`;
   let queryParams = [analyte];
 
-  // If a filter field and value are provided, add it to the WHERE clause
-  if (field && value) {
-    baseWhere += ` AND ?? LIKE ?`;
-    queryParams.push(field, `%${value}%`);
+  const { ageMin, ageMax, gender, sampleType, smokingStatus, search } = filters;
+
+  if (ageMin !== null) {
+    baseWhere += ` AND age >= ?`;
+    queryParams.push(ageMin);
+  }
+
+  if (ageMax !== null) {
+    baseWhere += ` AND age <= ?`;
+    queryParams.push(ageMax);
+  }
+
+  if (gender) {
+    baseWhere += ` AND gender = ?`;
+    queryParams.push(gender);
+  }
+
+  if (sampleType) {
+    baseWhere += ` AND sampleType = ?`;
+    queryParams.push(sampleType);
+  }
+
+  if (smokingStatus) {
+    baseWhere += ` AND smokingStatus = ?`;
+    queryParams.push(smokingStatus);
+  }
+
+  if (search) {
+    baseWhere += ` AND (PatientName LIKE ? OR masterID LIKE ?)`;
+    queryParams.push(`%${search}%`, `%${search}%`);
   }
 
   const dataQuery = `SELECT * FROM sample WHERE ${baseWhere} LIMIT ? OFFSET ?`;
@@ -420,8 +446,7 @@ const getAllSampleinIndex = (analyte, limit, offset, field, value, callback) => 
       return callback(err, null);
     }
 
-    // Remove limit & offset from count query params
-    const countParams = field && value ? [analyte, field, `%${value}%`] : [analyte];
+    const countParams = queryParams.slice(0, queryParams.length - 2); // exclude limit, offset
 
     mysqlConnection.query(countQuery, countParams, (err, countResults) => {
       if (err) {
@@ -455,6 +480,7 @@ const getAllSampleinIndex = (analyte, limit, offset, field, value, callback) => 
     });
   });
 };
+
 
 
 

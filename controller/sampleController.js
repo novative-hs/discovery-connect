@@ -15,21 +15,33 @@ const getAllSampleinIndex = (req, res) => {
   const limit = parseInt(req.query.limit) || 10;
   const offset = (page - 1) * limit;
 
-  const searchField = req.query.field;
-  const searchValue = req.query.value;
+  // Get filters
+  const ageMin = req.query.ageMin ? parseInt(req.query.ageMin) : null;
+  const ageMax = req.query.ageMax ? parseInt(req.query.ageMax) : null;
+  const gender = req.query.gender || null;
+  const sampleType = req.query.sampleType || null;
+  const smokingStatus = req.query.smokingStatus || null;
+  const search = req.query.search || null;
 
-  console.log("Data:", name, page, limit, searchField, searchValue);
+  console.log("📥 Filters:", { ageMin, ageMax, gender, sampleType, smokingStatus, search });
 
-  SampleModel.getAllSampleinIndex(name, limit, offset, searchField, searchValue, (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: "Error fetching samples detail" });
+  // Now pass these to your model function
+  SampleModel.getAllSampleinIndex(
+    name,
+    limit,
+    offset,
+    { ageMin, ageMax, gender, sampleType, smokingStatus, search },
+    (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: "Error fetching samples detail" });
+      }
+
+      res.status(200).json({
+        data: results.data,
+        total: results.total,
+      });
     }
-
-    res.status(200).json({
-      data: results.data,
-      total: results.total,
-    });
-  });
+  );
 };
 
 

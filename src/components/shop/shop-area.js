@@ -40,7 +40,7 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
   const filteredProducts = products.filter((product) => {
 
     let matchesSampleType =
-  !selectedSampleType || product.SampleTypeMatrix.includes(selectedSampleType);
+      !selectedSampleType || product.SampleTypeMatrix.includes(selectedSampleType);
 
     let matchesGender = !selectedGender || product.gender === selectedGender;
     let matchesSmoking =
@@ -154,14 +154,31 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
                     itemsPerPage={12}
                     items={filteredProducts}
                     setShowingGridItems={setShowingGridItems}
+                    selectedFilters={{
+                      sampleType: selectedSampleType,
+                      gender: selectedGender,
+                      smokingStatus: selectedSmokingStatus,
+                      age: selectedAge,
+                      sampleNames: selectedSampleName,
+                      searchQuery,
+                    }}
                   />
+
                   <ProductListItems
                     itemsPerPage={5}
                     items={filteredProducts}
+                     selectedFilters={{
+                      sampleType: selectedSampleType,
+                      gender: selectedGender,
+                      smokingStatus: selectedSmokingStatus,
+                      age: selectedAge,
+                      sampleNames: selectedSampleName,
+                      searchQuery,
+                    }}
                     setShowingListItems={setShowingListItems}
                   />
                 </div>
-                
+
               </div>
             </div>
           </div>

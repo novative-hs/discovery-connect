@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 // internal
 import SingleListProduct from "@components/products/single-list-product";
 
-const ProductListItems = ({ itemsPerPage, items, setShowingListItems }) => {
+const ProductListItems = ({ itemsPerPage, items, setShowingListItems,selectedFilters }) => {
   const [visibleCount, setVisibleCount] = useState(itemsPerPage);
   const [visibleItems, setVisibleItems] = useState([]);
 
@@ -31,7 +31,7 @@ const ProductListItems = ({ itemsPerPage, items, setShowingListItems }) => {
         <div className="row">
           {visibleItems.map((product) => (
             <div key={product._id} className="col-lg-12 col-md-6">
-              <SingleListProduct product={product} />
+              <SingleListProduct product={product} selectedFilters={selectedFilters}/>
             </div>
           ))}
         </div>
