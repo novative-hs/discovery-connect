@@ -29,13 +29,13 @@ export default function Cart({ query }) {
       <SEO pageTitle={"Cart"} />
       {userId ? (
         <>
-          <CartBreadcrumb title="My Cart" subtitle="Cart" />
+          <CartBreadcrumb title="Cart" subtitle="Cart" />
           <CartArea product={product} />
         </>
       ) : (
         <>
           <Header style_2={true} />
-          <CartBreadcrumb title="My Cart" subtitle="Cart" />
+          <CartBreadcrumb title="Cart" subtitle="Cart" />
           <CartArea product={product} />
           <Footer />
         </>

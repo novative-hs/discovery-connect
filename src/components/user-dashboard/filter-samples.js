@@ -152,6 +152,7 @@ const FilterProductArea = ({ selectedProduct }) => {
         gender: sample.gender || "",
         Analyte: sample.Analyte,
         Volume: sample.volume,
+        SamplePriceCurrency:sample.SamplePriceCurrency || "",
         ContainerType: sample.ContainerType,
         SampleTypeMatrix: sample.SampleTypeMatrix,
         VolumeUnit: sample.VolumeUnit,

@@ -153,6 +153,7 @@ const CartArea = () => {
   return (
     <section className="cart-area py-5" style={{ backgroundColor: "#f4f8fb", minHeight: "100vh" }}>
       <div className="container">
+        <p className="text-danger fs-6">"Note: This sample will be accessible within 48 hours. After that, it will be automatically removed from your cart."</p>
         <div className="row">
           <div className="col-12">
             {cart_products.length > 0 ? (
@@ -187,7 +188,12 @@ const CartArea = () => {
                               </div>
                             </td>
                             <td>{`${item.quantity} x ${item.Volume}${item.VolumeUnit}`}</td>
-                            <td>{item.price && item.price > 0 ? item.price : "Please Quote"}</td>
+                            <td className="text-end">
+                              {item.price && item.price > 0
+                                ? `${item.SamplePriceCurrency}: ${Number(item.price).toLocaleString("en-PK", { minimumFractionDigits: 2 })}`
+                                : "Please Quote"}
+                            </td>
+
                             <td>
                               <button
                                 className="btn btn-sm btn-outline-danger rounded-circle"
@@ -211,11 +217,21 @@ const CartArea = () => {
                         <ul className="list-group list-group-flush mb-3">
                           <li className="list-group-item d-flex justify-content-between">
                             <strong>Subtotal</strong>
-                            <span>{subtotal.toFixed(2)}</span>
+                            <span>
+                              Rs:{" "}
+                              {Number(subtotal).toLocaleString("en-PK", {
+                                minimumFractionDigits: 2,
+                              })}
+                            </span>
                           </li>
                           <li className="list-group-item d-flex justify-content-between">
                             <strong>Total</strong>
-                            <span>{subtotal.toFixed(2)}</span>
+                            <span>
+                              Rs:{" "}
+                              {Number(subtotal).toLocaleString("en-PK", {
+                                minimumFractionDigits: 2,
+                              })}
+                            </span>
                           </li>
                         </ul>
                       ) : (
@@ -225,7 +241,9 @@ const CartArea = () => {
                       <div
                         onClick={() => {
                           if (quoteAlreadySent && !loading && !allItemsHavePrice) {
-                            alert("Your quote request has already been sent. Please wait for Biobank's response.");
+                            alert(
+                              "Your quote request has already been sent. Please wait for Biobank's response."
+                            );
                           }
                         }}
                       >
@@ -243,9 +261,9 @@ const CartArea = () => {
                                 : "Request Quote"}
                         </button>
                       </div>
-
                     </div>
                   </div>
+
                 </div>
               </div>
             ) : (

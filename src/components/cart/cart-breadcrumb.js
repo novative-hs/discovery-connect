@@ -23,7 +23,7 @@ const CartBreadcrumb = ({ title, subtitle }) => {
           <div className="col-xxl-8 col-xl-8 col-lg-10">
             <div className="breadcrumb__content text-center p-relative z-index-1">
               <h3 className="breadcrumb__title">{title}</h3>
-              <div className="breadcrumb__list">
+              {/* <div className="breadcrumb__list">
                 <span>
                   <a href="#">Home</a>
                 </span>
@@ -31,10 +31,10 @@ const CartBreadcrumb = ({ title, subtitle }) => {
                   <i className="fa-solid fa-circle-small"></i>
                 </span>
                 <span>{subtitle}</span>
-              </div>
+              </div> */}
 
               {/* Updated button with improved design */}
-              <div className="mt-4 d-flex justify-content-center">
+              {/* <div className="mt-4 d-flex justify-content-center">
   <button
     onClick={handleBackToShop}
     className="btn btn-outline-primary fw-semibold fs-5 px-4 py-2 rounded-pill d-flex align-items-center shadow-sm transition"
@@ -56,7 +56,7 @@ const CartBreadcrumb = ({ title, subtitle }) => {
     <i className="fas fa-arrow-left me-2" style={{ fontSize: "18px" }}></i>
     <span>Back  Home</span>
   </button>
-</div>
+</div> */}
 
             </div>
           </div>
