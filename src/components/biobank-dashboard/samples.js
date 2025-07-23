@@ -1552,7 +1552,7 @@ Box ID=${sample.box_id || "----"} `;
                         >
                           <i className="fa fa-history"></i>
                         </button>
-                        {(sample.samplemode === 'Pooled') && (
+                        {(sample.samplemode !== 'Individual') && (
                           <button
                             className="btn btn-outline-success btn-sm"
                             onClick={() => handlePoolSampleHistory(sample.id, sample.Analyte)}
