@@ -139,33 +139,45 @@ const getBiobankSamples = (
   const countParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id];
 
 
-  mysqlConnection.query(dataQuery, finalParams, (err, results) => {
-    if (err) {
-      console.error("❌ Data Query Error:", err.sqlMessage || err.message);
-      return callback(err);
-    }
-
-    const enrichedResults = results.map(sample => {
-  let shortMasterID = null;
-  try {
-    shortMasterID = decryptAndShort(sample.masterID);
-  } catch (e) {
-    console.error("⚠️ Failed to decrypt masterID for sample:", sample.id);
+ mysqlConnection.query(dataQuery, finalParams, (err, results) => {
+  if (err) {
+    console.error("❌ Data Query Error:", err.sqlMessage || err.message);
+    return callback(err);
   }
 
-  return {
-    ...sample,
-    locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-'),
-    masterID: shortMasterID,
-  };
+  const enrichedResults = results.map(sample => {
+    let shortMasterID = null;
+    try {
+      shortMasterID = decryptAndShort(sample.masterID);
+    } catch (e) {
+      console.error("⚠️ Failed to decrypt masterID for sample:", sample.id);
+    }
+
+    return {
+      ...sample,
+      locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-'),
+      masterID: shortMasterID,
+    };
+  });
+
+  // MasterID filter after decryption
+  const finalFilteredResults =
+    searchField === "masterID" && searchValue
+      ? enrichedResults.filter(sample =>
+          sample.masterID?.toLowerCase().includes(searchValue.toLowerCase())
+        )
+      : enrichedResults;
+
+  // Apply manual pagination on filtered results
+  const paginated = finalFilteredResults.slice(offset, offset + pageSizeInt);
+
+  mysqlConnection.query(countQuery, countParams, (err, countResults) => {
+    if (err) return callback(err);
+    const totalCount = finalFilteredResults.length;
+    callback(null, { samples: paginated, totalCount });
+  });
 });
 
-    mysqlConnection.query(countQuery, countParams, (err, countResults) => {
-      if (err) return callback(err);
-      const totalCount = countResults[0].totalCount;
-      callback(null, { samples: enrichedResults, totalCount });
-    });
-  });
 };
 
 const getBiobankSamplesPooled = (

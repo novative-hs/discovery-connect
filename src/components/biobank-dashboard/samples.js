@@ -1322,35 +1322,35 @@ const BioBankSampleArea = () => {
           <table className="table table-bordered table-hover text-center align-middle w-auto border">
             <thead className="table-primary text-dark">
               <tr className="text-center">
-             {(poolMode || visibilitystatuschange) && (
-  <th className="text-center" style={{ minWidth: "120px" }}>
-    <div className="d-flex align-items-center justify-content-center gap-2">
-      <span className="fw-bold fs-6">Select All</span>
-    <input
-  type="checkbox"
-  checked={
-    samples.length > 0 &&
-    samples.every((sample) => selectedSamples.includes(sample.id))
-  }
-  onChange={(e) => {
-    const currentPageIds = samples.map((sample) => sample.id);
-    if (e.target.checked) {
-      // Add current page sample IDs to selectedSamples, without duplication
-      setSelectedSamples((prevSelected) => [
-        ...new Set([...prevSelected, ...currentPageIds]),
-      ]);
-    } else {
-      // Remove current page sample IDs from selectedSamples
-      setSelectedSamples((prevSelected) =>
-        prevSelected.filter((id) => !currentPageIds.includes(id))
-      );
-    }
-  }}
-/>
+                {(poolMode || visibilitystatuschange) && (
+                  <th className="text-center" style={{ minWidth: "120px" }}>
+                    <div className="d-flex align-items-center justify-content-center gap-2">
+                      <span className="fw-bold fs-6">Select All</span>
+                      <input
+                        type="checkbox"
+                        checked={
+                          samples.length > 0 &&
+                          samples.every((sample) => selectedSamples.includes(sample.id))
+                        }
+                        onChange={(e) => {
+                          const currentPageIds = samples.map((sample) => sample.id);
+                          if (e.target.checked) {
+                            // Add current page sample IDs to selectedSamples, without duplication
+                            setSelectedSamples((prevSelected) => [
+                              ...new Set([...prevSelected, ...currentPageIds]),
+                            ]);
+                          } else {
+                            // Remove current page sample IDs from selectedSamples
+                            setSelectedSamples((prevSelected) =>
+                              prevSelected.filter((id) => !currentPageIds.includes(id))
+                            );
+                          }
+                        }}
+                      />
 
-    </div>
-  </th>
-)}
+                    </div>
+                  </th>
+                )}
 
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
