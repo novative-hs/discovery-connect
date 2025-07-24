@@ -1028,18 +1028,19 @@ const BioBankSampleArea = () => {
     if (mode === "Individual") {
       return (
         formData.patientname?.toString().trim() &&
+
         formData.patientlocation?.toString().trim() &&
-        formData.MRNumber?.toString().trim() &&
+        // formData.MRNumber?.toString().trim() &&
         formData.Analyte?.toString().trim() &&
-        formData.locationids?.toString().trim() &&
+        // formData.locationids?.toString().trim() &&
         formData.volume !== "" &&
-        formData.phoneNumber?.toString().trim() &&
+        // formData.phoneNumber?.toString().trim() &&
         formData.TestResult?.toString().trim() &&
         formData.gender?.toString().trim() &&
         formData.SampleTypeMatrix?.toString().trim() &&
-        formData.age !== "" &&
-        formData.ContainerType?.toString().trim() &&
-        formData.logo instanceof File
+        // formData.age !== "" &&
+        formData.ContainerType?.toString().trim() 
+        // formData.logo instanceof File
       );
     } else if (mode === "Pooled") {
       return (
