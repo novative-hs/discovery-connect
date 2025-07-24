@@ -199,15 +199,15 @@ const CartArea = () => {
                               <div>
                                 <div className="fw-semibold">{item.Analyte}</div>
                                 <div className="text-muted small">
-                                  {item.gender}, {item.age} years | {item.TestResult}
-                                  {item.TestResultUnit} | {item.Volume}
-                                  {item.VolumeUnit}
+                                  {item.gender}
+                                  {item.age ? `, ${item.age} years` : ""} | {item.TestResult} {item.TestResultUnit}
                                 </div>
+
                               </div>
                             </td>
 
                             {/* Quantity */}
-                            <td>{item.quantity}x</td>
+                            <td>{item.quantity} x {item.Volume}{item.VolumeUnit}</td>
 
                             {/* Price */}
                             <td>
