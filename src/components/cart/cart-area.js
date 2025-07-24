@@ -152,23 +152,37 @@ const CartArea = () => {
 
   return (
     <section className="cart-area py-5" style={{ backgroundColor: "#f4f8fb", minHeight: "100vh" }}>
-      <div className="container">
-        <p className="text-danger fs-6">"Note: This sample will be accessible within 48 hours. After that, it will be automatically removed from your cart."</p>
-        <div className="row">
-          <div className="col-12">
-            {cart_products.length > 0 ? (
-              <div className="row">
-                <div className="col-md-8">
+      <div className="container py-5">
+        {/* Note at the top */}
+        <div className="alert alert-info text-center fw-medium mb-4">
+          Note: This sample will be accessible within 48 hours. After that, it will be automatically removed from your cart.
+        </div>
+
+        {cart_products.length === 0 ? (
+          // 🚫 Empty cart UI
+          <div className="text-center py-5">
+            <h4 className="fw-semibold mb-3">Your cart is currently empty.</h4>
+            {/* <p className="text-muted">Start exploring our samples and add items to your cart.</p>
+            <a href="/shop" className="btn btn-primary mt-3">
+              Browse Samples
+            </a> */}
+          </div>
+        ) : (
+          // ✅ Your existing cart layout (no changes needed below)
+
+          <div className="row">
+            {/* Left: Cart Items */}
+            <div className="col-lg-8 mb-4 mb-lg-0">
+              <div className="card shadow-sm border-0">
+                <div className="card-body">
+                  <h4 className="fw-semibold mb-4">Sample Details</h4>
                   <div className="table-responsive">
-                    <table className="table table-bordered bg-white rounded shadow-sm">
-                      <thead className="table-light text-center">
-                        <tr>
-                          <th colSpan="6" className="fs-6 py-3">Sample Cart Detail</th>
-                        </tr>
+                    <table className="table align-middle">
+                      <thead className="table-light">
                         <tr>
                           <th>Serial No.</th>
                           <th>Specimen ID</th>
-                          <th>Analyte</th>
+                          <th>Product</th>
                           <th>Quantity</th>
                           <th>Unit Price</th>
                           <th>Remove</th>
@@ -176,28 +190,45 @@ const CartArea = () => {
                       </thead>
                       <tbody>
                         {cart_products.map((item, i) => (
-                          <tr key={i} className="text-center align-middle">
+                          <tr key={i}>
                             <td>{i + 1}</td>
-                            <td>{item.masterid}</td>
-                            <td>
-                              <div>{item.Analyte}</div>
+                            {/* Product Details */}
+                            <td><div className="fw-semibold">{item.masterid}</div></td>
+                            <td className="d-flex align-items-center gap-3">
+
                               <div>
-                                {[item.gender, `${item.age} year`, `${item.TestResult}${item.TestResultUnit}`]
-                                  .filter(Boolean)
-                                  .join(", ")}
+                                <div className="fw-semibold">{item.Analyte}</div>
+                                <div className="text-muted small">
+                                  {item.gender}, {item.age} years | {item.TestResult}
+                                  {item.TestResultUnit} | {item.Volume}
+                                  {item.VolumeUnit}
+                                </div>
                               </div>
                             </td>
-                            <td>{`${item.quantity} x ${item.Volume}${item.VolumeUnit}`}</td>
-                            <td className="text-end">
-                              {item.price && item.price > 0
-                                ? `${item.SamplePriceCurrency}: ${Number(item.price).toLocaleString("en-PK", { minimumFractionDigits: 2 })}`
-                                : "Please Quote"}
+
+                            {/* Quantity */}
+                            <td>{item.quantity}x</td>
+
+                            {/* Price */}
+                            <td>
+                              {item.price && item.price > 0 ? (
+                                <span>
+                                  {item.SamplePriceCurrency || "Rs"}:{" "}
+                                  {Number(item.price).toLocaleString("en-PK", {
+                                    minimumFractionDigits: 2,
+                                  })}
+                                </span>
+                              ) : (
+                                <span className="text-danger">Please Quote</span>
+                              )}
                             </td>
 
+                            {/* Remove Button */}
                             <td>
                               <button
-                                className="btn btn-sm btn-outline-danger rounded-circle"
+                                className="btn btn-sm btn-outline-danger"
                                 onClick={() => handleRemoveProduct(item)}
+                                title="Remove"
                               >
                                 <i className="fas fa-trash-alt"></i>
                               </button>
@@ -207,72 +238,94 @@ const CartArea = () => {
                       </tbody>
                     </table>
                   </div>
-                </div>
-
-                <div className="col-12 col-md-4">
-                  <div className="card shadow-sm">
-                    <div className="card-body">
-                      <h5 className="card-title">Cart Totals</h5>
-                      {validItems.length > 0 ? (
-                        <ul className="list-group list-group-flush mb-3">
-                          <li className="list-group-item d-flex justify-content-between">
-                            <strong>Subtotal</strong>
-                            <span>
-                              Rs:{" "}
-                              {Number(subtotal).toLocaleString("en-PK", {
-                                minimumFractionDigits: 2,
-                              })}
-                            </span>
-                          </li>
-                          <li className="list-group-item d-flex justify-content-between">
-                            <strong>Total</strong>
-                            <span>
-                              Rs:{" "}
-                              {Number(subtotal).toLocaleString("en-PK", {
-                                minimumFractionDigits: 2,
-                              })}
-                            </span>
-                          </li>
-                        </ul>
-                      ) : (
-                        <div className="alert alert-warning p-2">Pricing not available.</div>
-                      )}
-
-                      <div
-                        onClick={() => {
-                          if (quoteAlreadySent && !loading && !allItemsHavePrice) {
-                            alert(
-                              "Your quote request has already been sent. Please wait for Biobank's response."
-                            );
-                          }
-                        }}
-                      >
-                        <button
-                          className="tp-btn cursor-pointer w-100"
-                          onClick={handleProceedToCheckout}
-                          disabled={loading || quoteAlreadySent}
-                        >
-                          {loading
-                            ? "Please wait..."
-                            : allItemsHavePrice
-                              ? "Proceed to Checkout"
-                              : quoteAlreadySent
-                                ? "Quote Requested"
-                                : "Request Quote"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
+                  {/* <a href="/shop" className="text-decoration-none text-primary fw-medium">
+                  ← Continue Shopping
+                </a> */}
                 </div>
               </div>
-            ) : (
-              <EmptyCart />
-            )}
+            </div>
+
+            {/* Right: Order Summary */}
+            <div className="col-lg-4">
+              <div className="card shadow-sm border-0">
+                <div className="card-body">
+                  <h5 className="fw-semibold mb-3">Order Summary</h5>
+                  <ul className="list-group mb-3">
+                    <li className="list-group-item d-flex justify-content-between">
+                      <span>Items</span>
+                      <span>{cart_products.length}</span>
+                    </li>
+                    <li className="list-group-item d-flex justify-content-between align-items-center fw-semibold">
+                      <span>Subtotal</span>
+                      <span>
+                        {subtotal && subtotal > 0
+                          ? `Rs ${subtotal.toLocaleString("en-PK", { minimumFractionDigits: 2 })}`
+                          : "---"}
+                      </span>
+                    </li>
+
+                    {/* <li className="list-group-item d-flex justify-content-between">
+                    <span>Shipping</span>
+                    <span>Standard - Rs. 0.00</span>
+                  </li> */}
+                  </ul>
+
+                  {/* Promo Code */}
+                  {/* <div className="mb-3">
+                  <label className="form-label fw-medium">Promo Code</label>
+                  <div className="input-group">
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Enter your code"
+                      disabled
+                    />
+                    <button className="btn btn-danger" disabled>
+                      Apply
+                    </button>
+                  </div>
+                </div> */}
+
+                  {/* Total Cost */}
+
+                  <div className="d-flex justify-content-between fw-bold fs-5 mb-3">
+                    <span>Total</span>
+                    <span>
+                      {subtotal && subtotal > 0
+                        ? `Rs ${subtotal.toLocaleString("en-PK", { minimumFractionDigits: 2 })}`
+                        : "---"}
+                    </span>
+                  </div>
+                  {/* Checkout Button */}
+                  <button
+                    className={`btn w-100 ${allItemsHavePrice ? "btn-primary" : "btn-danger"
+                      }`}
+                    onClick={handleProceedToCheckout}
+                    disabled={loading || quoteAlreadySent}
+                  >
+                    {loading
+                      ? "Please wait..."
+                      : allItemsHavePrice
+                        ? "Checkout"
+                        : quoteAlreadySent
+                          ? "Quote Requested"
+                          : "Request Quote"}
+                  </button>
+
+                  {quoteAlreadySent && !allItemsHavePrice && (
+                    <div className="mt-2 text-center text-muted small">
+                      Your quote will be processed within 24–48 hours.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
     </section>
+
   );
 };
 

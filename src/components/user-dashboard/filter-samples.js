@@ -25,9 +25,8 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [filters, setFilters] = useState({});
-
-  const [image_url, setImageURL] = useState();
   const filterTimeoutRef = useRef(null);
+  const [image_url, setImageURL] = useState();
   const [selectedAnalyte, setSelectedAnalyte] = useState(null);
   const tableHeaders = [
     { label: "Analyte", key: "Analyte" },
@@ -146,19 +145,28 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
   };
 
   const handleFilterChange = (field, value) => {
+    // ✅ Step 1: Update input field immediately
+    setFilters((prev) => ({ ...prev, [field]: value }));
+
+    // ✅ Step 2: Debounced filter call
     clearTimeout(filterTimeoutRef.current);
     filterTimeoutRef.current = setTimeout(() => {
       const searchValue = value.trim();
+
+      // ⚠️ Only send API call if not empty
       if (!searchValue) {
-        getSample(selectedAnalyte, 1, itemsPerPage); // No filter
+        getSample(selectedAnalyte, 1, itemsPerPage);
         return;
       }
+
       getSample(selectedAnalyte, 1, itemsPerPage, {
         searchField: field,
         searchValue,
       });
     }, 300);
   };
+
+
 
 
   const openModal = (sample) => {
@@ -221,9 +229,10 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
                           type="text"
                           className="form-control form-control-sm text-center shadow-none"
                           placeholder={`Search ${label}`}
-                          value={filters[key] || ""} // controlled input
+                          value={filters[key] || ""} // ✅ controlled input
                           onChange={(e) => handleFilterChange(key, e.target.value)}
                         />
+
                         <span className="fw-bold mt-1 fs-6">{label}</span>
                       </div>
                     </th>

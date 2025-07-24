@@ -10,6 +10,7 @@ import BioBankSampleDispatchArea from './sample-dispatch';
 import QuarantineStockchArea from './quarantine-stock';
 import Header from '../../layout/dashboardheader';
 import { getsessionStorage } from "@utils/sessionStorage";
+import QuoteRequest from "./quoterequest";
 
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples");
@@ -47,6 +48,8 @@ const DashboardArea = () => {
         return <BioBankSampleArea />;
       case "sample-dispatch":
         return <BioBankSampleDispatchArea />;
+        case "pendingquoterequest":
+          return <QuoteRequest/>
       case "Quarantine-Stock":
         return <QuarantineStockchArea />;
         case "pooledsample":

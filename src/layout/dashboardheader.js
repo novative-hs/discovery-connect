@@ -65,33 +65,6 @@ const Header = ({ setActiveTab, activeTab }) => {
     }
   }, [id]);
 
-  useEffect(() => {
-    if (userType !== "biobank") return;
-
-    const fetchPriceRequest = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getPriceCount`
-        );
-        const pendingQuotes = response.data;
-        setPendingQuotes(pendingQuotes);
-        setPriceRequestCount(pendingQuotes.length);
-      } catch (error) {
-        console.error("Error fetching quote requests:", error);
-      }
-    };
-
-    // Initial fetch
-    fetchPriceRequest();
-
-    // Set up polling every 5 seconds
-    const interval = setInterval(() => {
-      fetchPriceRequest();
-    }, 5000);
-
-    // Clean up the interval
-    return () => clearInterval(interval);
-  }, [userType]); // <— Only runs when userType is set
 
   const fetchCart = async () => {
     try {
@@ -245,6 +218,7 @@ const Header = ({ setActiveTab, activeTab }) => {
               { label: "Sample List", tab: "samples" },
               { label: "Sample Dispatch", tab: "sample-dispatch" },
               { label: "Pooled Sample List", tab: "pooledsample" },
+              {label:"Quote Pending Request",tab:"pendingquoterequest"},
               { label: "Quarantine Stock", tab: "Quarantine-Stock" },
             ]
             : userType == "committeemember"
@@ -404,44 +378,11 @@ const Header = ({ setActiveTab, activeTab }) => {
                     Welcome BioBank!
                   </span>
 
-                  <div
-                    style={{ position: "relative", width: "24px", height: "24px", cursor: "pointer" }}
-                    title="Notifications"
-                    onClick={() => setIsCartOpen(true)} // ✅ Open sidebar
-                  >
-                    <i className="fas fa-bell fa-shake text-dark fs-5" style={{ fontSize: "20px" }}></i>
-
-                    {pricerequestCount > 0 && (
-                      <span
-                        style={{
-                          position: "absolute",
-                          top: "-6px",
-                          right: "-6px",
-                          backgroundColor: "red",
-                          color: "white",
-                          borderRadius: "50%",
-                          fontSize: "10px",
-                          minWidth: "16px",
-                          height: "16px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {pricerequestCount}
-                      </span>
-                    )}
-                  </div>
+                 
                 </div>
               )}
 
-              {/* ✅ Sidebar for pending quotes */}
-              <CartSidebar
-                isCartOpen={isCartOpen}
-                setIsCartOpen={setIsCartOpen}
-                pendingQuotes={pendingQuotes}
-              />
+        
               <div className="d-flex  align-items-center gap-0">
                 <div className="dropdown me-3" ref={dropdownRef}>
                   <button

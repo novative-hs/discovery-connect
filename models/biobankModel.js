@@ -2,7 +2,7 @@ const mysqlConnection = require("../config/db");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 const { sendEmail } = require("../config/email");
-const { decryptAndShort} = require("../config/encryptdecrptUtils");
+const { decryptAndShort } = require("../config/encryptdecrptUtils");
 
 const create_biobankTable = () => {
   const create_biobankTable = `
@@ -139,44 +139,44 @@ const getBiobankSamples = (
   const countParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id];
 
 
- mysqlConnection.query(dataQuery, finalParams, (err, results) => {
-  if (err) {
-    console.error("❌ Data Query Error:", err.sqlMessage || err.message);
-    return callback(err);
-  }
-
-  const enrichedResults = results.map(sample => {
-    let shortMasterID = null;
-    try {
-      shortMasterID = decryptAndShort(sample.masterID);
-    } catch (e) {
-      console.error("⚠️ Failed to decrypt masterID for sample:", sample.id);
+  mysqlConnection.query(dataQuery, finalParams, (err, results) => {
+    if (err) {
+      console.error("❌ Data Query Error:", err.sqlMessage || err.message);
+      return callback(err);
     }
 
-    return {
-      ...sample,
-      locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-'),
-      masterID: shortMasterID,
-    };
-  });
+    const enrichedResults = results.map(sample => {
+      let shortMasterID = null;
+      try {
+        shortMasterID = decryptAndShort(sample.masterID);
+      } catch (e) {
+        console.error("⚠️ Failed to decrypt masterID for sample:", sample.id);
+      }
 
-  // MasterID filter after decryption
-  const finalFilteredResults =
-    searchField === "masterID" && searchValue
-      ? enrichedResults.filter(sample =>
+      return {
+        ...sample,
+        locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-'),
+        masterID: shortMasterID,
+      };
+    });
+
+    // MasterID filter after decryption
+    const finalFilteredResults =
+      searchField === "masterID" && searchValue
+        ? enrichedResults.filter(sample =>
           sample.masterID?.toLowerCase().includes(searchValue.toLowerCase())
         )
-      : enrichedResults;
+        : enrichedResults;
 
-  // Apply manual pagination on filtered results
-  const paginated = finalFilteredResults.slice(offset, offset + pageSizeInt);
+    // Apply manual pagination on filtered results
+    const paginated = finalFilteredResults.slice(offset, offset + pageSizeInt);
 
-  mysqlConnection.query(countQuery, countParams, (err, countResults) => {
-    if (err) return callback(err);
-    const totalCount = finalFilteredResults.length;
-    callback(null, { samples: paginated, totalCount });
+    mysqlConnection.query(countQuery, countParams, (err, countResults) => {
+      if (err) return callback(err);
+      const totalCount = finalFilteredResults.length;
+      callback(null, { samples: paginated, totalCount });
+    });
   });
-});
 
 };
 
@@ -415,7 +415,7 @@ const postSamplePrice = (data, callback) => {
 
 
 const UpdateSampleStatus = (id, status, callback) => {
-  
+
   const query = `
     UPDATE sample
     SET sample_visibility = ?
@@ -459,29 +459,51 @@ const getQuarantineStock = (callback) => {
 
 const getPriceRequest = (callback) => {
   const query = `
-    SELECT 
+SELECT 
+      qr.id AS quote_request_id,
       qr.sample_id,
       qr.status,
-      qr.created_at,
       s.masterID,
-      s.analyte
+      s.id,
+      s.analyte,
+s.age,
+s.gender,
+s.quantity,
+s.TestResult,
+s.price,
+s.SamplePriceCurrency,
+s.TestResultUnit,
+      r.ResearcherName,
+      r.phoneNumber,
+      r.fullAddress,
+
+      c.name AS city_name,
+      d.name AS district_name,
+      co.name AS country_name,
+
+      o.organizationname AS OrganizationName
+
     FROM quote_requests qr
     LEFT JOIN sample s ON qr.sample_id = s.id
-    WHERE qr.status = 'pending'
+    LEFT JOIN researcher r ON r.user_account_id = qr.researcher_id
+    LEFT JOIN organization o ON r.nameofOrganization = o.id
+    LEFT JOIN city c ON r.city = c.id
+    LEFT JOIN district d ON r.district = d.id
+    LEFT JOIN country co ON r.country = co.id
   `;
 
   mysqlConnection.query(query, (err, results) => {
     if (err) return callback(err, null);
 
-    // Apply decryption/transformation to each result's masterID
     const transformedResults = results.map(sample => ({
       ...sample,
-      masterID: decryptAndShort(sample.masterID)
+      masterID: decryptAndShort(sample.masterID)  // Apply your transformation
     }));
 
     return callback(null, transformedResults);
   });
 };
+
 
 
 

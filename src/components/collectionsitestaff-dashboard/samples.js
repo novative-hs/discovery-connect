@@ -1030,17 +1030,17 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
         formData.patientname?.toString().trim() &&
 
         formData.patientlocation?.toString().trim() &&
-        formData.MRNumber?.toString().trim() &&
+        // formData.MRNumber?.toString().trim() &&
         formData.Analyte?.toString().trim() &&
-        formData.locationids?.toString().trim() &&
+        // formData.locationids?.toString().trim() &&
         formData.volume !== "" &&
-        formData.phoneNumber?.toString().trim() &&
+        // formData.phoneNumber?.toString().trim() &&
         formData.TestResult?.toString().trim() &&
         formData.gender?.toString().trim() &&
         formData.SampleTypeMatrix?.toString().trim() &&
-        formData.age !== "" &&
-        formData.ContainerType?.toString().trim() &&
-        formData.logo instanceof File
+        // formData.age !== "" &&
+        formData.ContainerType?.toString().trim() 
+        // formData.logo instanceof File
       );
     } else if (mode === "Pooled") {
       return (
@@ -2596,7 +2596,7 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
                             className="form-check-label"
                             htmlFor="toggleDetails"
                           >
-                            Add Additional Details
+                            Add Additional Details <span className="text-danger">(can be added if above mandatory fields are enter)</span>
                           </label>
                         </div>
                       )}
