@@ -69,7 +69,7 @@ const [activeTab, setActiveTab] = useState("order-info");
   if (isLoading) {
     content = <ShopLoader loading={isLoading} />;
   } else if (isError) {
-    console.error("Error fetching samples:", error);
+    
     content = <ErrorMessage message="There was an error loading samples." />;
   } else if (filtered_samples.length === 0) {
     content = (

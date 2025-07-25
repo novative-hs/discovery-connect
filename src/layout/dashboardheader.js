@@ -50,7 +50,7 @@ const Header = ({ setActiveTab, activeTab }) => {
     if (type) {
       setUserType(type);
     } else {
-      console.error("Account type is null or undefined");
+      
       router.push("/login");
     }
   }, [router]);
@@ -76,7 +76,7 @@ const Header = ({ setActiveTab, activeTab }) => {
         setCartCount(response.data[0].Count);
         sessionStorage.setItem("cartCount", response.data[0].Count);
       } else {
-        console.warn("Unexpected API response format");
+        
         sessionStorage.setItem("cartCount", 0);
       }
     } catch (error) {

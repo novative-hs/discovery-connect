@@ -24,7 +24,7 @@ const UserOrdersPage = () => {
     if (type) {
       setUserType(type);
     } else {
-      console.error("Account type is null or undefined");
+      
       router.push("/login");
     }
   }, [router]);

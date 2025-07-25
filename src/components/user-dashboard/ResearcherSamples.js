@@ -69,7 +69,7 @@ const SampleArea = () => {
       setSamples(response.data);
     }
   } catch (error) {
-    console.error("Error fetching samples:", error);
+    
     setError("An error occurred while fetching the samples.");
   } finally {
     setLoading(false);

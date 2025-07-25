@@ -119,7 +119,7 @@ const OrderPage = () => {
         setCurrentPage(1)
       }
     } catch (error) {
-      console.error("Error updating order status:", error);
+    
       setSuccessMessage("Failed to update order status.");
     } finally {
       setLoading(false);

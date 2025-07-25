@@ -154,7 +154,7 @@ if(id){
       notifySuccess("Researcher updated successfully");
       
     } catch (error) {
-      console.error("Error updating Researcher:", error);
+      
       notifyError("Failed to update Researcher");
     }
   };

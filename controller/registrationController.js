@@ -64,7 +64,7 @@ const verifyOTP = (req, res) => {
 };
 
 const sendEmail = (req, res) => {
-  console.log("REQ BODY:", req.body);
+  
 
   accountModel.sendEmailForOrder(req, (err, result) => {
     if (err) {

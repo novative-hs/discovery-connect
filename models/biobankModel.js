@@ -388,7 +388,7 @@ const postSamplePrice = (data, callback) => {
                   "Sample Price Updated - Ready to Order",
                   emailBody
                 );
-                console.log("✅ Email sent to researcher");
+                
               } catch (emailErr) {
                 console.error("❌ Error sending email to researcher:", emailErr);
               }

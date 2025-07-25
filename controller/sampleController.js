@@ -25,7 +25,7 @@ const getAllSampleinIndex = (req, res) => {
   const TestResult = req.query.TestResult || null;
   const exactAge = req.query.age ? parseInt(req.query.age) : null;
 
-console.log("Exact age",exactAge)
+
   // Now pass these to your model function
   SampleModel.getAllSampleinIndex(
     name,

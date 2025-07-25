@@ -282,9 +282,6 @@ const BioBankSampleArea = () => {
 
       const response = await axios.get(url);
       const { samples, totalCount, pageSize: serverPageSize, currentPage: serverPage } = response.data;
-console.log("totalCount:", totalCount);
-console.log("serverPageSize:", serverPageSize);
-console.log("samples.length:", samples.length);
 
       setSamples(samples);
       setFilteredSamples(samples);

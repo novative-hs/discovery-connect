@@ -53,7 +53,7 @@ const ForgotPassword = ({ params }) => {
         notifyError("Something went wrong!");
       }
     } catch (error) {
-      console.error("Unexpected Error:", error);
+      
       notifyError("An unexpected error occurred.");
     }
   
