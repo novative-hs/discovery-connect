@@ -37,6 +37,7 @@ const getBiobankSamples = (
 
   let baseWhereShared = `sample.status = "In Stock" AND sample.is_deleted = FALSE`;
   let baseWhereOwn = `sample.status = "In Stock" AND sample.is_deleted = FALSE`;
+
   const paramsShared = [];
   const paramsOwn = [];
 
@@ -51,8 +52,8 @@ const getBiobankSamples = (
     baseWhereOwn += ` AND (sample.price IS NULL OR sample.price = 0)`;
   }
 
-  // Search filter
-  if (searchField && searchValue) {
+  // Search filter (excluding masterID, handled later)
+  if (searchField && searchValue && searchField !== "masterID") {
     switch (searchField) {
       case "locationids":
         baseWhereShared += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
@@ -117,68 +118,57 @@ const getBiobankSamples = (
     WHERE ${baseWhereOwn} AND sample.user_account_id = ?
   `;
 
-  const dataQuery = `
+  const combinedQuery = `
     SELECT * FROM (
       ${sharedSamplesQuery}
       UNION ALL
       ${ownSamplesQuery}
     ) AS merged_samples
     ORDER BY id DESC
-    LIMIT ? OFFSET ?
   `;
 
-  const countQuery = `
-    SELECT COUNT(*) AS totalCount FROM (
-      ${sharedSamplesQuery}
-      UNION ALL
-      ${ownSamplesQuery}
-    ) AS countCombined
-  `;
+  const finalParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id];
 
-  const finalParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id, pageSizeInt, offset];
-  const countParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id];
-
-
-  mysqlConnection.query(dataQuery, finalParams, (err, results) => {
+  mysqlConnection.query(combinedQuery, finalParams, (err, results) => {
     if (err) {
-      console.error("❌ Data Query Error:", err.sqlMessage || err.message);
+      console.error("❌ Query Error:", err.sqlMessage || err.message);
       return callback(err);
     }
 
+    // Enrich and decrypt masterID
     const enrichedResults = results.map(sample => {
       let shortMasterID = null;
       try {
         shortMasterID = decryptAndShort(sample.masterID);
       } catch (e) {
-        console.error("⚠️ Failed to decrypt masterID for sample:", sample.id);
+        console.error("⚠️ Decryption error for sample ID", sample.id);
       }
 
       return {
         ...sample,
-        locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-'),
+        locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join("-"),
         masterID: shortMasterID,
       };
     });
 
-    // MasterID filter after decryption
-    const finalFilteredResults =
+    // If masterID filter is used, apply it after decryption
+    const filteredResults =
       searchField === "masterID" && searchValue
         ? enrichedResults.filter(sample =>
-          sample.masterID?.toLowerCase().includes(searchValue.toLowerCase())
-        )
+            sample.masterID?.toLowerCase().includes(searchValue.toLowerCase())
+          )
         : enrichedResults;
 
-    // Apply manual pagination on filtered results
-    const paginated = finalFilteredResults.slice(offset, offset + pageSizeInt);
+    const totalCount = filteredResults.length;
+    const paginatedSamples = filteredResults.slice(offset, offset + pageSizeInt);
 
-    mysqlConnection.query(countQuery, countParams, (err, countResults) => {
-      if (err) return callback(err);
-      const totalCount = finalFilteredResults.length;
-      callback(null, { samples: paginated, totalCount });
+    callback(null, {
+      samples: paginatedSamples,
+      totalCount,
     });
   });
-
 };
+
 
 const getBiobankSamplesPooled = (
   user_account_id,

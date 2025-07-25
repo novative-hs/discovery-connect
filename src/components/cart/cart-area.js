@@ -7,6 +7,14 @@ import { remove_product, set_cart_products } from "src/redux/features/cartSlice"
 import { notifyError, notifySuccess } from "@utils/toast";
 
 const CartArea = () => {
+  const currencySymbols = {
+    PKR: "Rs",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    INR: "₹",
+    // Add more as needed
+  };
   const router = useRouter();
   const dispatch = useDispatch();
   const { cart_products } = useSelector((state) => state.cart);
@@ -18,8 +26,15 @@ const CartArea = () => {
 
   const unpricedItems = cart_products.filter((item) => !item.price || item.price === 0);
   const validItems = cart_products.filter((item) => item.price && item.price > 0);
+  const displayCurrency =
+    validItems.length > 0
+      ? currencySymbols[validItems[0].SamplePriceCurrency] ||
+      validItems[0].SamplePriceCurrency
+      : "Rs";
+
   const allItemsHavePrice = unpricedItems.length === 0;
   const subtotal = validItems.reduce((acc, item) => acc + item.price, 0);
+
 
   const getCartHash = (items) => {
     return items.map((item) => item.id).sort().join("-");
@@ -199,9 +214,24 @@ const CartArea = () => {
                               <div>
                                 <div className="fw-semibold">{item.Analyte}</div>
                                 <div className="text-muted small">
-                                  {item.gender}
-                                  {item.age ? `, ${item.age} years` : ""} | {item.TestResult} {item.TestResultUnit}
+                                  {/* Gender and Age */}
+                                  {(item.gender || item.age) && (
+                                    <>
+                                      {item.gender}
+                                      {item.age ? `${item.gender ? ', ' : ''}${item.age} years` : ''}
+                                    </>
+                                  )}
+
+                                  {/* Separator + TestResult */}
+                                  {(item.TestResult || item.TestResultUnit) && (item.gender || item.age) && ' | '}
+                                  {(item.TestResult || item.TestResultUnit) && (
+                                    <>
+                                      {item.TestResult ?? ''} {item.TestResultUnit ?? ''}
+                                    </>
+                                  )}
                                 </div>
+
+
 
                               </div>
                             </td>
@@ -213,7 +243,7 @@ const CartArea = () => {
                             <td>
                               {item.price && item.price > 0 ? (
                                 <span>
-                                  {item.SamplePriceCurrency || "Rs"}:{" "}
+                                  {currencySymbols[item.SamplePriceCurrency] || item.SamplePriceCurrency || "Rs"}:{" "}
                                   {Number(item.price).toLocaleString("en-PK", {
                                     minimumFractionDigits: 2,
                                   })}
@@ -258,9 +288,18 @@ const CartArea = () => {
                     <li className="list-group-item d-flex justify-content-between align-items-center fw-semibold">
                       <span>Subtotal</span>
                       <span>
-                        {subtotal && subtotal > 0
-                          ? `Rs ${subtotal.toLocaleString("en-PK", { minimumFractionDigits: 2 })}`
-                          : "---"}
+                        <span>
+                          {subtotal && subtotal > 0 ? (
+                            <>
+                              {displayCurrency}:{" "}
+                              {subtotal.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
+                            </>
+                          ) : (
+                            "---"
+                          )}
+                        </span>
+
+
                       </span>
                     </li>
 
@@ -291,9 +330,14 @@ const CartArea = () => {
                   <div className="d-flex justify-content-between fw-bold fs-5 mb-3">
                     <span>Total</span>
                     <span>
-                      {subtotal && subtotal > 0
-                        ? `Rs ${subtotal.toLocaleString("en-PK", { minimumFractionDigits: 2 })}`
-                        : "---"}
+                      {subtotal && subtotal > 0 ? (
+                        <>
+                          {displayCurrency}:{" "}
+                          {subtotal.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
+                        </>
+                      ) : (
+                        "---"
+                      )}
                     </span>
                   </div>
                   {/* Checkout Button */}

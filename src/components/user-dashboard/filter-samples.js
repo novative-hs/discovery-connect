@@ -94,8 +94,8 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
         console.log("✅ Gender Filter:", filters.gender);
       }
 
-      if (filters.sampleType) queryParams.push(`sampleType=${filters.sampleType}`);
-      if (filters.smokingStatus) queryParams.push(`smokingStatus=${filters.smokingStatus}`);
+      if (filters.sampleType) queryParams.push(`SampleTypeMatrix=${filters.sampleType}`);
+      if (filters.smokingStatus) queryParams.push(`SmokingStatus=${filters.smokingStatus}`);
 
       if (filters.age) {
         console.log("🔍 Age Filter:", filters.age);
@@ -253,7 +253,7 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
                               content = "----"; // or you can use "----" or empty string
                             } else {
                               content = sample.price
-                                ? `Rs: ${Number(sample.price).toLocaleString("en-PK", {
+                                ? `${Number(sample.price).toLocaleString("en-PK", {
                                   minimumFractionDigits: 2,
                                 })} ${sample.SamplePriceCurrency || ""}`
                                 : "Request the Quote";
@@ -316,16 +316,17 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
                         return <td key={idx}>{content}</td>;
                       })}
                       <td>
-                        {sample.reserved ? (
-                          <button className="btn btn-warning btn-sm" disabled>Reserved</button>
-                        ) : isInCart(sample.id) ? (
+                        {isInCart(sample.id) ? (
                           <button className="btn btn-secondary btn-sm" disabled>Added</button>
+                        ) : sample.reserved ? (
+                          <button className="btn btn-warning btn-sm" disabled>Reserved</button>
                         ) : (
                           <button className="btn btn-primary btn-sm" onClick={() => handleAddToCart(sample)}>
                             <Cart className="fs-7 text-white" />
                           </button>
                         )}
                       </td>
+
                     </tr>
                   ))
                 ) : (

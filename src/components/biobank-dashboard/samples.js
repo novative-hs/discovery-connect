@@ -78,16 +78,16 @@ const BioBankSampleArea = () => {
   const [showBarcodeModal, setShowBarcodeModal] = useState(false);
   const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 50;
+  const [itemsPerPage] = useState(50);
   const [totalPages, setTotalPages] = useState(0);
+  const [pageSize, setPageSize] = useState(50);
+  const [totalCount, setTotalCount] = useState(0);
   const [logoPreview, setLogoPreview] = useState(null);
   const [samplePrice, setSamplePrice] = useState([]);
   const [selectedSampleVisibilityId, setSelectedSampleVisibilityId] = useState(null);
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
   const [searchField, setSearchField] = useState(null);
   const [searchValue, setSearchValue] = useState(null);
-  const [pageSize, setPageSize] = useState(50);
-  const [totalCount, setTotalCount] = useState(0);
   const [priceFilter, setPriceFilter] = useState("");
   const [poolMode, setPoolMode] = useState(false);
   const [visibilitystatuschange, setVisibilityStatusChange] = useState(false);
@@ -282,10 +282,13 @@ const BioBankSampleArea = () => {
 
       const response = await axios.get(url);
       const { samples, totalCount, pageSize: serverPageSize, currentPage: serverPage } = response.data;
+console.log("totalCount:", totalCount);
+console.log("serverPageSize:", serverPageSize);
+console.log("samples.length:", samples.length);
 
       setSamples(samples);
       setFilteredSamples(samples);
-      setTotalPages(Math.ceil(totalCount / pageSize));
+      setTotalPages(Math.ceil(totalCount / serverPageSize));
       setTotalCount(totalCount);
       setPageSize(serverPageSize);
     } catch (error) {
@@ -329,12 +332,11 @@ const BioBankSampleArea = () => {
 
     tableNames.forEach(({ name, setter }) => fetchTableData(name, setter));
   }, []);
-
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages); // Adjust down if needed
     }
-  }, [totalPages, currentPage]);
+  }, [totalPages]);
 
   const handlePageChange = (event) => {
     const selectedPage = event.selected; // React Paginate is 0-indexed, so we adjust
@@ -1039,7 +1041,7 @@ const BioBankSampleArea = () => {
         formData.gender?.toString().trim() &&
         formData.SampleTypeMatrix?.toString().trim() &&
         // formData.age !== "" &&
-        formData.ContainerType?.toString().trim() 
+        formData.ContainerType?.toString().trim()
         // formData.logo instanceof File
       );
     } else if (mode === "Pooled") {

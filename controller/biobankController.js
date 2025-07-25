@@ -9,8 +9,8 @@ const create_biobankTable = (req, res) => {
 // Controller to get samples in biobank
 const getBiobankSamples = (req, res) => {
   const id = parseInt(req.params.id);
-  const page = req.query.page || 1;
-  const pageSize = req.query.pageSize || 50;
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 50;
 
   const priceFilter = req.query.priceFilter || null;
   const searchField = req.query.searchField || null;
@@ -20,21 +20,27 @@ const getBiobankSamples = (req, res) => {
     return res.status(400).json({ error: "Invalid user_account_id" });
   }
 
-  BioBankModel.getBiobankSamples(id, page, pageSize, priceFilter, searchField, searchValue, (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: "Error fetching samples" });
-    }
+  BioBankModel.getBiobankSamples(
+    id, page, pageSize, priceFilter, searchField, searchValue,
+    (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: "Error fetching samples" });
+      }
 
-    const { samples, totalCount } = results;
-    res.status(200).json({
-      samples,
-      totalPages: Math.ceil(totalCount / pageSize),
-      currentPage: parseInt(page),
-      pageSize: parseInt(pageSize),
-      totalCount,
-    });
-  });
+      const { samples, totalCount } = results;
+      res.status(200).json({
+        samples,
+        totalPages: Math.ceil(totalCount / pageSize),
+        currentPage: page,
+        pageSize,
+        totalCount,
+      });
+    }
+  );
 };
+
+
+
 const getPriceRequest = (req, res) => {
   BioBankModel.getPriceRequest((err, results) => {
     if (err) {

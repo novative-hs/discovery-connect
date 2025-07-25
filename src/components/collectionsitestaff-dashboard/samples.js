@@ -268,81 +268,81 @@ const SampleArea = () => {
     fetchCollectionSiteNames();
   }, [currentPage, searchField, searchValue]);
 
-const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
-  try {
-    const { searchField, searchValue } = filters;
+  const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+    try {
+      const { searchField, searchValue } = filters;
 
-    if (!id) {
-      console.error("ID is missing.");
-      return;
-    }
-
-    let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
-    let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
-
-    if (searchField && searchValue) {
-      ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-      receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-    }
-
-    const [ownResponse, receivedResponse] = await Promise.all([
-      axios.get(ownResponseurl),
-      axios.get(receivedResponseurl),
-    ]);
-// Collect received sample IDs first
-
-
-    const receivedSamples = receivedResponse.data.samples.map((s) => ({
-      ...s,
-      quantity: Number(s.quantity ?? s.Quantity ?? 0),
-      sourceType: "received", // instead of isReturn: true
-    }));
-const receivedSampleIds = new Set(receivedSamples.map((s) => s.id));
-
-const ownSamples = ownResponse.data.samples.map((s) => ({
-  ...s,
-  quantity: Number(s.quantity ?? s.Quantity ?? 0),
-  logo: s.logo?.data
-    ? `data:image/jpeg;base64,${Buffer.from(s.logo.data).toString("base64")}`
-    : "",
-  sourceType: receivedSampleIds.has(s.id) ? "received" : "own", // Correct logic
-}));
-    const sampleMap = new Map();
-
-    [...ownSamples, ...receivedSamples].forEach((sample) => {
-      const sampleId = sample.id;
-      if (sampleMap.has(sampleId)) {
-        const existing = sampleMap.get(sampleId);
-        existing.quantity += sample.quantity;
-        if (sample.sourceType === "own") {
-          existing.sourceType = "own"; // overwrite only if it's own
-        }
-        sampleMap.set(sampleId, existing);
-      } else {
-        sampleMap.set(sampleId, { ...sample });
+      if (!id) {
+        console.error("ID is missing.");
+        return;
       }
-    });
 
-    const merged = Array.from(sampleMap.values());
+      let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
+      let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
+
+      if (searchField && searchValue) {
+        ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+        receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+      }
+
+      const [ownResponse, receivedResponse] = await Promise.all([
+        axios.get(ownResponseurl),
+        axios.get(receivedResponseurl),
+      ]);
+      // Collect received sample IDs first
 
 
-    const totalCount = ownResponse.data.totalCount + receivedResponse.data.totalCount;
-    const totalPages = Math.ceil(totalCount / pageSize);
+      const receivedSamples = receivedResponse.data.samples.map((s) => ({
+        ...s,
+        quantity: Number(s.quantity ?? s.Quantity ?? 0),
+        sourceType: "received", // instead of isReturn: true
+      }));
+      const receivedSampleIds = new Set(receivedSamples.map((s) => s.id));
 
-    const ownPageSize = ownResponse.data.pageSize || pageSize;
-    const receivedPageSize = receivedResponse.data.pageSize || pageSize;
-    const serverPageSize = Math.max(ownPageSize, receivedPageSize);
+      const ownSamples = ownResponse.data.samples.map((s) => ({
+        ...s,
+        quantity: Number(s.quantity ?? s.Quantity ?? 0),
+        logo: s.logo?.data
+          ? `data:image/jpeg;base64,${Buffer.from(s.logo.data).toString("base64")}`
+          : "",
+        sourceType: receivedSampleIds.has(s.id) ? "received" : "own", // Correct logic
+      }));
+      const sampleMap = new Map();
 
-    setPageSize(serverPageSize);
-    setSamples(merged);
-    setFilteredSamplename(merged);
-    setTotalPages(totalPages);
-    setfiltertotal(totalCount);
-    setTotalCount(totalCount);
-  } catch (error) {
-    console.error("Fetch error:", error);
-  }
-};
+      [...ownSamples, ...receivedSamples].forEach((sample) => {
+        const sampleId = sample.id;
+        if (sampleMap.has(sampleId)) {
+          const existing = sampleMap.get(sampleId);
+          existing.quantity += sample.quantity;
+          if (sample.sourceType === "own") {
+            existing.sourceType = "own"; // overwrite only if it's own
+          }
+          sampleMap.set(sampleId, existing);
+        } else {
+          sampleMap.set(sampleId, { ...sample });
+        }
+      });
+
+      const merged = Array.from(sampleMap.values());
+
+
+      const totalCount = ownResponse.data.totalCount + receivedResponse.data.totalCount;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      const ownPageSize = ownResponse.data.pageSize || pageSize;
+      const receivedPageSize = receivedResponse.data.pageSize || pageSize;
+      const serverPageSize = Math.max(ownPageSize, receivedPageSize);
+
+      setPageSize(serverPageSize);
+      setSamples(merged);
+      setFilteredSamplename(merged);
+      setTotalPages(totalPages);
+      setfiltertotal(totalCount);
+      setTotalCount(totalCount);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
+  };
 
 
   const fetchCollectionSiteNames = async () => {
@@ -618,7 +618,7 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
           mode: "Pooled",
           TestResult: formData.TestResult,
           TestResultUnit: formData.TestResultUnit,
-          samplepdf:formData.samplepdf,
+          samplepdf: formData.samplepdf,
         },
         {
           headers: {
@@ -627,7 +627,7 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
         }
       );
 
-      fetchSamples(currentPage , itemsPerPage, { searchField, searchValue });
+      fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
 
       setSelectedSampleId("")
       setSelectedSampleName("");
@@ -1039,7 +1039,7 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
         formData.gender?.toString().trim() &&
         formData.SampleTypeMatrix?.toString().trim() &&
         // formData.age !== "" &&
-        formData.ContainerType?.toString().trim() 
+        formData.ContainerType?.toString().trim()
         // formData.logo instanceof File
       );
     } else if (mode === "Pooled") {
@@ -1069,7 +1069,7 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
 
 
   const handlePrint = (barcodeId) => {
-    
+
     const barcodeString = barcodeId?.toString() || "";
 
     const printWindow = window.open("", "", "width=300,height=200");
@@ -1125,12 +1125,16 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
     printWindow.document.close();
   };
 
-
-
-
-
-
-
+  // useEffect(() => {
+  //   const wrapper = document.querySelector(".table-wrapper");
+  //   const onWheel = (e) => {
+  //     if (e.deltaY !== 0) {
+  //       wrapper.scrollLeft += e.deltaY;
+  //     }
+  //   };
+  //   wrapper.addEventListener("wheel", onWheel);
+  //   return () => wrapper.removeEventListener("wheel", onWheel);
+  // }, []);
 
 
   if (id === null) {
@@ -1226,7 +1230,7 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
 
 
         {/* Table */}
-        <div className="table-wrapper w-100" style={{ overflowX: "hidden" }}>
+        <div className="table-responsive" style={{ overflowX: "auto", whiteSpace: "nowrap" }}>
           <table
             className="table table-bordered table-hover text-center align-middle border"
             style={{ width: "100%" }} // Removed tableLayout: "fixed"
@@ -1241,8 +1245,8 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
                   </th>
                 )}
                 {tableHeaders.map(({ label, key }, index) => (
-                  <th key={index}>
-                    <div className="d-flex flex-column align-items-center">
+                  <th key={index} className="text-center align-middle px-2" style={{ minWidth: "150px" }}>
+                    <div className="d-flex flex-column justify-content-between align-items-center" style={{ gap: "4px" }}>
                       <input
                         type="text"
                         className="form-control form-control-sm text-center"
@@ -1250,15 +1254,18 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
                         onChange={(e) => handleFilterChange(key, e.target.value)}
                         style={{
                           fontSize: "13px",
-                          padding: "2px 4px",
+                          padding: "2px 6px",
                           width: "100%",
-                          maxWidth: "130px", // limit input width
+                          maxWidth: "120px",
                         }}
                       />
-                      <span className="fw-bold fs-6 text-center text-wrap">{label}</span>
+                      <span className="fw-bold fs-6 text-wrap text-center" style={{ fontSize: "13px" }}>
+                        {label}
+                      </span>
                     </div>
                   </th>
                 ))}
+
                 {actions.some(action => ['edit', 'dispatch', 'receive', 'all'].includes(action)) && (
                   <th>
                     <span className="fw-bold fs-6">Action</span>
@@ -1274,19 +1281,19 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
                   <tr key={sample.id}>
                     {(poolMode) && (
                       <td className="text-center">
-                        
-                          <input
-                            type="checkbox"
-                            checked={selectedSamples.includes(sample.id)}
-                            onChange={() => {
-                              setSelectedSamples((prev) =>
-                                prev.includes(sample.id)
-                                  ? prev.filter((id) => id !== sample.id)
-                                  : [...prev, sample.id]
-                              );
-                            }}
-                          />
-                      
+
+                        <input
+                          type="checkbox"
+                          checked={selectedSamples.includes(sample.id)}
+                          onChange={() => {
+                            setSelectedSamples((prev) =>
+                              prev.includes(sample.id)
+                                ? prev.filter((id) => id !== sample.id)
+                                : [...prev, sample.id]
+                            );
+                          }}
+                        />
+
                       </td>
                     )}
 
@@ -1357,9 +1364,12 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
                                 {sample.locationids || "----"}
                               </span>
                             );
-                          } else if (key === "volume") {
-                            return `${sample.volume} ${sample.VolumeUnit || ""}`;
-                          } else if (key === "barcode") {
+                          }  else if (key === "volume") {
+                              return `${sample.volume} ${sample.VolumeUnit || ""}`;
+                            }
+
+
+                          else if (key === "barcode") {
                             return (
                               <button
                                 className="btn btn-outline-primary btn-sm"
@@ -1375,9 +1385,17 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
                             return !sample.age || sample.age === 0
                               ? "-----"
                               : `${sample.age} years`;
-                          } else if (key === "TestResult") {
-                            return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
-                          } else {
+                          }
+                          else if (key === "TestResult") {
+                            const result = sample.TestResult;
+                            const unit = sample.TestResultUnit;
+
+                            return result || unit
+                              ? `${result || ""} ${unit || ""}`.trim()
+                              : "----";
+                          }
+
+                          else {
                             return sample[key] || "----";
                           }
                         })()}
@@ -1411,7 +1429,7 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
                                     </button>
                                   </li>
                                 )}
-                              {(actions.includes("edit") || actions.includes("all")) && sample.sourceType === "own"  && (
+                              {(actions.includes("edit") || actions.includes("all")) && sample.sourceType === "own" && (
                                 <li>
                                   <button
                                     className="dropdown-item text-success fw-semibold"
@@ -1444,7 +1462,7 @@ const ownSamples = ownResponse.data.samples.map((s) => ({
                                   </button>
                                 </li>
                               )}
-                              {(actions.includes("history") || actions.includes("all")) && sample.sourceType === "own"  && 
+                              {(actions.includes("history") || actions.includes("all")) && sample.sourceType === "own" &&
                                 sample.samplemode !== "Individual" && (
                                   <li>
                                     <button

@@ -129,34 +129,34 @@ export const cartSlice = createSlice({
       setLocalStorage(CART_STORAGE_KEY, state.cart_products);
     },
 
-  get_cart_products: (state) => {
-  const storedCart = getLocalStorage(CART_STORAGE_KEY) || [];
-  const now = new Date();
+    get_cart_products: (state) => {
+      const storedCart = getLocalStorage(CART_STORAGE_KEY) || [];
+      const now = new Date();
 
-  const updatedCart = storedCart.filter((item) => {
-    const addedTime = new Date(item.addedAt);
-    const diffHours = (now - addedTime) / (1000 * 60 * 60);
+      const updatedCart = storedCart.filter((item) => {
+        const addedTime = new Date(item.addedAt);
+        const diffHours = (now - addedTime) / (1000 * 60 * 60);
 
-    const isExpired = diffHours > 48;
-    if (isExpired) {
-      // Call API to unreserve
-      fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/${item.id}/reserve/0`, {
-        method: "PUT",
-      }).catch((err) => {
-        console.error("Failed to unreserve sample:", err);
+        const isExpired = diffHours > 48;
+        if (isExpired) {
+          // Call API to unreserve
+          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/${item.id}/reserve/0`, {
+            method: "PUT",
+          }).catch((err) => {
+            console.error("Failed to unreserve sample:", err);
+          });
+        }
+        return !isExpired;
       });
-    }
-    return !isExpired;
-  });
 
-  if (updatedCart.length < storedCart.length) {
-    notifyError("Some expired items were removed from your cart.");
-  }
+      if (updatedCart.length < storedCart.length) {
+        notifyError("Some expired items were removed from your cart.");
+      }
 
-  state.cart_products = updatedCart;
-  setLocalStorage(CART_STORAGE_KEY, updatedCart);
-  setsessionStorage(CART_STORAGE_KEY, updatedCart);
-},
+      state.cart_products = updatedCart;
+      setLocalStorage(CART_STORAGE_KEY, updatedCart);
+      setsessionStorage(CART_STORAGE_KEY, updatedCart);
+    },
 
     initialOrderQuantity: (state) => {
       state.orderQuantity = 1;
