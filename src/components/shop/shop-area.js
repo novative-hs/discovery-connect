@@ -49,24 +49,17 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
     //   !selectedPrice ||
     //   (product.price >= selectedPrice.min &&
     //     product.price <= selectedPrice.max);
-    let matchesAge = true;
+    
+let matchesAge = true;
+if (selectedAge && typeof selectedAge === "object") {
+  const productAge = Number(product.age);
+  if (!isNaN(productAge)) {
+    matchesAge = productAge >= selectedAge.min && productAge <= selectedAge.max;
+  } else {
+    matchesAge = false;
+  }
+}
 
-    if (selectedAge) {
-      if (typeof selectedAge === "string" && selectedAge.includes("-")) {
-        const [minAge, maxAge] = selectedAge.split("-").map(Number);
-        matchesAge = product.age >= minAge && product.age <= maxAge;
-      } else if (typeof selectedAge === "string") {
-        const exactAge = parseInt(selectedAge);
-        matchesAge = product.age === exactAge;
-      } else if (typeof selectedAge === "object") {
-        if (
-          selectedAge.min !== undefined &&
-          selectedAge.max !== undefined
-        ) {
-          matchesAge = product.age >= selectedAge.min && product.age <= selectedAge.max;
-        }
-      }
-    }
 
     let matchesSampleName =
       selectedSampleName.length === 0 ||
