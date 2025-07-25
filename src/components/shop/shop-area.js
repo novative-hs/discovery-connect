@@ -49,10 +49,24 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
     //   !selectedPrice ||
     //   (product.price >= selectedPrice.min &&
     //     product.price <= selectedPrice.max);
-    let matchesAge =
-      !selectedAge ||
-      (product.age >= selectedAge.min &&
-        product.age <= selectedAge.max);
+    let matchesAge = true;
+
+    if (selectedAge) {
+      if (typeof selectedAge === "string" && selectedAge.includes("-")) {
+        const [minAge, maxAge] = selectedAge.split("-").map(Number);
+        matchesAge = product.age >= minAge && product.age <= maxAge;
+      } else if (typeof selectedAge === "string") {
+        const exactAge = parseInt(selectedAge);
+        matchesAge = product.age === exactAge;
+      } else if (typeof selectedAge === "object") {
+        if (
+          selectedAge.min !== undefined &&
+          selectedAge.max !== undefined
+        ) {
+          matchesAge = product.age >= selectedAge.min && product.age <= selectedAge.max;
+        }
+      }
+    }
 
     let matchesSampleName =
       selectedSampleName.length === 0 ||
@@ -167,7 +181,7 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
                   <ProductListItems
                     itemsPerPage={5}
                     items={filteredProducts}
-                     selectedFilters={{
+                    selectedFilters={{
                       sampleType: selectedSampleType,
                       gender: selectedGender,
                       smokingStatus: selectedSmokingStatus,

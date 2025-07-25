@@ -36,13 +36,13 @@ const ShopSidebar = ({
     { label: "61+", min: 61, max: Infinity },
   ];
 
-const handleSampleTypeChange = (type) => {
-  if (selectedSampleType === type) {
-    setSelectedSampleType(null); // unselect if same value clicked again
-  } else {
-    setSelectedSampleType(type); // otherwise select new value
-  }
-};
+  const handleSampleTypeChange = (type) => {
+    if (selectedSampleType === type) {
+      setSelectedSampleType(null); // unselect if same value clicked again
+    } else {
+      setSelectedSampleType(type); // otherwise select new value
+    }
+  };
 
 
   return (
@@ -73,17 +73,17 @@ const handleSampleTypeChange = (type) => {
               <div className="accordion-body">
                 <div className="shop__widget-list">
                   {SampleTypeMatrix.map((type, index) => (
-  <div key={index} className="shop__widget-list-item">
-    <input
-      type="checkbox"
-      name="sampleType"
-      id={`sample-${type}`}
-      checked={selectedSampleType === type}
-      onChange={() => handleSampleTypeChange(type)}
-    />
-    <label htmlFor={`sample-${type}`}>{type}</label>
-  </div>
-))}
+                    <div key={index} className="shop__widget-list-item">
+                      <input
+                        type="checkbox"
+                        name="sampleType"
+                        id={`sample-${type}`}
+                        checked={selectedSampleType === type}
+                        onChange={() => handleSampleTypeChange(type)}
+                      />
+                      <label htmlFor={`sample-${type}`}>{type}</label>
+                    </div>
+                  ))}
 
                 </div>
               </div>
@@ -123,8 +123,8 @@ const handleSampleTypeChange = (type) => {
                         id={`gender-${gender}`}
                         checked={selectedGender === gender}
                         onChange={() =>
-  setSelectedGender(selectedGender === gender ? null : gender)
-}
+                          setSelectedGender(selectedGender === gender ? null : gender)
+                        }
 
                       />
                       <label htmlFor={`gender-${gender}`}>{gender}</label>
@@ -227,19 +227,14 @@ const handleSampleTypeChange = (type) => {
                       type="checkbox"
                       name="age"
                       id={`age-${index}`}
-                      checked={selectedAge && selectedAge.min === range.min && selectedAge.max === range.max}
-                      onChange={() => {
-  if (
-    selectedAge &&
-    selectedAge.min === range.min &&
-    selectedAge.max === range.max
-  ) {
-    setSelectedAge(null); // unselect if same checkbox clicked again
-  } else {
-    setSelectedAge({ min: range.min, max: range.max }); // select new range
-  }
-}}
-
+                      checked={selectedAge?.min === range.min && selectedAge?.max === range.max}
+                      onChange={() =>
+                        setSelectedAge(
+                          selectedAge?.min === range.min && selectedAge?.max === range.max
+                            ? null
+                            : { min: range.min, max: range.max }
+                        )
+                      }
                     />
                     <label htmlFor={`age-${index}`}>{range.label}</label>
                   </div>
@@ -249,6 +244,7 @@ const handleSampleTypeChange = (type) => {
           </div>
         </div>
       </div>
+
       <div className="shop__widget tp-accordion mt-3">
         <button onClick={handleReset} className="tp-btn w-100">
           Reset Filters
