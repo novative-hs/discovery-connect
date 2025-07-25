@@ -87,31 +87,40 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
       const encodedName = encodeURIComponent(name);
       let queryParams = [`page=${page}`, `limit=${pageSize}`];
 
-      const filters = { ...selectedFilters, ...additionalFilters };
+      const allFilters = { ...selectedFilters, ...additionalFilters };
 
-      if (filters.gender) {
-        queryParams.push(`gender=${filters.gender}`);
-        console.log("✅ Gender Filter:", filters.gender);
+      if (allFilters.gender) {
+        queryParams.push(`gender=${allFilters.gender}`);
+        console.log("✅ Gender Filter:", allFilters.gender);
       }
 
-      if (filters.sampleType) queryParams.push(`SampleTypeMatrix=${filters.sampleType}`);
-      if (filters.smokingStatus) queryParams.push(`SmokingStatus=${filters.smokingStatus}`);
+      if (allFilters.TestResult) { queryParams.push(`TestResult=${allFilters.TestResult}`) }
 
-      if (filters.age) {
-        console.log("🔍 Age Filter:", filters.age);
-        if (typeof filters.age === "string" && filters.age.includes("-")) {
-          const [min, max] = filters.age.split("-").map(Number);
+      if (allFilters.sampleType) queryParams.push(`SampleTypeMatrix=${allFilters.sampleType}`);
+      if (allFilters.smokingStatus) queryParams.push(`SmokingStatus=${allFilters.smokingStatus}`);
+
+      if (allFilters.age) {
+        // Case 1: Age is a string with range, e.g., "20-30"
+        if (typeof allFilters.age === "string" && allFilters.age.includes("-")) {
+          const [min, max] = allFilters.age.split("-").map(Number);
           if (!isNaN(min)) queryParams.push(`ageMin=${min}`);
           if (!isNaN(max)) queryParams.push(`ageMax=${max}`);
-        } else if (typeof filters.age === "object") {
-          if (filters.age.min !== undefined) queryParams.push(`ageMin=${filters.age.min}`);
-          if (filters.age.max !== undefined) queryParams.push(`ageMax=${filters.age.max}`);
+        }
+        // Case 2: Age is an object with min/max values, e.g., {min: 20, max: 30}
+        else if (typeof allFilters.age === "object" && allFilters.age !== null) {
+          if (allFilters.age.min !== undefined) queryParams.push(`ageMin=${allFilters.age.min}`);
+          if (allFilters.age.max !== undefined) queryParams.push(`ageMax=${allFilters.age.max}`);
+        }
+        // ✅ Case 3: Age is a single exact number, e.g., "20" or 20
+        else if (!isNaN(allFilters.age)) {
+          queryParams.push(`age=${allFilters.age}`);
         }
       }
 
-      if (filters.searchQuery) queryParams.push(`search=${encodeURIComponent(filters.searchQuery)}`);
-      if (filters.sampleNames?.length > 0) {
-        queryParams.push(`analytes=${encodeURIComponent(filters.sampleNames.join(','))}`);
+
+      if (allFilters.searchQuery) queryParams.push(`analytes=${encodeURIComponent(allFilters.searchQuery)}`);
+      if (allFilters.sampleNames?.length > 0) {
+        queryParams.push(`analytes=${encodeURIComponent(allFilters.sampleNames.join(','))}`);
       }
 
       const query = queryParams.join("&");
@@ -139,32 +148,34 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
 
 
 
+
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // Because react-paginate is 0-indexed
     setCurrentPage(selectedPage); // Correct ✅
   };
 
   const handleFilterChange = (field, value) => {
-    // ✅ Step 1: Update input field immediately
-    setFilters((prev) => ({ ...prev, [field]: value }));
+    setFilters((prev) => {
+      const updatedFilters = { ...prev, [field]: value };
 
-    // ✅ Step 2: Debounced filter call
-    clearTimeout(filterTimeoutRef.current);
-    filterTimeoutRef.current = setTimeout(() => {
-      const searchValue = value.trim();
+      clearTimeout(filterTimeoutRef.current);
+      filterTimeoutRef.current = setTimeout(() => {
+        const refinedFilters = { ...updatedFilters };
 
-      // ⚠️ Only send API call if not empty
-      if (!searchValue) {
-        getSample(selectedAnalyte, 1, itemsPerPage);
-        return;
-      }
+        // Clean up empty strings
+        Object.keys(refinedFilters).forEach((key) => {
+          if (refinedFilters[key] === "") {
+            delete refinedFilters[key];
+          }
+        });
 
-      getSample(selectedAnalyte, 1, itemsPerPage, {
-        searchField: field,
-        searchValue,
-      });
-    }, 300);
+        getSample(selectedAnalyte, 1, itemsPerPage, refinedFilters);
+      }, 300);
+
+      return updatedFilters;
+    });
   };
+
 
 
 

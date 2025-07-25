@@ -403,16 +403,21 @@ const getAllSampleinIndex = (analyte, limit, offset, filters, callback) => {
   let baseWhere = `Analyte = ? AND quantity > 0 AND sample_visibility = "Public" AND status = "In Stock"`;
   let queryParams = [analyte];
 
-  const { ageMin, ageMax, gender, sampleType, smokingStatus, search } = filters;
-
-  if (ageMin !== null) {
-    baseWhere += ` AND age >= ?`;
-    queryParams.push(ageMin);
+  const { ageMin, ageMax, gender, sampleType, smokingStatus, search, TestResult, exactAge, } = filters;
+  if (exactAge !== null) {
+    baseWhere += ` AND age = ?`;
+    queryParams.push(exactAge);
   }
+  else {
+    if (ageMin !== null) {
+      baseWhere += ` AND age >= ?`;
+      queryParams.push(ageMin);
+    }
 
-  if (ageMax !== null) {
-    baseWhere += ` AND age <= ?`;
-    queryParams.push(ageMax);
+    if (ageMax !== null) {
+      baseWhere += ` AND age <= ?`;
+      queryParams.push(ageMax);
+    }
   }
 
   if (gender) {
@@ -429,7 +434,10 @@ const getAllSampleinIndex = (analyte, limit, offset, filters, callback) => {
     baseWhere += ` AND smokingStatus = ?`;
     queryParams.push(smokingStatus);
   }
-
+  if (TestResult) {
+    baseWhere += ` AND TestResult = ?`;
+    queryParams.push(TestResult);
+  }
   if (search) {
     baseWhere += ` AND (PatientName LIKE ? OR masterID LIKE ?)`;
     queryParams.push(`%${search}%`, `%${search}%`);
@@ -575,10 +583,39 @@ const getAllCSSamples = (limit, offset, callback) => {
     });
   });
 };
-const updateReservedSample = (sampleId,status, callback) => {
-  const query = "UPDATE sample SET reserved = ? WHERE id = ?";
-  mysqlConnection.query(query, [status,sampleId], callback);
+
+const updateReservedSample = (sampleId, status, callback) => {
+  const updateQuery = "UPDATE sample SET reserved = ? WHERE id = ?";
+
+  mysqlConnection.query(updateQuery, [status, sampleId], (err, result) => {
+    if (err) return callback(err);
+
+    // If status is 0, check quote_request status before deleting
+    if (status === 0) {
+      const checkStatusQuery = "SELECT status FROM quote_requests WHERE sample_id = ?";
+      mysqlConnection.query(checkStatusQuery, [sampleId], (checkErr, rows) => {
+        if (checkErr) return callback(checkErr);
+
+        // If no record or status is not 'priced', delete
+        if (rows.length === 0 || rows[0].status !== 'priced') {
+          const deleteQuery = "DELETE FROM quote_requests WHERE sample_id = ?";
+          mysqlConnection.query(deleteQuery, [sampleId], (deleteErr, deleteResult) => {
+            if (deleteErr) return callback(deleteErr);
+            return callback(null, { updateResult: result, deleteResult });
+          });
+        } else {
+          // Status is 'priced', do not delete
+          return callback(null, { updateResult: result, message: "Not deleted due to 'priced' status" });
+        }
+      });
+    } else {
+      // Reserved is not 0, just return update result
+      return callback(null, { updateResult: result });
+    }
+  });
 };
+
+
 
 const getsingleSamples = (sampleId, callback) => {
   const query = 'SELECT * FROM sample WHERE id = ?';

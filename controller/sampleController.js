@@ -22,15 +22,16 @@ const getAllSampleinIndex = (req, res) => {
   const sampleType = req.query.sampleType || null;
   const smokingStatus = req.query.smokingStatus || null;
   const search = req.query.search || null;
+  const TestResult = req.query.TestResult || null;
+  const exactAge = req.query.age ? parseInt(req.query.age) : null;
 
-  console.log("📥 Filters:", { ageMin, ageMax, gender, sampleType, smokingStatus, search });
-
+console.log("Exact age",exactAge)
   // Now pass these to your model function
   SampleModel.getAllSampleinIndex(
     name,
     limit,
     offset,
-    { ageMin, ageMax, gender, sampleType, smokingStatus, search },
+    { ageMin, ageMax, exactAge, gender, sampleType, smokingStatus, search, TestResult },
     (err, results) => {
       if (err) {
         return res.status(500).json({ error: "Error fetching samples detail" });
@@ -127,9 +128,9 @@ const getResearcherSamples = (req, res) => {
 
 const updateReservedSample = (req, res) => {
   const sampleId = req.params.id;
-  const status=req.params.status
+  const status = req.params.status
 
-  SampleModel.updateReservedSample(sampleId,status, (err, result) => {
+  SampleModel.updateReservedSample(sampleId, status, (err, result) => {
     if (err) {
       console.error("Error updating sample:", err);
       return res.status(500).json({ success: false, message: "Database error" });

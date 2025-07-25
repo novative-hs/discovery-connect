@@ -33,17 +33,17 @@ const SingleProduct = ({ product, selectedFilters }) => {
       >
 
         {/* Product Image */}
-        <div className="product__thumb mb-3 rounded overflow-hidden">
+        <div className="product__thumb mb-3 rounded overflow-hidden border border-black">
           <Image
             src={imageUrl}
             alt="product image"
             width={250}
             height={150}
             className="w-100 object-fit-cover rounded"
-            unoptimized // ← Allow base64 and any custom URLs
+            unoptimized
           />
-
         </div>
+
 
         {/* Analyte Name */}
         <h6 className="fw-bold text-dark mb-2 min-height-40">{Analyte}</h6>
