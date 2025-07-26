@@ -495,52 +495,55 @@ const getAllSampleinIndex = (analyte, limit, offset, filters, callback) => {
 const getAllCSSamples = (limit, offset, callback) => {
   const dataQuery = `
   SELECT 
-    s.*,
-    cs.CollectionSiteName,
-    st.staffName AS CollectionSiteStaffName,
-    bb.Name AS BiobankName,
-    c.name AS CityName,
-    d.name AS DistrictName,
-    IFNULL(q.total_quantity, 0) AS total_quantity,
-    IFNULL(q.total_allocated, 0) AS total_allocated,
-    a.image AS analyteImage
-  FROM sample s
-  LEFT JOIN collectionsitestaff st ON s.user_account_id = st.user_account_id
-  LEFT JOIN collectionsite cs ON st.collectionsite_id = cs.id
-  LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
-  LEFT JOIN city c ON cs.city = c.id
-  LEFT JOIN district d ON cs.district = d.id
-  LEFT JOIN analyte a ON a.name = s.Analyte
+  s.*,
+  cs.CollectionSiteName,
+  st.staffName AS CollectionSiteStaffName,
+  bb.Name AS BiobankName,
+  c.name AS CityName,
+  d.name AS DistrictName,
+  IFNULL(q.total_quantity, 0) AS total_quantity,
+  IFNULL(q.total_allocated, 0) AS total_allocated,
+  a.image AS analyteImage
+FROM sample s
+LEFT JOIN collectionsitestaff st ON s.user_account_id = st.user_account_id
+LEFT JOIN collectionsite cs ON st.collectionsite_id = cs.id
+LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
+LEFT JOIN city c ON cs.city = c.id
+LEFT JOIN district d ON cs.district = d.id
+LEFT JOIN analyte a ON a.name = s.Analyte
+INNER JOIN (
+  SELECT s1.Analyte, MAX(s1.id) AS id
+  FROM sample s1
   INNER JOIN (
-    SELECT s1.Analyte, s1.id
-    FROM sample s1
-    JOIN (
-      SELECT Analyte, MIN(age) AS min_age
-      FROM sample
-      WHERE 
-        status = 'In Stock'
-        AND sample_visibility = 'Public'
-        AND (quantity > 0 OR quantity_allocated > 0)
-      GROUP BY Analyte
-    ) AS min_age_per_analyte ON s1.Analyte = min_age_per_analyte.Analyte AND s1.age = min_age_per_analyte.min_age
-    WHERE 
-      s1.status = 'In Stock'
-      AND s1.sample_visibility = 'Public'
-      AND (s1.quantity > 0 OR s1.quantity_allocated > 0)
-  ) AS latest ON s.id = latest.id
-  LEFT JOIN (
-    SELECT 
-      Analyte, 
-      SUM(quantity) AS total_quantity,
-      SUM(quantity_allocated) AS total_allocated
+    SELECT Analyte, MIN(age) AS min_age
     FROM sample
     WHERE 
       status = 'In Stock'
       AND sample_visibility = 'Public'
+      AND (quantity > 0 OR quantity_allocated > 0)
     GROUP BY Analyte
-  ) AS q ON s.Analyte = q.Analyte
-  ORDER BY s.Analyte
-  LIMIT ? OFFSET ?;
+  ) AS min_age_per_analyte
+  ON s1.Analyte = min_age_per_analyte.Analyte AND s1.age = min_age_per_analyte.min_age
+  WHERE 
+    s1.status = 'In Stock'
+    AND s1.sample_visibility = 'Public'
+    AND (s1.quantity > 0 OR s1.quantity_allocated > 0)
+  GROUP BY s1.Analyte
+) AS filtered ON s.id = filtered.id
+LEFT JOIN (
+  SELECT 
+    Analyte, 
+    SUM(quantity) AS total_quantity,
+    SUM(quantity_allocated) AS total_allocated
+  FROM sample
+  WHERE 
+    status = 'In Stock'
+    AND sample_visibility = 'Public'
+  GROUP BY Analyte
+) AS q ON s.Analyte = q.Analyte
+ORDER BY s.Analyte
+LIMIT ? OFFSET ?;
+
 `;
 
 
