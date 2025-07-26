@@ -6,6 +6,7 @@ import ProductGridItems from "./prd-grid-items";
 import ProductListItems from "./prd-list-items";
 
 const ShopArea = ({ products, all_products, shortHandler }) => {
+  
   const [showingGridItems, setShowingGridItems] = useState(0);
   const [showingListItems, setShowingListItems] = useState(0);
   const [tabActive, setActiveTab] = useState("grid");
@@ -36,7 +37,7 @@ const ShopArea = ({ products, all_products, shortHandler }) => {
     setSelectedSampleName([]);
     setSearchQuery("");
   };
-
+console.log("product",products)
   const filteredProducts = products.filter((product) => {
 
     let matchesSampleType =
@@ -55,6 +56,7 @@ if (selectedAge && typeof selectedAge === "object") {
   const productAge = Number(product.age);
   if (!isNaN(productAge)) {
     matchesAge = productAge >= selectedAge.min && productAge <= selectedAge.max;
+    console.log("age",matchesAge)
   } else {
     matchesAge = false;
   }
@@ -79,7 +81,7 @@ if (selectedAge && typeof selectedAge === "object") {
       matchesSearch
     );
   });
-
+console.log("filter",filteredProducts)
   return (
     <section className="shop__area pb-40">
       <div className="container">
