@@ -1179,18 +1179,16 @@ const BioBankSampleArea = () => {
         </div>
 
         {/* Header Section with Filter and Button */}
-        <div className="d-flex justify-content-between align-items-start flex-wrap mb-3 p-3 rounded-4 shadow-sm bg-white border gap-3">
-
-          {/* Left Side: Filters */}
-          <div className="d-flex flex-wrap align-items-center gap-3">
+        <div className="p-4 mb-4 bg-white rounded-4 shadow-sm border">
+          <div className="row g-3 align-items-end">
 
             {/* Analyte */}
-            <div className="d-flex align-items-center gap-2">
-              <label className="mb-0">Analyte:</label>
+            <div className="col-md-3 col-sm-6">
+              <label className="form-label fw-semibold">Analyte</label>
               <input
                 type="text"
-                className="form-control form-control-sm rounded-3 shadow-sm border-secondary"
-                style={{ width: "140px" }}
+                className="form-control rounded-3 border-secondary shadow-sm"
+                placeholder="Enter analyte"
                 value={analyte}
                 onChange={(e) => {
                   setAnalyte(e.target.value);
@@ -1199,14 +1197,13 @@ const BioBankSampleArea = () => {
               />
             </div>
 
-
             {/* Gender */}
-            <div className="d-flex align-items-center gap-2">
-              <label className="mb-0">Gender:</label>
+            <div className="col-md-2 col-sm-6">
+              <label className="form-label fw-semibold">Gender</label>
               <input
                 type="text"
-                className="form-control form-control-sm rounded-3 shadow-sm border-secondary"
-                style={{ width: "120px" }}
+                className="form-control rounded-3 border-secondary shadow-sm"
+                placeholder="e.g. Male"
                 value={gender}
                 onChange={(e) => {
                   setGender(e.target.value);
@@ -1216,12 +1213,12 @@ const BioBankSampleArea = () => {
             </div>
 
             {/* Collection Site */}
-            <div className="d-flex align-items-center gap-2">
-              <label className="mb-0">Collection Site:</label>
+            <div className="col-md-3 col-sm-6">
+              <label className="form-label fw-semibold">Collection Site</label>
               <input
                 type="text"
-                className="form-control form-control-sm rounded-3 shadow-sm border-secondary"
-                style={{ width: "170px" }}
+                className="form-control rounded-3 border-secondary shadow-sm"
+                placeholder="Enter site name"
                 value={collectionSite}
                 onChange={(e) => {
                   setCollectionSite(e.target.value);
@@ -1231,12 +1228,12 @@ const BioBankSampleArea = () => {
             </div>
 
             {/* Visibility */}
-            <div className="d-flex align-items-center gap-2">
-              <label className="mb-0">Visibility:</label>
+            <div className="col-md-2 col-sm-6">
+              <label className="form-label fw-semibold">Visibility</label>
               <input
                 type="text"
-                className="form-control form-control-sm rounded-3 shadow-sm border-secondary"
-                style={{ width: "130px" }}
+                className="form-control rounded-3 border-secondary shadow-sm"
+                placeholder="Public / Private"
                 value={visibility}
                 onChange={(e) => {
                   setVisibility(e.target.value);
@@ -1245,12 +1242,11 @@ const BioBankSampleArea = () => {
               />
             </div>
 
-            {/* Price */}
-            <div className="d-flex align-items-center gap-2">
-              <label className="mb-0">Price:</label>
+            {/* Price Filter */}
+            <div className="col-md-2 col-sm-6">
+              <label className="form-label fw-semibold">Price</label>
               <select
-                className="form-select form-select-sm rounded-3 shadow-sm border-secondary"
-                style={{ width: "140px" }}
+                className="form-select rounded-3 border-secondary shadow-sm"
                 value={priceFilter}
                 onChange={(e) => {
                   setPriceFilter(e.target.value);
@@ -1265,127 +1261,131 @@ const BioBankSampleArea = () => {
                 ))}
               </select>
             </div>
-            <div className="w-100 d-flex flex-wrap gap-3">
+
+            {/* Date From */}
+            <div className="d-flex flex-wrap align-items-center gap-3 mb-4">
               {/* Date From */}
               <div className="d-flex align-items-center gap-2">
-                <label className="mb-0">Date From:</label>
+                <label htmlFor="dateFrom" className="form-label mb-0 fw-bold">Date From:</label>
                 <input
                   type="date"
-                  className="form-control form-control-sm rounded-3 shadow-sm border-secondary"
-                  style={{ width: "160px" }}
-                  min="2025-05-01"
+                  id="dateFrom"
+                  className="form-control"
+                  style={{ width: "200px", height: "42px" }}
                   value={dateFrom}
                   onChange={(e) => {
                     setDateFrom(e.target.value);
                     handleFilterChange("date_from", e.target.value);
                   }}
+                  min="2024-01-01"
                 />
               </div>
 
               {/* Date To */}
               <div className="d-flex align-items-center gap-2">
-                <label className="mb-0">Date To:</label>
+                <label htmlFor="dateTo" className="form-label mb-0 fw-bold">Date To:</label>
                 <input
                   type="date"
-                  className="form-control form-control-sm rounded-3 shadow-sm border-secondary"
-                  style={{ width: "160px" }}
-                  min="2025-05-01"
+                  id="dateTo"
+                  className="form-control"
+                  style={{ width: "200px", height: "42px" }}
                   value={dateTo}
                   onChange={(e) => {
                     setDateTo(e.target.value);
                     handleFilterChange("date_to", e.target.value);
                   }}
+                  min="2024-01-01"
                 />
               </div>
+
             </div>
+
 
             {/* Clear Button */}
             {(analyte || gender || collectionSite || visibility || priceFilter || dateFrom || dateTo) && (
-              <button
-                className="btn btn-sm btn-outline-danger rounded-pill shadow-sm px-3"
-                onClick={() => {
-                  setAnalyte("");
-                  setGender("");
-                  setCollectionSite("");
-                  setVisibility("");
-                  setPriceFilter("");
-                  setDateFrom("");
-                  setDateTo("");
-                  fetchSamples();
-                }}
-              >
-                Clear
-              </button>
+              <div className="col-md-2 col-sm-6 d-flex align-items-end">
+                <button
+                  className="btn btn-outline-danger w-100 rounded-pill shadow-sm"
+                  onClick={() => {
+                    setAnalyte("");
+                    setGender("");
+                    setCollectionSite("");
+                    setVisibility("");
+                    setPriceFilter("");
+                    setDateFrom("");
+                    setDateTo("");
+                    fetchSamples();
+                  }}
+                >
+                  Clear Filters
+                </button>
+              </div>
             )}
           </div>
 
-          {/* Right Side: Action Buttons */}
-          <div className="d-flex flex-wrap justify-content-end align-items-center gap-2">
+          {/* Action Buttons */}
+          <div className="mt-4 d-flex flex-wrap justify-content-end gap-3">
 
-            {/* Visibility Button */}
+            {/* Visibility Toggle */}
             {!visibilitystatuschange ? (
               <button
                 onClick={() => {
                   setVisibilityStatusChange(true);
                   setPoolMode(false);
                 }}
-                className="btn btn-success rounded-pill shadow-sm px-3"
+                className="btn btn-success rounded-pill shadow-sm px-4"
               >
                 Make Public / Non-Public
               </button>
             ) : (
-              <button
-                onClick={handleVisibilityButtonClick}
-                className="btn btn-success rounded-pill shadow-sm px-3"
-              >
-                Make Public / Non-Public
-              </button>
+              <>
+                <button
+                  onClick={handleVisibilityButtonClick}
+                  className="btn btn-success rounded-pill shadow-sm px-4"
+                >
+                  Confirm Visibility
+                </button>
+                <button
+                  onClick={() => {
+                    setVisibilityStatusChange(false);
+                    setSelectedSamples([]);
+                  }}
+                  className="btn btn-outline-danger rounded-pill shadow-sm"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </>
             )}
 
-            {/* Cancel Visibility */}
-            {visibilitystatuschange && (
-              <button
-                className="btn btn-outline-danger rounded-pill shadow-sm"
-                onClick={() => {
-                  setVisibilityStatusChange(false);
-                  setSelectedSamples([]);
-                }}
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            )}
-
-            {/* Pool Button */}
+            {/* Pool Buttons */}
             {!poolMode ? (
               <button
                 onClick={() => {
                   setPoolMode(true);
                   setVisibilityStatusChange(false);
                 }}
-                className="btn btn-primary rounded-pill shadow-sm px-3"
+                className="btn btn-primary rounded-pill shadow-sm px-4"
               >
                 Mark Sample as Pooled
               </button>
             ) : (
-              <button
-                onClick={handlePoolButtonClick}
-                className="btn btn-primary rounded-pill shadow-sm px-3"
-              >
-                Mark Pooled
-              </button>
-            )}
-
-            {/* Cancel Pool */}
-            {poolMode && (
-              <button
-                onClick={() => {
-                  setPoolMode(false);
-                  setSelectedSamples([]);
-                }}
-                className="btn btn-outline-danger rounded-pill shadow-sm"
-              >
-                <i className="fas fa-times"></i>
-              </button>
+              <>
+                <button
+                  onClick={handlePoolButtonClick}
+                  className="btn btn-primary rounded-pill shadow-sm px-4"
+                >
+                  Mark Pooled
+                </button>
+                <button
+                  onClick={() => {
+                    setPoolMode(false);
+                    setSelectedSamples([]);
+                  }}
+                  className="btn btn-outline-danger rounded-pill shadow-sm"
+                >
+                  <i className="fas fa-times"></i>
+                </button>
+              </>
             )}
 
             {/* Add Sample Button */}
@@ -1398,6 +1398,7 @@ const BioBankSampleArea = () => {
             </button>
           </div>
         </div>
+
 
         {/* Table */}
         <div className="table-responsive w-100">
