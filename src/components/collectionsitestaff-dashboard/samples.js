@@ -390,7 +390,7 @@ const SampleArea = () => {
         delete updated[field];
       }
 
-      fetchSamples(1, itemsPerPage, updated);
+      fetchSamples(currentPage, itemsPerPage, updated);
       return updated;
     });
   };
@@ -1268,7 +1268,7 @@ const SampleArea = () => {
                     setVisibility("");
                     setDateFrom("");
                     setDateTo("");
-                    fetchSamples();
+                    fetchSamples(currentPage + 1, itemsPerPage, filters);
                   }}
                 >
                   Clear Filters

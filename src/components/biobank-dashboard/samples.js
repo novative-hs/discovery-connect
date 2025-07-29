@@ -1314,7 +1314,7 @@ const BioBankSampleArea = () => {
                     setPriceFilter("");
                     setDateFrom("");
                     setDateTo("");
-                    fetchSamples();
+                    fetchSamples(currentPage + 1, itemsPerPage, filters);
                   }}
                 >
                   Clear Filters
