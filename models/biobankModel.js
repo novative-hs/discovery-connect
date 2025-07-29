@@ -27,8 +27,7 @@ const getBiobankSamples = (
   page,
   pageSize,
   priceFilter,
-  searchField,
-  searchValue,
+  filters,
   callback
 ) => {
   const pageInt = parseInt(page, 10) || 1;
@@ -41,7 +40,7 @@ const getBiobankSamples = (
   const paramsShared = [];
   const paramsOwn = [];
 
-  const likeValue = `%${searchValue?.toLowerCase()}%`;
+  // const likeValue = `%${filters?.toLowerCase()}%`;
 
   // Price filter
   if (priceFilter === "priceAdded") {
@@ -53,8 +52,13 @@ const getBiobankSamples = (
   }
 
   // Search filter (excluding masterID, handled later)
-  if (searchField && searchValue && searchField !== "masterID") {
-    switch (searchField) {
+  Object.entries(filters).forEach(([field, value]) => {
+    if (!value || field === "page" || field === "pageSize" || field === "priceFilter" || field === "searchField" || field === "searchValue") return;
+
+    const likeValue = `%${value.toLowerCase()}%`;
+    console.log("FIELD being processed:", field);
+
+    switch (field) {
       case "locationids":
         baseWhereShared += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
         baseWhereOwn += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
@@ -72,8 +76,8 @@ const getBiobankSamples = (
       case "volume":
         baseWhereShared += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
         baseWhereOwn += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
-        paramsShared.push(likeValue, searchValue.toLowerCase());
-        paramsOwn.push(likeValue, searchValue.toLowerCase());
+        paramsShared.push(likeValue, value.toLowerCase());
+        paramsOwn.push(likeValue, value.toLowerCase());
         break;
 
       case "TestResult":
@@ -86,23 +90,63 @@ const getBiobankSamples = (
       case "gender":
         baseWhereShared += ` AND LOWER(sample.gender) LIKE ?`;
         baseWhereOwn += ` AND LOWER(sample.gender) LIKE ?`;
-        paramsShared.push(`${searchValue.toLowerCase()}%`);
-        paramsOwn.push(`${searchValue.toLowerCase()}%`);
+        paramsShared.push(`${value.toLowerCase()}%`);
+        paramsOwn.push(`${value.toLowerCase()}%`);
         break;
 
+      case "Analyte":
+        baseWhereShared += ` AND LOWER(sample.Analyte) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.Analyte) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
       case "CollectionSiteName":
         baseWhereShared += ` AND LOWER(collectionsite.CollectionSiteName) LIKE ?`;
         paramsShared.push(likeValue);
         break;
-
       default:
-        baseWhereShared += ` AND LOWER(sample.\`${searchField}\`) LIKE ?`;
-        baseWhereOwn += ` AND LOWER(sample.\`${searchField}\`) LIKE ?`;
-        paramsShared.push(likeValue);
-        paramsOwn.push(likeValue);
+        console.warn("⚠️ Unknown filter field:", field);
         break;
     }
+  });
+
+  // 🔄 Dynamic Search (handled once, outside loop)
+  if (filters.searchField && filters.searchValue) {
+    const field = filters.searchField;
+    const value = filters.searchValue;
+    const likeValue = `%${value.toLowerCase()}%`;
+
+    if (field === "visibility") {
+      baseWhereShared += ` AND LOWER(sample.sample_visibility) LIKE ?`;
+      paramsShared.push(likeValue);
+      baseWhereOwn += ` AND LOWER(sample.sample_visibility) LIKE ?`;
+      paramsOwn.push(likeValue);
+    }
+    else if (field === "CollectionSiteName") {
+      baseWhereShared += ` AND LOWER(collectionsite.CollectionSiteName) LIKE ?`;
+      paramsShared.push(likeValue);
+    }
+    else if (field === "date_to") {
+      baseWhereShared += ` AND sample.created_at <= ?`;
+      baseWhereOwn += ` AND sample.created_at <= ?`;
+      paramsShared.push(value + " 23:59:59"); // optional: include full day
+      paramsOwn.push(value + " 23:59:59");
+    }
+    else if (field === "date_from") {
+      baseWhereShared += ` AND sample.created_at >= ?`;
+      baseWhereOwn += ` AND sample.created_at >= ?`;
+      paramsShared.push(value);
+      paramsOwn.push(value);
+    }
+    else {
+      baseWhereShared += ` AND LOWER(sample.\`${field}\`) LIKE ?`;
+      paramsShared.push(likeValue);
+      baseWhereOwn += ` AND LOWER(sample.\`${field}\`) LIKE ?`;
+      paramsOwn.push(likeValue);
+    }
   }
+
+
 
   const sharedSamplesQuery = `
     SELECT sample.*, collectionsite.CollectionSiteName
@@ -152,12 +196,8 @@ const getBiobankSamples = (
     });
 
     // If masterID filter is used, apply it after decryption
-    const filteredResults =
-      searchField === "masterID" && searchValue
-        ? enrichedResults.filter(sample =>
-            sample.masterID?.toLowerCase().includes(searchValue.toLowerCase())
-          )
-        : enrichedResults;
+
+    const filteredResults = enrichedResults;
 
     const totalCount = filteredResults.length;
     const paginatedSamples = filteredResults.slice(offset, offset + pageSizeInt);
@@ -388,7 +428,7 @@ const postSamplePrice = (data, callback) => {
                   "Sample Price Updated - Ready to Order",
                   emailBody
                 );
-                
+
               } catch (emailErr) {
                 console.error("❌ Error sending email to researcher:", emailErr);
               }
@@ -456,13 +496,13 @@ SELECT
       s.masterID,
       s.id,
       s.analyte,
-s.age,
-s.gender,
-s.quantity,
-s.TestResult,
-s.price,
-s.SamplePriceCurrency,
-s.TestResultUnit,
+      s.age,
+      s.gender,
+      s.quantity,
+      s.TestResult,
+      s.price,
+      s.SamplePriceCurrency,
+      s.TestResultUnit,
       r.ResearcherName,
       r.phoneNumber,
       r.fullAddress,
@@ -480,6 +520,7 @@ s.TestResultUnit,
     LEFT JOIN city c ON r.city = c.id
     LEFT JOIN district d ON r.district = d.id
     LEFT JOIN country co ON r.country = co.id
+    WHERE s.status = "In Stock" AND  quantity>0
   `;
 
   mysqlConnection.query(query, (err, results) => {

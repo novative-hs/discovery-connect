@@ -12,16 +12,16 @@ const getBiobankSamples = (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const pageSize = parseInt(req.query.pageSize) || 50;
 
-  const priceFilter = req.query.priceFilter || null;
-  const searchField = req.query.searchField || null;
-  const searchValue = req.query.searchValue || null;
+  const filters = req.query; // now filters can contain Analyte, gender, etc.
+  const priceFilter = filters.priceFilter || null;
+
 
   if (isNaN(id)) {
     return res.status(400).json({ error: "Invalid user_account_id" });
   }
 
   BioBankModel.getBiobankSamples(
-    id, page, pageSize, priceFilter, searchField, searchValue,
+    id, page, pageSize, priceFilter, filters,
     (err, results) => {
       if (err) {
         return res.status(500).json({ error: "Error fetching samples" });

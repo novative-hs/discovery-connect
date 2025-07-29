@@ -9,7 +9,7 @@ const QuoteRequestTable = () => {
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [showCartModal, setShowCartModal] = useState(false);
   const [priceInputs, setPriceInputs] = useState({});
-  const [selectedCurrency, setSelectedCurrency] = useState({});
+  const [groupCurrency, setGroupCurrency] = useState("");
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [isReadOnly, setIsReadOnly] = useState(false);
 
@@ -48,7 +48,7 @@ const QuoteRequestTable = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  // Group by Researcher
+  // Group samples by researcher
   const groupedByResearcher = samples.reduce((acc, sample) => {
     const key = `${sample.ResearcherName}-${sample.OrganizationName}-${sample.city_name}-${sample.district_name}-${sample.country_name}`;
     if (!acc[key]) acc[key] = [];
@@ -56,19 +56,17 @@ const QuoteRequestTable = () => {
     return acc;
   }, {});
 
-  // Submit one sample
-  const submitSamplePrice = async (sampleId) => {
+  // Submit price for one sample
+  const submitSamplePrice = async (sampleId, currency) => {
     const price = priceInputs[sampleId];
-    const currency = selectedCurrency[sampleId];
-
     if (!price || !currency) return;
 
     try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/postprice/${sampleId}`,
         {
-          sampleId: sampleId,
-          price: price,
+          sampleId,
+          price,
           SamplePriceCurrency: currency,
         }
       );
@@ -77,20 +75,20 @@ const QuoteRequestTable = () => {
     }
   };
 
-  // Submit all samples one by one
+  // Submit all samples in selected quote
   const handleSubmitAll = async () => {
-    if (!selectedQuote || selectedQuote.length === 0) return;
+    if (!selectedQuote || selectedQuote.length === 0 || !groupCurrency) return;
 
     for (const sample of selectedQuote) {
       const sampleId = sample.sample_id;
-      await submitSamplePrice(sampleId);
+      await submitSamplePrice(sampleId, groupCurrency);
     }
 
     alert("All prices updated successfully!");
     setShowCartModal(false);
     setSelectedQuote(null);
     setPriceInputs({});
-    setSelectedCurrency({});
+    setGroupCurrency("");
   };
 
   return (
@@ -127,6 +125,7 @@ const QuoteRequestTable = () => {
                         setSelectedQuote(samples);
                         setShowCartModal(true);
                         setIsReadOnly(true);
+                        setGroupCurrency(samples[0]?.SamplePriceCurrency || "");
                       }}
                     >
                       View Details
@@ -138,6 +137,7 @@ const QuoteRequestTable = () => {
                         setSelectedQuote(samples);
                         setShowCartModal(true);
                         setIsReadOnly(false);
+                        setGroupCurrency("");
                       }}
                     >
                       <FontAwesomeIcon icon={faDollarSign} className="me-1" />
@@ -203,37 +203,39 @@ const QuoteRequestTable = () => {
                       )}
                     </td>
                     <td>
-                      {isReadOnly ? (
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value={sample.SamplePriceCurrency || ""}
-                          readOnly
-                        />
-                      ) : (
-                        <select
-                          className="form-select form-select-sm"
-                          value={selectedCurrency[sample.sample_id] || ""}
-                          onChange={(e) =>
-                            setSelectedCurrency({
-                              ...selectedCurrency,
-                              [sample.sample_id]: e.target.value,
-                            })
-                          }
-                        >
-                          <option value="">Select</option>
-                          {currencyOptions.map((currency, index) => (
-                            <option key={index} value={currency}>
-                              {currency}
-                            </option>
-                          ))}
-                        </select>
-                      )}
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={isReadOnly ? sample.SamplePriceCurrency || groupCurrency : groupCurrency}
+                        readOnly
+                      />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            {/* Global Currency Selector */}
+            {!isReadOnly && (
+              <div className="d-flex justify-content-end align-items-center gap-2 mb-3">
+                <label className="mb-0 fw-bold">Currency:</label>
+                <select
+                  className="form-select form-select-sm"
+                  style={{ width: "160px" }}
+                  value={groupCurrency}
+                  onChange={(e) => setGroupCurrency(e.target.value)}
+                >
+                  <option value="">Select</option>
+                  {currencyOptions.map((currency, index) => (
+                    <option key={index} value={currency}>
+                      {currency}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Submit Button */}
             {!isReadOnly && (
               <div className="text-end">
                 <button className="btn btn-success" onClick={handleSubmitAll}>

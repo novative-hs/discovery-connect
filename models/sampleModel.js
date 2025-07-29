@@ -111,7 +111,7 @@ const createPriceRequest = () => {
 }
 
 // Function to get all samples with 'In Stock' status
-const getSamples = (user_account_id, page, pageSize, searchField, searchValue, callback) => {
+const getSamples = (user_account_id, page, pageSize, filters, callback) => {
   const userId = parseInt(user_account_id, 10);
   const pageInt = parseInt(page, 10) || 1;
   const pageSizeInt = parseInt(pageSize, 10) || 50;
@@ -131,44 +131,52 @@ const getSamples = (user_account_id, page, pageSize, searchField, searchValue, c
     const collectionsite_id = siteResult[0].collectionsite_id;
 
     let searchClause = "";
-    const searchParams = [];
+    let searchParams = [];
 
-    const likeValue = `%${searchValue?.toLowerCase() || ""}%`;
+    Object.entries(filters).forEach(([field, value]) => {
+      const lowerVal = `%${value.toLowerCase()}%`;
 
-    if (searchField && searchValue) {
-      switch (searchField) {
+      switch (field) {
         case "locationids":
-          searchClause = ` AND (LOWER(s.room_number) LIKE ? OR LOWER(s.freezer_id) LIKE ? OR LOWER(s.box_id) LIKE ?)`;
-          searchParams.push(likeValue, likeValue, likeValue);
+          searchClause += ` AND (LOWER(s.room_number) LIKE ? OR LOWER(s.freezer_id) LIKE ? OR LOWER(s.box_id) LIKE ?)`;
+          searchParams.push(lowerVal, lowerVal, lowerVal);
           break;
 
         case "price":
-          searchClause = ` AND LOWER(CONCAT_WS(' ', s.price, s.SamplePriceCurrency)) LIKE ?`;
-          searchParams.push(likeValue);
+          searchClause += ` AND LOWER(CONCAT_WS(' ', s.price, s.SamplePriceCurrency)) LIKE ?`;
+          searchParams.push(lowerVal);
           break;
 
         case "volume":
-          searchClause = ` AND LOWER(CONCAT_WS(' ', s.volume, s.VolumeUnit)) LIKE ?`;
-          searchParams.push(likeValue);
+          searchClause += ` AND LOWER(CONCAT_WS(' ', s.volume, s.VolumeUnit)) LIKE ?`;
+          searchParams.push(lowerVal);
           break;
 
         case "TestResult":
-          searchClause = ` AND LOWER(CONCAT_WS(' ', s.TestResult, s.TestResultUnit)) LIKE ?`;
-          searchParams.push(likeValue);
+          searchClause += ` AND LOWER(CONCAT_WS(' ', s.TestResult, s.TestResultUnit)) LIKE ?`;
+          searchParams.push(lowerVal);
           break;
 
         case "gender":
         case "sample_visibility":
-          searchClause = ` AND LOWER(s.${searchField}) LIKE ?`;
-          searchParams.push(`${searchValue.toLowerCase()}%`);
+          searchClause += ` AND LOWER(s.${field}) LIKE ?`;
+          searchParams.push(value.toLowerCase() + "%");
+          break;
+        case "date_from":
+          searchClause += ` AND DATE(s.created_at) >= ?`;
+          searchParams.push(value); // expect value like '2025-07-28'
+          break;
+
+        case "date_to":
+          searchClause += ` AND DATE(s.created_at) <= ?`;
+          searchParams.push(value);
           break;
 
         default:
-          searchClause = ` AND LOWER(s.${searchField}) LIKE ?`;
-          searchParams.push(likeValue);
-          break;
+          searchClause += ` AND LOWER(s.${field}) LIKE ?`;
+          searchParams.push(lowerVal);
       }
-    }
+    });
 
     const dataQuery = `
       SELECT s.*
@@ -488,9 +496,6 @@ const getAllSampleinIndex = (analyte, limit, offset, filters, callback) => {
     });
   });
 };
-
-
-
 
 const getAllCSSamples = (limit, offset, callback) => {
   const dataQuery = `

@@ -49,15 +49,13 @@ const getAllSampleinIndex = (req, res) => {
 // Controller to get all samples
 const getSamples = (req, res) => {
   const id = req.params.id;
-  const page = req.query.page || 1; // Get page from query, default to 1
-  const pageSize = req.query.pageSize || 50; // Get pageSize from query, default to 50
-  const searchField = req.query.searchField || null;
-  const searchValue = req.query.searchValue || null;
+  const { page = 1, pageSize = 50, ...filters } = req.query;
+
   if (!id) {
     return res.status(400).json({ error: "ID parameter is missing" });
   }
 
-  SampleModel.getSamples(id, page, pageSize, searchField, searchValue, (err, results) => {
+  SampleModel.getSamples(id, page, pageSize, filters, (err, results) => {
     if (err) {
       console.error('Error in model:', err);
       return res.status(500).json({ error: "Error fetching samples" });
@@ -72,6 +70,7 @@ const getSamples = (req, res) => {
     });
   });
 };
+
 
 const getAllVolumnUnits = (req, res) => {
   const { name } = req.params;

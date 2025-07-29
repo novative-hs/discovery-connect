@@ -86,9 +86,8 @@ const BioBankSampleArea = () => {
   const [samplePrice, setSamplePrice] = useState([]);
   const [selectedSampleVisibilityId, setSelectedSampleVisibilityId] = useState(null);
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
-  const [searchField, setSearchField] = useState(null);
-  const [searchValue, setSearchValue] = useState(null);
-  const [priceFilter, setPriceFilter] = useState("");
+
+
   const [poolMode, setPoolMode] = useState(false);
   const [visibilitystatuschange, setVisibilityStatusChange] = useState(false);
   const [analyteOptions, setAnalyteOptions] = useState([]);
@@ -96,6 +95,21 @@ const BioBankSampleArea = () => {
   const [showEditPoolModal, setShowEditPoolModal] = useState(false);
   const [poolhistoryData, setPoolHistoryData] = useState([]);
   const [PoolSampleHistoryModal, setPoolSampleHistoryModal] = useState(false);
+  const [searchField, setSearchField] = useState(null);
+  const [searchValue, setSearchValue] = useState(null);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [analyte, setAnalyte] = useState("");
+  const [gender, setGender] = useState("");
+  const [collectionSite, setCollectionSite] = useState("");
+  const [visibility, setVisibility] = useState("");
+  const [priceFilter, setPriceFilter] = useState("");
+  const [filters, setFilters] = useState({
+    Analyte: '',
+    Gender: '',
+    CollectionSiteName: '',
+    price: '',
+  });
 
   const tableHeaders = [
     { label: "Specimen ID", key: "masterID" },
@@ -274,11 +288,18 @@ const BioBankSampleArea = () => {
   // Fetch samples from the backend
   const fetchSamples = useCallback(async (page = 1, pageSize = 50, filters = {}) => {
     try {
-      const { priceFilter, searchField, searchValue } = filters;
+      console.log("Incoming filters:", filters);  // Debug incoming filters
+
       let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
-      if (priceFilter) url += `&priceFilter=${priceFilter}`;
-      if (searchField && searchValue)
-        url += `&searchField=${searchField}&searchValue=${searchValue}`;
+
+      // Add all filters dynamically
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) {
+          url += `&${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+        }
+      });
+
+      console.log("Final request URL:", url); // Debug final request
 
       const response = await axios.get(url);
       const { samples, totalCount, pageSize: serverPageSize, currentPage: serverPage } = response.data;
@@ -293,20 +314,25 @@ const BioBankSampleArea = () => {
     }
   }, [id]);
 
-  // Fetch samples from backend when component loads
+
   useEffect(() => {
-    let isMounted = true;
-    const storedUser = getsessionStorage("user");
+    const delayDebounceFn = setTimeout(() => {
+      const filters = {
+        Analyte: analyte?.trim() || undefined,
+        gender: gender?.trim() || undefined,
+        CollectionSiteName: collectionSite?.trim() || undefined,
+        visibility: visibility,
+        priceFilter: priceFilter
+      };
 
-    fetchSamples(currentPage + 1, itemsPerPage, {
-      searchField,
-      searchValue,
-    });
+      console.log("Sending filters:", filters); // Add this debug
 
-    return () => {
-      isMounted = false;
-    };
-  }, [currentPage, searchField, searchValue, fetchSamples]);
+      fetchSamples(currentPage + 1, itemsPerPage, filters);
+    }, 400); // reasonable debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [analyte, gender, collectionSite, visibility, priceFilter, currentPage]);
+
 
   const currentData = filteredSamples;
 
@@ -340,8 +366,6 @@ const BioBankSampleArea = () => {
     setCurrentPage(selectedPage); // This will trigger the data change based on selected page
   };
 
-
-  // Filter the researchers list
   const handleFilterChange = (field, value) => {
     setCurrentPage(0);
 
@@ -357,6 +381,7 @@ const BioBankSampleArea = () => {
       fetchSamples(1, itemsPerPage, { searchField: field, searchValue: value });
     }
   };
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -1154,95 +1179,164 @@ const BioBankSampleArea = () => {
         </div>
 
         {/* Header Section with Filter and Button */}
-        <div className="d-flex justify-content-between align-items-center flex-wrap mb-3 p-3 rounded shadow-sm bg-white border">
+        <div className="d-flex justify-content-between align-items-start flex-wrap mb-3 p-3 rounded-4 shadow-sm bg-white border gap-3">
 
-          <div className="d-flex align-items-center flex-wrap gap-3 mb-3">
-            <label className="fw-semibold text-secondary mb-0">Filter by:</label>
+          {/* Left Side: Filters */}
+          <div className="d-flex flex-wrap align-items-center gap-3">
 
-            {/* Main Filter Dropdown */}
-            <NiceSelect
-              options={filterOptions}
-              defaultCurrent={0}
-              name="filter-by"
-              onChange={(item) => {
-                setFilter(item.value);
-                setFilterValue("");
-                setPriceFilter(""); // reset priceFilter
-
-                if (item.value === "") {
-                  handleFilterChange("", "");
-                } else if (item.value === "price") {
-                  // Auto-select "priceAdded" when price filter is selected
-                  const defaultPrice = "priceAdded";
-                  setPriceFilter(defaultPrice);
-                  handleFilterChange("price", defaultPrice);
-                } else {
-                  fetchSamples(); // optional if you want to reload
-                }
-              }}
-            />
-            {/* If "Price" is selected, show Price filter dropdown */}
-            {filter === "price" && (
-              <NiceSelect
-                options={priceOptions}
-                defaultCurrent={0}
-                name="price-options"
-                onChange={(item) => {
-                  setPriceFilter(item.value);
-                  handleFilterChange("price", item.value);
-                }}
-              />
-            )}
-
-            {/* Text input for other filters */}
-            {filter && filter !== "" && filter !== "price" && (
+            {/* Analyte */}
+            <div className="d-flex align-items-center gap-2">
+              <label className="mb-0">Analyte:</label>
               <input
                 type="text"
-                className="form-control rounded px-3 py-1"
-                placeholder={`Enter ${filter}`}
-                value={filterValue}
-                style={{ minWidth: "200px" }}
+                className="form-control form-control-sm rounded-3 shadow-sm border-secondary"
+                style={{ width: "140px" }}
+                value={analyte}
                 onChange={(e) => {
-                  const newValue = e.target.value;
-                  setFilterValue(newValue);
-                  handleFilterChange(filter, newValue.trim() === "" ? "" : newValue);
+                  setAnalyte(e.target.value);
+                  handleFilterChange("Analyte", e.target.value);
                 }}
               />
-            )}
+            </div>
 
-            {/* Clear button */}
-            {(filter && filterValue) || priceFilter ? (
+
+            {/* Gender */}
+            <div className="d-flex align-items-center gap-2">
+              <label className="mb-0">Gender:</label>
+              <input
+                type="text"
+                className="form-control form-control-sm rounded-3 shadow-sm border-secondary"
+                style={{ width: "120px" }}
+                value={gender}
+                onChange={(e) => {
+                  setGender(e.target.value);
+                  handleFilterChange("gender", e.target.value);
+                }}
+              />
+            </div>
+
+            {/* Collection Site */}
+            <div className="d-flex align-items-center gap-2">
+              <label className="mb-0">Collection Site:</label>
+              <input
+                type="text"
+                className="form-control form-control-sm rounded-3 shadow-sm border-secondary"
+                style={{ width: "170px" }}
+                value={collectionSite}
+                onChange={(e) => {
+                  setCollectionSite(e.target.value);
+                  handleFilterChange("CollectionSiteName", e.target.value);
+                }}
+              />
+            </div>
+
+            {/* Visibility */}
+            <div className="d-flex align-items-center gap-2">
+              <label className="mb-0">Visibility:</label>
+              <input
+                type="text"
+                className="form-control form-control-sm rounded-3 shadow-sm border-secondary"
+                style={{ width: "130px" }}
+                value={visibility}
+                onChange={(e) => {
+                  setVisibility(e.target.value);
+                  handleFilterChange("visibility", e.target.value);
+                }}
+              />
+            </div>
+
+            {/* Price */}
+            <div className="d-flex align-items-center gap-2">
+              <label className="mb-0">Price:</label>
+              <select
+                className="form-select form-select-sm rounded-3 shadow-sm border-secondary"
+                style={{ width: "140px" }}
+                value={priceFilter}
+                onChange={(e) => {
+                  setPriceFilter(e.target.value);
+                  handleFilterChange("price", e.target.value);
+                }}
+              >
+                <option value="">Select</option>
+                {priceOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.text}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="w-100 d-flex flex-wrap gap-3">
+              {/* Date From */}
+              <div className="d-flex align-items-center gap-2">
+                <label className="mb-0">Date From:</label>
+                <input
+                  type="date"
+                  className="form-control form-control-sm rounded-3 shadow-sm border-secondary"
+                  style={{ width: "160px" }}
+                  min="2025-05-01"
+                  value={dateFrom}
+                  onChange={(e) => {
+                    setDateFrom(e.target.value);
+                    handleFilterChange("date_from", e.target.value);
+                  }}
+                />
+              </div>
+
+              {/* Date To */}
+              <div className="d-flex align-items-center gap-2">
+                <label className="mb-0">Date To:</label>
+                <input
+                  type="date"
+                  className="form-control form-control-sm rounded-3 shadow-sm border-secondary"
+                  style={{ width: "160px" }}
+                  min="2025-05-01"
+                  value={dateTo}
+                  onChange={(e) => {
+                    setDateTo(e.target.value);
+                    handleFilterChange("date_to", e.target.value);
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Clear Button */}
+            {(analyte || gender || collectionSite || visibility || priceFilter || dateFrom || dateTo) && (
               <button
-                className="btn btn-sm btn-outline-danger"
+                className="btn btn-sm btn-outline-danger rounded-pill shadow-sm px-3"
                 onClick={() => {
-                  setFilter("");
-                  setFilterValue("");
+                  setAnalyte("");
+                  setGender("");
+                  setCollectionSite("");
+                  setVisibility("");
                   setPriceFilter("");
-                  fetchSamples(1, itemsPerPage, {}); // reset all
+                  setDateFrom("");
+                  setDateTo("");
+                  fetchSamples();
                 }}
               >
                 Clear
               </button>
-            ) : null}
+            )}
           </div>
 
-          <div className="d-flex justify-content-end align-items-center flex-wrap gap-2 mb-4">
+          {/* Right Side: Action Buttons */}
+          <div className="d-flex flex-wrap justify-content-end align-items-center gap-2">
 
             {/* Visibility Button */}
             {!visibilitystatuschange ? (
               <button
                 onClick={() => {
                   setVisibilityStatusChange(true);
-                  setPoolMode(false); // disable pool if it was active
+                  setPoolMode(false);
                 }}
-                className="btn btn-success"
+                className="btn btn-success rounded-pill shadow-sm px-3"
               >
                 Make Public / Non-Public
               </button>
             ) : (
               <button
                 onClick={handleVisibilityButtonClick}
-                className="btn btn-success"
+                className="btn btn-success rounded-pill shadow-sm px-3"
               >
                 Make Public / Non-Public
               </button>
@@ -1251,7 +1345,7 @@ const BioBankSampleArea = () => {
             {/* Cancel Visibility */}
             {visibilitystatuschange && (
               <button
-                className="btn btn-outline-danger"
+                className="btn btn-outline-danger rounded-pill shadow-sm"
                 onClick={() => {
                   setVisibilityStatusChange(false);
                   setSelectedSamples([]);
@@ -1266,16 +1360,16 @@ const BioBankSampleArea = () => {
               <button
                 onClick={() => {
                   setPoolMode(true);
-                  setVisibilityStatusChange(false); // disable visibility mode
+                  setVisibilityStatusChange(false);
                 }}
-                className="btn btn-primary"
+                className="btn btn-primary rounded-pill shadow-sm px-3"
               >
                 Mark Sample as Pooled
               </button>
             ) : (
               <button
                 onClick={handlePoolButtonClick}
-                className="btn btn-primary"
+                className="btn btn-primary rounded-pill shadow-sm px-3"
               >
                 Mark Pooled
               </button>
@@ -1288,35 +1382,23 @@ const BioBankSampleArea = () => {
                   setPoolMode(false);
                   setSelectedSamples([]);
                 }}
-                className="btn btn-outline-danger"
+                className="btn btn-outline-danger rounded-pill shadow-sm"
               >
                 <i className="fas fa-times"></i>
               </button>
             )}
 
-
-
-
-
-            {/* Add Sample Button - Success Theme */}
-            <div className="d-flex justify-content-end align-items-center">
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="btn d-flex align-items-center gap-2 px-3 py-2"
-                style={{
-                  backgroundColor: "#198754", // Bootstrap Success Green
-                  color: "#fff",
-                  borderRadius: "8px",
-                  boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  fontWeight: "500",
-                }}
-              >
-                <i className="fas fa-vial"></i> Add Sample
-              </button>
-            </div>
+            {/* Add Sample Button */}
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="btn btn-success d-flex align-items-center gap-2 px-4 py-2 rounded-pill shadow"
+              style={{ fontWeight: "500" }}
+            >
+              <i className="fas fa-vial"></i> Add Sample
+            </button>
           </div>
-
         </div>
+
         {/* Table */}
         <div className="table-responsive w-100">
           <table className="table table-bordered table-hover text-center align-middle w-auto border">

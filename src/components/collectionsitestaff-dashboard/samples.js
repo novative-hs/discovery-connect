@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEdit,
   faExchangeAlt,
+  faPrint,
   faRuler,
 } from "@fortawesome/free-solid-svg-icons";
 import NiceSelect from "@ui/NiceSelect";
@@ -82,6 +83,15 @@ const SampleArea = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [searchField, setSearchField] = useState(null);
   const [searchValue, setSearchValue] = useState(null);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [analyte, setAnalyte] = useState("");
+  const [gender, setGender] = useState("");
+  const [collectionSite, setCollectionSite] = useState("");
+  const [visibility, setVisibility] = useState("");
+
+  const [filters, setFilters] = useState({});
+
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
     dispatchVia: "",
@@ -112,8 +122,7 @@ const SampleArea = () => {
   const tableHeaders = [
     { label: "Patient Name", key: "PatientName" },
     { label: "Patient Location", key: "PatientLocation" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
+    { label: "Gender & Age", key: "gender" },
     { label: "MR Number", key: "MRNumber" },
     // { label: "Location", key: "locationids" },
     { label: "Analyte", key: "Analyte" },
@@ -121,9 +130,9 @@ const SampleArea = () => {
     { label: "Volume", key: "volume" },
     // { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Status", key: "status" },
-    { label: "Sample Visibility", key: "sample_visibility" },
+    // { label: "Sample Visibility", key: "sample_visibility" },
     { label: "Sample Mode", key: "samplemode" },
-    { label: "Barcode", key: "barcode" },
+
   ];
 
   const fieldsToShowInOrder = [
@@ -261,29 +270,34 @@ const SampleArea = () => {
 
   // Fetch samples from backend when component loads
   useEffect(() => {
-    fetchSamples(currentPage, itemsPerPage, {
-      searchField,
-      searchValue,
-    });
+    fetchSamples(currentPage, itemsPerPage, filters);
     fetchCollectionSiteNames();
-  }, [currentPage, searchField, searchValue]);
+  }, [currentPage, filters]);
+
 
   const fetchSamples = async (page = 1, pageSize = 10, filters = {}) => {
+    if (!id) {
+      console.error("ID is missing.");
+      return;
+    }
     try {
-      const { searchField, searchValue } = filters;
+      const queryParams = new URLSearchParams();
 
-      if (!id) {
-        console.error("ID is missing.");
-        return;
-      }
+      Object.entries(filters || {}).forEach(([key, value]) => {
+        if (value?.trim()) {
+          queryParams.append(key, value.trim());
+        }
+      });
 
       let ownResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get/${id}?page=${page}&pageSize=${pageSize}`;
       let receivedResponseurl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samplereceive/get/${id}?page=${page}&pageSize=${pageSize}`;
 
-      if (searchField && searchValue) {
-        ownResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
-        receivedResponseurl += `&searchField=${searchField}&searchValue=${searchValue}`;
+      const filterString = queryParams.toString();
+      if (filterString) {
+        ownResponseurl += `&${filterString}`;
+        receivedResponseurl += `&${filterString}`;
       }
+
 
       const [ownResponse, receivedResponse] = await Promise.all([
         axios.get(ownResponseurl),
@@ -368,15 +382,19 @@ const SampleArea = () => {
   const handleFilterChange = (field, value) => {
     const trimmed = value.trim();
 
-    if (trimmed === "") {
-      fetchSamples(1, itemsPerPage); // Reset
-    } else {
-      fetchSamples(1, itemsPerPage, {
-        searchField: field,
-        searchValue: trimmed,
-      });
-    }
+    setFilters(prev => {
+      const updated = { ...prev, [field]: trimmed };
+
+      // If the value is empty, remove the field
+      if (trimmed === "") {
+        delete updated[field];
+      }
+
+      fetchSamples(1, itemsPerPage, updated);
+      return updated;
+    });
   };
+
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // Because react-paginate is 0-indexed
     setCurrentPage(selectedPage); // Correct ✅
@@ -1165,37 +1183,107 @@ const SampleArea = () => {
 
 
         {/* Button */}
-        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-          <div className="d-flex align-items-center gap-2">
-            <label className="fw-semibold text-secondary mb-0">Filter Sample Mode by:</label>
-            <NiceSelect
-              options={filterOptions}
-              defaultCurrent={0}
-              name="filter-by"
-              onChange={(item) => handleFilterChange("samplemode", item.value)}
-            />
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+
+          {/* FILTERS SECTION */}
+          <div className="d-flex flex-wrap gap-4 align-items-end">
+
+            {/* Date From */}
+            <div className="form-group">
+              <label className="form-label fw-semibold mb-1">Date From</label>
+              <input
+                type="date"
+                className="form-control border rounded-3"
+                style={{ width: "200px", height: "42px" }}
+                value={dateFrom}
+                min="2025-05-01"
+                onChange={(e) => {
+                  setDateFrom(e.target.value);
+                  handleFilterChange("date_from", e.target.value);
+                }}
+              />
+            </div>
+
+            {/* Date To */}
+            <div className="form-group">
+              <label className="form-label fw-semibold mb-1">Date To</label>
+              <input
+                type="date"
+                className="form-control border rounded-3"
+                style={{ width: "200px", height: "42px" }}
+                value={dateTo}
+                min="2025-05-01"
+                onChange={(e) => {
+                  setDateTo(e.target.value);
+                  handleFilterChange("date_to", e.target.value);
+                }}
+              />
+            </div>
+
+            {/* Analyte */}
+            <div className="form-group">
+              <label className="form-label fw-semibold mb-1">Analyte</label>
+              <input
+                type="text"
+                className="form-control border rounded-3"
+                placeholder="Enter Analyte"
+                style={{ width: "200px", height: "42px" }}
+                value={analyte}
+                onChange={(e) => {
+                  setAnalyte(e.target.value);
+                  handleFilterChange("Analyte", e.target.value);
+                }}
+              />
+            </div>
+
+            {/* Gender */}
+            <div className="form-group">
+              <label className="form-label fw-semibold mb-1">Gender</label>
+              <select
+                className="form-select border rounded-3"
+                style={{ width: "200px", height: "42px" }}
+                value={gender}
+                onChange={(e) => {
+                  setGender(e.target.value);
+                  handleFilterChange("gender", e.target.value);
+                }}
+              >
+                <option value="">All</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            {/* Clear Button */}
+            {(analyte || gender || dateFrom || dateTo) && (
+              <div className="form-group">
+                <label className="d-block mb-1">&nbsp;</label>
+                <button
+                  className="btn btn-outline-danger rounded-pill px-3 shadow-sm"
+                  onClick={() => {
+                    setAnalyte("");
+                    setGender("");
+                    setCollectionSite("");
+                    setVisibility("");
+                    setDateFrom("");
+                    setDateTo("");
+                    fetchSamples();
+                  }}
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
           </div>
 
-
-          {/* Buttons RIGHT */}
-          {actions.some(a =>
-            ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(a)
-          ) && (
-              <div className="d-flex align-items-center flex-wrap gap-2">
+          {/* ACTION BUTTONS */}
+          <div className="d-flex flex-wrap gap-2">
+            {actions.some(a => ['add_full', 'add_basic', 'edit', 'dispatch', 'receive', 'all'].includes(a)) && (
+              <>
                 <button
                   onClick={handlePoolButtonClick}
-                  style={{
-                    backgroundColor: "#4a90e2",
-                    color: "#fff",
-                    border: "none",
-                    padding: "10px 20px",
-                    borderRadius: "6px",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                  }}
+                  className="btn btn-primary d-flex align-items-center gap-2 shadow-sm"
                 >
                   {poolMode ? "Make Pool" : "Mark Sample as Pool"}
                 </button>
@@ -1208,25 +1296,16 @@ const SampleArea = () => {
                         setMode("Individual");
                         setShowAddModal(true);
                       }}
-                      style={{
-                        backgroundColor: "#4a90e2",
-                        color: "#fff",
-                        border: "none",
-                        padding: "10px 20px",
-                        borderRadius: "6px",
-                        fontWeight: "500",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                      }}
+                      className="btn btn-primary d-flex align-items-center gap-2 shadow-sm"
                     >
                       <i className="fas fa-vial"></i> Add Sample
                     </button>
                   )}
-              </div>
+              </>
             )}
+          </div>
         </div>
+
 
 
         {/* Table */}
@@ -1364,24 +1443,23 @@ const SampleArea = () => {
                                 {sample.locationids || "----"}
                               </span>
                             );
-                          }  else if (key === "volume") {
-                              return `${sample.volume} ${sample.VolumeUnit || ""}`;
-                            }
+                          } else if (key === "volume") {
+                            return `${sample.volume} ${sample.VolumeUnit || ""}`;
+                          }
+                          else if (key === "gender") {
+                            const gender = sample.gender ? sample.gender : "";
+                            const age =
+                              sample.age !== null &&
+                                sample.age !== undefined &&
+                                sample.age !== "" &&
+                                sample.age !== 0
+                                ? `${sample.age} years`
+                                : "";
+                            return [gender, age].filter(Boolean).join(" | ");
+                          }
 
 
-                          else if (key === "barcode") {
-                            return (
-                              <button
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={() => {
-                                  setSelectedBarcodeId(sample.id);
-                                  handlePrint(sample.masterID);
-                                }}
-                              >
-                                Print Barcode
-                              </button>
-                            );
-                          } else if (key === "age") {
+                          else if (key === "age") {
                             return !sample.age || sample.age === 0
                               ? "-----"
                               : `${sample.age} years`;
@@ -1416,6 +1494,21 @@ const SampleArea = () => {
                               <i className="fas fa-ellipsis-v text-dark"></i>
                             </button>
                             <ul className="dropdown-menu dropdown-menu-end p-1 shadow-sm">
+                              {(actions.includes("edit") || actions.includes("add") || actions.includes("all")) && (
+                                <li>
+                                  <button
+                                    className="dropdown-item  fw-semibold"
+                                    style={{ color: "#FF5733" }}
+                                    onClick={() => {
+                                      setSelectedBarcodeId(sample.id);
+                                      handlePrint(sample.masterID);
+                                    }}
+                                  >
+                                    <FontAwesomeIcon icon={faPrint} className="me-2" />
+                                    Print Barcode
+                                  </button>
+                                </li>
+                              )}
                               {(actions.includes("edit") || actions.includes("add") || actions.includes("all")) &&
                                 sample.samplemode !== "Individual" &&
                                 sample.samplemode !== "Pooled" && (

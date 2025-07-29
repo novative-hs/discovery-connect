@@ -55,7 +55,7 @@ const CartArea = () => {
     if (unpricedItems.length > 0) {
       priceIntervalRef.current = setInterval(() => {
         refreshCartPrices(cart_products);
-      }, 30000);
+      }, 15000);
     }
 
     return () => {
