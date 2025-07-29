@@ -42,6 +42,7 @@ const SampleArea = () => {
   const [PoolSampleHistoryModal, setPoolSampleHistoryModal] = useState(false);
   const [selectedSampleId, setSelectedSampleId] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showPatientModal, setShowPatientModal] = useState(false);
   const [countryname, setCountryname] = useState([]);
   const [searchCountry, setSearchCountry] = useState("");
   const [selectedCountry, setSelectedCountry] = useState(null);
@@ -113,17 +114,23 @@ const SampleArea = () => {
     setSelectedSample(sample);
     setShowModal(true);
   };
+  const openPatientModal = (sample) => {
+    setSelectedSample(sample);
+    setShowPatientModal(true);
+  };
+
 
   const closeModal = () => {
     setSelectedSample(null);
     setShowModal(false);
+    setShowPatientModal(false)
   };
 
   const tableHeaders = [
     { label: "Patient Name", key: "PatientName" },
-    { label: "Patient Location", key: "PatientLocation" },
+    // { label: "Patient Location", key: "PatientLocation" },
     { label: "Gender & Age", key: "gender" },
-    { label: "MR Number", key: "MRNumber" },
+    // { label: "MR Number", key: "MRNumber" },
     // { label: "Location", key: "locationids" },
     { label: "Analyte", key: "Analyte" },
     { label: "Test Result & Unit", key: "TestResult" },
@@ -1392,25 +1399,42 @@ const SampleArea = () => {
                           whiteSpace: "normal",
                         }}
                       >
-                        {key === "Analyte" ? (
-                          <span
-                            className="text-primary fw-semibold fs-6 text-decoration-underline"
-                            role="button"
-                            title="Sample Details"
-                            onClick={() => openModal(sample)}
-                            style={{ cursor: "pointer", transition: "color 0.2s" }}
-                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                            onMouseOut={(e) => (e.target.style.color = "")}
-                          >
-                            {sample.Analyte || "----"}
-                          </span>
-                        ) : key === "samplemode" &&
-                          ["Low", "Medium", "High"].includes(sample.samplemode) ? (
-                          <span className="text-danger fw-semibold">
-                            Add to Pool - {sample.samplemode}
-                          </span>
-                        ) : (() => {
-                          if (key === "locationids") {
+                        {(() => {
+                          if (key === "PatientName") {
+                            return (
+                              <span
+                                className="text-primary fw-semibold fs-6 text-decoration-underline"
+                                role="button"
+                                title="Sample Details"
+                                onClick={() => openPatientModal(sample)}
+                                style={{ cursor: "pointer", transition: "color 0.2s" }}
+                                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                                onMouseOut={(e) => (e.target.style.color = "")}
+                              >
+                                {sample.PatientName || "----"}
+                              </span>
+                            );
+                          } else if (key === "Analyte") {
+                            return (
+                              <span
+                                className="text-primary fw-semibold fs-6 text-decoration-underline"
+                                role="button"
+                                title="Sample Details"
+                                onClick={() => openModal(sample)}
+                                style={{ cursor: "pointer", transition: "color 0.2s" }}
+                                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                                onMouseOut={(e) => (e.target.style.color = "")}
+                              >
+                                {sample.Analyte || "----"}
+                              </span>
+                            );
+                          } else if (key === "samplemode" && ["Low", "Medium", "High"].includes(sample.samplemode)) {
+                            return (
+                              <span className="text-danger fw-semibold">
+                                Add to Pool - {sample.samplemode}
+                              </span>
+                            );
+                          } else if (key === "locationids") {
                             const tooltip = `${sample.room_number || "N/A"} = Room Number\n${sample.freezer_id || "N/A"} = Freezer ID\n${sample.box_id || "N/A"} = Box ID`;
 
                             const handleLogoClick = () => {
@@ -1445,9 +1469,8 @@ const SampleArea = () => {
                             );
                           } else if (key === "volume") {
                             return `${sample.volume} ${sample.VolumeUnit || ""}`;
-                          }
-                          else if (key === "gender") {
-                            const gender = sample.gender ? sample.gender : "";
+                          } else if (key === "gender") {
+                            const gender = sample.gender || "";
                             const age =
                               sample.age !== null &&
                                 sample.age !== undefined &&
@@ -1455,30 +1478,24 @@ const SampleArea = () => {
                                 sample.age !== 0
                                 ? `${sample.age} years`
                                 : "";
-                            return [gender, age].filter(Boolean).join(" | ");
-                          }
-
-
-                          else if (key === "age") {
+                            return [gender, age].filter(Boolean).join(" | ") || "----";
+                          } else if (key === "age") {
                             return !sample.age || sample.age === 0
                               ? "-----"
                               : `${sample.age} years`;
-                          }
-                          else if (key === "TestResult") {
+                          } else if (key === "TestResult") {
                             const result = sample.TestResult;
                             const unit = sample.TestResultUnit;
-
                             return result || unit
                               ? `${result || ""} ${unit || ""}`.trim()
                               : "----";
-                          }
-
-                          else {
+                          } else {
                             return sample[key] || "----";
                           }
                         })()}
                       </td>
                     ))}
+
 
                     {actions.some(action =>
                       ["edit", "dispatch", "history", "all"].includes(action)
@@ -3858,6 +3875,54 @@ const SampleArea = () => {
         </Modal.Body>
         <Modal.Footer className="border-0"></Modal.Footer>
       </Modal>
+      <Modal
+        show={showPatientModal}
+        onHide={closeModal}
+        size="lg"
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton className="border-0">
+          <Modal.Title className="fw-bold text-danger">Patient Details</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body
+          style={{ maxHeight: "500px", overflowY: "auto" }}
+          className="bg-light rounded"
+        >
+          {selectedSample ? (
+            <div className="p-3">
+              <div className="row g-3">
+                {/* MRNumber */}
+                <div className="col-md-6">
+                  <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                    <span className="text-muted small fw-bold mb-1">MRNumber</span>
+                    <span className="fs-6 text-dark">
+                      {selectedSample.MRNumber || "----"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Patient Location */}
+                <div className="col-md-6">
+                  <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                    <span className="text-muted small fw-bold mb-1">Patient Location</span>
+                    <span className="fs-6 text-dark">
+                      {selectedSample.PatientLocation || "----"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center text-muted p-3">No details to show</div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer className="border-0" />
+      </Modal>
+
     </section>
   );
 };
