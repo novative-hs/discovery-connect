@@ -131,7 +131,7 @@ const SampleArea = () => {
     // { label: "Patient Location", key: "PatientLocation" },
     { label: "Gender & Age", key: "gender" },
     // { label: "MR Number", key: "MRNumber" },
-    // { label: "Location", key: "locationids" },
+    { label: "Location", key: "locationids" },
     { label: "Analyte", key: "Analyte" },
     { label: "Test Result & Unit", key: "TestResult" },
     { label: "Volume", key: "volume" },
@@ -387,20 +387,35 @@ const SampleArea = () => {
     }
   }, [totalPages]);
   const handleFilterChange = (field, value) => {
-    const trimmed = value.trim();
+    const trimmed = value.trim?.() || value;
 
-    setFilters(prev => {
-      const updated = { ...prev, [field]: trimmed };
+    if (field === "date_to" && trimmed && !dateFrom) {
+      notifyError("Please select 'Date From' first.");
+      return;
+    }
 
-      // If the value is empty, remove the field
-      if (trimmed === "") {
-        delete updated[field];
-      }
+    const updatedFilters = {
+      ...filters,
+      [field]: trimmed,
+    };
 
-      fetchSamples(currentPage, itemsPerPage, updated);
-      return updated;
-    });
+    if (trimmed === "") {
+      delete updatedFilters[field];
+    }
+
+    setFilters(updatedFilters);
+
+    // ✅ Only apply fetch if both dates are selected, or if it's not a date field
+    if (
+      (field === "date_from" && value && dateTo) ||
+      (field === "date_to" && value && dateFrom) ||
+      (field !== "date_from" && field !== "date_to")
+    ) {
+      fetchSamples(currentPage, itemsPerPage, updatedFilters);
+    }
   };
+
+
 
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // Because react-paginate is 0-indexed
@@ -1205,13 +1220,17 @@ const SampleArea = () => {
                 value={dateFrom}
                 min="2025-05-01"
                 onChange={(e) => {
-                  setDateFrom(e.target.value);
-                  handleFilterChange("date_from", e.target.value);
+                  const value = e.target.value;
+                  setDateFrom(value);
+                  handleFilterChange("date_from", value); // Apply immediately
+                  if (dateTo) {
+                    handleFilterChange("date_to", dateTo); // Re-apply if already selected
+                  }
                 }}
+
               />
             </div>
 
-            {/* Date To */}
             <div className="form-group">
               <label className="form-label fw-semibold mb-1">Date To</label>
               <input
@@ -1221,11 +1240,17 @@ const SampleArea = () => {
                 value={dateTo}
                 min="2025-05-01"
                 onChange={(e) => {
-                  setDateTo(e.target.value);
-                  handleFilterChange("date_to", e.target.value);
+                  const value = e.target.value;
+                  setDateTo(value);
+                  handleFilterChange("date_to", value); // Apply immediately
+                  if (dateFrom) {
+                    handleFilterChange("date_from", dateFrom); // Re-apply if already selected
+                  }
                 }}
+
               />
             </div>
+
 
             {/* Analyte */}
             <div className="form-group">
@@ -1275,7 +1300,7 @@ const SampleArea = () => {
                     setVisibility("");
                     setDateFrom("");
                     setDateTo("");
-                    fetchSamples(currentPage + 1, itemsPerPage, filters);
+                    fetchSamples(1, itemsPerPage, {});
                   }}
                 >
                   Clear Filters
@@ -1316,7 +1341,7 @@ const SampleArea = () => {
 
 
         {/* Table */}
-        <div className="table-responsive" style={{ overflowX: "auto", whiteSpace: "nowrap" }}>
+        <div className="table-responsive" style={{ overflowX: "auto" }}>
           <table
             className="table table-bordered table-hover text-center align-middle border"
             style={{ width: "100%" }} // Removed tableLayout: "fixed"
@@ -1331,7 +1356,13 @@ const SampleArea = () => {
                   </th>
                 )}
                 {tableHeaders.map(({ label, key }, index) => (
-                  <th key={index} className="text-center align-middle px-2" style={{ minWidth: "150px" }}>
+                  <th key={index} className="text-center align-middle px-2" style={{
+                    maxWidth: key === "volume" ? "80px" : "150px",
+                    minWidth: key === "volume" ? "60px" : "auto",
+                    wordBreak: "break-word",
+                    whiteSpace: "normal",
+                  }}
+                  >
                     <div className="d-flex flex-column justify-content-between align-items-center" style={{ gap: "4px" }}>
                       <input
                         type="text"
@@ -1394,10 +1425,12 @@ const SampleArea = () => {
                               : "text-center"
                         }
                         style={{
-                          maxWidth: "150px",
+                          maxWidth: key === "volume" ? "80px" : "150px",
+                          minWidth: key === "volume" ? "60px" : "auto",
                           wordBreak: "break-word",
                           whiteSpace: "normal",
                         }}
+
                       >
                         {(() => {
                           if (key === "PatientName") {
