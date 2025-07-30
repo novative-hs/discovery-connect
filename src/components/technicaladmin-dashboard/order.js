@@ -169,11 +169,7 @@ const OrderPage = () => {
     setShowTransferModal(true);
   };
   const [expandedComments, setExpandedComments] = useState({});
-  const fieldsToShowInOrder = [
-    { label: "Researcher Name", field: "researcher_name" },
-    { label: "Organization Name", field: "organization_name" },
 
-  ];
   const openModal = (sample) => {
 
     setSelectedOrder(sample);
@@ -379,6 +375,7 @@ const OrderPage = () => {
                     <thead className="table-primary">
                       <tr>
                         <th>Analyte</th>
+                        <th>Sample Collection Site Name</th>
                         <th>Status</th>
                         <th>Technical Admin</th>
                         <th>Scientific Committee</th>
@@ -413,6 +410,9 @@ const OrderPage = () => {
                                 }}
                               >
                                 {order.Analyte || "N/A"}
+                              </td>
+                              <td>
+                                {order.source_name}
                               </td>
 
                               <td>

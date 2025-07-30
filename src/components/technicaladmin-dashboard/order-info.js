@@ -7,7 +7,6 @@ const OrderInfo = ({ setActiveTab }) => {
 
   useEffect(() => {
     fetchUserCount();
-    fetchContactusCount();
   }, []);
 
   // Function to fetch user count data
@@ -18,16 +17,6 @@ const OrderInfo = ({ setActiveTab }) => {
       );
       
       setUserCount(response.data); // Set the fetched counts in the state
-    } catch (error) {
-      console.error("Error fetching user count:", error);
-    }
-  };
-  const fetchContactusCount = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/contactus/get-all`
-      );
-      setContactusCount(response.data.length); // Set the fetched counts in the state
     } catch (error) {
       console.error("Error fetching user count:", error);
     }
@@ -52,13 +41,6 @@ const OrderInfo = ({ setActiveTab }) => {
       icon: "fa-solid fa-times-circle",
       bg: "bg-danger",
       tab: "orderrejected",
-    },
-    {
-      label: "Contact us List",
-      count: contactusCount,
-      icon: "fa-solid fa-envelope",
-      bg: "bg-primary",
-      tab: "contactus",
     },
   ];
 

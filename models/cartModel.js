@@ -462,6 +462,9 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
       r.ResearcherName AS researcher_name,
       r.phoneNumber AS phoneNumber, 
       org.OrganizationName AS organization_name,
+      cs.CollectionSiteName AS collectionsitename,
+      b.Name AS biobankname,
+      COALESCE(cs.CollectionSiteName, b.Name) AS source_name,
       c.sample_id, 
       s.Analyte, 
       s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
@@ -494,6 +497,9 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
     LEFT JOIN researcher r ON u.id = r.user_account_id 
     LEFT JOIN organization org ON r.nameofOrganization = org.id
     JOIN sample s ON c.sample_id = s.id
+    LEFT JOIN biobank b ON s.user_account_id = b.user_account_id
+    LEFT JOIN collectionsitestaff css ON s.user_account_id = css.user_account_id
+    LEFT JOIN collectionsite cs ON css.collectionsite_id = cs.id
     LEFT JOIN technicaladminsampleapproval ra ON c.id = ra.cart_id
     ${whereClause}
     ORDER BY c.created_at DESC
