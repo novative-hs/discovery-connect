@@ -169,6 +169,7 @@ const Header = ({ setActiveTab, activeTab }) => {
           { label: "Cities", tab: "city" },
           { label: "Countries", tab: "country" },
           { label: "Districts", tab: "district" },
+          { label: "Contact us List", tab: "contactus" },
           { label: "Researcher's List", tab: "researcher" },
           { label: "Organization's List", tab: "organization" },
           { label: "Collection Site's", tab: "collectionsite" },
@@ -228,7 +229,6 @@ const Header = ({ setActiveTab, activeTab }) => {
                   { label: "Profile", tab: "order-info" },
                   { label: "Order List", tab: "order" },
                   { label: "Order Rejected List", tab: "orderrejected" },
-                  { label: "Contact us List", tab: "contactus" },
                 ]
                 : userType == "csr"
                   ? [
@@ -343,7 +343,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                   className="text-primary fw-bold fs-6"
                   style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
                 >
-                  Welcome Technical Admin!
+                  Welcome Customer Support Admin!
                 </span>
               )}
               {userType === "registrationadmin" && (

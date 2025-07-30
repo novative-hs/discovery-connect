@@ -61,7 +61,7 @@ const updateCartStatusToCompleted = (cartId, callback) => {
     if (results.length === 0) {
       return callback(new Error("Cart not found"), null);
     }
-const tracking_id=results[0].tracking_id;
+    const tracking_id = results[0].tracking_id;
     const deliveredAt = results[0].delivered_at;
     const currentOrderStatus = results[0].order_status;
 
@@ -149,7 +149,7 @@ const createCart = (data, callback) => {
     irb_file,
     nbc_file,
   } = data;
-const tracking_id = generateTrackingId();
+  const tracking_id = generateTrackingId();
   // Validate required fields
   if (
     !researcher_id ||
@@ -179,7 +179,7 @@ const tracking_id = generateTrackingId();
 
     // Insert each cart item
     const insertPromises = cart_items.map((item) => {
-      
+
       return new Promise((resolve, reject) => {
         const sample_id = item.sample_id;
 
@@ -256,43 +256,43 @@ const tracking_id = generateTrackingId();
       });
     });
 
-   Promise.all(insertPromises)
-  .then(() => {
-    const message =
-      "Your sample request has been <b>successfully created</b>. Please check your dashboard for more details.";
-    const subject = "Sample Request Status Update";
+    Promise.all(insertPromises)
+      .then(() => {
+        const message =
+          "Your sample request has been <b>successfully created</b>. Please check your dashboard for more details.";
+        const subject = "Sample Request Status Update";
 
-    const getResearcherEmailQuery = `
+        const getResearcherEmailQuery = `
       SELECT ua.email, c.created_at, c.id AS cartId
       FROM user_account ua
       JOIN cart c ON ua.id = c.user_id
       WHERE c.tracking_id = ?
     `;
 
-    mysqlConnection.query(getResearcherEmailQuery, [tracking_id], (emailErr, emailResults) => {
-      if (emailErr) return callback(emailErr);
+        mysqlConnection.query(getResearcherEmailQuery, [tracking_id], (emailErr, emailResults) => {
+          if (emailErr) return callback(emailErr);
 
-      if (emailResults.length === 0) {
-        return callback(new Error("No data found for provided tracking ID"));
-      }
+          if (emailResults.length === 0) {
+            return callback(new Error("No data found for provided tracking ID"));
+          }
 
-      const researcherEmail = emailResults[0].email;
-      const cartIdsList = emailResults
-        .map((detail) => `Cart ID: ${detail.cartId} (Created At: ${detail.created_at})`)
-        .join("<br/>");
+          const researcherEmail = emailResults[0].email;
+          const cartIdsList = emailResults
+            .map((detail) => `Cart ID: ${detail.cartId} (Created At: ${detail.created_at})`)
+            .join("<br/>");
 
-      const emailMessage = `Dear Researcher,<br/>${message}<br/>Tracking ID: <b>${tracking_id}</b><br/>Best regards,<br/>Discovery Connect`;
+          const emailMessage = `Dear Researcher,<br/>${message}<br/>Tracking ID: <b>${tracking_id}</b><br/>Best regards,<br/>Discovery Connect`;
 
-      sendEmail(researcherEmail, subject, emailMessage)
-        .then(() => {
-          callback(null, { message: "Cart created successfully", tracking_id });
-        })
-        .catch((emailSendErr) => {
-          console.error("Failed to send researcher email:", emailSendErr);
-          callback(emailSendErr);
+          sendEmail(researcherEmail, subject, emailMessage)
+            .then(() => {
+              callback(null, { message: "Cart created successfully", tracking_id });
+            })
+            .catch((emailSendErr) => {
+              console.error("Failed to send researcher email:", emailSendErr);
+              callback(emailSendErr);
+            });
         });
-    });
-  })
+      })
   });
 };
 
@@ -459,7 +459,8 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
       c.tracking_id,
       c.user_id, 
       u.email AS user_email,
-      r.ResearcherName AS researcher_name, 
+      r.ResearcherName AS researcher_name,
+      r.phoneNumber AS phoneNumber, 
       org.OrganizationName AS organization_name,
       c.sample_id, 
       s.Analyte, 
@@ -530,7 +531,6 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
               }
             });
           });
-
           callback(null, {
             results,
             totalCount,
