@@ -258,7 +258,10 @@ const SampleArea = () => {
     { name: "/get/analyte", setter: setAnalyteNames },
     { name: "infectiousdiseasetesting", setter: setInfectiousdiseasetestingNames },
   ];
-
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0]; // format: YYYY-MM-DD
+    setDateTo(today); // auto-select today's date
+  }, []);
   const handleTransferClick = (sample) => {
 
     setSelectedSampleId(sample.id);
@@ -3885,29 +3888,39 @@ const SampleArea = () => {
 
         <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
           {selectedSample ? (
-            <div className="p-3">
-              <div className="row g-3">
-                {fieldsToShowInOrder.map(({ key, label }) => {
-                  const value = selectedSample[key];
-                  if (value === undefined) return null;
+            (() => {
+              const validFields = fieldsToShowInOrder.filter(({ key }) => {
+                const value = selectedSample[key];
+                return value !== undefined && value !== null && value !== "";
+              });
 
-                  return (
-                    <div className="col-md-6" key={key}>
-                      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                        <span className="text-muted small fw-bold mb-1">{label}</span>
-                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+              if (validFields.length === 0) {
+                return <div className="text-center text-muted p-3">No sample detail to show</div>;
+              }
+
+              return (
+                <div className="p-3">
+                  <div className="row g-3">
+                    {validFields.map(({ key, label }) => (
+                      <div className="col-md-6" key={key}>
+                        <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                          <span className="text-muted small fw-bold mb-1">{label}</span>
+                          <span className="fs-6 text-dark">{selectedSample[key]?.toString() || "----"}</span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()
           ) : (
-            <div className="text-center text-muted p-3">No details to show</div>
+            <div className="text-center text-muted p-3">No sample detail to show</div>
           )}
         </Modal.Body>
+
         <Modal.Footer className="border-0"></Modal.Footer>
       </Modal>
+
       <Modal
         show={showPatientModal}
         onHide={closeModal}
