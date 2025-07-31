@@ -226,7 +226,6 @@ const Header = ({ setActiveTab, activeTab }) => {
               ? [{ label: "Pending Review List", tab: "samples" }]
               : userType == "technicaladmin"
                 ? [
-                  { label: "Profile", tab: "order-info" },
                   { label: "Order List", tab: "order" },
                   { label: "Order Rejected List", tab: "orderrejected" },
                 ]

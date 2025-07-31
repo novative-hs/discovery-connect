@@ -38,6 +38,8 @@ const OrderPage = () => {
   const [filtertotal, setfiltertotal] = useState(null);
   const [searchField, setSearchField] = useState(null);
   const [searchValue, setSearchValue] = useState(null);
+  const [allOrdersRaw, setAllOrdersRaw] = useState([]);
+
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
 
@@ -54,11 +56,33 @@ const OrderPage = () => {
     }
   }, []);
   useEffect(() => {
-    fetchOrders(currentPage, ordersPerPage, {
-      searchField,
-      searchValue,
+    fetchOrders(currentPage, ordersPerPage);
+  }, [currentPage]);
+  useEffect(() => {
+    const filtered = allOrdersRaw.filter((order) => {
+      if (!searchField || !searchValue) return true;
+
+      const fieldValue = (order[searchField] || "").toString().toLowerCase();
+      return fieldValue.includes(searchValue);
     });
-  }, [currentPage, searchField, searchValue]);
+
+    const grouped = {};
+    filtered.forEach((order) => {
+      if (!grouped[order.tracking_id]) {
+        grouped[order.tracking_id] = { ...order, analytes: [] };
+      }
+      grouped[order.tracking_id].analytes.push({
+        analyte: order.Analyte,
+        quantity: order.quantity,
+        id: order.sample_id,
+        ...order,
+      });
+    });
+
+    const groupedOrders = Object.values(grouped);
+    setOrders(groupedOrders);
+  }, [allOrdersRaw, searchField, searchValue]);
+
 
   const fetchOrders = async (page, pageSize, filters = {}) => {
     setLoading(true);
@@ -89,6 +113,7 @@ const OrderPage = () => {
       const groupedOrders = Object.values(grouped);
       setOrders(groupedOrders);
       setAllOrders(groupedOrders);
+      setAllOrdersRaw(groupedOrders);
       setTotalPages(Math.ceil(totalCount / pageSize));
 
       return groupedOrders;
