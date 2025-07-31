@@ -104,6 +104,11 @@ const getBiobankSamples = (
         baseWhereShared += ` AND LOWER(collectionsite.CollectionSiteName) LIKE ?`;
         paramsShared.push(likeValue);
         break;
+      case "visibility":
+        baseWhereShared += ` AND LOWER(sample.sample_visibility) = ?`;
+        paramsShared.push(value.toLowerCase());
+        baseWhereOwn += ` AND LOWER(sample.sample_visibility) = ?`;
+        paramsOwn.push(value.toLowerCase());
       default:
         console.warn("⚠️ Unknown filter field:", field);
         break;
@@ -117,11 +122,12 @@ const getBiobankSamples = (
     const likeValue = `%${value.toLowerCase()}%`;
 
     if (field === "visibility") {
-      baseWhereShared += ` AND LOWER(sample.sample_visibility) LIKE ?`;
-      paramsShared.push(likeValue);
-      baseWhereOwn += ` AND LOWER(sample.sample_visibility) LIKE ?`;
-      paramsOwn.push(likeValue);
+      baseWhereShared += ` AND LOWER(sample.sample_visibility) = ?`;
+      paramsShared.push(value.toLowerCase());
+      baseWhereOwn += ` AND LOWER(sample.sample_visibility) = ?`;
+      paramsOwn.push(value.toLowerCase());
     }
+
     else if (field === "CollectionSiteName") {
       baseWhereShared += ` AND LOWER(collectionsite.CollectionSiteName) LIKE ?`;
       paramsShared.push(likeValue);

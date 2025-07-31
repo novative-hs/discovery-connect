@@ -316,21 +316,17 @@ const BioBankSampleArea = () => {
 
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      const filters = {
-        Analyte: analyte?.trim() || undefined,
-        gender: gender?.trim() || undefined,
-        CollectionSiteName: collectionSite?.trim() || undefined,
-        visibility: visibility,
-        priceFilter: priceFilter
-      };
+    const filters = {
+      Analyte: analyte?.trim() || undefined,
+      gender: gender?.trim() || undefined,
+      CollectionSiteName: collectionSite?.trim() || undefined,
+      visibility: visibility,
+      priceFilter: priceFilter
+    };
 
-      console.log("Sending filters:", filters); // Add this debug
+    console.log("Sending filters:", filters);
 
-      fetchSamples(currentPage + 1, itemsPerPage, filters);
-    }, 400); // reasonable debounce
-
-    return () => clearTimeout(delayDebounceFn);
+    fetchSamples(currentPage + 1, itemsPerPage, filters);
   }, [analyte, gender, collectionSite, visibility, priceFilter, currentPage]);
 
 
@@ -371,16 +367,23 @@ const BioBankSampleArea = () => {
 
     if (field === "price") {
       setPriceFilter(value);
-      setSearchField("");  // optional, to clear old field
-      setSearchValue("");  // optional
-      fetchSamples(1, itemsPerPage, { priceFilter: value }); // 🟢 priceFilter passed
+      setSearchField("");
+      setSearchValue("");
+      fetchSamples(1, itemsPerPage, { priceFilter: value });
+    } else if (field === "visibility") {
+      setVisibility(value);
+      setSearchField("");
+      setSearchValue("");
+      setPriceFilter("");
+      fetchSamples(1, itemsPerPage, { visibility: value });
     } else {
       setSearchField(field);
       setSearchValue(value);
-      setPriceFilter(""); // clear priceFilter
+      setPriceFilter("");
       fetchSamples(1, itemsPerPage, { searchField: field, searchValue: value });
     }
   };
+
 
 
   const handleInputChange = (e) => {
@@ -1230,16 +1233,19 @@ const BioBankSampleArea = () => {
             {/* Visibility */}
             <div className="col-md-2 col-sm-6">
               <label className="form-label fw-semibold">Visibility</label>
-              <input
-                type="text"
-                className="form-control rounded-3 border-secondary shadow-sm"
-                placeholder="Public / Private"
+              <select
+                className="form-select rounded-3 border-secondary shadow-sm"
                 value={visibility}
                 onChange={(e) => {
                   setVisibility(e.target.value);
                   handleFilterChange("visibility", e.target.value);
                 }}
-              />
+              >
+                <option value="">Select</option>
+                <option value="Public">Public</option>
+                <option value="Non-Public">Non-Public</option>
+              </select>
+
             </div>
 
             {/* Price Filter */}
