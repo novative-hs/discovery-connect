@@ -59,28 +59,17 @@ const OrderPage = () => {
     fetchOrders(currentPage, ordersPerPage);
   }, [currentPage]);
   useEffect(() => {
-    const filtered = allOrdersRaw.filter((order) => {
-      if (!searchField || !searchValue) return true;
+    if (!searchField || !searchValue) {
+      setOrders(allOrdersRaw);
+      return;
+    }
 
-      const fieldValue = (order[searchField] || "").toString().toLowerCase();
+    const filteredGroups = allOrdersRaw.filter((group) => {
+      const fieldValue = (group[searchField] || "").toString().toLowerCase();
       return fieldValue.includes(searchValue);
     });
 
-    const grouped = {};
-    filtered.forEach((order) => {
-      if (!grouped[order.tracking_id]) {
-        grouped[order.tracking_id] = { ...order, analytes: [] };
-      }
-      grouped[order.tracking_id].analytes.push({
-        analyte: order.Analyte,
-        quantity: order.quantity,
-        id: order.sample_id,
-        ...order,
-      });
-    });
-
-    const groupedOrders = Object.values(grouped);
-    setOrders(groupedOrders);
+    setOrders(filteredGroups);
   }, [allOrdersRaw, searchField, searchValue]);
 
 
@@ -276,7 +265,7 @@ const OrderPage = () => {
             {successMessage}
           </div>
         )}
-        <h7 className="text-danger mb-1">Click on Analyte to get detail about sample.</h7>
+
         <div className="row justify-content-center">
           <h4 className="tp-8 fw-bold text-success text-center pb-2">
             Order Detail
@@ -295,6 +284,10 @@ const OrderPage = () => {
                     {
                       label: "Organization Name",
                       field: "organization_name",
+                    },
+                    {
+                      label: "Order status",
+                      field: "order_status",
                     },
                     {
                       label: "Order Date",
@@ -351,6 +344,20 @@ const OrderPage = () => {
                       <td>{orderGroup.user_email}</td>
                       <td>{orderGroup.phoneNumber}</td>
                       <td>{orderGroup.organization_name}</td>
+                      <td>
+                        <span className={`badge text-uppercase fw-semibold
+    ${orderGroup.order_status === 'Pending' ? 'bg-warning text-dark' : ''}
+    ${orderGroup.order_status === 'Under Review' ? 'bg-info text-dark' : ''}
+    ${orderGroup.order_status === 'Accepted' ? 'bg-success' : ''}
+    ${orderGroup.order_status === 'Shipped' ? 'bg-primary' : ''}
+    ${orderGroup.order_status === 'Dispatch' ? 'bg-secondary' : ''}
+    ${orderGroup.order_status === 'Completed' ? 'bg-success' : ''}
+  `}>
+                          {orderGroup.order_status}
+                        </span>
+                      </td>
+
+
                       <td>{new Date(orderGroup.created_at).toLocaleDateString('en-GB')}</td>
                       <td>
                         <span
@@ -392,6 +399,7 @@ const OrderPage = () => {
                 Order Details
               </Modal.Title>
             </Modal.Header>
+            <p className="text-danger mb-1 ms-3">Click on Analyte to get detail about sample.</p>
 
             <Modal.Body className="bg-light" style={{ maxHeight: "500px", overflowY: "auto" }}>
               {selectedOrder ? (
