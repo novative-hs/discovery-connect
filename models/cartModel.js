@@ -92,7 +92,7 @@ const updateCartStatusToCompleted = (cartId, callback) => {
           return callback(updateErr, null);
         }
 
-        notifyResearcher(tracking_id, "Your sample request has been completed.<br/>", "Sample Request Status Update", (notifyErr) => {
+        notifyResearcher(cartId, "Your sample request has been completed.<br/>", "Sample Request Status Update", (notifyErr) => {
           if (notifyErr) {
             return callback(notifyErr, null);
           }
