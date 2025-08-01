@@ -15,7 +15,7 @@ import InputMask from "react-input-mask";
 import { getsessionStorage } from "@utils/sessionStorage";
 import Barcode from "react-barcode";
 import { notifyError } from "@utils/toast";
-
+import Select from "react-select";
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -30,7 +30,6 @@ const SampleArea = () => {
   const [poolMode, setPoolMode] = useState(false);
   const [selectedSamples, setSelectedSamples] = useState([]);
   const [selectedSampleName, setSelectedSampleName] = useState("");
-  const [analyteOptions, setAnalyteOptions] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAddPoolModal, setshowAddPoolModal] = useState(false);
   const [showEditPoolModal, setShowEditPoolModal] = useState(false);
@@ -74,6 +73,10 @@ const SampleArea = () => {
   const [testsystemNames, setTestSystemNames] = useState([]);
   const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
   const [AnalyteNames, setAnalyteNames] = useState([]);
+  const analyteOptions = AnalyteNames.map((item) => ({
+    value: item.name,
+    label: item.name,
+  }));
   const [showAdditionalFields, setShowAdditionalFields] = React.useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [samplePdfPreview, setSamplePdfPreview] = useState(null);
@@ -1896,34 +1899,83 @@ const SampleArea = () => {
                                     )}
                                   </InputMask>
                                 </div>
-                                <div className="form-group col-md-4">
+                                <div className="form-group col-md-4 react-select-container">
                                   <label>
-                                    Analyte{" "}
-                                    <span className="text-danger">*</span>
+                                    Analyte <span className="text-danger">*</span>
                                   </label>
-                                  <select
-                                    className="form-control"
-                                    name="Analyte"
-                                    value={formData.Analyte}
-                                    onChange={handleInputChange}
-                                    required
-                                    style={{
-                                      height: "45px",
-                                      fontSize: "14px",
-                                      backgroundColor: !formData.Analyte
-                                        ? "#fdecea"
-                                        : "#fff",
+                                  <Select
+                                    options={analyteOptions}
+                                    value={analyteOptions.find(option => option.value === formData.Analyte)}
+                                    onChange={(selectedOption) =>
+                                      handleInputChange({
+                                        target: { name: "Analyte", value: selectedOption?.value || "" },
+                                      })
+                                    }
+                                    isClearable
+                                    classNamePrefix="react-select"
+                                    menuPortalTarget={document.body}
+                                    styles={{
+                                      control: (base, state) => ({
+                                        ...base,
+                                        minHeight: 40,
+                                        height: 40,
+                                        fontSize: 14,
+                                        backgroundColor: !formData.Analyte ? "#fdecea" : "#fff",
+                                        borderColor: state.isFocused ? "#80bdff" : base.borderColor,
+                                        boxShadow: state.isFocused ? "0 0 0 0.2rem rgba(0,123,255,.25)" : "none",
+                                        display: "flex",
+                                        alignItems: "center", // ensures vertical centering
+                                      }),
+                                      valueContainer: (base) => ({
+                                        ...base,
+                                        padding: "0 8px",
+                                        display: "flex",
+                                        alignItems: "center", // centers text
+                                        height: 40,
+                                      }),
+                                      indicatorsContainer: (base) => ({
+                                        ...base,
+                                        height: 40,
+                                        display: "flex",
+                                        alignItems: "center", // centers icons
+                                      }),
+                                      dropdownIndicator: (base) => ({
+                                        ...base,
+                                        padding: 4,
+                                        display: "flex",
+                                        alignItems: "center",
+                                      }),
+                                      clearIndicator: (base) => ({
+                                        ...base,
+                                        padding: 4,
+                                        display: "flex",
+                                        alignItems: "center",
+                                      }),
+                                      option: (base, state) => ({
+                                        ...base,
+                                        fontSize: 13,
+                                        padding: "6px 10px",
+                                        backgroundColor: state.isSelected
+                                          ? "#007bff"
+                                          : state.isFocused
+                                            ? "#e9f5ff"
+                                            : "#fff",
+                                        color: state.isSelected ? "#fff" : "#000",
+                                      }),
+                                      menu: (base) => ({
+                                        ...base,
+                                        zIndex: 9999,
+                                      }),
+                                      menuPortal: (base) => ({
+                                        ...base,
+                                        zIndex: 9999,
+                                      }),
                                     }}
-                                  >
-                                    <option value="" hidden></option>
-                                    {AnalyteNames.map((item, index) => (
-                                      <option key={index} value={item.name}>
-                                        {item.name}
-                                      </option>
-                                    ))}
 
-                                  </select>
+                                  />
+
                                 </div>
+
                                 <div className="form-group col-md-4">
                                   <label>
                                     Sample Type Matrix{" "}
