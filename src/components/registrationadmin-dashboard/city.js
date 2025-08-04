@@ -7,7 +7,7 @@ import Pagination from "@ui/Pagination";
 import * as XLSX from "xlsx";
 const CityArea = () => {
   const id = sessionStorage.getItem("userID");
-  
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -30,18 +30,18 @@ const CityArea = () => {
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
   // Fetch City from backend when component loads
   useEffect(() => {
-     const fetchcityname = async () => {
-    try {
-      const response = await axios.get(`${url}/city/get-city`);
-      setcityname(response.data);
-      setFilteredCityname(response.data); // Initialize filtered list
-    } catch (error) {
-      console.error("Error fetching City:", error);
-    }
-  };
+    const fetchcityname = async () => {
+      try {
+        const response = await axios.get(`${url}/city/get-city`);
+        setcityname(response.data);
+        setFilteredCityname(response.data); // Initialize filtered list
+      } catch (error) {
+        console.error("Error fetching City:", error);
+      }
+    };
     fetchcityname(); // Call the function when the component mounts
   }, [url]);
- 
+
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -52,7 +52,7 @@ const CityArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredCityname,currentPage]);
+  }, [filteredCityname, currentPage]);
 
   const currentData = filteredCityname.slice(
     currentPage * itemsPerPage,
@@ -64,27 +64,27 @@ const CityArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-  let filtered = [];
+    let filtered = [];
 
-  if (value.trim() === "") {
-    filtered = cityname;
-  } else {
-    filtered = cityname.filter((city) => {
-      if (field === "added_by") {
-        return "registration admin".includes(value.toLowerCase());
-      }
+    if (value.trim() === "") {
+      filtered = cityname;
+    } else {
+      filtered = cityname.filter((city) => {
+        if (field === "added_by") {
+          return "registration admin".includes(value.toLowerCase());
+        }
 
-      return city[field]
-        ?.toString()
-        .toLowerCase()
-        .includes(value.toLowerCase());
-    });
-  }
+        return city[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase());
+      });
+    }
 
-  setFilteredCityname(filtered);
-  setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-  setCurrentPage(0);
-};
+    setFilteredCityname(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
+  };
 
 
   const fetchHistory = async (filterType, id) => {
@@ -115,23 +115,23 @@ const CityArea = () => {
     setFormData({ cityname: "", added_by: id });
   };
 
-    const handleSubmit = async (e) => {
-      e.preventDefault();
-      try {
-        await axios.post(`${url}/city/post-city`, formData);
-        const response = await axios.get(`${url}/city/get-city`);
-        setFilteredCityname(response.data);
-        setcityname(response.data);
-        setSuccessMessage("City added successfully.");
-        setTimeout(() => setSuccessMessage(""), 3000);
-        resetFormData();
-        setShowAddModal(false);
-      } catch (error) {
-        console.error("Error adding City", error);
-      }
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${url}/city/post-city`, formData);
+      const response = await axios.get(`${url}/city/get-city`);
+      setFilteredCityname(response.data);
+      setcityname(response.data);
+      setSuccessMessage("City added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowAddModal(false);
+    } catch (error) {
+      console.error("Error adding City", error);
+    }
+  };
 
-   const handleEditClick = (cityname) => {
+  const handleEditClick = (cityname) => {
     setSelectedcitynameId(cityname.id);
     setEditcityname(cityname);
     setFormData({
@@ -141,7 +141,7 @@ const CityArea = () => {
     setShowEditModal(true);
   };
 
-   const handleUpdate = async (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
     try {
       await axios.put(`${url}/city/put-city/${selectedcitynameId}`, formData);
@@ -157,7 +157,7 @@ const CityArea = () => {
     }
   };
 
-   const handleDelete = async () => {
+  const handleDelete = async () => {
     try {
       await axios.delete(`${url}/city/delete-city/${selectedcitynameId}`);
       const response = await axios.get(`${url}/city/get-city`);
@@ -177,7 +177,7 @@ const CityArea = () => {
     document.body.style.overflow = isModalOpen ? "hidden" : "auto";
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
- 
+
 
   const formatDate = (date) => {
     const options = { year: "2-digit", month: "short", day: "2-digit" };
@@ -191,56 +191,57 @@ const CityArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
 
-    const handleFileUpload = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-  
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const workbook = XLSX.read(event.target.result, { type: "binary" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const data = XLSX.utils.sheet_to_json(sheet);
-        const payload = data.map((row) => ({ name: row.name, added_by: id }));
-  
-        try {
-          await axios.post(`${url}/city/post-city`, { bulkData: payload });
-          const response = await axios.get(`${url}/city/get-city`);
-          setFilteredCityname(response.data);
-          setcityname(response.data);
-          setSuccessMessage("Successfully added")
-        } catch (error) {
-          console.error("Error uploading City", error);
-        }
-      };
-      reader.readAsBinaryString(file);
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const workbook = XLSX.read(event.target.result, { type: "binary" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+      console.log(data)
+      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
+      
+      try {
+        await axios.post(`${url}/city/post-city`, { bulkData: payload });
+        const response = await axios.get(`${url}/city/get-city`);
+        setFilteredCityname(response.data);
+        setcityname(response.data);
+        setSuccessMessage("Successfully added")
+      } catch (error) {
+        console.error("Error uploading City", error);
+      }
     };
-const handleExportToExcel = () => {
-  const dataToExport = filteredCityname.map((item) => ({
-    Name: item.name ?? "", // Fallback to empty string
-    "Added By": "Registration Admin",
-    "Created At": item.created_at ? formatDate(item.created_at) : "",
-    "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-  }));
+    reader.readAsBinaryString(file);
+  };
+  const handleExportToExcel = () => {
+    const dataToExport = filteredCityname.map((item) => ({
+      Name: item.name ?? "", // Fallback to empty string
+      "Added By": "Registration Admin",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
 
-  // Add an empty row with all headers if filteredCityname is empty (optional)
-  if (dataToExport.length === 0) {
-    dataToExport.push({
-      Name: "",
-      "Added By": "",
-      "Created At": "",
-      "Updated At": "",
-    });
-  }
+    // Add an empty row with all headers if filteredCityname is empty (optional)
+    if (dataToExport.length === 0) {
+      dataToExport.push({
+        Name: "",
+        "Added By": "",
+        "Created At": "",
+        "Updated At": "",
+      });
+    }
 
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "City");
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "City");
 
-  XLSX.writeFile(workbook, "City_List.xlsx");
-};
-if (id === null) {
+    XLSX.writeFile(workbook, "City_List.xlsx");
+  };
+  if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
-  } 
+  }
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
