@@ -45,6 +45,35 @@ const notifyResearcher = (cartIds, message, subject) => {
     });
   });
 };
+const createCartTable = () => {
+  const cartTableQuery = `
+  CREATE TABLE IF NOT EXISTS cart (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    sample_id VARCHAR(36) NOT NULL,
+    tracking_id VARCHAR(10),
+    price FLOAT NOT NULL,
+    quantity INT NOT NULL,
+    VolumeUnit VARCHAR(20),
+    volume VARCHAR(255) NOT NULL,
+    totalpayment DECIMAL(10, 2) NOT NULL,
+    payment_id INT DEFAULT NULL,
+    order_status ENUM('Pending', 'Accepted', 'UnderReview', 'Rejected', 'Shipped', 'Dispatched', 'Completed') DEFAULT 'Pending',
+   delivered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES user_account(id) ON DELETE CASCADE,
+    FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
+    FOREIGN KEY (payment_id) REFERENCES payment(id) ON DELETE SET NULL
+  )`;
+
+  mysqlConnection.query(cartTableQuery, (err, result) => {
+    if (err) {
+      console.error("Error creating cart table:", err);
+    } else {
+      console.log("Cart table created or already exists.");
+    }
+  });
+};
 
 const updateCartStatusToCompleted = (cartId, callback) => {
   const getCartDetailsQuery = `
@@ -106,35 +135,7 @@ const updateCartStatusToCompleted = (cartId, callback) => {
   });
 };
 
-const createCartTable = () => {
-  const cartTableQuery = `
-  CREATE TABLE IF NOT EXISTS cart (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    sample_id VARCHAR(36) NOT NULL,
-    tracking_id VARCHAR(10),
-    price FLOAT NOT NULL,
-    quantity INT NOT NULL,
-    VolumeUnit VARCHAR(20),
-    volume VARCHAR(255) NOT NULL,
-    totalpayment DECIMAL(10, 2) NOT NULL,
-    payment_id INT DEFAULT NULL,
-    order_status ENUM('Pending', 'Accepted', 'UnderReview', 'Rejected', 'Shipped', 'Dispatched', 'Completed') DEFAULT 'Pending',
-   delivered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES user_account(id) ON DELETE CASCADE,
-    FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
-    FOREIGN KEY (payment_id) REFERENCES payment(id) ON DELETE SET NULL
-  )`;
 
-  mysqlConnection.query(cartTableQuery, (err, result) => {
-    if (err) {
-      console.error("Error creating cart table:", err);
-    } else {
-      console.log("Cart table created or already exists.");
-    }
-  });
-};
 function generateTrackingId() {
   return Math.floor(10000 + Math.random() * 90000).toString();
 }
@@ -467,6 +468,8 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
       COALESCE(cs.CollectionSiteName, b.Name) AS source_name,
       c.sample_id, 
       s.Analyte, 
+      s.VolumeUnit,
+      s.volume,
       s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
       s.CountryofCollection, s.VolumeUnit, s.SampleTypeMatrix, s.SmokingStatus, 
       s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
@@ -531,12 +534,15 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
           callback(err, null);
         } else {
           results.forEach(order => {
-            updateCartStatusToCompleted(order.order_id, (updateErr) => {
-              if (updateErr) {
-                console.error(`Error updating status for order ${order.order_id}:`, updateErr);
-              }
-            });
+            if (order.order_status !== 'Dispatched' && order.order_status !== 'Shipped') {
+              updateCartStatusToCompleted(order.order_id, (updateErr) => {
+                if (updateErr) {
+                  console.error(`Error updating status for order ${order.order_id}:`, updateErr);
+                }
+              });
+            }
           });
+
           callback(null, {
             results,
             totalCount,
@@ -581,6 +587,8 @@ const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, ca
       org.OrganizationName AS organization_name,
       s.id AS sample_id,
       s.Analyte, 
+      s.VolumeUnit,
+      s.volume,
       s.age, s.gender, s.ethnicity, s.samplecondition, 
       s.storagetemp, s.ContainerType, s.CountryofCollection, 
       s.VolumeUnit, s.SampleTypeMatrix, s.SmokingStatus, 
@@ -768,7 +776,7 @@ const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
     let newCartStatus = null;
 
     if (technical_admin_status === 'Accepted') {
-      newCartStatus = 'Pending';  // or 'Accepted', depending on business logic
+      newCartStatus = 'Dispatched';
     } else if (technical_admin_status === 'Rejected') {
       newCartStatus = 'Rejected';
     }

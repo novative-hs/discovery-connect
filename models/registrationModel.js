@@ -1018,8 +1018,8 @@ const sendEmailForOrder = async (req, callback) => {
     // ✅ Insert new quote requests
     for (const item of newQuotes) {
       await mysqlConnection.promise().query(
-        `INSERT INTO quote_requests (researcher_id, sample_id, status) VALUES (?, ?, 'pending')`,
-        [userID, item.id]
+        `INSERT INTO quote_requests (researcher_id,quantity, sample_id, status) VALUES (?,?, ?, 'pending')`,
+        [userID, item.quantity,item.id]
       );
     }
 

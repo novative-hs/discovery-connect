@@ -88,7 +88,7 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
 
       const updateCartStatusQuery = `
         UPDATE cart
-        SET order_status = 'UnderReview'
+        SET order_status = 'Pending'
         WHERE id = ?
       `;
 
@@ -114,7 +114,7 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
           }
 
           const userEmail = emailResults?.[0]?.email;
-          const tracking_id=emailResults?.[0]?.tracking_id;
+          const tracking_id = emailResults?.[0]?.tracking_id;
           const subject = "Committee Status Update";
           const text = `Dear User,\n\nYour sample request (Tracking ID: ${tracking_id}) is now under review by the committee.\n\nPlease check your dashboard for further updates.\n\nRegards,\nDiscovery Connect Team`;
 
@@ -143,109 +143,7 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
   });
 };
 
-const updateCartStatusToShipping = (cartId, callback) => {
-  const committeeStatusQuery = `
-    SELECT 
-      (SELECT COUNT(*) FROM committeesampleapproval ca
-       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-       WHERE ca.cart_id = ? AND ca.committee_status IN ('Refused', 'Rejected')) AS any_rejected,
 
-      (SELECT COUNT(*) FROM committeesampleapproval ca
-       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-       WHERE ca.cart_id = ? AND cm.committeetype = 'Ethical' AND ca.committee_status = 'Approved') AS ethical_approved,
-
-      (SELECT COUNT(*) FROM committeesampleapproval ca
-       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-       WHERE ca.cart_id = ? AND cm.committeetype = 'Scientific' AND ca.committee_status = 'Approved') AS scientific_approved,
-
-      (SELECT COUNT(*) FROM committeesampleapproval ca
-       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-       WHERE ca.cart_id = ? AND cm.committeetype = 'Ethical') AS ethical_total,
-
-      (SELECT COUNT(*) FROM committeesampleapproval ca
-       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-       WHERE ca.cart_id = ? AND cm.committeetype = 'Scientific') AS scientific_total,
-
-      c.order_status AS current_order_status
-    FROM cart c WHERE c.id = ?`;
-
-  mysqlConnection.query(
-    committeeStatusQuery,
-    [cartId, cartId, cartId, cartId, cartId, cartId],
-    (err, results) => {
-      if (err) return callback(err, null);
-
-      const {
-        any_rejected,
-        ethical_approved,
-        scientific_approved,
-        ethical_total,
-        scientific_total,
-        current_order_status
-      } = results[0];
-
-      // ✅ Reject if any member rejected/refused
-      if (Number(any_rejected) > 0 && current_order_status !== "Rejected") {
-        const rejectQuery = `UPDATE cart SET order_status = 'Rejected' WHERE id = ?`;
-        return mysqlConnection.query(rejectQuery, [cartId], (rejectErr, rejectResults) => {
-          if (rejectErr) return callback(rejectErr, null);
-          return callback(null, rejectResults);
-        });
-      }
-
-      const ethicalApprovedComplete = ethical_total === 0 || ethical_approved === ethical_total;
-      const scientificApprovedComplete = scientific_total === 0 || scientific_approved === scientific_total;
-
-      if (ethical_total === 0 && scientific_total === 0) {
-        return callback(null, null); // ✅ No approvals required
-      }
-
-      // ✅ If fully approved and not already dispatched/shipped
-      if (ethicalApprovedComplete && scientificApprovedComplete) {
-        if (current_order_status !== "Shipped" && current_order_status !== "Dispatched") {
-          const updateStatusQuery = `UPDATE cart SET order_status = 'Dispatched' WHERE id = ?`;
-
-          mysqlConnection.query(updateStatusQuery, [cartId], (updateErr, updateResults) => {
-            if (updateErr) return callback(updateErr, null);
-
-            const getResearcherEmailQuery = `
-              SELECT ua.email, c.tracking_id,c.created_at, c.id AS cartId
-              FROM user_account ua
-              JOIN cart c ON ua.id = c.user_id
-              WHERE c.id = ?`;
-
-            mysqlConnection.query(getResearcherEmailQuery, [cartId], (emailErr, emailResults) => {
-              if (emailErr) return callback(emailErr, null);
-
-              if (emailResults.length === 0) {
-                console.warn("No researcher found for this cart ID");
-                return callback(null, updateResults);
-              }
-
-              const { email: researcherEmail, tracking_id,created_at: cartCreatedAt } = emailResults[0];
-              const subject = "Sample Request Status Update";
-              const message = `Dear Researcher,\n\nYour sample request is now being processed for <b>Dispatched</b>.\n\nDetails:\nCart ID: ${tracking_id} (Created At: ${cartCreatedAt})\n\nBest regards,\nYour Team`;
-
-              setImmediate(() => {
-                sendEmail(researcherEmail, subject, message, (emailSendErr) => {
-                  if (emailSendErr) {
-                    console.error("❌ Failed to send email:", emailSendErr);
-                  }
-                });
-              });
-
-              return callback(null, updateResults);
-            });
-          });
-        } else {
-          return callback(null, null); // ✅ Already updated
-        }
-      } else {
-        return callback(null, null); // ❌ Not fully approved yet
-      }
-    }
-  );
-};
 
 
 const updateCommitteeStatus = async (cartId, committee_member_id, committee_status, comments, callback) => {
@@ -260,60 +158,76 @@ const updateCommitteeStatus = async (cartId, committee_member_id, committee_stat
       return callback(err, null);
     }
 
-    const response = {
-      success: true,
-      message: "Committee status updated",
-      cartId,
-      status: committee_status,
-    };
-
     if (committee_status === 'Refused') {
       try {
         revertSampleQuantity(cartId);
-
-
       } catch (revertErr) {
         console.error("❌ Error reverting sample quantity:", revertErr);
       }
     }
 
-    const getEmailQuery = `
-      SELECT ua.email,c.tracking_id
-      FROM user_account ua
-      JOIN cart c ON ua.id = c.user_id
-      WHERE c.id = ?`;
+    // Check if all committee members have submitted status
+    const checkAllStatusQuery = `
+      SELECT COUNT(*) AS pending 
+      FROM committeesampleapproval 
+      WHERE cart_id = ? AND committee_status IS NULL`;
 
-    mysqlConnection.query(getEmailQuery, [cartId], (emailErr, emailResults) => {
-      if (emailErr) {
-        console.error("Error fetching email:", emailErr);
-      } else if (emailResults.length > 0) {
-        const userEmail = emailResults[0].email;
-        const tracking_id=emailResults[0].tracking_id;
-        const subject = `Committee Status Update`;
-        const text = `<b>Dear Researcher,</b><br><br>Your sample request for <b>Tracking_id ID: ${tracking_id}</b> has been <b>${committee_status}</b> by a committee member.<br><br>📝 <b>Comments:</b> ${comments}<br><br>Please check your <b>dashboard</b> for more details. 🚀`;
-
-        setImmediate(() => {
-          sendEmail(userEmail, subject, text, (emailSendErr) => {
-            if (emailSendErr) {
-              console.error("Failed to send email:", emailSendErr);
-            }
-          });
-        });
-      } else {
-        console.warn("No email found for user with cart ID", cartId);
+    mysqlConnection.query(checkAllStatusQuery, [cartId], (checkErr, checkResult) => {
+      if (checkErr) {
+        console.error("Error checking committee status completion:", checkErr);
+        return callback(checkErr, null);
       }
 
-      // Always try to update cart Shipped status regardless of email success
-      updateCartStatusToShipping(cartId, (shippingErr) => {
-        if (shippingErr) {
-          console.error("Error in shipping status update:", shippingErr);
-        }
-      });
+      const pending = checkResult[0].pending;
 
+      // Only proceed if all members submitted status
+      if (pending === 0) {
+        const getEmailQuery = `
+          SELECT ua.email, c.tracking_id 
+          FROM user_account ua
+          JOIN cart c ON ua.id = c.user_id 
+          WHERE c.id = ?`;
+
+        mysqlConnection.query(getEmailQuery, [cartId], (emailErr, emailResults) => {
+          if (emailErr) {
+            console.error("Error fetching email:", emailErr);
+          } else if (emailResults.length > 0) {
+            const { email: userEmail, tracking_id } = emailResults[0];
+
+            // Update cart order_status to "underreview"
+            const updateCartStatusQuery = `UPDATE cart SET order_status = 'UnderReview' WHERE id = ?`;
+            mysqlConnection.query(updateCartStatusQuery, [cartId], (cartErr) => {
+              if (cartErr) {
+                console.error("Failed to update cart status:", cartErr);
+              }
+            });
+
+            const subject = `Committee Status Update`;
+            const text = `<b>Dear Researcher,</b><br><br>Your sample request for <b>Tracking ID: ${tracking_id}</b> has been reviewed by all committee members.<br><br>📝 <b>Latest Comment:</b> ${comments}<br><br>Please check your <b>dashboard</b> for details. 🚀`;
+
+            sendEmail(userEmail, subject, text, (emailSendErr) => {
+              if (emailSendErr) {
+                console.error("Failed to send email:", emailSendErr);
+              }
+            });
+          } else {
+            console.warn("No email found for cart ID", cartId);
+          }
+        });
+      }
+
+      // Final callback
+      const response = {
+        success: true,
+        message: "Committee status updated",
+        cartId,
+        status: committee_status,
+      };
       callback(null, response);
     });
   });
 };
+
 
 
 const revertSampleQuantity = (cartId) => {

@@ -96,6 +96,7 @@ const createPriceRequest = () => {
   id INT AUTO_INCREMENT PRIMARY KEY,
   researcher_id INT,
   sample_id VARCHAR(36),
+    quantity FLOAT,
   status ENUM('pending', 'priced') DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

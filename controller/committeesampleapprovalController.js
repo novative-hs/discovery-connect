@@ -1,16 +1,29 @@
 const committeesampleapproval = require("../models/committeesampleapproval");
 
-const createCommitteeSample = (req, res) => {
-  const {cartId,senderId,committeeType} = req.body;
+const createCommitteeSample = async (req, res) => {
+  const { cartId, senderId, committeeType } = req.body;
 
-  // Pass data to the model
-  committeesampleapproval.insertCommitteeApproval(cartId,senderId,committeeType, (err, result) => {
-    if (err) {
-      return res.status(400).json({ error: err.message || "Error creating Cart" });
+  if (!Array.isArray(cartId)) {
+    return res.status(400).json({ error: "cartId must be an array" });
+  }
+
+  try {
+    for (const singleCartId of cartId) {
+      await new Promise((resolve, reject) => {
+        committeesampleapproval.insertCommitteeApproval(singleCartId, senderId, committeeType, (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
     }
-    res.status(201).json(result); // Send the success response
-  });
+
+    return res.status(201).json({ message: "All cart items processed successfully." });
+  } catch (err) {
+    console.error("Error processing committee samples:", err);
+    return res.status(500).json({ error: err.message || "Failed to process committee samples" });
+  }
 };
+
 
 const updateCommitteeStatus = (req, res) => {
   const { committee_status, comments, committee_member_id } = req.body;
@@ -36,7 +49,7 @@ const updateCommitteeStatus = (req, res) => {
   );
 };
 
-module.exports={
-    createCommitteeSample,
-    updateCommitteeStatus
+module.exports = {
+  createCommitteeSample,
+  updateCommitteeStatus
 }

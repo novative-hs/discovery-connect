@@ -137,46 +137,47 @@ const OrderPage = () => {
 
 
   const handleAdminStatus = async (newStatus) => {
-    if (!selectedOrderId) return;
+    if (!selectedOrder || !selectedOrder.analytes || selectedOrder.analytes.length === 0) return;
+
     setLoading(true);
 
     try {
-      const res = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${selectedOrderId}/technical-status`,
-        { technical_admin_status: newStatus }
+      // Send request for all analytes in parallel
+      const updatePromises = selectedOrder.analytes.map((analyte) =>
+        axios.put(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${analyte.order_id}/technical-status`,
+          { technical_admin_status: newStatus }
+        )
       );
 
-      if (res.status === 200) {
-        notifySuccess(`Order updated to ${newStatus}`);
+      // Wait for all requests to finish
+      await Promise.all(updatePromises);
 
-        // Use freshOrders here instead of the old state
-        const freshOrders = await fetchOrders(currentPage, ordersPerPage, {
-          searchField,
-          searchValue,
-        });
+      notifySuccess(`All items updated to ${newStatus}`);
 
-        if (selectedOrder) {
-          const updatedGroup = freshOrders.find(
-            (grp) => grp.tracking_id === selectedOrder.tracking_id
-          );
-          if (updatedGroup) {
-            setSelectedOrder(updatedGroup);
-          }
+      // Fetch fresh orders
+      const freshOrders = await fetchOrders(currentPage, ordersPerPage, {
+        searchField,
+        searchValue,
+      });
+
+      if (selectedOrder) {
+        const updatedGroup = freshOrders.find(
+          (grp) => grp.tracking_id === selectedOrder.tracking_id
+        );
+        if (updatedGroup) {
+          setSelectedOrder(updatedGroup);
         }
       }
     } catch (err) {
-      console.error("Status update error:", err);
-      notifyError("Failed to update order status.");
+      console.error("Bulk status update error:", err);
+      notifyError("Failed to update all items.");
     } finally {
       setLoading(false);
       setShowModal(false);
       setTimeout(() => setSuccessMessage(""), 3000);
     }
   };
-
-
-
-
 
   const handleToggleTransferOptions = (orderId) => {
     setSelectedOrderId(orderId);
@@ -204,20 +205,33 @@ const OrderPage = () => {
   const handleCommitteeApproval = async (committeeType) => {
     setTransferLoading(true);
 
+    const analyteIdsToTransfer = [
+      ...new Set(
+        selectedOrder?.analytes
+          ?.filter(item => !item.sender_id)
+          ?.map(item => item.order_id)
+      )
+    ];
+
+
+    console.log("Transfering with:", {
+      cartId: analyteIdsToTransfer,
+      senderId: user_id,
+      committeeType,
+      analyteIds: analyteIdsToTransfer
+    });
+
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/transfertocommittee`,
         {
-          cartId: selectedOrderId,
+          cartId: analyteIdsToTransfer,
           senderId: user_id,
-          committeeType: committeeType,
+          committeeType,
         }
       );
 
-      notifySuccess(
-        response.data.message || "Approval request sent successfully!"
-      );
-
+      notifySuccess(response.data.message || "Approval request sent successfully!");
       setShowModal(false);
       setSelectedOrderId(null);
       setSelectedApprovalType("");
@@ -257,6 +271,7 @@ const OrderPage = () => {
       document.body.classList.remove("modal-open");
     }
   }, [showSampleModal, showTransferModal, showCommentsModal]);
+
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
@@ -278,6 +293,10 @@ const OrderPage = () => {
                 <tr className="text-center">
                   {[
                     { label: "Order Id", field: "tracking_id" },
+                    {
+                      label: "Order Date",
+                      field: "created_at"
+                    },
                     { label: "Client Name", field: "researcher_name" },
                     { label: "Client Email", field: "user_email" },
                     { label: "Client Contact", field: "phoneNumber" },
@@ -289,10 +308,7 @@ const OrderPage = () => {
                       label: "Order status",
                       field: "order_status",
                     },
-                    {
-                      label: "Order Date",
-                      field: "created_at"
-                    },
+
 
                   ].map(({ label, field }, index) => (
                     <th
@@ -340,32 +356,35 @@ const OrderPage = () => {
                   currentOrders.map((orderGroup) => (
                     <tr key={orderGroup.tracking_id}>
                       <td>{orderGroup.tracking_id}</td>
+                      <td>{new Date(orderGroup.created_at).toLocaleDateString('en-GB')}</td>
                       <td>{orderGroup.researcher_name}</td>
                       <td>{orderGroup.user_email}</td>
                       <td>{orderGroup.phoneNumber}</td>
                       <td>{orderGroup.organization_name}</td>
                       <td>
-                        <span className={`badge text-uppercase fw-semibold
-    ${orderGroup.order_status === 'Pending' ? 'bg-warning text-dark' : ''}
-    ${orderGroup.order_status === 'Under Review' ? 'bg-info text-dark' : ''}
-    ${orderGroup.order_status === 'Accepted' ? 'bg-success' : ''}
-    ${orderGroup.order_status === 'Shipped' ? 'bg-primary' : ''}
-    ${orderGroup.order_status === 'Dispatch' ? 'bg-secondary' : ''}
-    ${orderGroup.order_status === 'Completed' ? 'bg-success' : ''}
-  `}>
+                        <span className={`badge text-uppercase fw-semibold text-dark fs-6
+                          ${orderGroup.order_status === 'Pending' ? 'bg-warning text-dark' : ''}
+                          ${orderGroup.order_status === 'Under Review' ? 'bg-info text-dark' : ''}
+                          ${orderGroup.order_status === 'Accepted' ? 'bg-success' : ''}
+                          ${orderGroup.order_status === 'Shipped' ? 'bg-primary' : ''}
+                          ${orderGroup.order_status === 'Dispatch' ? 'bg-secondary' : ''}
+                          ${orderGroup.order_status === 'Completed' ? 'bg-success' : ''}
+                        `}>
                           {orderGroup.order_status}
                         </span>
                       </td>
 
 
-                      <td>{new Date(orderGroup.created_at).toLocaleDateString('en-GB')}</td>
+
                       <td>
                         <span
                           className="text-primary"
                           style={{ cursor: "pointer" }}
                           onClick={() => {
+
                             setSelectedOrder(orderGroup); // save full group
                             setShowOrderModal(true);
+
                           }}
                         >
                           View Details
@@ -386,191 +405,164 @@ const OrderPage = () => {
             </table>
           </div>
           {/* Order Detail  */}
-          <Modal
-            show={showOrderModal}
-            onHide={closeModal}
-            size="lg"
-            centered
-            backdrop="static"
-            keyboard={false}
-          >
-            <Modal.Header closeButton className="bg-white border-0">
-              <Modal.Title className="fw-bold text-danger">
-                Order Details
-              </Modal.Title>
-            </Modal.Header>
-            <p className="text-danger mb-1 ms-3">Click on Analyte to get detail about sample.</p>
+          {selectedOrder && (
+            <Modal show={showOrderModal} onHide={closeModal} size="lg" centered>
+              <Modal.Header closeButton>
+                <Modal.Title>Order Details</Modal.Title>
+              </Modal.Header>
 
-            <Modal.Body className="bg-light" style={{ maxHeight: "500px", overflowY: "auto" }}>
-              {selectedOrder ? (
+              <Modal.Body>
+                {/* Status Section */}
+                <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 border p-3 rounded bg-light">
+                  <div>
+                    <span className="fw-bold">Customer Support Admin Status:</span>{" "}
+                    <span className={`badge ${selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted") ? "bg-success" : "bg-warning text-dark"}`}>
+                      {selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted") ? "All Accepted" : "Pending"}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="fw-bold">Order Status:</span>{" "}
+                    <span className={`badge ${selectedOrder.order_status ? "bg-info text-dark" : "bg-secondary"}`}>
+                      {selectedOrder.order_status || "Not Set"}
+                    </span>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="mt-3 d-flex gap-2 flex-wrap">
+                    {/** Define condition for Accept button **/}
+                    {(() => {
+                      const isAcceptEnabled = selectedOrder.analytes?.some(item =>
+                        item.scientific_committee_status === "Approved" &&
+                        (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent")
+                      );
+
+                      return (
+                        <>
+                          {/* ✅ Accept Button */}
+                          <button
+                            className={`btn btn-sm ${isAcceptEnabled ? "btn-outline-success" : "btn-secondary"}`}
+                            disabled={!isAcceptEnabled}
+                            onClick={() => {
+                              setActionType("Accepted");
+                              setShowModal(true);
+                            }}
+                          >
+                            Accept
+                          </button>
+
+                          {/* ❌ Reject Button */}
+                          <button
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => {
+                              setActionType("Rejected");
+                              setSelectedOrderId(selectedOrder.order_id || selectedOrder.analytes?.[0]?.order_id);
+                              setShowModal(true);
+                            }}
+                          >
+                            Reject
+                          </button>
+
+                          {/* 🔁 Transfer Button */}
+                          <button
+                            className={`btn btn-sm ${selectedOrder.order_status === "Pending" ? "btn-outline-primary" : "btn-secondary"}`}
+                            disabled={selectedOrder.order_status !== "Pending"}
+                            onClick={() => handleToggleTransferOptions(selectedOrder.order_id)}
+                          >
+                            Transfer
+                          </button>
+                        </>
+                      );
+                    })()}
+                  </div>
+
+
+                </div>
+
+                {/* Analytes Table */}
                 <div className="table-responsive">
-                  <table className="table table-hover table-bordered align-middle text-center">
-                    <thead className="table-primary">
+                  <table className="table table-bordered table-hover align-middle text-center">
+                    <thead className="table-light">
                       <tr>
                         <th>Analyte</th>
-                        <th>Sample Collection Site Name</th>
-                        <th>Status</th>
-                        <th>Technical Admin</th>
+                        {/* <th>Quantity X Volume</th> */}
+                        <th>Sample Collection Site</th>
                         <th>Scientific Committee</th>
                         <th>Ethical Committee</th>
                         <th>Comments</th>
-                        {/* Show 'Action' column only if no item is Shipped or Dispatched */}
-                        {selectedOrder.analytes?.some(
-                          (item) =>
-                            item.order_status !== "Shipped" &&
-                            item.order_status !== "Dispatched" &&
-                            item.order_status !== "UnderReview"
-                        ) && <th>Action</th>}
                       </tr>
                     </thead>
+                    <tbody>
+                      {selectedOrder.analytes?.map((order, index) => (
+                        <tr key={order.order_id || index}>
+                          <td
+                            className="text-primary fw-semibold"
+                            style={{ cursor: "pointer", textDecoration: "underline" }}
+                            onClick={() => {
+                              setSelectedSample(order);
+                              setSampleShowModal(true);
+                            }}
+                          >
+                            {order.Analyte || "N/A"}
+                          </td>
+                          {/* <td>{order.quantity} X {order.volume}{order.VolumeUnit}</td> */}
+                          <td>{order.source_name}</td>
 
-                    <tbody className="table-light">
-                      {selectedOrder.analytes?.length > 0 ? (
-                        selectedOrder.analytes.map((order, index) => {
-                          const isFinalized =
-                            order.order_status === "Shipped" ||
-                            order.order_status === "Dispatched" ||
-                            order.order_status === "UnderReview"
+                          <td>
+                            {order.technical_admin_status === "Rejected" ? (
+                              <span className="badge bg-danger">No further processing</span>
+                            ) : order.scientific_committee_status === "Refused" ? (
+                              <span className="badge bg-danger">Refused</span>
+                            ) : !order.scientific_committee_status ? (
+                              <span className="badge bg-secondary">Awaiting Admin Action</span>
+                            ) : (
+                              <span className="badge bg-success">{order.scientific_committee_status}</span>
+                            )}
+                          </td>
 
-                          return (
-                            <tr key={order.order_id || index}>
-                              <td
-                                className="text-primary fw-semibold"
-                                style={{ cursor: "pointer", textDecoration: "underline" }}
-                                onClick={() => {
-                                  setSelectedSample(order);
-                                  setSampleShowModal(true);
-                                }}
-                              >
-                                {order.Analyte || "N/A"}
-                              </td>
-                              <td>
-                                {order.source_name}
-                              </td>
+                          <td>
+                            {order.ethical_committee_status === "Refused" ? (
+                              <span className="badge bg-danger">Refused</span>
+                            ) : order.technical_admin_status === "Rejected" ? (
+                              <span className="badge bg-danger">No further processing</span>
+                            ) : !order.ethical_committee_status && order.sender_id === null ? (
+                              <span className="badge bg-warning text-dark">Not Sent</span>
+                            ) : !order.ethical_committee_status ? (
+                              <span className="badge bg-secondary">Awaiting Admin Action</span>
+                            ) : (
+                              <span className="badge bg-success">{order.ethical_committee_status}</span>
+                            )}
+                          </td>
 
-                              <td>
-                                <span className="badge bg-secondary">
-                                  {order.order_status || "Pending"}
-                                </span>
-                              </td>
-
-                              <td>
-                                <span
-                                  className={`badge ${order.technical_admin_status === "Accepted"
-                                    ? "bg-success"
-                                    : order.technical_admin_status === "Rejected"
-                                      ? "bg-danger"
-                                      : "bg-warning text-dark"
-                                    }`}
-                                >
-                                  {order.technical_admin_status || "Pending"}
-                                </span>
-                              </td>
-
-                              <td>
-                                {order.technical_admin_status === "Rejected"
-                                  ? "No further processing"
-                                  : order.scientific_committee_status === "Refused"
-                                    ? "Refused"
-                                    : !order.scientific_committee_status
-                                      ? "Awaiting Admin Action"
-                                      : order.scientific_committee_status}
-                              </td>
-
-                              <td>
-                                {order.ethical_committee_status === "Refused"
-                                  ? "Refused"
-                                  : order.technical_admin_status === "Rejected"
-                                    ? "No further processing"
-                                    : !order.ethical_committee_status &&
-                                      order.sender_id === null
-                                      ? "Not Sent"
-                                      : !order.ethical_committee_status
-                                        ? "Awaiting Admin Action"
-                                        : order.ethical_committee_status}
-                              </td>
-
-                              <td
-                                className="text-primary fw-bold"
-                                style={{ cursor: "pointer" }}
-                                onClick={() => {
-                                  setSelectedComments(order.committee_comments);
-                                  setShowCommentsModal(true);
-                                }}
-                              >
-                                View Comments
-                              </td>
-
-                              {!isFinalized && (
-                                <td>
-                                  <div className="d-flex justify-content-center gap-2">
-
-                                    <button
-                                      className="btn btn-sm btn-outline-success"
-                                      title="Accept Order"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedOrderId(order.order_id);
-                                        setShowModal(true);
-                                        setActionType("Accepted");
-                                      }}
-                                    >
-                                      <FontAwesomeIcon icon={faCheck} size="sm" />
-                                    </button>
-
-
-                                    {order.technical_admin_status !== "Accepted" && (
-                                      <button
-                                        className="btn btn-sm btn-outline-danger"
-                                        title="Reject Order"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSelectedOrderId(order.order_id);
-                                          setShowModal(true);
-                                          setActionType("Rejected");
-                                        }}
-                                      >
-                                        <FontAwesomeIcon icon={faTimes} size="sm" />
-                                      </button>
-                                    )}
-
-                                    {order.technical_admin_status === "Accepted" &&
-                                      !order.ethical_committee_status &&
-                                      !order.scientific_committee_status && (
-                                        <button
-                                          className="btn btn-sm btn-outline-primary"
-                                          title="Send for Committee Approval"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleToggleTransferOptions(order.order_id);
-                                          }}
-                                        >
-                                          <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
-                                        </button>
-                                      )}
-                                  </div>
-                                </td>
-                              )}
-                            </tr>
-                          );
-                        })
-                      ) : (
-                        <tr>
-                          <td colSpan="7" className="text-center p-4 text-muted">
-                            No analytes available
+                          <td
+                            className="text-primary fw-bold"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => {
+                              setSelectedComments(order.committee_comments);
+                              setShowCommentsModal(true);
+                            }}
+                          >
+                            View Comments
                           </td>
                         </tr>
-                      )}
+                      ))}
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                <div className="text-center text-muted py-4">No details to show</div>
-              )}
-            </Modal.Body>
+              </Modal.Body>
+            </Modal>
+          )}
 
-            <Modal.Footer className="bg-white border-0"></Modal.Footer>
-          </Modal>
+
+
+          {/* Pagination Controls */}
+          {totalPages >= 0 && (
+            <Pagination
+              handlePageClick={handlePageChange}
+              pageCount={totalPages}
+              focusPage={currentPage - 1}
+            />
+          )}
 
           {showModal && (
             <Modal show={showModal} onHide={handleCloseModal}>
@@ -579,9 +571,9 @@ const OrderPage = () => {
               </Modal.Header>
               <Modal.Body>
                 <p>
-                  Are you sure you want to <strong>{actionType}</strong> Order
-                  ID: {selectedOrderId}?
+                  Are you sure you want to <strong>{actionType}</strong> all items?
                 </p>
+
               </Modal.Body>
               <Modal.Footer>
                 <Button
@@ -614,7 +606,7 @@ const OrderPage = () => {
                   top: 0,
                   left: 0,
                   width: "100%",
-                  height: "100%",
+                  height: "100%", // Changed from 80% to full height
                   zIndex: 1040,
                 }}
               ></div>
@@ -624,7 +616,7 @@ const OrderPage = () => {
                 className="modal show d-block"
                 role="dialog"
                 style={{
-                  zIndex: 1060, // Increased z-index to be above Bootstrap modals
+                  zIndex: 1060,
                   position: "fixed",
                   top: "50%",
                   left: "50%",
@@ -635,8 +627,10 @@ const OrderPage = () => {
                   boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
                   width: "90vw",
                   maxWidth: "700px",
-                  maxHeight: "80vh",
+                  maxHeight: "90vh", // Limit modal height
                   overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
                 <div className="modal-header d-flex justify-content-between align-items-center">
@@ -656,7 +650,14 @@ const OrderPage = () => {
                   </button>
                 </div>
 
-                <div className="modal-body">
+                <div
+                  className="modal-body"
+                  style={{
+                    overflowY: "auto",
+                    flexGrow: 1,
+                    paddingRight: "5px",
+                  }}
+                >
                   {selectedComments ? (
                     selectedComments.split(" | ").map((comment, idx) => {
                       const [name, text] = comment.split(" : ");
@@ -665,8 +666,8 @@ const OrderPage = () => {
                           key={idx}
                           className="p-3 mb-3 rounded"
                           style={{
-                            backgroundColor: "#f8f9fa", // light background
-                            border: "1px solid #dee2e6", // subtle border
+                            backgroundColor: "#f8f9fa",
+                            border: "1px solid #dee2e6",
                           }}
                         >
                           <p
@@ -682,14 +683,13 @@ const OrderPage = () => {
                       );
                     })
                   ) : (
-                    <p className="text-muted fst-italic">
-                      No comments available
-                    </p>
+                    <p className="text-muted fst-italic">No comments available</p>
                   )}
                 </div>
               </div>
             </>
           )}
+
 
           {/* Approval  */}
           <Modal
@@ -723,15 +723,6 @@ const OrderPage = () => {
               </Button>
             </Modal.Footer>
           </Modal>
-
-          {/* Pagination Controls */}
-          {totalPages >= 0 && (
-            <Pagination
-              handlePageClick={handlePageChange}
-              pageCount={totalPages}
-              focusPage={currentPage - 1}
-            />
-          )}
 
           {/* Sample details Modal */}
           {showSampleModal && selectedSample && (

@@ -135,6 +135,7 @@ const CartArea = () => {
               TestResult: item.TestResult,
               TestResultUnit: item.TestResultUnit,
               price: item.price,
+              quantity:item.quantity
             })),
           }),
         });

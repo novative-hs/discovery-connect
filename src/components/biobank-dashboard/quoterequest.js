@@ -37,6 +37,7 @@ const QuoteRequestTable = () => {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getPriceCount`
         );
+        console.log(response.data)
         setSamples(response.data);
       } catch (error) {
         console.error("Error fetching quote requests:", error);
@@ -159,63 +160,8 @@ const QuoteRequestTable = () => {
               {isReadOnly ? "Sample Details" : "Sample Pricing"} - {selectedQuote[0].ResearcherName}
             </Modal.Title>
           </Modal.Header>
-          <Modal.Body>
-            <table className="table table-bordered">
-              <thead>
-                <tr>
-                  <th>Sample ID</th>
-                  <th>Analyte</th>
-                  <th>Quantity</th>
-                  <th>Test Result</th>
-                  <th>Price</th>
-                  <th>Currency</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedQuote.map((sample) => (
-                  <tr key={sample.sample_id}>
-                    <td>{sample.masterID}</td>
-                    <td>{sample.analyte}</td>
-                    <td>{sample.quantity}</td>
-                    <td>
-                      {sample.TestResult} {sample.TestResultUnit}
-                    </td>
-                    <td>
-                      {isReadOnly ? (
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value={sample.price || ""}
-                          readOnly
-                        />
-                      ) : (
-                        <input
-                          type="number"
-                          className="form-control form-control-sm"
-                          value={priceInputs[sample.sample_id] || ""}
-                          onChange={(e) =>
-                            setPriceInputs({
-                              ...priceInputs,
-                              [sample.sample_id]: e.target.value,
-                            })
-                          }
-                        />
-                      )}
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={isReadOnly ? sample.SamplePriceCurrency || groupCurrency : groupCurrency}
-                        readOnly
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
 
-            {/* Global Currency Selector */}
+          <Modal.Body>
             {!isReadOnly && (
               <div className="d-flex justify-content-end align-items-center gap-2 mb-3">
                 <label className="mb-0 fw-bold">Currency:</label>
@@ -234,6 +180,64 @@ const QuoteRequestTable = () => {
                 </select>
               </div>
             )}
+            <div className="d-flex justify-content-end align-items-center gap-2">
+              <label className="mb-0 fs-5 fw-bold">Currency:</label>
+              <span className="mb-0 fs-5 fw-bold">{groupCurrency || "Not Selected"}</span>
+            </div>
+            <table className="table table-bordered">
+
+              <thead>
+                <tr>
+                  <th>Sample ID</th>
+                  <th>Analyte</th>
+                  <th>Quantity</th>
+                  <th>Test Result</th>
+                  <th>Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedQuote.map((sample) => (
+                  <tr key={sample.sample_id}>
+                    <td>{sample.masterID}</td>
+                    <td>{sample.analyte}</td>
+                    <td>{sample.quantity}</td>
+                    <td>
+                      {sample.TestResult} {sample.TestResultUnit}
+                    </td>
+                    <td>
+                      {isReadOnly ? (
+                        <input
+                          type="text"
+                          className="form-control form-control-sm text-end"
+                          value={
+                            sample.price
+                              ? Number(sample.price).toLocaleString()
+                              : ""
+                          }
+                          readOnly
+                        />
+                      ) : (
+                        <input
+                          type="number"
+                          className="form-control form-control-sm text-end"
+                          value={priceInputs[sample.sample_id] || ""}
+                          onChange={(e) =>
+                            setPriceInputs({
+                              ...priceInputs,
+                              [sample.sample_id]: e.target.value,
+                            })
+                          }
+                        />
+                      )}
+                    </td>
+
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Global Currency Selector */}
+
 
             {/* Submit Button */}
             {!isReadOnly && (
