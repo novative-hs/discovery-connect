@@ -14,6 +14,7 @@ const Header = ({ setActiveTab, activeTab }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [staffAction, setStaffAction] = useState("");
   const id = sessionStorage.getItem("userID");
+  const committeetype = sessionStorage.getItem("committeetype");
   const [showDropdown, setShowDropdown] = useState(false);
   const [showSampleDropdown, setShowSampleDropdown] = useState(false);
   const dispatch = useDispatch();
@@ -50,7 +51,7 @@ const Header = ({ setActiveTab, activeTab }) => {
     if (type) {
       setUserType(type);
     } else {
-      
+
       router.push("/login");
     }
   }, [router]);
@@ -76,7 +77,7 @@ const Header = ({ setActiveTab, activeTab }) => {
         setCartCount(response.data[0].Count);
         sessionStorage.setItem("cartCount", response.data[0].Count);
       } else {
-        
+
         sessionStorage.setItem("cartCount", 0);
       }
     } catch (error) {
@@ -219,7 +220,7 @@ const Header = ({ setActiveTab, activeTab }) => {
               { label: "Sample List", tab: "samples" },
               { label: "Sample Dispatch", tab: "sample-dispatch" },
               { label: "Pooled Sample List", tab: "pooledsample" },
-              {label:"Quote Pending Request",tab:"pendingquoterequest"},
+              { label: "Quote Pending Request", tab: "pendingquoterequest" },
               { label: "Quarantine Stock", tab: "Quarantine-Stock" },
             ]
             : userType == "committeemember"
@@ -342,7 +343,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                   className="text-primary fw-bold fs-6"
                   style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
                 >
-                  Welcome Customer Support Admin!
+                  Welcome Technical Admin!
                 </span>
               )}
               {userType === "registrationadmin" && (
@@ -358,8 +359,9 @@ const Header = ({ setActiveTab, activeTab }) => {
                   className="text-primary fw-bold fs-6"
                   style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
                 >
-                  Welcome Committee Member!
+                  {`Welcome ${committeetype} Committee Member!`}
                 </span>
+
               )}
               {userType === "biobank" && (
                 <div
@@ -377,11 +379,11 @@ const Header = ({ setActiveTab, activeTab }) => {
                     Welcome BioBank!
                   </span>
 
-                 
+
                 </div>
               )}
 
-        
+
               <div className="d-flex  align-items-center gap-0">
                 <div className="dropdown me-3" ref={dropdownRef}>
                   <button

@@ -1525,8 +1525,8 @@ const BioBankSampleArea = () => {
                             if (key === "locationids") {
                               const tooltip = `Room Number=${sample.room_number || "----"
                                 } 
-Freezer ID=${sample.freezer_id || "----"} 
-Box ID=${sample.box_id || "----"} `;
+                                Freezer ID=${sample.freezer_id || "----"} 
+                                Box ID=${sample.box_id || "----"} `;
 
                               // To show logo while clicking on location IDs
                               const handleLogoClick = () => {
@@ -1583,9 +1583,11 @@ Box ID=${sample.box_id || "----"} `;
                                 }`;
                             } else if (key === "price") {
                               return sample.price && sample.SamplePriceCurrency
-                                ? `${sample.price} ${sample.SamplePriceCurrency}`
+                                ? `${sample.SamplePriceCurrency} ${new Intl.NumberFormat('en-PK').format(sample.price)}`
                                 : "----";
-                            } else {
+                            }
+
+                            else {
                               return sample[key] || "----";
                             }
                           })()

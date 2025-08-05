@@ -33,6 +33,8 @@ const OrderPage = () => {
   const [selectedComments, setSelectedComments] = useState("");
   const ordersPerPage = 10;
   const [transferLoading, setTransferLoading] = useState(false);
+  const [transferredOrders, setTransferredOrders] = useState([]);
+  const [comment, setComment] = useState("");
 
   const [totalPages, setTotalPages] = useState(1);
   const [filtertotal, setfiltertotal] = useState(null);
@@ -137,52 +139,62 @@ const OrderPage = () => {
 
 
   const handleAdminStatus = async (newStatus) => {
-    if (!selectedOrder || !selectedOrder.analytes || selectedOrder.analytes.length === 0) return;
+  if (!selectedOrder || !selectedOrder.analytes || selectedOrder.analytes.length === 0) return;
 
-    setLoading(true);
+  // Trim and validate comment if rejected
+  const trimmedComment = comment.trim();
 
-    try {
-      // Send request for all analytes in parallel
-      const updatePromises = selectedOrder.analytes.map((analyte) =>
-        axios.put(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/${analyte.order_id}/technical-status`,
-          { technical_admin_status: newStatus }
-        )
-      );
+  if (newStatus === "Rejected" && !trimmedComment) {
+    notifyError("Comment is required when rejecting.");
+    return;
+  }
 
-      // Wait for all requests to finish
-      await Promise.all(updatePromises);
+  setLoading(true);
 
-      notifySuccess(`All items updated to ${newStatus}`);
+  try {
+    const allOrderIds = selectedOrder.analytes.map(analyte => analyte.order_id);
 
-      // Fetch fresh orders
-      const freshOrders = await fetchOrders(currentPage, ordersPerPage, {
-        searchField,
-        searchValue,
-      });
-
-      if (selectedOrder) {
-        const updatedGroup = freshOrders.find(
-          (grp) => grp.tracking_id === selectedOrder.tracking_id
-        );
-        if (updatedGroup) {
-          setSelectedOrder(updatedGroup);
-        }
+    // Send one combined request
+    await axios.put(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/bulk-update-Technicalstatus`,
+      {
+        order_ids: allOrderIds,
+        technical_admin_status: newStatus,
+        comment: newStatus === "Rejected" ? trimmedComment : null,
       }
-    } catch (err) {
-      console.error("Bulk status update error:", err);
-      notifyError("Failed to update all items.");
-    } finally {
-      setLoading(false);
-      setShowModal(false);
-      setTimeout(() => setSuccessMessage(""), 3000);
-    }
-  };
+    );
+
+    notifySuccess(`All items updated to ${newStatus}`);
+
+    // Refetch orders
+    const freshOrders = await fetchOrders(currentPage, ordersPerPage, {
+      searchField,
+      searchValue,
+    });
+
+    const updatedGroup = freshOrders.find(
+      (grp) => grp.tracking_id === selectedOrder.tracking_id
+    );
+    if (updatedGroup) setSelectedOrder(updatedGroup);
+  } catch (err) {
+    console.error("Bulk status update error:", err);
+    notifyError("Failed to update items.");
+  } finally {
+    setLoading(false);
+    setShowModal(false);
+    setComment(""); // Reset comment
+    setTimeout(() => setSuccessMessage(""), 3000);
+  }
+};
+
+
 
   const handleToggleTransferOptions = (orderId) => {
     setSelectedOrderId(orderId);
     setShowTransferModal(true);
+    setTransferredOrders((prev) => [...prev, orderId]);
   };
+
   const [expandedComments, setExpandedComments] = useState({});
 
   const openModal = (sample) => {
@@ -202,6 +214,7 @@ const OrderPage = () => {
     }));
   };
 
+
   const handleCommitteeApproval = async (committeeType) => {
     setTransferLoading(true);
 
@@ -212,14 +225,6 @@ const OrderPage = () => {
           ?.map(item => item.order_id)
       )
     ];
-
-
-    console.log("Transfering with:", {
-      cartId: analyteIdsToTransfer,
-      senderId: user_id,
-      committeeType,
-      analyteIds: analyteIdsToTransfer
-    });
 
     try {
       const response = await axios.post(
@@ -292,7 +297,7 @@ const OrderPage = () => {
               <thead className="table-primary text-dark">
                 <tr className="text-center">
                   {[
-                    { label: "Order Id", field: "tracking_id" },
+                    { label: "Order ID", field: "tracking_id" },
                     {
                       label: "Order Date",
                       field: "created_at"
@@ -356,7 +361,14 @@ const OrderPage = () => {
                   currentOrders.map((orderGroup) => (
                     <tr key={orderGroup.tracking_id}>
                       <td>{orderGroup.tracking_id}</td>
-                      <td>{new Date(orderGroup.created_at).toLocaleDateString('en-GB')}</td>
+                      <td>
+                        {new Date(orderGroup.created_at).toLocaleDateString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        }).replace(/ /g, '-')}
+                      </td>
+
                       <td>{orderGroup.researcher_name}</td>
                       <td>{orderGroup.user_email}</td>
                       <td>{orderGroup.phoneNumber}</td>
@@ -412,37 +424,38 @@ const OrderPage = () => {
               </Modal.Header>
 
               <Modal.Body>
-                {/* Status Section */}
-                <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 border p-3 rounded bg-light">
-                  <div>
-                    <span className="fw-bold">Customer Support Admin Status:</span>{" "}
-                    <span className={`badge ${selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted") ? "bg-success" : "bg-warning text-dark"}`}>
-                      {selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted") ? "All Accepted" : "Pending"}
-                    </span>
-                  </div>
+                {/* 📦 Status + Actions Section */}
+                <div className="border rounded p-4 bg-white shadow-sm mb-4">
+                  <div className="row align-items-center">
+                    {/* 🟢 Technical Admin Status */}
+                    <div className="col-md-4 mb-3 mb-md-0">
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="fw-bold text-dark">Technical Admin Status:</span>
+                        <span className={`fs-6 badge rounded-pill ${selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted") ? "bg-success" : "bg-warning text-dark"}`}>
+                          {selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted") ? "All Accepted" : "Pending"}
+                        </span>
+                      </div>
+                    </div>
 
-                  <div>
-                    <span className="fw-bold">Order Status:</span>{" "}
-                    <span className={`badge ${selectedOrder.order_status ? "bg-info text-dark" : "bg-secondary"}`}>
-                      {selectedOrder.order_status || "Not Set"}
-                    </span>
-                  </div>
+                    {/* 🔵 Order Status */}
+                    <div className="col-md-4 mb-3 mb-md-0">
+                      <div className="d-flex align-items-center gap-2">
+                        <span className="fw-bold text-dark">Order Status:</span>
+                        <span className={`fs-6 badge rounded-pill ${selectedOrder.order_status ? "bg-info text-dark" : "bg-secondary"}`}>
+                          {selectedOrder.order_status}
+                        </span>
+                      </div>
+                    </div>
 
-                  {/* Action Buttons */}
-                  <div className="mt-3 d-flex gap-2 flex-wrap">
-                    {/** Define condition for Accept button **/}
-                    {(() => {
-                      const isAcceptEnabled = selectedOrder.analytes?.some(item =>
+                    {/* 🎯 Action Buttons */}
+                    <div className="col-md-4 text-md-end d-flex flex-wrap justify-content-md-end gap-2 mt-3 mt-md-0">
+                      {/* Accept */}
+                      {selectedOrder.analytes?.some(item =>
                         item.scientific_committee_status === "Approved" &&
                         (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent")
-                      );
-
-                      return (
-                        <>
-                          {/* ✅ Accept Button */}
+                      ) && (
                           <button
-                            className={`btn btn-sm ${isAcceptEnabled ? "btn-outline-success" : "btn-secondary"}`}
-                            disabled={!isAcceptEnabled}
+                            className="btn btn-outline-success btn-sm"
                             onClick={() => {
                               setActionType("Accepted");
                               setShowModal(true);
@@ -450,34 +463,35 @@ const OrderPage = () => {
                           >
                             Accept
                           </button>
+                        )}
 
-                          {/* ❌ Reject Button */}
-                          <button
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => {
-                              setActionType("Rejected");
-                              setSelectedOrderId(selectedOrder.order_id || selectedOrder.analytes?.[0]?.order_id);
-                              setShowModal(true);
-                            }}
-                          >
-                            Reject
-                          </button>
+                      {/* Reject */}
+                      {selectedOrder && selectedOrder.committee_member_status !== 'Rejected' && selectedOrder.committee_member_status !== 'Approved' && (
+                        <button
+                          className="btn btn-outline-danger btn-sm"
+                          onClick={() => {
+                            setActionType("Rejected");
+                            setSelectedOrderId(selectedOrder.order_id || selectedOrder.analytes?.[0]?.order_id);
+                            setShowModal(true);
+                          }}
+                        >
+                          Reject
+                        </button>
+                      )}
 
-                          {/* 🔁 Transfer Button */}
-                          <button
-                            className={`btn btn-sm ${selectedOrder.order_status === "Pending" ? "btn-outline-primary" : "btn-secondary"}`}
-                            disabled={selectedOrder.order_status !== "Pending"}
-                            onClick={() => handleToggleTransferOptions(selectedOrder.order_id)}
-                          >
-                            Transfer
-                          </button>
-                        </>
-                      );
-                    })()}
+                      {/* Transfer */}
+                      {!transferredOrders.includes(selectedOrder.order_id) && (
+                        <button
+                          className="btn btn-outline-primary btn-sm"
+                          onClick={() => handleToggleTransferOptions(selectedOrder.order_id)}
+                        >
+                          Transfer
+                        </button>
+                      )}
+                    </div>
                   </div>
-
-
                 </div>
+
 
                 {/* Analytes Table */}
                 <div className="table-responsive">
@@ -485,30 +499,47 @@ const OrderPage = () => {
                     <thead className="table-light">
                       <tr>
                         <th>Analyte</th>
-                        {/* <th>Quantity X Volume</th> */}
-                        <th>Sample Collection Site</th>
-                        <th>Scientific Committee</th>
+                        <th>Quantity X Volume</th>
+                        {/* <th>Sample Collection Site</th> */}
+                        {/* <th>Scientific Committee</th>
                         <th>Ethical Committee</th>
-                        <th>Comments</th>
+                        <th>Comments</th> */}
                       </tr>
                     </thead>
                     <tbody>
                       {selectedOrder.analytes?.map((order, index) => (
                         <tr key={order.order_id || index}>
-                          <td
-                            className="text-primary fw-semibold"
-                            style={{ cursor: "pointer", textDecoration: "underline" }}
-                            onClick={() => {
-                              setSelectedSample(order);
-                              setSampleShowModal(true);
-                            }}
-                          >
-                            {order.Analyte || "N/A"}
-                          </td>
-                          {/* <td>{order.quantity} X {order.volume}{order.VolumeUnit}</td> */}
-                          <td>{order.source_name}</td>
+                          <td className="text-primary fw-semibold" style={{ cursor: "pointer" }} onClick={() => {
+                            setSelectedSample(order);
+                            setSampleShowModal(true);
+                          }}>
+                            <span style={{ textDecoration: "underline" }}>
+                              {order.Analyte || "N/A"}
+                            </span>
 
-                          <td>
+                            <div className="text-muted small" style={{ textDecoration: "none", cursor: "default" }}>
+                              {/* Gender and Age */}
+                              {(order.gender || order.age) && (
+                                <>
+                                  {order.gender}
+                                  {order.age ? `${order.gender ? ', ' : ''}${order.age} years` : ''}
+                                </>
+                              )}
+
+                              {/* Separator + TestResult */}
+                              {(order.TestResult || order.TestResultUnit) && (order.gender || order.age) && ' | '}
+                              {(order.TestResult || order.TestResultUnit) && (
+                                <>
+                                  {order.TestResult ?? ''} {order.TestResultUnit ?? ''}
+                                </>
+                              )}
+                            </div>
+                          </td>
+
+                          <td>{order.quantity} X {order.volume}{order.VolumeUnit}</td>
+                          {/* <td>{order.source_name}</td> */}
+
+                          {/* <td>
                             {order.technical_admin_status === "Rejected" ? (
                               <span className="badge bg-danger">No further processing</span>
                             ) : order.scientific_committee_status === "Refused" ? (
@@ -543,7 +574,7 @@ const OrderPage = () => {
                             }}
                           >
                             View Comments
-                          </td>
+                          </td> */}
                         </tr>
                       ))}
                     </tbody>
@@ -569,24 +600,32 @@ const OrderPage = () => {
               <Modal.Header closeButton>
                 <Modal.Title>Confirm Action</Modal.Title>
               </Modal.Header>
+
               <Modal.Body>
                 <p>
-                  Are you sure you want to <strong>{actionType}</strong> all items?
+                  Are you sure you want to <strong>{actionType}</strong> items?
                 </p>
 
+                {actionType === "Rejected" && (
+                  <Form.Group controlId="rejectionComment">
+                    <Form.Label>Reason for Rejection</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={3}
+                      placeholder="Enter your comment here..."
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                    />
+                  </Form.Group>
+                )}
               </Modal.Body>
+
               <Modal.Footer>
-                <Button
-                  variant="secondary"
-                  onClick={handleCloseModal}
-                  disabled={loading}
-                >
-                  Cancel
-                </Button>
+
                 <Button
                   variant={actionType === "Accepted" ? "success" : "danger"}
                   onClick={() => handleAdminStatus(actionType)}
-                  disabled={loading} // Disable button while processing
+                  disabled={loading}
                 >
                   {loading ? "Processing..." : `Confirm ${actionType}`}
                 </Button>

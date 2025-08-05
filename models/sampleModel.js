@@ -507,50 +507,55 @@ const getAllCSSamples = (limit, offset, callback) => {
       bb.Name AS BiobankName,
       c.name AS CityName,
       d.name AS DistrictName,
-      IFNULL(q.total_quantity, 0) AS total_quantity,
-      IFNULL(q.total_allocated, 0) AS total_allocated,
+      totals.total_quantity,
+      totals.total_allocated,
       a.image AS analyteImage
-    FROM sample s
+    FROM (
+      SELECT *
+      FROM sample
+      WHERE id IN (
+        SELECT MAX(id)
+        FROM sample
+        WHERE 
+          status = 'In Stock'
+          AND sample_visibility = 'Public'
+          AND (quantity > 0 OR quantity_allocated > 0)
+        GROUP BY Analyte
+      )
+    ) AS s
     LEFT JOIN collectionsitestaff st ON s.user_account_id = st.user_account_id
     LEFT JOIN collectionsite cs ON st.collectionsite_id = cs.id
     LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
     LEFT JOIN city c ON cs.city = c.id
     LEFT JOIN district d ON cs.district = d.id
     LEFT JOIN analyte a ON a.name = s.Analyte
-    INNER JOIN (
-      SELECT Analyte, MAX(id) AS max_id
-      FROM sample
-      WHERE 
-        status = 'In Stock'
-        AND sample_visibility = 'Public'
-      GROUP BY Analyte
-    ) AS grouped ON s.Analyte = grouped.Analyte AND s.id = grouped.max_id
     LEFT JOIN (
       SELECT 
-        Analyte, 
+        Analyte,
         SUM(quantity) AS total_quantity,
         SUM(quantity_allocated) AS total_allocated
       FROM sample
       WHERE 
         status = 'In Stock'
         AND sample_visibility = 'Public'
+        AND (quantity > 0 OR quantity_allocated > 0)
       GROUP BY Analyte
-    ) AS q ON s.Analyte = q.Analyte
-    WHERE  
-  s.status = 'In Stock'
-  AND s.sample_visibility = 'Public'
-  AND (s.quantity > 0 OR s.quantity_allocated > 0)
+    ) AS totals ON s.Analyte = totals.Analyte
     ORDER BY s.Analyte
     LIMIT ? OFFSET ?;
   `;
 
   const countQuery = `
-    SELECT COUNT(DISTINCT Analyte) AS total
-    FROM sample
-    WHERE 
-      status = 'In Stock' 
-      AND sample_visibility = 'Public'
-      AND quantity > 0
+    SELECT COUNT(*) AS total
+    FROM (
+      SELECT Analyte
+      FROM sample
+      WHERE 
+        status = 'In Stock'
+        AND sample_visibility = 'Public'
+        AND (quantity > 0 OR quantity_allocated > 0)
+      GROUP BY Analyte
+    ) AS counted;
   `;
 
   mysqlConnection.query(countQuery, (countErr, countResult) => {
@@ -574,7 +579,6 @@ const getAllCSSamples = (limit, offset, callback) => {
           imageUrl = sample.analyteImage.startsWith('/')
             ? sample.analyteImage
             : `/${sample.analyteImage}`;
-
         }
 
         return {
@@ -589,6 +593,8 @@ const getAllCSSamples = (limit, offset, callback) => {
     });
   });
 };
+
+
 
 
 const updateReservedSample = (sampleId, status, callback) => {

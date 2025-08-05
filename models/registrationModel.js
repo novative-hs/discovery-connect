@@ -783,7 +783,7 @@ const loginAccount = (data, callback) => {
 
       else if (user.accountType === 'Committeemember') {
         const CommitteememberQuery =
-          `SELECT status FROM committee_member WHERE user_account_id = ?`;
+          `SELECT status,committeetype FROM committee_member WHERE user_account_id = ?`;
 
         mysqlConnection.query(CommitteememberQuery, [user.id], (err, CommitteememberResults) => {
           if (err) {
@@ -791,6 +791,8 @@ const loginAccount = (data, callback) => {
           }
 
           if (CommitteememberResults.length > 0 && CommitteememberResults[0].status.toLowerCase() === "active") {
+            
+             user.committeetype = CommitteememberResults[0].committeetype;
             return callback(null, user); // Return user info if approved
           } else {
             return callback({ status: "fail", message: "Account is not approved" }, null);

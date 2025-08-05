@@ -115,6 +115,7 @@ const loginAccount = (req, res) => {
         .status(500)
         .json({ status: "fail", error: "Internal server error" });
     }
+
     res.status(200).json({
       status: "success",
       message: "Login successful",
@@ -123,6 +124,7 @@ const loginAccount = (req, res) => {
         accountType: result.accountType,
         email: result.email,
         action: result.action || null, 
+        committeetype:result.committeetype||null,
         authToken: "mockAuthToken", // Replace with JWT or real token logic
       },
     });

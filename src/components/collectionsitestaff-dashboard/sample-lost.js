@@ -104,26 +104,24 @@ const SampleLost = () => {
   };
 
   const tableHeaders = [
-    { label: "Analyte ", key: "Analyte" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Volume", key: "volume" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
+    { label: "Gender & Age", key: "gender_age" },
     { label: "Test Result & Unit", key: "TestResult" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+
     { label: "Status", key: "status" },
-    { label: "Sample Visibility", key: "sample_visibility" },
+
   ];
 
   const fieldsToShowInOrder = [
-    { label: "Phone Number", key: "phoneNumber" },
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Analyte", key: "Analyte" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
@@ -149,21 +147,21 @@ const SampleLost = () => {
             <thead className="table-primary text-dark">
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
-  <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
-    <div className="d-flex flex-column align-items-center">
-      <input
-        type="text"
-        className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
-        placeholder={`Search ${label}`}
-        onChange={(e) => handleFilterChange(key, e.target.value)}
-        style={{ minWidth: "110px" }}
-      />
-      <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
-        {label}
-      </span>
-    </div>
-  </th>
-))}
+                  <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
+                    <div className="d-flex flex-column align-items-center">
+                      <input
+                        type="text"
+                        className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        style={{ minWidth: "110px" }}
+                      />
+                      <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
+                        {label}
+                      </span>
+                    </div>
+                  </th>
+                ))}
 
               </tr>
             </thead>
@@ -200,8 +198,15 @@ const SampleLost = () => {
                           </span>
                         ) : key === "volume" ? (
                           `${sample.volume || "----"} ${sample.VolumeUnit || ""}`
-                        ) : key === "age" ? (
-                          `${sample.age || "----"} years`
+                        ) : key === "gender_age" ? (
+                          (sample.gender && sample.age ?
+                            `${sample.gender} | ${sample.age} years` :
+                            sample.gender ?
+                              sample.gender :
+                              sample.age ?
+                                `${sample.age} years` :
+                                "----"
+                          )
                         ) : key === "TestResult" ? (
                           `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
                         ) : (

@@ -45,17 +45,17 @@ const SampleArea = () => {
     created_at: "",
   });
   const tableHeaders = [
+    { label: "Order Date", key: "created_at" },
     { label: "Order ID", key: "tracking_id" },
     { label: "Researcher Name", key: "researcher_name" },
     { label: "Organization Name", key: "organization_name" },
-    { label: "Order Status", key: "order_status" },
-    { label: "Order Date", key: "created_at" }
+    { label: "Review Status", key: "committee_status" },
+    { label: "Review Comments", key: "comments" },
   ];
   const SampleHeader = [
     { label: "Analyte", key: "Analyte" },
     { label: "Quantity X Volume", key: "quantity" },
-    { label: "Test Result", key: "TestResult" },
-    { label: "Test Result Unit", key: "TestResultUnit" },
+    { label: "Location", key: "locationids" },
   ];
 
   const fetchSamples = useCallback(async (page = 1, pageSize = 10, filters = {}) => {
@@ -186,69 +186,69 @@ const SampleArea = () => {
     setShowModal(false);
   };
 
-  const handleSubmit = async () => {
-    const trimmedComment = comment.trim();
+ const handleSubmit = async () => {
+  const trimmedComment = comment.trim();
 
-    if (!id || !selectedResearcherSamples || selectedResearcherSamples.length === 0 || !trimmedComment) {
-      alert("Please enter a comment.");
-      return;
-    }
+  if (!id || !selectedResearcherSamples || selectedResearcherSamples.length === 0 || !trimmedComment) {
+    alert("Please enter a comment.");
+    return;
+  }
 
-    try {
-      // Loop through all samples in the group
-      for (const sample of selectedResearcherSamples) {
-        const payload = {
-          committee_member_id: id,
-          committee_status: actionType, // "Approved" or "Refused"
-          comments: trimmedComment,
-        };
+  try {
+    // Prepare payload with all cart_ids at once
+    const payload = {
+      committee_member_id: id,
+      committee_status: actionType, // "Approved" or "Refused"
+      comments: trimmedComment,
+      cart_ids: selectedResearcherSamples.map(sample => sample.cart_id),
+    };
 
-        await axios.put(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/${sample.cart_id}/committee-approval`,
-          payload
-        );
+    // Send a single request
+    await axios.put(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/bulk-committee-approval`,
+      payload
+    );
+
+    notifySuccess(`${actionType} successful for all samples.`);
+    setShowModal(false);
+    setComment("");
+
+    // ✅ Refetch updated data
+    const updatedOrderRes = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
+    );
+    const updatedDocRes = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
+    );
+
+    const updatedOrders = updatedOrderRes.data.results || [];
+    const updatedDocuments = updatedDocRes.data.results || [];
+
+    const updatedDocMap = {};
+    updatedDocuments.forEach((doc) => {
+      if (doc.cart_id) {
+        updatedDocMap[doc.cart_id] = doc;
       }
+    });
 
-      notifySuccess(`${actionType} successful for all samples.`);
+    const updatedMerged = updatedOrders.map((order) => ({
+      ...order,
+      ...(updatedDocMap[order.cart_id] || {}),
+    }));
 
-      setShowModal(false);
-      setComment("");
+    setSamples(updatedMerged);
 
-      // ✅ Refetch updated data
-      const updatedOrderRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
-      );
-      const updatedDocRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
-      );
+    const updatedGroup = updatedMerged.filter(
+      (s) => s.tracking_id === selectedResearcherSamples[0].tracking_id
+    );
+    setSelectedResearcherSamples(updatedGroup);
 
-      const updatedOrders = updatedOrderRes.data.results || [];
-      const updatedDocuments = updatedDocRes.data.results || [];
+  } catch (error) {
+    console.error("❌ Error updating samples:", error);
+    notifyError("Bulk approval/refusal failed. Please check logs.");
+  }
+};
 
-      const updatedDocMap = {};
-      updatedDocuments.forEach((doc) => {
-        if (doc.cart_id) {
-          updatedDocMap[doc.cart_id] = doc;
-        }
-      });
-
-      const updatedMerged = updatedOrders.map((order) => ({
-        ...order,
-        ...(updatedDocMap[order.cart_id] || {}),
-      }));
-
-      setSamples(updatedMerged); // Update main list
-
-      const updatedGroup = updatedMerged.filter(
-        (s) => s.tracking_id === selectedResearcherSamples[0].tracking_id
-      );
-      setSelectedResearcherSamples(updatedGroup);
-
-    } catch (error) {
-      console.error("❌ Error updating samples:", error);
-      notifyError("Some approvals/refusals failed. Please check logs.");
-    }
-  };
 
 
 
@@ -270,7 +270,7 @@ const SampleArea = () => {
   if (!id) return <div>Loading...</div>;
   return (
     <div className="container py-3">
-      <h4 className="text-center text-success">Researcher Orders</h4>
+      <h4 className="text-center text-success">Pending Review List</h4>
       <div
         onScroll={handleScroll}
         className="table-responsive"
@@ -305,11 +305,21 @@ const SampleArea = () => {
           <tbody>
             {Object.entries(groupedByResearcher).map(([researcher, group], idx) => (
               <tr key={idx}>
+                <td>
+                  {(() => {
+                    const date = new Date(group[0].created_at);
+                    const day = date.getDate().toString().padStart(2, '0');
+                    const month = date.toLocaleString('en-GB', { month: 'short' });
+                    const year = date.getFullYear();
+                    return `${day}-${month}-${year}`;
+                  })()}
+                </td>
                 <td>{group[0].tracking_id}</td>
                 <td>{group[0].researcher_name}</td>
                 <td>{group[0].organization_name}</td>
-                <td>{group[0].order_status}</td>
-                <td>{moment(group[0].created_at).format("YYYY-MM-DD HH:mm A")}</td>
+                <td>{group[0].committee_status}</td>
+                <td>{group[0].comments || "----"}</td>
+
                 <td>
                   <button
                     className="btn btn-outline-info btn-sm"
@@ -347,6 +357,20 @@ const SampleArea = () => {
           </Modal.Header>
 
           <Modal.Body>
+            <div
+              className="card mb-3"
+              style={{ backgroundColor: "#f9f9f9", borderLeft: "4px solid #007bff" }}
+            >
+              <div className="card-body py-2 px-3 d-flex flex-wrap gap-4">
+                <div>
+                  <strong>Additional Mechanism:</strong>{" "}
+                  <span className="text-muted">
+                    {selectedResearcherSamples[0]?.reporting_mechanism || "N/A"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Documents Buttons - shown once */}
             <div className="mb-3 d-flex flex-wrap gap-2">
               {["study_copy", "irb_file", "nbc_file"].map((docKey) => (
@@ -366,33 +390,6 @@ const SampleArea = () => {
                 </button>
               ))}
             </div>
-            <div
-              className="card mb-3"
-              style={{ backgroundColor: "#f9f9f9", borderLeft: "4px solid #007bff" }}
-            >
-              <div className="card-body py-2 px-3 d-flex flex-wrap gap-4">
-                <div>
-                  <strong>Additional Mechanism:</strong>{" "}
-                  <span className="text-muted">
-                    {selectedResearcherSamples[0]?.reporting_mechanism || "N/A"}
-                  </span>
-                </div>
-
-                <div>
-                  <strong>Committee Comments:</strong>{" "}
-                  <span className="text-muted">
-                    {selectedResearcherSamples[0]?.comments || "N/A"}
-                  </span>
-                </div>
-
-                <div>
-                  <strong>Committee Member Status:</strong>{" "}
-                  <span className="text-muted">
-                    {selectedResearcherSamples[0]?.committee_status || "N/A"}
-                  </span>
-                </div>
-              </div>
-            </div>
 
             {/* Approve / Reject buttons - shown once */}
             {selectedResearcherSamples &&
@@ -403,14 +400,14 @@ const SampleArea = () => {
                     onClick={() => handleOpenModal("Approved", selectedResearcherSamples)}
                   >
                     <FontAwesomeIcon icon={faCheck} className="me-1" />
-                    Approve All
+                    Approve
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={() => handleOpenModal("Refused", selectedResearcherSamples)}
                   >
                     <FontAwesomeIcon icon={faTimes} className="me-1" />
-                    Refuse All
+                    Refuse
                   </button>
                 </div>
               )}
@@ -459,48 +456,82 @@ const SampleArea = () => {
                               }
                             }}
                           >
-                            {["study_copy", "irb_file", "nbc_file"].includes(key)
-                              ? "----"
-                              : key === "reporting_mechanism" && sample[key]
-                                ? sample[key].length > 50
-                                  ? (
-                                    <span
-                                      className="text-primary"
-                                      style={{ cursor: "pointer", textDecoration: "underline" }}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setSelectedComment(sample[key]);
-                                        setShowCommentModal(true);
-                                      }}
-                                      title={sample[key]}
-                                    >
-                                      Click to View
-                                    </span>
-                                  )
-                                  : <span title={sample[key]}>{sample[key]}</span>
-                                : key === "comments" && sample[key]
-                                  ? sample[key].length > 50
-                                    ? (
-                                      <span
-                                        className="text-primary"
-                                        style={{ cursor: "pointer", textDecoration: "underline" }}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSelectedComment(sample[key]);
-                                          setShowCommentModal(true);
-                                        }}
-                                        title={sample[key]}
-                                      >
-                                        Click to View
-                                      </span>
-                                    )
-                                    : <span title={sample[key]}>{sample[key]}</span>
-                                  : key === "quantity"
-                                    ? `${sample.quantity || 0} × ${sample.volume || 0}${sample.VolumeUnit || ''}`
-                                    : sample[key] || "----"}
-                          </td>
+                            {key === "Analyte" ? (
+                              <>
+                                <span style={{ textDecoration: "underline" }}>{sample.Analyte || "N/A"}</span>
+                                <div
+                                  className="text-muted small mt-1"
+                                  style={{ textDecoration: "none", cursor: "default" }}
+                                >
+                                  {/* Gender and Age */}
+                                  {(sample.gender || sample.age) && (
+                                    <>
+                                      {sample.gender}
+                                      {sample.age ? `${sample.gender ? ', ' : ''}${sample.age} years` : ''}
+                                    </>
+                                  )}
 
+                                  {/* Separator + TestResult */}
+                                  {(sample.TestResult || sample.TestResultUnit) && (sample.gender || sample.age) && ' | '}
+                                  {(sample.TestResult || sample.TestResultUnit) && (
+                                    <>
+                                      {sample.TestResult ?? ''} {sample.TestResultUnit ?? ''}
+                                    </>
+                                  )}
+                                </div>
+                              </>
+                            ) : ["study_copy", "irb_file", "nbc_file"].includes(key) ? (
+                              "----"
+                            ) : key === "reporting_mechanism" && sample[key] ? (
+                              sample[key].length > 50 ? (
+                                <span
+                                  className="text-primary"
+                                  style={{ cursor: "pointer", textDecoration: "underline" }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedComment(sample[key]);
+                                    setShowCommentModal(true);
+                                  }}
+                                  title={sample[key]}
+                                >
+                                  Click to View
+                                </span>
+                              ) : (
+                                <span title={sample[key]}>{sample[key]}</span>
+                              )
+                            ) : key === "comments" && sample[key] ? (
+                              sample[key].length > 50 ? (
+                                <span
+                                  className="text-primary"
+                                  style={{ cursor: "pointer", textDecoration: "underline" }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedComment(sample[key]);
+                                    setShowCommentModal(true);
+                                  }}
+                                  title={sample[key]}
+                                >
+                                  Click to View
+                                </span>
+                              ) : (
+                                <span title={sample[key]}>{sample[key]}</span>
+                              )
+                            ) : key === "quantity" ? (
+                              `${sample.quantity || 0} × ${sample.volume || 0}${sample.VolumeUnit || ''}`
+                            ) : key === "locationids" ? (
+                              <span
+                                style={{ cursor: "pointer" }}
+                                title="Location ID's = Room Number, Freezer ID and Box ID"
+                              >
+                                {sample[key] || "----"}
+                              </span>
+                            ) : (
+                              sample[key] || "----"
+                            )}
+
+                          </td>
                         ))}
+
                       </tr>
                     ))
                   ) : (

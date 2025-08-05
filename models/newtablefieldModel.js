@@ -1,6 +1,18 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
   {
+    table:"technicaladminsampleapproval",
+    columnsToAdd:[
+      
+      {
+        column: "Comments",
+        type: "VARCHAR(500)",
+        nullable: true,
+      },
+    ]
+  },
+
+  {
     table: "sample",
     columnsToAdd: [
       {

@@ -21,7 +21,7 @@ router.post('/cart', upload.fields([
 router.get('/cart/:id', cartController.getAllCart); // Get all cart items for a user
 router.get('/cart/getCount/:id', cartController.getCartCount); // Get count of cart items for a user
 router.put('/cart/update/:id', cartController.updateCard); // Update quantity of a product in the cart
-router.put("/cart/:id/technical-status", (req, res, next) => {
+router.put("/cart/bulk-update-Technicalstatus", (req, res, next) => {
   next();
 }, cartController.updateTechnicalAdminStatus);
 

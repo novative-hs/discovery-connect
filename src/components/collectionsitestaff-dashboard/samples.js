@@ -970,7 +970,7 @@ const SampleArea = () => {
     setLogoPreview(null)
   };
 
-  const handleUpdate = async (e) => {
+ const handleUpdate = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -1031,7 +1031,7 @@ const SampleArea = () => {
           },
         }
       );
-      fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
+      fetchSamples(currentPage, itemsPerPage, filters);
 
       setShowEditModal(false);
       setShowEditPoolModal(false);
@@ -1047,6 +1047,7 @@ const SampleArea = () => {
       setIsSubmitting(false);
     }
   };
+
 
   useEffect(() => {
     if (

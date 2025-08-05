@@ -308,22 +308,24 @@ const updateCartStatusToShipping = (cartId, callback) => {
     }
   );
 };
-const updateTechnicalAdminStatus = async (req, res) => {
-  const { id } = req.params;
-  const { technical_admin_status } = req.body;
 
-  if (!technical_admin_status) {
-    return res.status(400).json({ error: "technical admin status is required" });
+const updateTechnicalAdminStatus = async (req, res) => {
+  const { order_ids, technical_admin_status, comment } = req.body;
+
+  if (!technical_admin_status || !Array.isArray(order_ids) || order_ids.length === 0) {
+    return res.status(400).json({ error: "Invalid request data" });
   }
 
   try {
-    const result = await cartModel.updateTechnicalAdminStatus(id, technical_admin_status);
-    return res.status(200).json(result);
+    await cartModel.updateTechnicalAdminStatus(order_ids, technical_admin_status, comment || null);
+
+    return res.status(200).json({ message: "All statuses updated successfully" });
   } catch (err) {
-    console.error("Error in update:", err);
-    return res.status(500).json({ error: "Error in updating status" });
+    console.error("Error in bulk update:", err);
+    return res.status(500).json({ error: "Bulk update failed" });
   }
 };
+
 const updateCartStatusbyCSR = (req, res) => {
   const ids = req.body.ids;
   cartModel.updateCartStatusbyCSR(ids, req, (err, result) => {

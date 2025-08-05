@@ -60,16 +60,16 @@ const SampleDispatchArea = () => {
   const tableHeaders = [
     { label: "Analyte", key: "Analyte" },
     { label: "Volume", key: "volume" },
-    { label: "Gender", key: "gender" },
-    { label: "Age", key: "age" },
+    { label: "Gender & Age", key: "gender_age" },
     { label: "Test Result & Unit", key: "TestResult" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+
     { label: "Status", key: "status" },
-    { label: "Sample Visibility", key: "sample_visibility" },
+
   ];
 
   const fieldsToShowInOrder = [
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
@@ -361,12 +361,18 @@ const SampleDispatchArea = () => {
                             </span>
                           ) : key === "volume" ? (
                             `${sample.volume || "----"} ${sample.VolumeUnit || ""}`
-                          ) : key === "age" ? (
-                            sample.age ? `${sample.age} years` : "----"
-                          ) : key === "TestResult" ? (
-                            `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
+                          ) :  key === "gender_age" ? (
+                          (sample.gender && sample.age ?
+                          `${sample.gender} | ${sample.age} years` :
+                          sample.gender ?
+                          sample.gender :
+                          sample.age ?
+                          `${sample.age} years` :
+                          "----"
+                          ) ): key === "TestResult" ? (
+                          `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
                           ) : (
-                            sample[key] || "----"
+                          sample[key] || "----"
                           )}
                         </td>
                       ))}

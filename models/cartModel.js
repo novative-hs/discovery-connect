@@ -6,7 +6,7 @@ const notifyResearcher = (cartIds, message, subject) => {
     // Ensure cartIds is an array
     const ids = Array.isArray(cartIds) ? cartIds : [cartIds];
 
-    // Build a query that fetches emails and created_at for multiple cart IDs
+    // SQL placeholders
     const placeholders = ids.map(() => '?').join(',');
     const getResearcherEmailQuery = `
       SELECT ua.email, c.created_at, c.id AS cartId
@@ -15,7 +15,6 @@ const notifyResearcher = (cartIds, message, subject) => {
       WHERE c.id IN (${placeholders})
     `;
 
-    // Fetch all cart details in one query
     mysqlConnection.query(getResearcherEmailQuery, ids, (emailErr, emailResults) => {
       if (emailErr) {
         return reject(emailErr);
@@ -25,26 +24,32 @@ const notifyResearcher = (cartIds, message, subject) => {
         return reject(new Error('No data found for provided cart IDs'));
       }
 
-      // Assuming all cart items belong to the same researcher, use the first result
+      // Get the researcher email from the first result
       const researcherEmail = emailResults[0].email;
+
+      // Build cart list in HTML format
       const cartIdsList = emailResults
-        .map((detail) => `Cart ID: ${detail.cartId} (Created At: ${detail.created_at})`)
-        .join("\n");
+        .map((detail) => `<li>Cart ID: ${detail.cartId} (Created At: ${new Date(detail.created_at).toLocaleString()})</li>`)
+        .join('');
 
-      // Build the message
-      const emailMessage = `Dear Researcher,<br/>${message}<br/>Details for the following carts:${cartIdsList}<br/>Best regards`;
+      // Build email message in HTML
+      const emailMessage = `
+        <p>Dear Researcher,</p>
+        <p>${message}</p>
+        <p>Details for the following carts:</p>
+        <ul>${cartIdsList}</ul>
+        <p>Best regards,</p>
+        <p>Discovery Connect Team</p>
+      `;
 
-      // Start email sending process concurrently (non-blocking)
+      // Send single email
       sendEmail(researcherEmail, subject, emailMessage)
-        .then(() => {
-          resolve(); // Resolve after email is sent successfully
-        })
-        .catch((emailError) => {
-          reject(emailError); // Reject if email fails
-        });
+        .then(() => resolve())
+        .catch((emailError) => reject(emailError));
     });
   });
 };
+
 const createCartTable = () => {
   const cartTableQuery = `
   CREATE TABLE IF NOT EXISTS cart (
@@ -58,7 +63,7 @@ const createCartTable = () => {
     volume VARCHAR(255) NOT NULL,
     totalpayment DECIMAL(10, 2) NOT NULL,
     payment_id INT DEFAULT NULL,
-    order_status ENUM('Pending', 'Accepted', 'UnderReview', 'Rejected', 'Shipped', 'Dispatched', 'Completed') DEFAULT 'Pending',
+    order_status ENUM('Pending', 'Accepted', 'Rejected', 'Shipped', 'Dispatched', 'Completed') DEFAULT 'Pending',
    delivered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES user_account(id) ON DELETE CASCADE,
@@ -405,7 +410,7 @@ const baseCommitteeStatus = (committeeType) => `
             WHERE ca.cart_id = c.id AND cm.committeetype = '${committeeType === 'Scientific' ? 'Ethical' : 'Scientific'}'
         ) THEN 'Not Sent'
         WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
-        WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'UnderReview') > 0 THEN 'UnderReview'
+        WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Pending') > 0 THEN 'Pending'
         WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
         ELSE NULL
       END
@@ -589,6 +594,7 @@ const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, ca
       s.Analyte, 
       s.VolumeUnit,
       s.volume,
+      s.room_number,s.freezer_id,s.box_id,
       s.age, s.gender, s.ethnicity, s.samplecondition, 
       s.storagetemp, s.ContainerType, s.CountryofCollection, 
       s.VolumeUnit, s.SampleTypeMatrix, s.SmokingStatus, 
@@ -641,11 +647,18 @@ const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, ca
           console.error("Error fetching total count:", countErr);
           callback(countErr, null);
         } else {
+          // Add locationids field to each result
+          const updatedResults = results.map(sample => ({
+            ...sample,
+            locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-')
+          }));
+
           callback(null, {
-            results,
+            results: updatedResults,
             totalCount: countResults[0].totalCount,
           });
         }
+
       });
     }
   });
@@ -760,50 +773,57 @@ const getAllOrderByOrderPacking = (csrUserId, staffAction, callback) => {
   });
 };
 
-const updateTechnicalAdminStatus = async (id, technical_admin_status) => {
+const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comment) => {
   try {
+    const updateResults = [];
 
-    // Step 1: Update Technical admin status
-    const sqlQuery = `
-      UPDATE technicaladminsampleapproval 
-      SET technical_admin_status = ? 
-      WHERE cart_id = ?`;
+    for (const id of cartIds) {
+      // Step 1: Update technical admin status
+      const updateQuery = `
+        UPDATE technicaladminsampleapproval 
+        SET technical_admin_status = ?, Comments = ?
+        WHERE cart_id = ?
+      `;
+      await queryAsync(updateQuery, [technical_admin_status, comment, id]);
 
-    // Use promise-based query to avoid blocking
-    await queryAsync(sqlQuery, [technical_admin_status, id]);
+      // Step 2: Determine new cart status
+      let newCartStatus = null;
+      if (technical_admin_status === 'Accepted') {
+        newCartStatus = 'Dispatched';
+      } else if (technical_admin_status === 'Rejected') {
+        newCartStatus = 'Rejected';
+      }
 
-    // Step 2: Determine new cart status based on Technical admin status
-    let newCartStatus = null;
+      if (newCartStatus) {
+        await updateCartStatus(id, newCartStatus);
+      }
 
-    if (technical_admin_status === 'Accepted') {
-      newCartStatus = 'Dispatched';
-    } else if (technical_admin_status === 'Rejected') {
-      newCartStatus = 'Rejected';
+      // Step 3: Email message
+      const message =
+        technical_admin_status === 'Accepted'
+          ? "Your sample request has been <b>approved</b> by the Technical Admin.<br/>"
+          : technical_admin_status === 'Rejected'
+            ? "Your sample request has been <b>rejected</b> by the Technical Admin.<br/>"
+            : "Your sample request is still <b>pending</b> approval by the Technical Admin.<br/>";
+
+      // Optional comment addition
+      const fullMessage = comment
+        ? `${message}<br/><b>Comment:</b> ${comment}`
+        : message;
+
+      // Step 4: Notify researcher (email)
+      await notifyResearcher(id, fullMessage, "Sample Request Status Update");
+
+      updateResults.push({ id, status: 'updated' });
     }
 
-    if (newCartStatus) {
-      await updateCartStatus(id, newCartStatus);
-    }
-
-    const message =
-      technical_admin_status === 'Accepted'
-        ? "Your sample request has been <b>approved</b> by the Technical Admin.<br/>"
-        : technical_admin_status === 'Rejected'
-          ? "Your sample request has been <b>rejected</b> by the Technical Admin.<br/>"
-          : "Your sample request is still <b>pending</b> approval by the Technical Admin.<br/>";
-
-    // Step 5: Notify the researcher asynchronously (no blocking)
-    const notifyPromise = notifyResearcher(id, message, "Sample Request Status Update");
-
-    // Wait for notification to be sent
-    await notifyPromise;
-
-    return { message: "Technical Admin and Cart status updated. Researcher notified." };
+    return updateResults;
   } catch (err) {
-    console.error("Error updating Technical admin status:", err);
-    throw new Error("Error updating status");
+    console.error("Error in bulk update in model:", err);
+    throw new Error("Bulk update in model failed");
   }
 };
+
 
 const updateCartStatusbyCSR = async (ids, req, callback) => {
   try {
@@ -880,8 +900,8 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
     const message =
       cartStatus === 'Rejected'
         ? "Your sample request has been <b>rejected</b>.<br/>"
-        : cartStatus === 'UnderReview'
-          ? "Your sample documents have been <b>reviewed by a committee member</b>.<br/>"
+        : cartStatus === 'Pending'
+          ? "Your sample documents have been <b>reviewed by a committee member and Technical Admin</b>.<br/>"
           : "Your sample request status has been updated.<br/>";
 
     const subject = "Sample Request Status Update";

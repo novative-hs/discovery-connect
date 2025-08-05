@@ -6,8 +6,8 @@ const createcommitteesampleapprovalTable = () => {
   id INT AUTO_INCREMENT PRIMARY KEY,
   cart_id INT NOT NULL,  
   sender_id INT NOT NULL,  -- Registration admin
-  committee_member_id INT NOT NULL, -- Committee member
-  committee_status ENUM('UnderReview', 'Approved', 'Refused') NOT NULL DEFAULT 'UnderReview',
+  committee_member_id INT NOT NULL, 
+  committee_status ENUM('Pending', 'Approved', 'Refused') NOT NULL DEFAULT 'Pending',
   comments TEXT NULL, 
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE CASCADE,
@@ -25,7 +25,12 @@ const createcommitteesampleapprovalTable = () => {
     }
   });
 };
-const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
+const insertCommitteeApproval = (cartIds, senderId, committeeType, callback) => {
+  // Validate input
+  if (!Array.isArray(cartIds) || cartIds.length === 0) {
+    return callback(new Error("No cart IDs provided"), null);
+  }
+
   let getCommitteeMembersQuery = "";
 
   if (committeeType === "scientific") {
@@ -76,23 +81,27 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
       INSERT INTO committeesampleapproval (cart_id, sender_id, committee_member_id, committee_status)
       VALUES ?
     `;
-    const values = activeMembers.map(member => [cartId, senderId, member.user_account_id, "UnderReview"]);
+    const values = [];
+    cartIds.forEach(cartId => {
+      activeMembers.forEach(member => {
+        values.push([cartId, senderId, member.user_account_id, "Pending"]);
+      });
+    });
+
 
     mysqlConnection.query(insertQuery, [values], (insertErr, insertResult) => {
       if (insertErr) {
         console.error("Error inserting committee approval records:", insertErr);
         return callback(insertErr, null);
       }
-
-
-
       const updateCartStatusQuery = `
-        UPDATE cart
-        SET order_status = 'Pending'
-        WHERE id = ?
-      `;
+  UPDATE cart
+  SET order_status = 'Pending'
+  WHERE id IN (?)
+`;
 
-      mysqlConnection.query(updateCartStatusQuery, [cartId], (updateErr) => {
+      mysqlConnection.query(updateCartStatusQuery, [cartIds], (updateErr) => {
+
         if (updateErr) {
           console.error("Error updating cart status:", updateErr);
           return callback(updateErr, null);
@@ -101,43 +110,76 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
 
 
         const getEmailQuery = `
-          SELECT ua.email,c.tracking_id
-          FROM user_account ua
-          JOIN cart c ON ua.id = c.user_id
-          WHERE c.id = ?
-        `;
+  SELECT DISTINCT ua.email, r.researcherName, c.tracking_id
+  FROM user_account ua
+  JOIN cart c ON ua.id = c.user_id
+  JOIN researcher r ON ua.id = r.user_account_id
+  WHERE c.id IN (?)
+`;
 
-        mysqlConnection.query(getEmailQuery, [cartId], (emailErr, emailResults) => {
+        mysqlConnection.query(getEmailQuery, [cartIds], async (emailErr, emailResults) => {
           if (emailErr) {
-            console.error("Error fetching user email:", emailErr);
+            console.error("Error fetching user emails:", emailErr);
             return callback(emailErr, null);
           }
 
-          const userEmail = emailResults?.[0]?.email;
-          const tracking_id = emailResults?.[0]?.tracking_id;
-          const subject = "Committee Status Update";
-          const text = `Dear User,\n\nYour sample request (Tracking ID: ${tracking_id}) is now under review by the committee.\n\nPlease check your dashboard for further updates.\n\nRegards,\nDiscovery Connect Team`;
+          // Group by email and researcherName
+          const emailMap = new Map();
 
-          if (userEmail) {
-            sendEmail(userEmail, subject, text)
-              .then(() => {
+          emailResults.forEach(({ email, researcherName, tracking_id }) => {
+            const key = `${email}|${researcherName}`;
+            if (!emailMap.has(key)) {
+              emailMap.set(key, []);
+            }
+            emailMap.get(key).push(tracking_id);
+          });
 
-                return callback(null, {
-                  message: notice + "Committee status updated and email sent successfully!"
-                });
-              })
-              .catch((emailError) => {
-                console.error("Failed to send email:", emailError);
-                return callback(null, {
-                  message: notice + "Committee status updated, but email failed to send."
-                });
-              });
-          } else {
-            return callback(null, {
-              message: notice + "Committee status updated successfully, but no user email found."
-            });
+          let emailFailures = [];
+
+          for (const [key, trackingIds] of emailMap.entries()) {
+            const [email, researcherName] = key.split("|");
+
+            const subject = "Your Sample Submission is Under Review";
+
+            const text = `
+ <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px;">
+      <h2 style="color: #2c3e50;">Sample Request Under Review</h2>
+
+      <p>Dear <strong>${researcherName}</strong>,</p>
+
+      <p>We are writing to inform you that the following sample request(s) you submitted are now <strong>under review</strong> by the committee:</p>
+
+      <ul style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
+        Tracking ID(s): ${trackingIds.join(', ')}
+      </ul>
+
+      <p>You can log in to your dashboa   rd for further updates and to track the status of each request.</p>
+
+      <p style="margin-top: 30px;">Thank you for using <strong>Discovery Connect</strong>.</p>
+
+      <p style="color: #7f8c8d;">Best regards,<br/>Discovery Connect Team</p>
+    </div>
+    `.trim();
+
+            try {
+              await sendEmail(email, subject, text);
+            } catch (err) {
+              console.error("Failed to send email to", email, ":", err);
+              emailFailures.push(email);
+            }
           }
+
+          const finalMsg =
+            notice +
+            "Committee status updated" +
+            (emailFailures.length > 0
+              ? `, but email failed to send to: ${emailFailures.join(", ")}.`
+              : " and emails sent successfully!");
+
+          return callback(null, { message: finalMsg });
         });
+
+
       });
     });
   });
@@ -146,87 +188,156 @@ const insertCommitteeApproval = (cartId, senderId, committeeType, callback) => {
 
 
 
-const updateCommitteeStatus = async (cartId, committee_member_id, committee_status, comments, callback) => {
-  const updateQuery = `
-    UPDATE committeesampleapproval 
-    SET committee_status = ?, comments = ? 
-    WHERE committee_member_id = ? AND cart_id = ?`;
+const updateCommitteeStatus = async (cart_ids, committee_member_id, committee_status, comments, callback) => {
 
-  mysqlConnection.query(updateQuery, [committee_status, comments, committee_member_id, cartId], async (err, result) => {
-    if (err) {
-      console.error("Error updating committee status:", err);
-      return callback(err, null);
-    }
+  if (!Array.isArray(cart_ids) || cart_ids.length === 0) {
+    return callback(new Error("Invalid input: cart_ids must be a non-empty array"), null);
+  }
+   const getCommitteeTypeQuery = `SELECT committeetype FROM committee_member WHERE user_account_id = ?`;
+    const committeeTypeResult = await new Promise((resolve) => {
+      mysqlConnection.query(getCommitteeTypeQuery, [committee_member_id], (err, result) => {
+        if (err) {
+          console.error("Error fetching committee type:", err);
+          return resolve([]);
+        }
+        resolve(result);
+      });
+    });
 
-    if (committee_status === 'Refused') {
-      try {
-        revertSampleQuantity(cartId);
-      } catch (revertErr) {
-        console.error("❌ Error reverting sample quantity:", revertErr);
-      }
-    }
+    const committeeType = (committeeTypeResult[0]?.committeetype);
 
-    // Check if all committee members have submitted status
-    const checkAllStatusQuery = `
-      SELECT COUNT(*) AS pending 
-      FROM committeesampleapproval 
-      WHERE cart_id = ? AND committee_status IS NULL`;
+  const pendingEmailCarts = [];
 
-    mysqlConnection.query(checkAllStatusQuery, [cartId], (checkErr, checkResult) => {
-      if (checkErr) {
-        console.error("Error checking committee status completion:", checkErr);
-        return callback(checkErr, null);
-      }
+  let processed = 0;
+  const total = cart_ids.length;
+  let hasError = false;
 
-      const pending = checkResult[0].pending;
+  for (const cartid of cart_ids) {
 
-      // Only proceed if all members submitted status
-      if (pending === 0) {
-        const getEmailQuery = `
-          SELECT ua.email, c.tracking_id 
-          FROM user_account ua
-          JOIN cart c ON ua.id = c.user_id 
-          WHERE c.id = ?`;
+    const updateQuery = `
+      UPDATE committeesampleapproval 
+      SET committee_status = ?, comments = ? 
+      WHERE committee_member_id = ? AND cart_id = ?`;
 
-        mysqlConnection.query(getEmailQuery, [cartId], (emailErr, emailResults) => {
-          if (emailErr) {
-            console.error("Error fetching email:", emailErr);
-          } else if (emailResults.length > 0) {
-            const { email: userEmail, tracking_id } = emailResults[0];
+    await new Promise((resolve) => {
+      mysqlConnection.query(updateQuery, [committee_status, comments, committee_member_id, cartid], async (err) => {
+        if (err) {
+          console.error(`Error updating committee status for cart ${cartid}:`, err);
+          hasError = true;
+          return resolve();
+        }
 
-            // Update cart order_status to "underreview"
-            const updateCartStatusQuery = `UPDATE cart SET order_status = 'UnderReview' WHERE id = ?`;
-            mysqlConnection.query(updateCartStatusQuery, [cartId], (cartErr) => {
-              if (cartErr) {
-                console.error("Failed to update cart status:", cartErr);
-              }
-            });
-
-            const subject = `Committee Status Update`;
-            const text = `<b>Dear Researcher,</b><br><br>Your sample request for <b>Tracking ID: ${tracking_id}</b> has been reviewed by all committee members.<br><br>📝 <b>Latest Comment:</b> ${comments}<br><br>Please check your <b>dashboard</b> for details. 🚀`;
-
-            sendEmail(userEmail, subject, text, (emailSendErr) => {
-              if (emailSendErr) {
-                console.error("Failed to send email:", emailSendErr);
-              }
-            });
-          } else {
-            console.warn("No email found for cart ID", cartId);
+        if (committee_status === 'Refused') {
+          try {
+            revertSampleQuantity(cartid);
+          } catch (revertErr) {
+            console.error(`❌ Error reverting quantity for cart ${cartid}:`, revertErr);
           }
-        });
-      }
+        }
 
-      // Final callback
-      const response = {
-        success: true,
-        message: "Committee status updated",
-        cartId,
-        status: committee_status,
-      };
-      callback(null, response);
+        // Check if all committee members submitted
+        const checkAllStatusQuery = `
+          SELECT COUNT(*) AS pending 
+          FROM committeesampleapproval 
+          WHERE cart_id = ? AND committee_status IS NULL`;
+
+        mysqlConnection.query(checkAllStatusQuery, [cartid], (checkErr, checkResult) => {
+          if (checkErr) {
+            console.error(`Error checking committee status for cart ${cartid}:`, checkErr);
+            hasError = true;
+            return resolve();
+          }
+
+          const pending = checkResult[0].pending;
+          if (pending === 0) {
+           pendingEmailCarts.push({ cartId: cartid, latestComment: comments });
+          }
+
+          resolve();
+        });
+      });
+    });
+
+    processed++;
+  }
+
+  // Now send emails only once per cart
+const emailMap = new Map();
+
+for (const { cartId, latestComment } of pendingEmailCarts) {
+  const getEmailQuery = `
+    SELECT ua.email, r.researcherName, c.tracking_id 
+    FROM user_account ua
+    JOIN cart c ON ua.id = c.user_id 
+    JOIN researcher r ON ua.id = r.user_account_id
+    WHERE c.id = ?`;
+
+  const results = await new Promise((resolve) => {
+    mysqlConnection.query(getEmailQuery, [cartId], (err, result) => {
+      if (err) {
+        console.error("Error fetching email:", err);
+        return resolve([]);
+      }
+      resolve(result);
     });
   });
+
+  if (results.length > 0) {
+    const { email, researcherName, tracking_id } = results[0];
+
+    if (!emailMap.has(email)) {
+      emailMap.set(email, {
+        researcherName,
+        trackingIds: [tracking_id],
+        comment: latestComment,
+      });
+    } else {
+      const entry = emailMap.get(email);
+      entry.trackingIds.push(tracking_id); // multiple IDs
+    }
+
+    // Update cart status once per cart
+    const updateCartStatusQuery = `UPDATE cart SET order_status = 'Pending' WHERE id = ?`;
+    mysqlConnection.query(updateCartStatusQuery, [cartId], (cartErr) => {
+      if (cartErr) {
+        console.error(`Failed to update cart status for cart ${cartId}:`, cartErr);
+      }
+    });
+  }
+}
+
+// Send one email per unique user
+for (const [email, { researcherName, trackingIds, comment }] of emailMap.entries()) {
+  const uniqueTrackingIds = [...new Set(trackingIds)];
+
+  // Format tracking IDs as list items
+  const trackingListHTML = uniqueTrackingIds.map(id => `<li>${id}</li>`).join("");
+  const subject = `Committee Status Update`;
+  const text = `
+    <b>Dear ${researcherName},</b><br><br>
+    Your sample request(s) for the following Tracking ID(s) have been reviewed by ${committeeType} committee members:<br><ul>${trackingListHTML}</ul>
+    📝 <b>Latest Comment:</b> ${comment}<br><br>
+    Please check your <b>dashboard</b> for details. 🚀
+  `;
+
+  sendEmail(email, subject, text, (emailErr) => {
+    if (emailErr) {
+      console.error(`Failed to send email to ${email}:`, emailErr);
+    } else {
+      console.log(`✅ Email sent to ${email}`);
+    }
+  });
+}
+
+
+  const finalMessage = hasError
+    ? "Some updates failed. Check logs."
+    : "Committee statuses updated and email(s) sent where applicable.";
+
+  callback(null, { success: !hasError, message: finalMessage });
 };
+
+
 
 
 
