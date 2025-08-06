@@ -31,7 +31,11 @@ const SampleArea = () => {
   const [showGroupedModal, setShowGroupedModal] = useState(false);
   const [selectedResearcherSamples, setSelectedResearcherSamples] = useState(null);
   const [comments, setComments] = useState({});
-  const [viewedDocuments, setViewedDocuments] = useState({});
+  const [viewedDocuments, setViewedDocuments] = useState({
+    study_copy: false,
+    irb_file: false,
+    nbc_file: false,
+  });
   const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [filters, setFilters] = useState({
     tracking_id: "",
@@ -41,20 +45,17 @@ const SampleArea = () => {
     created_at: "",
   });
   const tableHeaders = [
+    { label: "Order Date", key: "created_at" },
     { label: "Order ID", key: "tracking_id" },
     { label: "Researcher Name", key: "researcher_name" },
     { label: "Organization Name", key: "organization_name" },
-    { label: "Order Status", key: "order_status" },
-    { label: "Order Date", key: "created_at" }
+    { label: "Review Status", key: "committee_status" },
+    { label: "Review Comments", key: "comments" },
   ];
   const SampleHeader = [
     { label: "Analyte", key: "Analyte" },
-    { label: "Committee Comments", key: "comments" },
-    { label: "Additional Mechanism", key: "reporting_mechanism" },
-    { label: "Study Copy", key: "study_copy" },
-    { label: "IRB file", key: "irb_file" },
-    { label: "NBC file", key: "nbc_file" },
-    { label: "Status", key: "committee_status" },
+    { label: "Quantity X Volume", key: "quantity" },
+    { label: "Location", key: "locationids" },
   ];
 
   const fetchSamples = useCallback(async (page = 1, pageSize = 10, filters = {}) => {
@@ -116,25 +117,6 @@ const SampleArea = () => {
     acc[key].push(sample);
     return acc;
   }, {});
-  const handleOpenModal = (type, sample) => {
-    if (!sample) {
-      alert("Sample data is missing.");
-      return;
-    }
-    if (!allDocumentsViewed(sample.cart_id, sample)) {
-      alert("Please view all required documents before proceeding.");
-      return;
-    }
-    setSelectedSample(sample); // Ensure the selected sample is set
-    setActionType(type);
-    setShowModal(true);
-  };
-  // Close Modal
-  const handleCloseModal = () => {
-    setSelectedSample(null); // Ensure the selected sample is set
-    setActionType(null);
-    setShowModal(false);
-  };
 
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1;
@@ -142,119 +124,131 @@ const SampleArea = () => {
   };
 
 
-const handleFilterChange = (field, value) => {
-  setSearchField(field);
-  setSearchValue(value);
-  setCurrentPage(1); // Optionally reset to page 1 when filtering
-};
+  const handleFilterChange = (field, value) => {
+    setSearchField(field);
+    setSearchValue(value);
+    setCurrentPage(1); // Optionally reset to page 1 when filtering
+  };
 
+  // HANDLER TO OPEN DOCUMENT AND TRACK VIEWED STATUS GLOBALLY
   const handleViewDocument = (fileBuffer, fileName, sampleId) => {
     if (!fileBuffer) {
       alert("No document available.");
       return;
     }
 
-    // Convert buffer to Blob
     const blob = new Blob([new Uint8Array(fileBuffer.data)], {
       type: "application/pdf",
     });
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
 
-    // Track viewed status
+    // ✅ Mark globally viewed
     setViewedDocuments((prev) => ({
       ...prev,
-      [sampleId]: { ...(prev[sampleId] || {}), [fileName]: true },
+      [fileName]: true,
     }));
   };
 
-  // Check if all documents are viewed for a sample
-  const allDocumentsViewed = (cartId, sample) => {
-    if (!sample) return false; // Ensure sample exists before accessing properties
-
+  // ✅ GLOBAL CHECK FOR DOCUMENTS VIEWED (not per sample)
+  const allDocumentsViewed = () => {
     const requiredDocs = ["study_copy", "irb_file"];
-    const optionalDoc = "nbc_file"; // This is optional
+    const optionalDoc = "nbc_file";
 
-    // Ensure required documents are viewed
-    const hasViewedRequired = requiredDocs.every(
-      (doc) => viewedDocuments[cartId]?.[doc]
-    );
-
-    // Check if nbc_file exists in the sample; if it does, ensure it is viewed
+    const hasViewedRequired = requiredDocs.every((doc) => viewedDocuments[doc]);
     const hasViewedOptional =
-      !sample.nbc_file || viewedDocuments[cartId]?.[optionalDoc];
+      !selectedResearcherSamples[0][optionalDoc] || viewedDocuments[optionalDoc];
 
     return hasViewedRequired && hasViewedOptional;
   };
 
-  const handleSubmit = async () => {
-    const trimmedComment = comment.trim();
-
-    if (!id || !selectedSample || !trimmedComment) {
-      alert("Please enter a comment.");
+  // OPEN MODAL HANDLER
+  const handleOpenModal = (type, samplesGroup) => {
+    if (!samplesGroup || !samplesGroup.length) {
+      alert("Sample data is missing.");
       return;
     }
 
+    if (!allDocumentsViewed()) {
+      alert("Please view all required documents before proceeding.");
+      return;
+    }
+
+    setSelectedSample(samplesGroup[0]); // Use first sample as reference
+    setActionType(type);
+    setShowModal(true);
+  };
+
+  // Close Modal
+  const handleCloseModal = () => {
+    setSelectedSample(null); // Ensure the selected sample is set
+    setActionType(null);
+    setShowModal(false);
+  };
+
+ const handleSubmit = async () => {
+  const trimmedComment = comment.trim();
+
+  if (!id || !selectedResearcherSamples || selectedResearcherSamples.length === 0 || !trimmedComment) {
+    alert("Please enter a comment.");
+    return;
+  }
+
+  try {
+    // Prepare payload with all cart_ids at once
     const payload = {
       committee_member_id: id,
       committee_status: actionType, // "Approved" or "Refused"
       comments: trimmedComment,
+      cart_ids: selectedResearcherSamples.map(sample => sample.cart_id),
     };
 
-    try {
-      const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/${selectedSample.cart_id}/committee-approval`,
-        payload
-      );
+    // Send a single request
+    await axios.put(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/bulk-committee-approval`,
+      payload
+    );
 
-      if (response.data.success) {
-        notifySuccess(response.data.message);
-        setShowModal(false);
-        setComment("");
+    notifySuccess(`${actionType} successful for all samples.`);
+    setShowModal(false);
+    setComment("");
 
-        // ✅ Fetch updated data and replace both samples & selectedResearcherSamples
-        const updatedOrderRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
-        );
-        const updatedDocRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
-        );
+    // ✅ Refetch updated data
+    const updatedOrderRes = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
+    );
+    const updatedDocRes = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
+    );
 
-        const updatedOrders = updatedOrderRes.data.results || [];
-        const updatedDocuments = updatedDocRes.data.results || [];
+    const updatedOrders = updatedOrderRes.data.results || [];
+    const updatedDocuments = updatedDocRes.data.results || [];
 
-        const updatedDocMap = {};
-        updatedDocuments.forEach((doc) => {
-          if (doc.cart_id) {
-            updatedDocMap[doc.cart_id] = doc;
-          }
-        });
-
-        const updatedMerged = updatedOrders.map((order) => ({
-          ...order,
-          ...(updatedDocMap[order.cart_id] || {}),
-        }));
-
-        setSamples(updatedMerged); // Update main sample list
-
-        // ✅ Update the selected group with fresh data
-        const updatedGroup = updatedMerged.filter(
-          (s) => s.tracking_id === selectedSample.tracking_id
-        );
-        setSelectedResearcherSamples(updatedGroup);
-
-      } else {
-        notifyError("Failed to update committee status. Please try again.");
+    const updatedDocMap = {};
+    updatedDocuments.forEach((doc) => {
+      if (doc.cart_id) {
+        updatedDocMap[doc.cart_id] = doc;
       }
-    } catch (error) {
-      console.error("❌ Error updating committee status:", error);
-      if (error.response?.data?.error) {
-        notifyError(`Error: ${error.response.data.error}`);
-      } else {
-        notifyError("Unexpected error occurred.");
-      }
-    }
-  };
+    });
+
+    const updatedMerged = updatedOrders.map((order) => ({
+      ...order,
+      ...(updatedDocMap[order.cart_id] || {}),
+    }));
+
+    setSamples(updatedMerged);
+
+    const updatedGroup = updatedMerged.filter(
+      (s) => s.tracking_id === selectedResearcherSamples[0].tracking_id
+    );
+    setSelectedResearcherSamples(updatedGroup);
+
+  } catch (error) {
+    console.error("❌ Error updating samples:", error);
+    notifyError("Bulk approval/refusal failed. Please check logs.");
+  }
+};
+
 
 
 
@@ -276,7 +270,7 @@ const handleFilterChange = (field, value) => {
   if (!id) return <div>Loading...</div>;
   return (
     <div className="container py-3">
-      <h4 className="text-center text-success">Researcher Orders</h4>
+      <h4 className="text-center text-success">Pending Review List</h4>
       <div
         onScroll={handleScroll}
         className="table-responsive"
@@ -311,11 +305,21 @@ const handleFilterChange = (field, value) => {
           <tbody>
             {Object.entries(groupedByResearcher).map(([researcher, group], idx) => (
               <tr key={idx}>
+                <td>
+                  {(() => {
+                    const date = new Date(group[0].created_at);
+                    const day = date.getDate().toString().padStart(2, '0');
+                    const month = date.toLocaleString('en-GB', { month: 'short' });
+                    const year = date.getFullYear();
+                    return `${day}-${month}-${year}`;
+                  })()}
+                </td>
                 <td>{group[0].tracking_id}</td>
                 <td>{group[0].researcher_name}</td>
                 <td>{group[0].organization_name}</td>
-                <td>{group[0].order_status}</td>
-                <td>{moment(group[0].created_at).format("YYYY-MM-DD HH:mm A")}</td>
+                <td>{group[0].committee_status}</td>
+                <td>{group[0].comments || "----"}</td>
+
                 <td>
                   <button
                     className="btn btn-outline-info btn-sm"
@@ -343,10 +347,9 @@ const handleFilterChange = (field, value) => {
         <Modal
           show={showGroupedModal}
           onHide={() => setShowGroupedModal(false)}
-          size="xl" // Larger than "lg"
+          size="xl"
           dialogClassName="custom-modal-width"
         >
-
           <Modal.Header closeButton>
             <Modal.Title>
               Samples for {selectedResearcherSamples[0]?.researcher_name}
@@ -355,52 +358,84 @@ const handleFilterChange = (field, value) => {
 
           <Modal.Body>
             <div
+              className="card mb-3"
+              style={{ backgroundColor: "#f9f9f9", borderLeft: "4px solid #007bff" }}
+            >
+              <div className="card-body py-2 px-3 d-flex flex-wrap gap-4">
+                <div>
+                  <strong>Additional Mechanism:</strong>{" "}
+                  <span className="text-muted">
+                    {selectedResearcherSamples[0]?.reporting_mechanism || "N/A"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Documents Buttons - shown once */}
+            <div className="mb-3 d-flex flex-wrap gap-2">
+              {["study_copy", "irb_file", "nbc_file"].map((docKey) => (
+                <button
+                  key={docKey}
+                  className="btn btn-outline-primary btn-sm"
+                  onClick={() =>
+                    handleViewDocument(
+                      selectedResearcherSamples[0][docKey],
+                      docKey,
+                      selectedResearcherSamples[0].cart_id
+                    )
+                  }
+                >
+                  Download {docKey.replace("_", " ").toUpperCase()}
+                  <FontAwesomeIcon icon={faDownload} size="sm" className="ms-1" />
+                </button>
+              ))}
+            </div>
+
+            {/* Approve / Reject buttons - shown once */}
+            {selectedResearcherSamples &&
+              selectedResearcherSamples.some((sample) => sample.committee_status !== "Approved") && (
+                <div className="mb-3 d-flex gap-2">
+                  <button
+                    className="btn btn-success btn-sm"
+                    onClick={() => handleOpenModal("Approved", selectedResearcherSamples)}
+                  >
+                    <FontAwesomeIcon icon={faCheck} className="me-1" />
+                    Approve
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleOpenModal("Refused", selectedResearcherSamples)}
+                  >
+                    <FontAwesomeIcon icon={faTimes} className="me-1" />
+                    Refuse
+                  </button>
+                </div>
+              )}
+
+
+            {/* Sample Table */}
+            <div
               onScroll={handleScroll}
               className="table-responsive"
               style={{ minWidth: "100%", overflowX: "visible" }}
             >
-
               <table className="table table-bordered table-hover text-center align-middle">
                 <thead className="table-primary text-dark">
                   <tr>
-                    {SampleHeader?.map(({ label, key }, index) => (
+                    {SampleHeader?.map(({ label }, index) => (
                       <th key={index} className="px-2">
-                        <div className="d-flex flex-column align-items-center">
-                          {/* <input
-                            type="text"
-                            className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                            placeholder={`Search ${label}`}
-                            onChange={(e) => handleFilterChange(key, e.target.value)}
-                            style={{ minWidth: "100px" }}
-                          /> */}
-                          <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-10">
-                            {label}
-                          </span>
-                        </div>
+                        <span className="fw-bold mt-1 d-block text-wrap fs-10">
+                          {label}
+                        </span>
                       </th>
                     ))}
-
-                    {/* This block must be **outside** of the map */}
-                    {selectedResearcherSamples?.some(
-                      (sample) =>
-                        sample.committee_status !== "Approved" &&
-                        sample.committee_status !== "Refused"
-                    ) && (
-                        <th className="p-2 text-center" style={{ minWidth: "50px" }}>
-                          Action
-                        </th>
-                      )}
-
-
                   </tr>
-
                 </thead>
 
                 <tbody className="table-light">
                   {selectedResearcherSamples.length > 0 ? (
                     selectedResearcherSamples.map((sample) => (
-                      <tr
-                        key={sample.id}>
+                      <tr key={sample.id}>
                         {SampleHeader.map(({ key }, index) => (
                           <td
                             key={index}
@@ -421,34 +456,37 @@ const handleFilterChange = (field, value) => {
                               }
                             }}
                           >
-                            {["study_copy", "irb_file", "nbc_file"].includes(
-                              key
-                            ) ? (
-                              <button
-                                className={`btn btn-sm ${viewedDocuments[sample.cart_id]?.[key]
-                                  ? "btn-outline-primary"
-                                  : "btn-outline-primary"
-                                  }`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleViewDocument(
-                                    sample[key],
-                                    key,
-                                    sample.cart_id
-                                  );
-                                }}
-                              >
-                                Download
-                                <FontAwesomeIcon icon={faDownload} size="sm" />
-                              </button>
+                            {key === "Analyte" ? (
+                              <>
+                                <span style={{ textDecoration: "underline" }}>{sample.Analyte || "N/A"}</span>
+                                <div
+                                  className="text-muted small mt-1"
+                                  style={{ textDecoration: "none", cursor: "default" }}
+                                >
+                                  {/* Gender and Age */}
+                                  {(sample.gender || sample.age) && (
+                                    <>
+                                      {sample.gender}
+                                      {sample.age ? `${sample.gender ? ', ' : ''}${sample.age} years` : ''}
+                                    </>
+                                  )}
+
+                                  {/* Separator + TestResult */}
+                                  {(sample.TestResult || sample.TestResultUnit) && (sample.gender || sample.age) && ' | '}
+                                  {(sample.TestResult || sample.TestResultUnit) && (
+                                    <>
+                                      {sample.TestResult ?? ''} {sample.TestResultUnit ?? ''}
+                                    </>
+                                  )}
+                                </div>
+                              </>
+                            ) : ["study_copy", "irb_file", "nbc_file"].includes(key) ? (
+                              "----"
                             ) : key === "reporting_mechanism" && sample[key] ? (
                               sample[key].length > 50 ? (
                                 <span
                                   className="text-primary"
-                                  style={{
-                                    cursor: "pointer",
-                                    textDecoration: "underline",
-                                  }}
+                                  style={{ cursor: "pointer", textDecoration: "underline" }}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setSelectedComment(sample[key]);
@@ -465,10 +503,7 @@ const handleFilterChange = (field, value) => {
                               sample[key].length > 50 ? (
                                 <span
                                   className="text-primary"
-                                  style={{
-                                    cursor: "pointer",
-                                    textDecoration: "underline",
-                                  }}
+                                  style={{ cursor: "pointer", textDecoration: "underline" }}
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setSelectedComment(sample[key]);
@@ -481,40 +516,21 @@ const handleFilterChange = (field, value) => {
                               ) : (
                                 <span title={sample[key]}>{sample[key]}</span>
                               )
+                            ) : key === "quantity" ? (
+                              `${sample.quantity || 0} × ${sample.volume || 0}${sample.VolumeUnit || ''}`
+                            ) : key === "locationids" ? (
+                              <span
+                                style={{ cursor: "pointer" }}
+                                title="Location ID's = Room Number, Freezer ID and Box ID"
+                              >
+                                {sample[key] || "----"}
+                              </span>
                             ) : (
                               sample[key] || "----"
                             )}
+
                           </td>
                         ))}
-                        {sample.committee_status !== "Approved" && sample.committee_status !== "Refused" && (
-
-                          <td className="text-center">
-                            <div
-                              className="d-flex justify-content-center gap-2"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {sample.committee_status !== "Refused" && (
-                                <button
-                                  className="btn btn-outline-success btn-sm"
-                                  onClick={() => handleOpenModal("Approved", sample)}
-                                  title="Approve Sample"
-                                >
-                                  <FontAwesomeIcon icon={faCheck} size="sm" />
-                                </button>
-                              )}
-
-                              {sample.committee_status !== "Approved" && (
-                                <button
-                                  className="btn btn-outline-danger btn-sm"
-                                  onClick={() => handleOpenModal("Refused", sample)}
-                                  title="Refuse Sample"
-                                >
-                                  <FontAwesomeIcon icon={faTimes} size="sm" />
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        )}
 
                       </tr>
                     ))
@@ -528,11 +544,10 @@ const handleFilterChange = (field, value) => {
                 </tbody>
               </table>
             </div>
-
-
           </Modal.Body>
         </Modal>
       )}
+
       {showSampleModal && selectedSample && (
         <>
           {/* Backdrop */}

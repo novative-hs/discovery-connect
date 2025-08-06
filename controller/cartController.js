@@ -205,23 +205,127 @@ const getAllOrderByOrderPacking = (req, res) => {
 };
 
 
+const updateCartStatusToShipping = (cartId, callback) => {
+  const committeeStatusQuery = `
+    SELECT 
+      (SELECT COUNT(*) FROM committeesampleapproval ca
+       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+       WHERE ca.cart_id = ? AND ca.committee_status IN ('Refused', 'Rejected')) AS any_rejected,
+
+      (SELECT COUNT(*) FROM committeesampleapproval ca
+       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+       WHERE ca.cart_id = ? AND cm.committeetype = 'Ethical' AND ca.committee_status = 'Approved') AS ethical_approved,
+
+      (SELECT COUNT(*) FROM committeesampleapproval ca
+       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+       WHERE ca.cart_id = ? AND cm.committeetype = 'Scientific' AND ca.committee_status = 'Approved') AS scientific_approved,
+
+      (SELECT COUNT(*) FROM committeesampleapproval ca
+       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+       WHERE ca.cart_id = ? AND cm.committeetype = 'Ethical') AS ethical_total,
+
+      (SELECT COUNT(*) FROM committeesampleapproval ca
+       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+       WHERE ca.cart_id = ? AND cm.committeetype = 'Scientific') AS scientific_total,
+
+      c.order_status AS current_order_status
+    FROM cart c WHERE c.id = ?`;
+
+  mysqlConnection.query(
+    committeeStatusQuery,
+    [cartId, cartId, cartId, cartId, cartId, cartId],
+    (err, results) => {
+      if (err) return callback(err, null);
+
+      const {
+        any_rejected,
+        ethical_approved,
+        scientific_approved,
+        ethical_total,
+        scientific_total,
+        current_order_status
+      } = results[0];
+
+      // ✅ Reject if any member rejected/refused
+      if (Number(any_rejected) > 0 && current_order_status !== "Rejected") {
+        const rejectQuery = `UPDATE cart SET order_status = 'Rejected' WHERE id = ?`;
+        return mysqlConnection.query(rejectQuery, [cartId], (rejectErr, rejectResults) => {
+          if (rejectErr) return callback(rejectErr, null);
+          return callback(null, rejectResults);
+        });
+      }
+
+      const ethicalApprovedComplete = ethical_total === 0 || ethical_approved === ethical_total;
+      const scientificApprovedComplete = scientific_total === 0 || scientific_approved === scientific_total;
+
+      if (ethical_total === 0 && scientific_total === 0) {
+        return callback(null, null); // ✅ No approvals required
+      }
+
+      // ✅ If fully approved and not already dispatched/shipped
+      if (ethicalApprovedComplete && scientificApprovedComplete) {
+        if (current_order_status !== "Shipped" && current_order_status !== "Dispatched") {
+          const updateStatusQuery = `UPDATE cart SET order_status = 'Dispatched' WHERE id = ?`;
+
+          mysqlConnection.query(updateStatusQuery, [cartId], (updateErr, updateResults) => {
+            if (updateErr) return callback(updateErr, null);
+
+            const getResearcherEmailQuery = `
+              SELECT ua.email, c.tracking_id,c.created_at, c.id AS cartId
+              FROM user_account ua
+              JOIN cart c ON ua.id = c.user_id
+              WHERE c.id = ?`;
+
+            mysqlConnection.query(getResearcherEmailQuery, [cartId], (emailErr, emailResults) => {
+              if (emailErr) return callback(emailErr, null);
+
+              if (emailResults.length === 0) {
+                console.warn("No researcher found for this cart ID");
+                return callback(null, updateResults);
+              }
+
+              const { email: researcherEmail, tracking_id,created_at: cartCreatedAt } = emailResults[0];
+              const subject = "Sample Request Status Update";
+              const message = `Dear Researcher,\n\nYour sample request is now being processed for <b>Dispatched</b>.\n\nDetails:\nCart ID: ${tracking_id} (Created At: ${cartCreatedAt})\n\nBest regards,\nYour Team`;
+
+              setImmediate(() => {
+                sendEmail(researcherEmail, subject, message, (emailSendErr) => {
+                  if (emailSendErr) {
+                    console.error("❌ Failed to send email:", emailSendErr);
+                  }
+                });
+              });
+
+              return callback(null, updateResults);
+            });
+          });
+        } else {
+          return callback(null, null); // ✅ Already updated
+        }
+      } else {
+        return callback(null, null); // ❌ Not fully approved yet
+      }
+    }
+  );
+};
 
 const updateTechnicalAdminStatus = async (req, res) => {
-  const { id } = req.params;
-  const { technical_admin_status } = req.body;
+  const { order_ids, technical_admin_status, comment } = req.body;
 
-  if (!technical_admin_status) {
-    return res.status(400).json({ error: "technical admin status is required" });
+  if (!technical_admin_status || !Array.isArray(order_ids) || order_ids.length === 0) {
+    return res.status(400).json({ error: "Invalid request data" });
   }
 
   try {
-    const result = await cartModel.updateTechnicalAdminStatus(id, technical_admin_status);
-    return res.status(200).json(result);
+    await cartModel.updateTechnicalAdminStatus(order_ids, technical_admin_status, comment || null);
+
+    return res.status(200).json({ message: "All statuses updated successfully" });
   } catch (err) {
-    console.error("Error in update:", err);
-    return res.status(500).json({ error: "Error in updating status" });
+    console.error("Error in bulk update:", err);
+    return res.status(500).json({ error: "Bulk update failed" });
   }
 };
+
 const updateCartStatusbyCSR = (req, res) => {
   const ids = req.body.ids;
   cartModel.updateCartStatusbyCSR(ids, req, (err, result) => {

@@ -8,7 +8,6 @@ import * as XLSX from "xlsx";
 const CityArea = () => {
   const id = sessionStorage.getItem("userID");
 
-  const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -51,7 +50,7 @@ const CityArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0);
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
   }, [filteredCityname, currentPage]);
 
@@ -65,20 +64,28 @@ const CityArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    setSearchTerm(value); // Store the search term
+    let filtered = [];
 
-    let filtered = cityname;
-    if (value.trim() !== "") {
-      filtered = cityname.filter(city =>
-        city[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      );
+    if (value.trim() === "") {
+      filtered = cityname;
+    } else {
+      filtered = cityname.filter((city) => {
+        if (field === "added_by") {
+          return "registration admin".includes(value.toLowerCase());
+        }
+
+        return city[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase());
+      });
     }
 
     setFilteredCityname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-
     setCurrentPage(0);
   };
+
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -138,17 +145,9 @@ const CityArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/city/put-city/${selectedcitynameId}`, formData);
-
-      // Update the city in the state
-      const updatedCities = cityname.map(city =>
-        city.id === selectedcitynameId ? { ...city, name: formData.cityname } : city
-      );
-
-      setcityname(updatedCities);
-      setFilteredCityname(updatedCities.filter(city =>
-        city.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ));
-
+      const response = await axios.get(`${url}/city/get-city`);
+      setFilteredCityname(response.data);
+      setcityname(response.data);
       setSuccessMessage("City updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -692,4 +691,7 @@ const CityArea = () => {
       </div>
     </section>
   );
-}; export default CityArea;
+};
+
+export default CityArea;
+

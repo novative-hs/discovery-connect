@@ -6,7 +6,7 @@ import FilterProductArea from "@components/user-dashboard/filter-samples";
 
 const SingleProduct = ({ product, selectedFilters }) => {
 
-  const { imageUrl, Analyte, total_allocated, total_quantity } = product || {};
+  const { imageUrl,total_remaining, Analyte, total_allocated, total_quantity } = product || {};
   const dispatch = useDispatch();
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -55,7 +55,7 @@ const SingleProduct = ({ product, selectedFilters }) => {
 
         {/* Stock & Allocation Info */}
         <div className="text-muted small mb-1">
-          Stock: <strong>{total_quantity}</strong>
+          Stock: <strong>{total_remaining}</strong>
         </div>
         <div className="text-muted small mb-3">
           Allocated: <strong>{total_allocated ?? 0}</strong>

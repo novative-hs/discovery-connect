@@ -499,12 +499,12 @@ SELECT
       qr.id AS quote_request_id,
       qr.sample_id,
       qr.status,
+      qr.quantity,
       s.masterID,
       s.id,
       s.analyte,
       s.age,
       s.gender,
-      s.quantity,
       s.TestResult,
       s.price,
       s.SamplePriceCurrency,
@@ -526,7 +526,7 @@ SELECT
     LEFT JOIN city c ON r.city = c.id
     LEFT JOIN district d ON r.district = d.id
     LEFT JOIN country co ON r.country = co.id
-    WHERE s.status = "In Stock" AND  quantity>0
+    WHERE s.status = "In Stock" 
   `;
 
   mysqlConnection.query(query, (err, results) => {

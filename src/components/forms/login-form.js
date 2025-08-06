@@ -32,7 +32,7 @@ const LoginForm = () => {
           errorData?.message || errorData?.error || result.error?.statusText || "Internal Server Error";
         notifyError(errorMsg);
       } else {
-        const { id, accountType, action, authToken } = result?.data?.user || {};
+        const { id, accountType, action, committeetype, authToken } = result?.data?.user || {};
         if (!id) return notifyError("Unexpected error: User ID is missing.");
 
         sessionStorage.setItem("userID", id);
@@ -40,6 +40,10 @@ const LoginForm = () => {
         if (typeof action !== "undefined") {
           sessionStorage.setItem("staffAction", action);
         }
+        if (typeof committeetype !== "undefined") {
+          sessionStorage.setItem("committeetype", committeetype);
+        }
+
         notifySuccess("Login successfully");
 
         document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;

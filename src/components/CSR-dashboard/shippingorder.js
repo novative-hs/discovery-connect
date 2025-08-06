@@ -34,9 +34,10 @@ const ShippingSampleArea = () => {
 
   const tableHeaders = [
     { label: "Order ID", key: "tracking_id" },
-    { label: "Researcher Name", key: "researcher_name" },
-    { label: "Analyte", key: "Analyte" },
     { label: "Order Date", key: "created_at" },
+    { label: "Researcher Name", key: "researcher_name" },
+    { label: "Organization Name", key: "organization_name" },
+    // { label: "Source Name", key: "source_name" },
     { label: "Status", key: "order_status" },
   ];
 
@@ -174,9 +175,10 @@ const ShippingSampleArea = () => {
                     </div>
                   </th>
                 ))}
-                <th className="p-2 text-center" style={{ minWidth: "50px" }}>
+                <th className="p-2 text-center" style={{ width: "1%", whiteSpace: "nowrap" }}>
                   Action
                 </th>
+
               </tr>
             </thead>
             <tbody className="bg-light">
@@ -184,13 +186,17 @@ const ShippingSampleArea = () => {
                 groupedList.map(([researcher, records]) => (
                   <tr key={researcher}>
                     <td>{records[0].tracking_id || "---"}</td>
-                    <td>{researcher}</td>
-                    <td>{records.map((r) => r.Analyte).join(", ")}</td>
                     <td>{new Date(records[0].created_at).toLocaleString()}</td>
+                    <td>{researcher}</td>
+                    <td>{records[0].organization_name}</td>
+                    {/* <td>
+                      {records[0].BiobankName || records[0].CollectionSiteName || "---"}
+                    </td> */}
+
                     <td>{records[0].order_status}</td>
                     <td>
                       <button
-                        className="btn btn-outline-success btn-sm d-flex align-items-center gap-2 px-3 py-1 rounded-pill shadow"
+                        className="btn btn-outline-success btn-sm d-flex justify-content-center align-items-center gap-2  rounded-pill shadow"
                         onClick={() => {
                           setSelectedUserSamples(records);
                           setSelectedUserName(researcher);
@@ -249,6 +255,7 @@ const ShippingSampleArea = () => {
                   <thead className="table-success text-dark">
                     <tr>
                       <th>Item</th>
+                      <th>Source Name</th>
                       <th>Qty</th>
                       <th>Unit Price</th>
                       <th>Total</th>
@@ -258,6 +265,7 @@ const ShippingSampleArea = () => {
                     {selectedUserSamples.map((sample, i) => (
                       <tr key={i}>
                         <td>{sample.Analyte}</td>
+                        <td>{sample.BiobankName || sample.CollectionSiteName || "---"}</td>
                         <td>{sample.quantity || "-"}</td>
                         <td>{sample.price || "-"}</td>
                         <td>{sample.totalpayment || "-"}</td>
@@ -266,7 +274,7 @@ const ShippingSampleArea = () => {
                   </tbody>
                   <tfoot className="bg-light">
                     <tr>
-                      <td colSpan="3" className="text-end fw-bold">
+                      <td colSpan="4" className="text-end fw-bold">
                         Total
                       </td>
                       <td className="fw-bold text-success">

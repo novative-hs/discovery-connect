@@ -119,7 +119,7 @@ const SampleLost = () => {
   };
 
   const tableHeaders = [
-    { label: "Analyte ", key: "Analyte" },
+    { label: "Analyte", key: "Analyte" },
     { label: "Volume", key: "volume" },
     { label: "Gender & Age", key: "gender_age" },
     { label: "Test Result & Unit", key: "TestResult" },
@@ -131,14 +131,12 @@ const SampleLost = () => {
   const fieldsToShowInOrder = [
     { label: "Container Type", key: "ContainerType" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
     { label: "Infectious Disease Result", key: "InfectiousDiseaseResult" },
     { label: "Ethnicity", key: "ethnicity" },
     { label: "Concurrent Medications", key: "ConcurrentMedications" },
-    { label: "Analyte", key: "Analyte" },
     { label: "Test Method", key: "TestMethod" },
     { label: "Test Kit Manufacturer", key: "TestKitManufacturer" },
     { label: "Test System", key: "TestSystem" },
@@ -179,14 +177,6 @@ const SampleLost = () => {
                     </div>
                   </th>
                 ))}
-
-                <th className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
-                  <div className="d-flex flex-column align-items-center">
-                    <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
-                      Comments
-                    </span>
-                  </div>
-                </th>
 
               </tr>
             </thead>

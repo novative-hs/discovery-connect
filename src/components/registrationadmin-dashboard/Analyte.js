@@ -277,6 +277,7 @@ const AnalyteArea = () => {
       const form = new FormData();
       form.append("name", formData.name);
       form.append("added_by", formData.added_by);
+      form.append("searchParams", JSON.stringify(searchParams)); // Include search params
 
       if (formData.testresultunit_id) {
         form.append("testresultunit_id", formData.testresultunit_id);
@@ -296,48 +297,19 @@ const AnalyteArea = () => {
         }
       );
 
-      // Refresh the full list
-      const updatedResponse = await axios.get(`${url}/samplefields/get/analyte`);
-      const fullData = updatedResponse.data;
-      setAnalytename(fullData);
+      // Use the filtered results from the response if available
+      const updatedResults = response.data.filteredResults || response.data;
 
-      // Reapply the current filters to the new data
-      let filtered = fullData;
-      Object.entries(searchParams).forEach(([field, value]) => {
-        if (value.trim() !== "") {
-          filtered = filtered.filter((Analyte) => {
-            if (!Analyte) return false;
-
-            try {
-              if (field === "testresultunit") {
-                const unitValue = Analyte.testresultunit;
-                if (!unitValue) return false;
-                const unitName = typeof unitValue === 'object'
-                  ? unitValue.name
-                  : unitValue;
-                return unitName?.toString().toLowerCase().includes(value.toLowerCase());
-              }
-
-              let fieldValue = Analyte[field];
-              if (fieldValue === undefined || fieldValue === null) return false;
-
-              if (field === "added_by") {
-                const addedByLabel = fieldValue === 1 ? "registration admin" : fieldValue.toString();
-                return addedByLabel.toLowerCase().includes(value.toLowerCase());
-              }
-
-              return fieldValue.toString().toLowerCase().includes(value.toLowerCase());
-            } catch (error) {
-              console.error(`Error filtering by ${field}:`, error);
-              return false;
-            }
-          });
+      setFilteredAnalytename(updatedResults);
+      setAnalytename(prev => {
+        // Update the main list while maintaining other entries
+        const updated = [...prev];
+        const index = updated.findIndex(item => item.id === selectedAnalyteId);
+        if (index !== -1) {
+          updated[index] = response.data.updatedSample;
         }
+        return updated;
       });
-
-      setFilteredAnalytename(filtered);
-      setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-      setCurrentPage(0);
 
       setShowEditModal(false);
       setSuccessMessage("Analyte updated successfully.");

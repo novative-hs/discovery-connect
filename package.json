@@ -45,7 +45,7 @@
     "react-modal-video": "^2.0.0",
     "react-paginate": "^8.1.4",
     "react-redux": "^8.0.5",
-    "react-select": "^5.10.1",
+    "react-select": "^5.10.2",
     "react-slick": "^0.29.0",
     "react-spinners": "^0.13.8",
     "react-timer-hook": "^3.0.5",

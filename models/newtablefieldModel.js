@@ -1,12 +1,24 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
   {
+    table:"technicaladminsampleapproval",
+    columnsToAdd:[
+      
+      {
+        column: "Comments",
+        type: "VARCHAR(500)",
+        nullable: true,
+      },
+    ]
+  },
+
+  {
     table: "sample",
     columnsToAdd: [
       {
-        column:"reserved",
-        type:"BOOLEAN",
-        default:"FALSE"
+        column: "reserved",
+        type: "BOOLEAN",
+        default: "FALSE"
 
       },
       {
@@ -58,6 +70,17 @@ const tablesAndColumns = [
       {
         column: "tracking_id",
         type: "VARCHAR(10)",
+        nullable: true,
+      },
+    ]
+  },
+  {
+    table: "quote_requests",
+    columnsToAdd: [
+
+      {
+        column: "quantity",
+        type: "FLOAT",
         nullable: true,
       },
     ]

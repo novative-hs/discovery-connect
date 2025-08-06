@@ -369,10 +369,9 @@ const SampleDispatchArea = () => {
                                 sample.age ?
                                   `${sample.age} years` :
                                   "----"
-                            )
-                          ) : key === "TestResult" ? (
-                            `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
-                          ) : (
+                            )) : key === "TestResult" ? (
+                              `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
+                            ) : (
                             sample[key] || "----"
                           )}
                         </td>
