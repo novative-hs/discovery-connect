@@ -13,7 +13,7 @@ import moment from "moment";
 
 const TestMethodArea = () => {
   const id = sessionStorage.getItem("userID");
- const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -37,22 +37,22 @@ const TestMethodArea = () => {
 
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-   const fetchTestMethodname = async () => {
-    try {
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testmethod`
-      );
-      setFilteredTestMethodname(response.data);
-      setTestMethodname(response.data); // Store fetched TestMethod in state
-    } catch (error) {
-      console.error("Error fetching TestMethod :", error);
-    }
-  };
+    const fetchTestMethodname = async () => {
+      try {
+        const response = await axios.get(
+          `${url}/samplefields/get-samplefields/testmethod`
+        );
+        setFilteredTestMethodname(response.data);
+        setTestMethodname(response.data); // Store fetched TestMethod in state
+      } catch (error) {
+        console.error("Error fetching TestMethod :", error);
+      }
+    };
     fetchTestMethodname();
   }, [url]);
 
   // ✅ UPDATE PAGINATION TOTAL PAGES
- 
+
 
   useEffect(() => {
     const pages = Math.max(
@@ -64,7 +64,7 @@ const TestMethodArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestMethodname,currentPage]);
+  }, [filteredTestMethodname, currentPage]);
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -82,10 +82,10 @@ const TestMethodArea = () => {
   const handleFilterChange = (field, value) => {
     const filtered = value.trim()
       ? testmethodname.filter((testmethod) =>
-          field === "added_by"
-            ? "registration admin".includes(value.toLowerCase())
-            : testmethod[field]?.toString().toLowerCase().includes(value.toLowerCase())
-        )
+        field === "added_by"
+          ? "registration admin".includes(value.toLowerCase())
+          : testmethod[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      )
       : testmethodname;
     setFilteredTestMethodname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
@@ -162,7 +162,7 @@ const TestMethodArea = () => {
       console.error(`Error deleting Test Method: ${selectedTestMethodnameId}`, error);
     }
   };
- const handleEditClick = (testmethodname) => {
+  const handleEditClick = (testmethodname) => {
     setSelectedTestMethodnameId(testmethodname.id);
     setEditTestMethodname(testmethodname);
     setFormData({
@@ -181,7 +181,7 @@ const TestMethodArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/testmethod`, { bulkData: payload });
@@ -206,31 +206,31 @@ const TestMethodArea = () => {
     return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}-${year}`;
   };
 
-   const handleExportToExcel = () => {
-       const dataToExport = filteredTestMethodname.map((item) => ({
-         Name: item.name ?? "", // Fallback to empty string
-         "Added By": "Registration Admin",
-         "Created At": item.created_at ? formatDate(item.created_at) : "",
-         "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-       }));
-     
-       // Add an empty row with all headers if filteredCityname is empty (optional)
-       if (dataToExport.length === 0) {
-         dataToExport.push({
-           Name: "",
-           "Added By": "",
-           "Created At": "",
-           "Updated At": "",
-         });
-       }
-     
-       const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-       const workbook = XLSX.utils.book_new();
-       XLSX.utils.book_append_sheet(workbook, worksheet, "Test Method");
-     
-       XLSX.writeFile(workbook, "Test_Method_List.xlsx");
-     };
-  
+  const handleExportToExcel = () => {
+    const dataToExport = filteredTestMethodname.map((item) => ({
+      Name: item.name ?? "", // Fallback to empty string
+      "Added By": "Registration Admin",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
+
+    // Add an empty row with all headers if filteredCityname is empty (optional)
+    if (dataToExport.length === 0) {
+      dataToExport.push({
+        Name: "",
+        "Added By": "",
+        "Created At": "",
+        "Updated At": "",
+      });
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Test Method");
+
+    XLSX.writeFile(workbook, "Test_Method_List.xlsx");
+  };
+
   if (!id) return <div>Loading...</div>;
 
   return (

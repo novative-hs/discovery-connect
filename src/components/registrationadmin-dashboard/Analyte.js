@@ -1,3 +1,4 @@
+//Analyte.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment";
@@ -16,13 +17,25 @@ const AnalyteArea = () => {
   const [selectedAnalyteId, setSelectedAnalytenameId] = useState(null); // Store ID of City to delete
   const [logo, setLogo] = useState();
   const [selectedLogoUrl, setSelectedLogoUrl] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
- const [formData, setFormData] = useState({
-  name: "",
-  added_by: id,
-  testresultunit_id: "", // store the ID here
-  image:""
-});
+
+  const [searchParams, setSearchParams] = useState({
+    name: '',
+    added_by: '',
+    testresultunit: '',
+    status: '',
+    created_at: '',
+    updated_at: ''
+  });
+
+  const [formData, setFormData] = useState({
+    name: "",
+    added_by: id,
+    testresultunit_id: "", // store the ID here
+    image: ""
+  });
 
 
   const [editAnalytename, setEditAnalytename] = useState(null); // State for selected City to edit
@@ -40,17 +53,20 @@ const AnalyteArea = () => {
   useEffect(() => {
     const fetchAnalytename = async () => {
       try {
-        const response = await axios.get(
-          `${url}/samplefields/get/analyte`
-        );
-        setAnalytename(response.data);
-        setFilteredAnalytename(response.data); // Initialize filtered list
+        const response = await axios.get(`${url}/samplefields/get/analyte`);
+        // Ensure response.data is an array
+        const data = Array.isArray(response.data) ? response.data : [];
+        setAnalytename(data);
+        setFilteredAnalytename(data);
       } catch (error) {
         console.error("Error fetching Analyte:", error);
+        // Set to empty array on error
+        setAnalytename([]);
+        setFilteredAnalytename([]);
       }
     };
-    fetchTestResultUnit()
-    fetchAnalytename(); // Call the function when the component mounts
+    fetchAnalytename();
+    fetchTestResultUnit();
   }, [url]);
 
   useEffect(() => {
@@ -65,45 +81,71 @@ const AnalyteArea = () => {
     }
   }, [filteredAnalytename, currentPage]);
 
-  const currentData = filteredAnalytename.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  const currentData = Array.isArray(filteredAnalytename)
+    ? filteredAnalytename.slice(
+      currentPage * itemsPerPage,
+      (currentPage + 1) * itemsPerPage
+    )
+    : [];
 
   const fetchTestResultUnit = async () => {
-      try {
-        const response = await axios.get(
-          `${url}/samplefields/get-samplefields/testresultunit`
-        );
-        setTestResultUnit(response.data);
-      } catch (error) {
-        console.error("Error fetching test result:", error);
-      }
-    };
+    try {
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/testresultunit`
+      );
+      setTestResultUnit(response.data);
+    } catch (error) {
+      console.error("Error fetching test result:", error);
+    }
+  };
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
   };
 
   const handleFilterChange = (field, value) => {
-    let filtered = [];
+    // Update search params state
+    setSearchParams(prev => ({
+      ...prev,
+      [field]: value
+    }));
 
-    if (value.trim() === "") {
-      filtered = Analytename; // Show all if filter is empty
-    } else {
+    if (!Array.isArray(Analytename)) {
+      console.error("Analytename is not an array");
+      return;
+    }
+
+    let filtered = Analytename;
+
+    if (value.trim() !== "") {
       filtered = Analytename.filter((Analyte) => {
-        let fieldValue = Analyte[field];
+        if (!Analyte) return false;
 
-        if (field === "added_by") {
-          // Convert numeric ID to a readable string for comparison
-          const addedByLabel =
-            fieldValue === 1 ? "registration admin" : fieldValue.toString();
-          return addedByLabel.toLowerCase().includes(value.toLowerCase());
+        try {
+          // Special handling for testresultunit which might be an object
+          if (field === "testresultunit") {
+            const unitValue = Analyte.testresultunit;
+            if (!unitValue) return false;
+
+            // Handle both object and string cases
+            const unitName = typeof unitValue === 'object'
+              ? unitValue.name
+              : unitValue;
+            return unitName?.toString().toLowerCase().includes(value.toLowerCase());
+          }
+
+          let fieldValue = Analyte[field];
+          if (fieldValue === undefined || fieldValue === null) return false;
+
+          if (field === "added_by") {
+            const addedByLabel = fieldValue === 1 ? "registration admin" : fieldValue.toString();
+            return addedByLabel.toLowerCase().includes(value.toLowerCase());
+          }
+
+          return fieldValue.toString().toLowerCase().includes(value.toLowerCase());
+        } catch (error) {
+          console.error(`Error filtering by ${field}:`, error);
+          return false;
         }
-
-        return fieldValue
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase());
       });
     }
 
@@ -118,7 +160,7 @@ const AnalyteArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      
+
       setHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -132,55 +174,77 @@ const AnalyteArea = () => {
   };
 
   const handleInputChange = (e) => {
-  const { name, value, files } = e.target;
-  if (name === "image") {
-    setFormData({
-      ...formData,
-      image: files[0], // Handle image file
-    });
-  } else {
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  }
-};
+    const { name, value, files } = e.target;
+    if (name === "image") {
+      setFormData({
+        ...formData,
+        image: files[0], // Handle image file
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
+  };
 
 
   const handleSubmit = async (e) => {
-    const payload = new FormData();
-payload.append("name", formData.name);
-payload.append("added_by", formData.added_by);
-payload.append("testresultunit_id", formData.testresultunit_id);
-payload.append("image", formData.image); // must be a File object
+    e.preventDefault();
 
-  e.preventDefault();
-  try {
-  
+    if (!formData.name) {
+      setSuccessMessage("Analyte name is required");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      return;
+    }
 
-    await axios.post(`${url}/samplefields/post-analytes/analyte`, payload, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    try {
+      const payload = new FormData();
+      payload.append("name", formData.name);
+      payload.append("added_by", formData.added_by);
 
-    const response = await axios.get(`${url}/samplefields/get/analyte`);
-    setFilteredAnalytename(response.data);
-    setAnalytename(response.data);
-    setSuccessMessage("Analyte added successfully.");
-    setTimeout(() => setSuccessMessage(""), 3000);
-    setFormData({
-      name:"",
-      added_by:id,
-      testresultunit_id:"",
-      image:""
-    })
-    setLogoPreview(false);
-    setShowAddModal(false);
-  } catch (error) {
-    console.error("Error adding Analyte", error);
-  }
-};
+      // Optional fields - only append if they exist
+      if (formData.testresultunit_id) {
+        payload.append("testresultunit_id", formData.testresultunit_id);
+      }
+      if (formData.image instanceof File) {
+        payload.append("image", formData.image);
+      }
+
+      const response = await axios.post(
+        `${url}/samplefields/post-analytes/analyte`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Refresh data
+      const updatedResponse = await axios.get(`${url}/samplefields/get/analyte`);
+      setFilteredAnalytename(updatedResponse.data);
+      setAnalytename(updatedResponse.data);
+
+      setSuccessMessage("Analyte added successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+
+      // Reset form
+      setFormData({
+        name: "",
+        added_by: id,
+        testresultunit_id: "",
+        image: ""
+      });
+      setLogoPreview(null);
+      setShowAddModal(false);
+
+    } catch (error) {
+      console.error("Error:", error.response?.data || error.message);
+      setSuccessMessage(`Error: ${error.response?.data?.message || "Failed to add Analyte"}`);
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+  };
 
   const handleEditClick = (Analytename) => {
     setSelectedAnalytenameId(Analytename.id);
@@ -188,11 +252,11 @@ payload.append("image", formData.image); // must be a File object
 
     setFormData({
       name: Analytename.name,
-      testresultunit_id:Analytename.testresultunit_id,
+      testresultunit_id: Analytename.testresultunit_id,
       added_by: id,
-      image:Analytename.image,
+      image: Analytename.image,
     });
-    
+
     const logoPreviewUrl =
       typeof Analytename.image === "string"
         ? Analytename.image
@@ -206,51 +270,90 @@ payload.append("image", formData.image); // must be a File object
 
     setShowEditModal(true);
   };
- 
-const handleUpdate = async (e) => {
-  e.preventDefault();
-  try {
-    const form = new FormData();
-    form.append("name", formData.name);
-    form.append("added_by", formData.added_by);
 
-    if (formData.testresultunit_id) {
-      form.append("testresultunit_id", formData.testresultunit_id);
-    }
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      const form = new FormData();
+      form.append("name", formData.name);
+      form.append("added_by", formData.added_by);
 
-  if (formData.image instanceof File) {
-  form.append("image", formData.image);
-}
-
-
-    await axios.put(
-      `${url}/samplefields/put-samplefields/analyte/${selectedAnalyteId}`,
-      form,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      if (formData.testresultunit_id) {
+        form.append("testresultunit_id", formData.testresultunit_id);
       }
-    );
 
-    const response = await axios.get(`${url}/samplefields/get/analyte`);
-    setFilteredAnalytename(response.data);
-    setAnalytename(response.data);
-    setShowEditModal(false);
-    setSuccessMessage("Analyte updated successfully.");
-    setTimeout(() => setSuccessMessage(""), 3000);
+      if (formData.image instanceof File) {
+        form.append("image", formData.image);
+      }
 
-    setFormData({
-      name: "",
-      added_by: id,
-      testresultunit_id: "",
-      image: "",
-    });
-    setLogoPreview(false);
-  } catch (error) {
-    console.error(`Error updating Analyte with ID ${selectedAnalyteId}:`, error);
-  }
-};
+      const response = await axios.put(
+        `${url}/samplefields/put-samplefields/analyte/${selectedAnalyteId}`,
+        form,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      // Refresh the full list
+      const updatedResponse = await axios.get(`${url}/samplefields/get/analyte`);
+      const fullData = updatedResponse.data;
+      setAnalytename(fullData);
+
+      // Reapply the current filters to the new data
+      let filtered = fullData;
+      Object.entries(searchParams).forEach(([field, value]) => {
+        if (value.trim() !== "") {
+          filtered = filtered.filter((Analyte) => {
+            if (!Analyte) return false;
+
+            try {
+              if (field === "testresultunit") {
+                const unitValue = Analyte.testresultunit;
+                if (!unitValue) return false;
+                const unitName = typeof unitValue === 'object'
+                  ? unitValue.name
+                  : unitValue;
+                return unitName?.toString().toLowerCase().includes(value.toLowerCase());
+              }
+
+              let fieldValue = Analyte[field];
+              if (fieldValue === undefined || fieldValue === null) return false;
+
+              if (field === "added_by") {
+                const addedByLabel = fieldValue === 1 ? "registration admin" : fieldValue.toString();
+                return addedByLabel.toLowerCase().includes(value.toLowerCase());
+              }
+
+              return fieldValue.toString().toLowerCase().includes(value.toLowerCase());
+            } catch (error) {
+              console.error(`Error filtering by ${field}:`, error);
+              return false;
+            }
+          });
+        }
+      });
+
+      setFilteredAnalytename(filtered);
+      setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+      setCurrentPage(0);
+
+      setShowEditModal(false);
+      setSuccessMessage("Analyte updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+
+      setFormData({
+        name: "",
+        added_by: id,
+        testresultunit_id: "",
+        image: "",
+      });
+      setLogoPreview(false);
+    } catch (error) {
+      console.error(`Error updating Analyte with ID ${selectedAnalyteId}:`, error);
+    }
+  };
 
 
 
@@ -262,7 +365,7 @@ const handleUpdate = async (e) => {
       const response = await axios.get(
         `${url}/samplefields/get/analyte`
       );
-       setFilteredAnalytename(response.data);
+      setFilteredAnalytename(response.data);
       setAnalytename(response.data);
       setSuccessMessage("Analyte deleted successfully.");
 
@@ -299,29 +402,115 @@ const handleUpdate = async (e) => {
     return `${day}-${formattedMonth}-${year}`;
   };
 
-   const handleFileUpload = async (e) => {
-     const file = e.target.files[0];
-     if (!file) return;
- 
-     const reader = new FileReader();
-     reader.onload = async (event) => {
-       const workbook = XLSX.read(event.target.result, { type: "binary" });
-       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-       const data = XLSX.utils.sheet_to_json(sheet);
-       const payload = data.map((row) => ({ name: row.name, added_by: id }));
- 
-       try {
-         await axios.post(`${url}/samplefields/post-analytes/analyte`, { bulkData: payload });
-         const response = await axios.get(`${url}/samplefields/get/analyte`);
-         setFilteredAnalytename(response.data);
-         setAnalytename(response.data);
-         setSuccessMessage("Successfully added")
-       } catch (error) {
-         console.error("Error uploading file", error);
-       }
-     };
-     reader.readAsBinaryString(file);
-   };
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Reset messages and set loading state
+    setErrorMessage('');
+    setSuccessMessage('');
+    setIsUploading(true);
+
+    const reader = new FileReader();
+
+    reader.onload = async (event) => {
+      try {
+        // 1. Parse Excel file
+        const workbook = XLSX.read(event.target.result, { type: "binary" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+        // 2. Validate data
+        if (jsonData.length === 0) {
+          throw new Error("Excel file is empty or couldn't be read");
+        }
+
+        // 3. Process and validate rows
+        const processedData = jsonData.map(row => {
+          // Support multiple possible column names (case insensitive)
+          const name =
+            row.name || row.Name ||
+            row.analyte || row.Analyte ||
+            row.parameter || row.Parameter ||
+            row['Test Parameter'] || row['test parameter'] ||
+            row['Analyte Name'] || row['analyte name'];
+
+          // Validate name exists and is string
+          if (!name || typeof name !== 'string' || name.trim() === '') {
+            return null;
+          }
+
+          return {
+            name: name.trim(),
+            ...(id && { added_by: id }) // Only include if id exists
+          };
+        }).filter(item => item !== null); // Remove invalid rows
+
+        if (processedData.length === 0) {
+          // Provide more detailed feedback about what went wrong
+          const sampleHeaders = Object.keys(jsonData[0] || {}).join(", ");
+          throw new Error(
+            `No valid analyte names found. Please ensure your file has a column with one of these headers: 
+          name, analyte, parameter, Test Parameter, or Analyte Name.
+          Detected columns: ${sampleHeaders || 'none'}`
+          );
+        }
+
+        // 4. Prepare payload
+        const payload = {
+          bulkData: processedData
+        };
+
+        // 5. Upload to server
+        const response = await axios.post(
+          `${url}/samplefields/post-analytes/analyte`,
+          payload,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          }
+        );
+
+        // 6. Refresh analyte list
+        const getResponse = await axios.get(`${url}/samplefields/get/analyte`);
+        setFilteredAnalytename(getResponse.data);
+        setAnalytename(getResponse.data);
+
+        // 7. Show success message
+        setSuccessMessage(`Successfully uploaded ${processedData.length} analytes`);
+        setErrorMessage(''); // Clear any previous errors
+
+      } catch (error) {
+        console.error("Upload error:", error);
+
+        // Handle different error types
+        let errorMsg = "Upload failed. Please try again.";
+        if (error.response) {
+          // Backend error
+          errorMsg = error.response.data.message || error.response.statusText;
+        } else if (error.message.includes("Unexpected token")) {
+          errorMsg = "Invalid file format. Please upload a valid Excel file.";
+        } else if (error.message) {
+          errorMsg = error.message;
+        }
+
+        setErrorMessage(errorMsg);
+        setSuccessMessage(''); // Clear any previous success messages
+      } finally {
+        setIsUploading(false);
+      }
+    };
+
+    reader.onerror = () => {
+      setErrorMessage("Failed to read file. Please try another file.");
+      setIsUploading(false);
+      setSuccessMessage(''); // Clear any previous success messages
+    };
+
+    reader.readAsBinaryString(file);
+  };
   const handleExportToExcel = () => {
     const dataToExport = filteredAnalytename.map((item) => ({
       Name: item.name ?? "", // Fallback to empty string
@@ -453,9 +642,9 @@ const handleUpdate = async (e) => {
                       field: "added_by",
                     },
                     {
-                      label:"Test Result Unit",
-                      placeholder:"Search testresultunit",
-                      field:"testresultunit"
+                      label: "Test Result Unit",
+                      placeholder: "Search testresultunit",
+                      field: "testresultunit"
                     },
                     {
                       label: "Status",
@@ -489,7 +678,7 @@ const handleUpdate = async (e) => {
                 </tr>
               </thead>
               <tbody>
-                {currentData.length > 0 ? (
+                {Array.isArray(currentData) && currentData.length > 0 ? (
                   currentData.map((Analytename) => (
                     <tr key={Analytename.id}>
                       <td>{Analytename.name}</td>
@@ -535,7 +724,7 @@ const handleUpdate = async (e) => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="text-center">
+                    <td colSpan="7" className="text-center">
                       No Analyte Available
                     </td>
                   </tr>
@@ -587,11 +776,11 @@ const handleUpdate = async (e) => {
                           setShowEditModal(false);
                           setLogoPreview("")
                           setFormData({
-  name: "",
-  added_by: id,
-  testresultunit_id: "", // store the ID here
-image:""
-    });
+                            name: "",
+                            added_by: id,
+                            testresultunit_id: "", // store the ID here
+                            image: ""
+                          });
                         }}
                         style={{
                           fontSize: "1.5rem",
@@ -609,74 +798,74 @@ image:""
                       onSubmit={showAddModal ? handleSubmit : handleUpdate} // Conditionally use submit handler
                     >
                       <div className="modal-body">
-  {/* Row: Analyte + Test Result Unit */}
-  <div className="row">
-    <div className="col-md-6 mb-3">
-      <label>Analyte</label>
-      <input
-        type="text"
-        className="form-control"
-        name="name"
-        value={formData.name}
-        onChange={handleInputChange}
-        required
-      />
-    </div>
+                        {/* Row: Analyte + Test Result Unit */}
+                        <div className="row">
+                          <div className="col-md-6 mb-3">
+                            <label>Analyte</label>
+                            <input
+                              type="text"
+                              className="form-control"
+                              name="name"
+                              value={formData.name}
+                              onChange={handleInputChange}
+                              required
+                            />
+                          </div>
 
- <div className="col-md-6 mb-3">
-  <label>Test Result Unit</label>
-  <select
-    className="form-control"
-    name="testresultunit_id" // 👈 match backend key if you're storing the id
-    value={formData.testresultunit_id || ""}
-    onChange={handleInputChange}
-    // required
-  >
-    <option value="">Select Unit</option>
-    {testResultUnit?.map((unit) => (
-      <option key={unit.id} value={unit.id}>
-        {unit.name}
-      </option>
-    ))}
-  </select>
-</div>
- <div className="col-md-6 mb-3">
-                                  <label>
-                                    Analyte Image
-                                    <span className="text-danger"></span>
-                                  </label>
-                                  <div className="d-flex align-items-center">
-                                  <input
-  type="file"
-  name="image"
-  accept="image/*"
-  className="form-control"
-  onChange={(e) => {
-    const file = e.target.files[0];
-    setFormData({ ...formData, image: file });
-    setLogoPreview(URL.createObjectURL(file)); // for previewing
-  }}
-/>
+                          <div className="col-md-6 mb-3">
+                            <label>Test Result Unit</label>
+                            <select
+                              className="form-control"
+                              name="testresultunit_id" // 👈 match backend key if you're storing the id
+                              value={formData.testresultunit_id || ""}
+                              onChange={handleInputChange}
+                            // required
+                            >
+                              <option value="">Select Unit</option>
+                              {testResultUnit?.map((unit) => (
+                                <option key={unit.id} value={unit.id}>
+                                  {unit.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="col-md-6 mb-3">
+                            <label>
+                              Analyte Image
+                              <span className="text-danger"></span>
+                            </label>
+                            <div className="d-flex align-items-center">
+                              <input
+                                type="file"
+                                name="image"
+                                accept="image/*"
+                                className="form-control"
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  setFormData({ ...formData, image: file });
+                                  setLogoPreview(URL.createObjectURL(file)); // for previewing
+                                }}
+                              />
 
-                                    {logoPreview && (
-                                      <img
-                                        src={logoPreview}
-                                        alt="Logo Preview"
-                                        width="80"
-                                        style={{
-                                          marginLeft: "20px",
-                                          borderRadius: "5px",
-                                        }}
-                                      />
-                                    )}
-                                  </div>
-                                </div>
+                              {logoPreview && (
+                                <img
+                                  src={logoPreview}
+                                  alt="Logo Preview"
+                                  width="80"
+                                  style={{
+                                    marginLeft: "20px",
+                                    borderRadius: "5px",
+                                  }}
+                                />
+                              )}
+                            </div>
+                          </div>
 
 
-  </div>
+                        </div>
 
-  {/* Row: Low Label + Range Inputs */}
-  {/* <div className="mb-2">
+                        {/* Row: Low Label + Range Inputs */}
+                        {/* <div className="mb-2">
     <label className="fw-bold">Low</label>
   </div>
 
@@ -701,7 +890,7 @@ image:""
       required
     />
   </div> */}
-</div>
+                      </div>
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">

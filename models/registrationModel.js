@@ -252,7 +252,7 @@ const createAccount = (req, callback) => {
     added_by,
 
   } = req.body;
-  
+
   const CNICBuffer = req.files?.CNIC?.[0]?.buffer || null;
   const OrgCardBuffer = req.files?.Org_card?.[0]?.buffer || null;
   let logo = null;
@@ -570,7 +570,7 @@ const updateAccount = (req, callback) => {
                         CSRName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, permission = ?,
                         country = ?,collection_id=? WHERE user_account_id = ?
                     `;
-                  values = [CSRName, phoneNumber, fullAddress, city, district, permission,country, collectionsitename, user_account_id];
+                  values = [CSRName, phoneNumber, fullAddress, city, district, permission, country, collectionsitename, user_account_id];
                   break;
 
                 default:
@@ -644,7 +644,7 @@ const updateAccount = (req, callback) => {
                     previousData.country || null,
                     previousData.logo || null,
                     previousData.added_by || null,
-                    previousData.permission||null,
+                    previousData.permission || null,
                     organizationID || null,
                     researcherID || null,
                     collectionSiteID || null,
@@ -708,6 +708,7 @@ const loginAccount = (data, callback) => {
     if (err) {
       return callback(err, null); // Pass error to the controller
     }
+    console.log("result", results)
 
     if (results.length > 0) {
       const user = results[0];
@@ -762,24 +763,24 @@ const loginAccount = (data, callback) => {
         });
       }
       else if (user.accountType === 'CollectionSitesStaff') {
-  const collectionsiteQuery =
-    `SELECT status, permission,collectionsite_id AS collection_id FROM collectionsitestaff WHERE user_account_id = ?`;
+        const collectionsiteQuery =
+          `SELECT status, permission,collectionsite_id AS collection_id FROM collectionsitestaff WHERE user_account_id = ?`;
 
-  mysqlConnection.query(collectionsiteQuery, [user.id], (err, collectionsitestaffResults) => {
-    if (err) {
-      return callback(err, null); // Pass error to the controller
-    }
+        mysqlConnection.query(collectionsiteQuery, [user.id], (err, collectionsitestaffResults) => {
+          if (err) {
+            return callback(err, null); // Pass error to the controller
+          }
 
-    if (collectionsitestaffResults.length > 0 && collectionsitestaffResults[0].status === 'active') {
-      // Attach action to the user object
-      user.action = collectionsitestaffResults[0].permission;
-      
-      return callback(null, user); // Return user with action included
-    } else {
-      return callback({ status: "fail", message: "Account is not active" }, null);
-    }
-  });
-}
+          if (collectionsitestaffResults.length > 0 && collectionsitestaffResults[0].status === 'active') {
+            // Attach action to the user object
+            user.action = collectionsitestaffResults[0].permission;
+
+            return callback(null, user); // Return user with action included
+          } else {
+            return callback({ status: "fail", message: "Account is not active" }, null);
+          }
+        });
+      }
 
       else if (user.accountType === 'Committeemember') {
         const CommitteememberQuery =
@@ -1041,8 +1042,8 @@ const sendEmailForOrder = async (req, callback) => {
         </thead>
         <tbody>
           ${newQuotes
-            .map(
-              (item, index) => `
+        .map(
+          (item, index) => `
               <tr>
                 <td>${index + 1}</td>
                 <td>${item.masterid || "-"}</td>
@@ -1053,8 +1054,8 @@ const sendEmailForOrder = async (req, callback) => {
                 <td>-</td>
               </tr>
             `
-            )
-            .join("")}
+        )
+        .join("")}
         </tbody>
       </table>
     `;

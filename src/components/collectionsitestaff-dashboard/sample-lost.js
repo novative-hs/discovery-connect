@@ -11,11 +11,26 @@ const SampleLost = () => {
   const [filteredSamples, setFilteredSamples] = useState([]);
   const [filtertotal, setfiltertotal] = useState(null);
 
+  const [showCommentModal, setShowCommentModal] = useState(false);
+  const [currentComment, setCurrentComment] = useState('');
+
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
   const [selectedSample, setSelectedSample] = useState(null);
   const [showModal, setShowModal] = useState(false);
+
+  // Open comment modal
+  const openCommentModal = (comment) => {
+    setCurrentComment(comment || 'No comments available');
+    setShowCommentModal(true);
+  };
+
+  // Close comment modal
+  const closeCommentModal = () => {
+    setShowCommentModal(false);
+    setCurrentComment('');
+  };
 
   useEffect(() => {
     const storedId = sessionStorage.getItem("userID");
@@ -106,16 +121,16 @@ const SampleLost = () => {
   const tableHeaders = [
     { label: "Analyte ", key: "Analyte" },
     { label: "Volume", key: "volume" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
+    { label: "Gender & Age", key: "gender_age" },
     { label: "Test Result & Unit", key: "TestResult" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+
     { label: "Status", key: "status" },
-    { label: "Sample Visibility", key: "sample_visibility" },
+
   ];
 
   const fieldsToShowInOrder = [
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
@@ -149,21 +164,29 @@ const SampleLost = () => {
             <thead className="table-primary text-dark">
               <tr className="text-center">
                 {tableHeaders.map(({ label, key }, index) => (
-  <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
-    <div className="d-flex flex-column align-items-center">
-      <input
-        type="text"
-        className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
-        placeholder={`Search ${label}`}
-        onChange={(e) => handleFilterChange(key, e.target.value)}
-        style={{ minWidth: "110px" }}
-      />
-      <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
-        {label}
-      </span>
-    </div>
-  </th>
-))}
+                  <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
+                    <div className="d-flex flex-column align-items-center">
+                      <input
+                        type="text"
+                        className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        style={{ minWidth: "110px" }}
+                      />
+                      <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
+                        {label}
+                      </span>
+                    </div>
+                  </th>
+                ))}
+
+                <th className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
+                  <div className="d-flex flex-column align-items-center">
+                    <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
+                      Comments
+                    </span>
+                  </div>
+                </th>
 
               </tr>
             </thead>
@@ -200,8 +223,15 @@ const SampleLost = () => {
                           </span>
                         ) : key === "volume" ? (
                           `${sample.volume || "----"} ${sample.VolumeUnit || ""}`
-                        ) : key === "age" ? (
-                          `${sample.age || "----"} years`
+                        ) : key === "gender_age" ? (
+                          (sample.gender && sample.age ?
+                            `${sample.gender} | ${sample.age} years` :
+                            sample.gender ?
+                              sample.gender :
+                              sample.age ?
+                                `${sample.age} years` :
+                                "----"
+                          )
                         ) : key === "TestResult" ? (
                           `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
                         ) : (
@@ -209,11 +239,28 @@ const SampleLost = () => {
                         )}
                       </td>
                     ))}
+                    <td className="text-center">
+                      <button
+                        onClick={() => openCommentModal(sample.Reason)}
+                        className={`btn btn-sm ${sample.Reason ? "btn-info text-white" : "btn-outline-secondary"}`}
+                        disabled={!sample.Reason}
+                        style={{
+                          minWidth: "120px",
+                          fontWeight: "500",
+                          backgroundColor: "brown",
+                          border: "brown",
+                          ...(!sample.Reason && { cursor: "not-allowed" })
+                        }}
+                      >
+                        {sample.Reason ? "View Comments" : "No Comments"}
+                      </button>
+                    </td>
+
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center">
+                  <td colSpan="7" className="text-center">
                     No samples available
                   </td>
                 </tr>
@@ -245,30 +292,27 @@ const SampleLost = () => {
             </Modal.Title>
           </Modal.Header>
 
-          <Modal.Body
-            style={{ maxHeight: "500px", overflowY: "auto" }}
-            className="bg-light rounded"
-          >
+          <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
             {selectedSample ? (
               <div className="p-3">
                 <div className="row g-3">
-                  {fieldsToShowInOrder.map(({ key, label }) => {
-                    const value = selectedSample[key];
-                    if (value === undefined) return null;
-
-                    return (
+                  {fieldsToShowInOrder
+                    .filter(({ key }) => {
+                      const value = selectedSample[key];
+                      return value !== undefined && value !== null && value !== "";
+                    })
+                    .map(({ key, label }) => (
                       <div className="col-md-6" key={key}>
                         <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
                           <span className="text-muted small fw-bold mb-1">
                             {label}
                           </span>
                           <span className="fs-6 text-dark">
-                            {value?.toString() || "----"}
+                            {selectedSample[key]?.toString() || "----"}
                           </span>
                         </div>
                       </div>
-                    );
-                  })}
+                    ))}
                 </div>
               </div>
             ) : (
@@ -277,6 +321,27 @@ const SampleLost = () => {
           </Modal.Body>
 
           <Modal.Footer className="border-0"></Modal.Footer>
+        </Modal>
+        <Modal
+          show={showCommentModal}
+          onHide={closeCommentModal}
+          size="md"
+          centered
+          className="comment-modal"
+        >
+          <Modal.Header closeButton className="border-0">
+            <Modal.Title className="fw-bold text-danger">
+              <i className="fas fa-comment me-2"></i>
+              Sample Comments
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="p-4 bg-light" >
+            <div className="p-3 rounded border">
+              <p className="mb-0 text-dark" style={{ fontSize: "1.1rem" }}>
+                {currentComment}
+              </p>
+            </div>
+          </Modal.Body>
         </Modal>
       </div>
     </section>

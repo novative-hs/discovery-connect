@@ -60,16 +60,16 @@ const SampleDispatchArea = () => {
   const tableHeaders = [
     { label: "Analyte", key: "Analyte" },
     { label: "Volume", key: "volume" },
-    { label: "Gender", key: "gender" },
-    { label: "Age", key: "age" },
+    { label: "Gender & Age", key: "gender_age" },
     { label: "Test Result & Unit", key: "TestResult" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+
     { label: "Status", key: "status" },
-    { label: "Sample Visibility", key: "sample_visibility" },
+
   ];
 
   const fieldsToShowInOrder = [
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
     { label: "Infectious Disease Testing", key: "InfectiousDiseaseTesting" },
@@ -361,8 +361,15 @@ const SampleDispatchArea = () => {
                             </span>
                           ) : key === "volume" ? (
                             `${sample.volume || "----"} ${sample.VolumeUnit || ""}`
-                          ) : key === "age" ? (
-                            sample.age ? `${sample.age} years` : "----"
+                          ) : key === "gender_age" ? (
+                            (sample.gender && sample.age ?
+                              `${sample.gender} | ${sample.age} years` :
+                              sample.gender ?
+                                sample.gender :
+                                sample.age ?
+                                  `${sample.age} years` :
+                                  "----"
+                            )
                           ) : key === "TestResult" ? (
                             `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
                           ) : (
@@ -608,30 +615,27 @@ const SampleDispatchArea = () => {
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body
-          style={{ maxHeight: "500px", overflowY: "auto" }}
-          className="bg-light rounded"
-        >
+        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
           {selectedSample ? (
             <div className="p-3">
               <div className="row g-3">
-                {fieldsToShowInOrder.map(({ key, label }) => {
-                  const value = selectedSample[key];
-                  if (value === undefined) return null;
-
-                  return (
+                {fieldsToShowInOrder
+                  .filter(({ key }) => {
+                    const value = selectedSample[key];
+                    return value !== undefined && value !== null && value !== "";
+                  })
+                  .map(({ key, label }) => (
                     <div className="col-md-6" key={key}>
                       <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
                         <span className="text-muted small fw-bold mb-1">
                           {label}
                         </span>
                         <span className="fs-6 text-dark">
-                          {value?.toString() || "----"}
+                          {selectedSample[key]?.toString() || "----"}
                         </span>
                       </div>
                     </div>
-                  );
-                })}
+                  ))}
               </div>
             </div>
           ) : (

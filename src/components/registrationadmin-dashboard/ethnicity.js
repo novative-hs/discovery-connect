@@ -15,8 +15,8 @@ const EthnicityArea = () => {
   const id = sessionStorage.getItem("userID");
 
   // ✅ HOOKS MUST ALWAYS BE CALLED FIRST
-    
-const [showAddModal, setShowAddModal] = useState(false);
+
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -39,21 +39,21 @@ const [showAddModal, setShowAddModal] = useState(false);
 
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-     const fetchEthnicityname = async () => {
-    try {
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/ethnicity`
-      );
-      setFilteredEthnicityname(response.data); // Initialize filtered list
-      setethnicityname(response.data); // Store fetched City in state
-    } catch (error) {
-      console.error("Error fetching Ethnicity:", error);
-    }
-  };
+    const fetchEthnicityname = async () => {
+      try {
+        const response = await axios.get(
+          `${url}/samplefields/get-samplefields/ethnicity`
+        );
+        setFilteredEthnicityname(response.data); // Initialize filtered list
+        setethnicityname(response.data); // Store fetched City in state
+      } catch (error) {
+        console.error("Error fetching Ethnicity:", error);
+      }
+    };
     fetchEthnicityname();
   }, [url]);
 
- useEffect(() => {
+  useEffect(() => {
     const pages = Math.max(
       1,
       Math.ceil(filteredEthnicityname.length / itemsPerPage)
@@ -63,7 +63,7 @@ const [showAddModal, setShowAddModal] = useState(false);
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredEthnicityname,currentPage]);
+  }, [filteredEthnicityname, currentPage]);
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
     const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
@@ -77,16 +77,16 @@ const [showAddModal, setShowAddModal] = useState(false);
     setCurrentPage(event.selected);
   };
 
-const handleFilterChange = (field, value) => {
+  const handleFilterChange = (field, value) => {
     let filtered = [];
 
     if (value.trim() === "") {
       filtered = ethnicityname; // Show all if filter is empty
     } else {
-      filtered = ethnicityname.filter((ethnicity) =>{
+      filtered = ethnicityname.filter((ethnicity) => {
         if (field === "added_by") {
-        return "registration admin".includes(value.toLowerCase());
-      }
+          return "registration admin".includes(value.toLowerCase());
+        }
         return ethnicity[field]?.toString().toLowerCase().includes(value.toLowerCase())
       }
 
@@ -190,7 +190,7 @@ const handleFilterChange = (field, value) => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/ethnicity`, { bulkData: payload });
@@ -216,34 +216,34 @@ const handleFilterChange = (field, value) => {
   };
 
   const handleExportToExcel = () => {
-   const dataToExport = filteredEthnicityname.map((item) => ({
-     Name: item.name ?? "", // Fallback to empty string
-     "Added By": "Registration Admin",
-     "Created At": item.created_at ? formatDate(item.created_at) : "",
-     "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-   }));
- 
-   // Add an empty row with all headers if filteredCityname is empty (optional)
-   if (dataToExport.length === 0) {
-     dataToExport.push({
-       Name: "",
-       "Added By": "",
-       "Created At": "",
-       "Updated At": "",
-     });
-   }
- 
-   const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-   const workbook = XLSX.utils.book_new();
-   XLSX.utils.book_append_sheet(workbook, worksheet, "ethnicity");
- 
-   XLSX.writeFile(workbook, "Ethnicity_List.xlsx");
- };
+    const dataToExport = filteredEthnicityname.map((item) => ({
+      Name: item.name ?? "", // Fallback to empty string
+      "Added By": "Registration Admin",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
 
-  
+    // Add an empty row with all headers if filteredCityname is empty (optional)
+    if (dataToExport.length === 0) {
+      dataToExport.push({
+        Name: "",
+        "Added By": "",
+        "Created At": "",
+        "Updated At": "",
+      });
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "ethnicity");
+
+    XLSX.writeFile(workbook, "Ethnicity_List.xlsx");
+  };
+
+
   if (!id) return <div>Loading...</div>;
 
-    return (
+  return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">

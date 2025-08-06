@@ -44,30 +44,30 @@ const TestKitManufacturerArea = () => {
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
     const fetchTestKitManufacturername = async () => {
-    try {
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testkitmanufacturer`
-      );
-      setFilteredTestkitmanufacturername(response.data); // Initialize filtered list
-      setTestKitManufacturername(response.data); // Store fetched TestMethod in state
-    } catch (error) {
-      console.error("Error fetching Test KitManufacturer :", error);
-    }
-  };
- 
+      try {
+        const response = await axios.get(
+          `${url}/samplefields/get-samplefields/testkitmanufacturer`
+        );
+        setFilteredTestkitmanufacturername(response.data); // Initialize filtered list
+        setTestKitManufacturername(response.data); // Store fetched TestMethod in state
+      } catch (error) {
+        console.error("Error fetching Test KitManufacturer :", error);
+      }
+    };
+
     fetchTestKitManufacturername();
   }, [url]);
 
   // ✅ UPDATE PAGINATION TOTAL PAGES
 
-useEffect(() => {
+  useEffect(() => {
     const pages = Math.max(1, Math.ceil(filteredTestkitmanufacturername.length / itemsPerPage));
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestkitmanufacturername,currentPage]);
+  }, [filteredTestkitmanufacturername, currentPage]);
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -89,13 +89,13 @@ useEffect(() => {
   const handleFilterChange = (field, value) => {
     const filtered = value.trim()
       ? testKitManufacturername.filter((testKitManufacturer) =>
-          field === "added_by"
-            ? "registration admin".includes(value.toLowerCase())
-            : testKitManufacturer[field]
-                ?.toString()
-                .toLowerCase()
-                .includes(value.toLowerCase())
-        )
+        field === "added_by"
+          ? "registration admin".includes(value.toLowerCase())
+          : testKitManufacturer[field]
+            ?.toString()
+            .toLowerCase()
+            .includes(value.toLowerCase())
+      )
       : testKitManufacturername;
     setFilteredTestkitmanufacturername(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
@@ -194,9 +194,9 @@ useEffect(() => {
       );
     }
   };
-  
 
-const handleEditClick = (testkitmanufacturername) => {
+
+  const handleEditClick = (testkitmanufacturername) => {
     setSelectedTestKitManufacturernameId(testkitmanufacturername.id);
     setEditTestKitManufacturername(testkitmanufacturername);
     setFormData({
@@ -217,7 +217,7 @@ const handleEditClick = (testkitmanufacturername) => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/testkitmanufacturer`, {
@@ -246,30 +246,30 @@ const handleEditClick = (testkitmanufacturername) => {
     return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}-${year}`;
   };
 
-     const handleExportToExcel = () => {
-       const dataToExport = filteredTestkitmanufacturername.map((item) => ({
-         Name: item.name ?? "", // Fallback to empty string
-         "Added By": "Registration Admin",
-         "Created At": item.created_at ? formatDate(item.created_at) : "",
-         "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-       }));
-     
-       // Add an empty row with all headers if filteredCityname is empty (optional)
-       if (dataToExport.length === 0) {
-         dataToExport.push({
-           Name: "",
-           "Added By": "",
-           "Created At": "",
-           "Updated At": "",
-         });
-       }
-     
-       const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-       const workbook = XLSX.utils.book_new();
-       XLSX.utils.book_append_sheet(workbook, worksheet, "Test kit Manufacturer");
-     
-       XLSX.writeFile(workbook, "Test_kit_Manufacturer_List.xlsx");
-     };
+  const handleExportToExcel = () => {
+    const dataToExport = filteredTestkitmanufacturername.map((item) => ({
+      Name: item.name ?? "", // Fallback to empty string
+      "Added By": "Registration Admin",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
+
+    // Add an empty row with all headers if filteredCityname is empty (optional)
+    if (dataToExport.length === 0) {
+      dataToExport.push({
+        Name: "",
+        "Added By": "",
+        "Created At": "",
+        "Updated At": "",
+      });
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Test kit Manufacturer");
+
+    XLSX.writeFile(workbook, "Test_kit_Manufacturer_List.xlsx");
+  };
 
   if (!id) return <div>Loading...</div>;
 

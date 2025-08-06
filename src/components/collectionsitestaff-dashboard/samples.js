@@ -1196,7 +1196,7 @@ const SampleArea = () => {
         )}
         <div className="text-danger fw-bold" style={{ marginTop: "-20px" }}>
           <h6>
-            Note: Click on Location Id's to see Sample Picture.
+            Note: Click on Location Id to see Sample Picture.
           </h6>
           <h6>
             Note: Click on Sample Icon to see Pooled Sample History.

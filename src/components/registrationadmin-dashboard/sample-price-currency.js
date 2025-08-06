@@ -13,7 +13,7 @@ import moment from "moment";
 
 const SamplePriceCurrencyArea = () => {
   const id = sessionStorage.getItem("userID");
- const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -40,19 +40,19 @@ const SamplePriceCurrencyArea = () => {
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
     const fetchSamplePriceCurrencyname = async () => {
-    try {
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/samplepricecurrency`
-      );
-      setFilteredSamplepricecurrencyname(response.data); // Initialize filtered list
-      setSamplePriceCurrencyname(response.data); // Store fetched SamplePriceCurrency in state
-    } catch (error) {
-      console.error("Error fetching Sample Price Currency:", error);
-    }
-  };
+      try {
+        const response = await axios.get(
+          `${url}/samplefields/get-samplefields/samplepricecurrency`
+        );
+        setFilteredSamplepricecurrencyname(response.data); // Initialize filtered list
+        setSamplePriceCurrencyname(response.data); // Store fetched SamplePriceCurrency in state
+      } catch (error) {
+        console.error("Error fetching Sample Price Currency:", error);
+      }
+    };
     fetchSamplePriceCurrencyname();
   }, [url]);
- 
+
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -63,7 +63,7 @@ const SamplePriceCurrencyArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredSamplepricecurrencyname,currentPage]);
+  }, [filteredSamplepricecurrencyname, currentPage]);
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -81,10 +81,10 @@ const SamplePriceCurrencyArea = () => {
   const handleFilterChange = (field, value) => {
     const filtered = value.trim()
       ? samplepricecurrencyname.filter((samplepricecurrency) =>
-          field === "added_by"
-            ? "registration admin".includes(value.toLowerCase())
-            : samplepricecurrency[field]?.toString().toLowerCase().includes(value.toLowerCase())
-        )
+        field === "added_by"
+          ? "registration admin".includes(value.toLowerCase())
+          : samplepricecurrency[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      )
       : samplepricecurrencyname;
     setFilteredSamplepricecurrencyname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
@@ -162,7 +162,7 @@ const SamplePriceCurrencyArea = () => {
     }
   };
 
- const handleEditClick = (samplepricecurrency) => {
+  const handleEditClick = (samplepricecurrency) => {
     setSelectedSamplePriceCurrencynameId(samplepricecurrency.id);
     setEditSamplePriceCurrencyname(samplepricecurrency);
     setFormData({
@@ -181,7 +181,7 @@ const SamplePriceCurrencyArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/samplepricecurrency`, { bulkData: payload });
@@ -206,35 +206,35 @@ const SamplePriceCurrencyArea = () => {
     return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}-${year}`;
   };
 
-    const handleExportToExcel = () => {
-        const dataToExport = filteredSamplepricecurrencyname.map((item) => ({
-          Name: item.name ?? "", // Fallback to empty string
-          "Added By": "Registration Admin",
-          "Created At": item.created_at ? formatDate(item.created_at) : "",
-          "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-        }));
-      
-        // Add an empty row with all headers if filteredCityname is empty (optional)
-        if (dataToExport.length === 0) {
-          dataToExport.push({
-            Name: "",
-            "Added By": "",
-            "Created At": "",
-            "Updated At": "",
-          });
-        }
-      
-        const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Sample Price Currency");
-      
-        XLSX.writeFile(workbook, "Sample_Price_Currency_List.xlsx");
-      };
+  const handleExportToExcel = () => {
+    const dataToExport = filteredSamplepricecurrencyname.map((item) => ({
+      Name: item.name ?? "", // Fallback to empty string
+      "Added By": "Registration Admin",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
 
-  
+    // Add an empty row with all headers if filteredCityname is empty (optional)
+    if (dataToExport.length === 0) {
+      dataToExport.push({
+        Name: "",
+        "Added By": "",
+        "Created At": "",
+        "Updated At": "",
+      });
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Sample Price Currency");
+
+    XLSX.writeFile(workbook, "Sample_Price_Currency_List.xlsx");
+  };
+
+
   if (!id) return <div>Loading...</div>;
 
- return (
+  return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
@@ -299,7 +299,7 @@ const SamplePriceCurrencyArea = () => {
                     onChange={(e) => handleFileUpload(e)}
                   />
                 </label>
-                 <button
+                <button
                   onClick={handleExportToExcel}
                   style={{
                     backgroundColor: "#28a745",

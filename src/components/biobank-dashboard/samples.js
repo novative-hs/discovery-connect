@@ -303,7 +303,7 @@ const BioBankSampleArea = () => {
 
       const response = await axios.get(url);
       const { samples, totalCount, pageSize: serverPageSize, currentPage: serverPage } = response.data;
-
+      console.log(samples)
       setSamples(samples);
       setFilteredSamples(samples);
       setTotalPages(Math.ceil(totalCount / serverPageSize));
@@ -1170,7 +1170,7 @@ const BioBankSampleArea = () => {
             </li>
             <li>
               <h6>
-                Click on Location Id's to see Sample Picture.
+                Click on Location Id to see Sample Picture.
               </h6>
             </li>
             <li>

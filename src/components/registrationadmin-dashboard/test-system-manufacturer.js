@@ -15,14 +15,14 @@ const TestSystemManufacturerArea = () => {
   const id = sessionStorage.getItem("userID");
 
   // ✅ HOOKS MUST ALWAYS BE CALLED FIRST
- 
 
- const [showAddModal, setShowAddModal] = useState(false);
+
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState();
-  const [ selectedTestSystemManufacturernameId, setSelectedTestSystemManufacturernameId,] = useState(null); // Store ID of Plasma to delete
+  const [selectedTestSystemManufacturernameId, setSelectedTestSystemManufacturernameId,] = useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
@@ -40,17 +40,17 @@ const TestSystemManufacturerArea = () => {
 
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-      const fetchTestSystemManufacturername = async () => {
-    try {
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testsystemmanufacturer`
-      );
-      setFilteredTestSystemmanufacturername(response.data);
-      setTestSystemManufacturername(response.data); // Store fetched TestMethod in state
-    } catch (error) {
-      console.error("Error fetching Test System :", error);
-    }
-  };
+    const fetchTestSystemManufacturername = async () => {
+      try {
+        const response = await axios.get(
+          `${url}/samplefields/get-samplefields/testsystemmanufacturer`
+        );
+        setFilteredTestSystemmanufacturername(response.data);
+        setTestSystemManufacturername(response.data); // Store fetched TestMethod in state
+      } catch (error) {
+        console.error("Error fetching Test System :", error);
+      }
+    };
     fetchTestSystemManufacturername();
   }, [url]);
 
@@ -79,10 +79,10 @@ const TestSystemManufacturerArea = () => {
   const handleFilterChange = (field, value) => {
     const filtered = value.trim()
       ? testsystemmanufacturername.filter((testsystemmanufacturer) =>
-          field === "added_by"
-            ? "registration admin".includes(value.toLowerCase())
-            : testsystemmanufacturer[field]?.toString().toLowerCase().includes(value.toLowerCase())
-        )
+        field === "added_by"
+          ? "registration admin".includes(value.toLowerCase())
+          : testsystemmanufacturer[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      )
       : testsystemmanufacturername;
     setFilteredTestSystemmanufacturername(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
@@ -176,7 +176,7 @@ const TestSystemManufacturerArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/testsystemmanufacturer`, { bulkData: payload });
@@ -217,10 +217,10 @@ const TestSystemManufacturerArea = () => {
     XLSX.writeFile(workbook, "Test_System_Manufacturer_List.xlsx");
   };
 
-  
+
   if (!id) return <div>Loading...</div>;
 
-    return (
+  return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">

@@ -39,7 +39,7 @@ const getAllCities = (callback) => {
 const createCity = (data, callback) => {
 
   const { bulkData, cityname, added_by } = data || {};
-
+  console.log(data)
   mysqlPool.getConnection((err, connection) => {
     if (err) return callback(err, null);
 
@@ -315,7 +315,7 @@ const getCount = (callback) => {
     return new Promise((resolve, reject) => {
       mysqlConnection.query(query, (err, result) => {
         if (err) {
-          reject(err); 
+          reject(err);
         } else {
           // ✅ Always use the 'count' field since all queries now return it
           if (result && result[0]) {

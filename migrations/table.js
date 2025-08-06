@@ -28,8 +28,8 @@ const sampleReturnModel = require("../models/sampleReturnModel")
 
 // Function to initialize all tables
 function Database() {
-sampleModel.createPriceRequest()
-sampleModel.createPoolSampleTable();
+  // sampleModel.createPriceRequest()
+  sampleModel.createPoolSampleTable();
   cityModel.createCityTable();
   historyModel.registrationadmin_history();
   countryModel.createCountryTable();
@@ -63,13 +63,12 @@ sampleModel.createPoolSampleTable();
   samplefieldsModel.createTestSystemManufacturerTable();
   samplefieldsModel.createTestKitManufacturerTable();
   samplefieldsModel.createConcurrentMedicalConditionsTable();
-  historyModel.registrationadmin_history();
   historyModel.create_historyTable();
- // historyModel.create_samplehistoryTable();
+  historyModel.create_samplehistoryTable();
   sampleReturnModel.createSampleReturnTable();
   contactusModel.createContactUsTable();
   samplefieldsModel.create_AnalyteTable();
   samplefieldsModel.create_infectiousdiseaseTable()
-  newtablefieldModel.createOrUpdateTables();
+  // newtablefieldModel.createOrUpdateTables();
 }
 Database();

@@ -13,7 +13,8 @@ import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 const DistrictArea = () => {
   const id = sessionStorage.getItem("userID");
-  
+
+  const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -37,17 +38,17 @@ const DistrictArea = () => {
   // Fetch District from backend when component loads
   useEffect(() => {
     const fetchdistrictname = async () => {
-    try {
-      const response = await axios.get(`${url}/district/get-district`);
-      setFilteredDistrictname(response.data);
-      setDistrictname(response.data); // Store fetched District in state
-    } catch (error) {
-      console.error("Error fetching District:", error);
-    }
-  };
+      try {
+        const response = await axios.get(`${url}/district/get-district`);
+        setFilteredDistrictname(response.data);
+        setDistrictname(response.data); // Store fetched District in state
+      } catch (error) {
+        console.error("Error fetching District:", error);
+      }
+    };
     fetchdistrictname(); // Call the function when the component mounts
   }, [url]);
-  
+
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -58,7 +59,7 @@ const DistrictArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredDistrictname,currentPage]);
+  }, [filteredDistrictname, currentPage]);
 
   const currentData = filteredDistrictname.slice(
     currentPage * itemsPerPage,
@@ -68,24 +69,18 @@ const DistrictArea = () => {
     setCurrentPage(event.selected); // React Paginate uses 0-based index
   };
   const handleFilterChange = (field, value) => {
-    let filtered = [];
+    setSearchTerm(value); // Store the search term
 
-    if (value.trim() === "") {
-      filtered = districtname; // Show all if filter is empty
-    } else {
-      filtered = districtname.filter((district) =>{
-          if (field === "added_by") {
-        return "registration admin".includes(value.toLowerCase());
-      }
-        return district[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      }
-        
+    let filtered = districtname;
+    if (value.trim() !== "") {
+      filtered = districtname.filter(district =>
+        district[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
     }
 
     setFilteredDistrictname(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
   const handleInputChange = (e) => {
@@ -111,27 +106,27 @@ const DistrictArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
- const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await axios.post(`${url}/district/post-district`, formData);
       const response = await axios.get(`${url}/district/get-district`);
       setFilteredDistrictname(response.data);
       setDistrictname(response.data);
-    setSuccessMessage("District added successfully.");
+      setSuccessMessage("District added successfully.");
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
-     resetFormData()
-      setShowAddModal(false); 
+      resetFormData()
+      setShowAddModal(false);
     } catch (error) {
       console.error("Error adding district:", error);
     }
   };
 
- 
+
   const handleEditClick = (districtname) => {
-    
+
     setselecteddistrictnameId(districtname.id);
     setEditDistrictname(districtname); // Store the District data to edit
     setShowEditModal(true); // Show the edit modal
@@ -141,26 +136,32 @@ const DistrictArea = () => {
     });
   };
 
-   const handleUpdate = async (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
     try {
       await axios.put(`${url}/district/put-district/${selecteddistrictnameId}`, formData);
-      const response = await axios.get(`${url}/district/get-district`);
-      setFilteredDistrictname(response.data);
-      setDistrictname(response.data);
-          setSuccessMessage("District updated successfully.");
+
+      // Update the country in the state while preserving search
+      const updatedDistricts = districtname.map(district =>
+        district.id === selecteddistrictnameId ? { ...district, name: formData.districtname } : district
+      );
+
+      setDistrictname(updatedDistricts);
+      setFilteredDistrictname(updatedDistricts.filter(district =>
+        district.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ));
+
+      setSuccessMessage("District updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
       setShowEditModal(false);
     } catch (error) {
-     console.error(
-        `Error updating districtname with ID ${selecteddistrictnameId}:`,
-        error
-      );
+      console.error(`Error updating District: ${selecteddistrictnameId}`, error);
     }
   };
 
- const handleDelete = async () => {
+
+  const handleDelete = async () => {
     try {
       await axios.delete(`${url}/district/delete-district/${selecteddistrictnameId}`);
       const response = await axios.get(`${url}/district/get-district`);
@@ -168,7 +169,7 @@ const DistrictArea = () => {
       setDistrictname(response.data);
       setSuccessMessage("districtname deleted successfully.");
 
-      setTimeout(() => { setSuccessMessage("");}, 3000);
+      setTimeout(() => { setSuccessMessage(""); }, 3000);
       setShowDeleteModal(false);
       setselecteddistrictnameId(null);
     } catch (error) {
@@ -179,12 +180,12 @@ const DistrictArea = () => {
 
     }
   };
-   useEffect(() => {
-      const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
-      document.body.style.overflow = isModalOpen ? "hidden" : "auto";
-      document.body.classList.toggle("modal-open", isModalOpen);
-    }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-  
+  useEffect(() => {
+    const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+    document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+    document.body.classList.toggle("modal-open", isModalOpen);
+  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+
 
 
   const formatDate = (date) => {
@@ -210,7 +211,7 @@ const DistrictArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
 
       try {
         await axios.post(`${url}/district/post-district`, { bulkData: payload });
@@ -226,31 +227,31 @@ const DistrictArea = () => {
   };
 
 
-const handleExportToExcel = () => {
-  const dataToExport = filteredDistrictname.map((item) => ({
-    Name: item.name ?? "", // Fallback to empty string
-    "Added By": "Registration Admin",
-    "Created At": item.created_at ? formatDate(item.created_at) : "",
-    "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-  }));
+  const handleExportToExcel = () => {
+    const dataToExport = filteredDistrictname.map((item) => ({
+      Name: item.name ?? "", // Fallback to empty string
+      "Added By": "Registration Admin",
+      "Created At": item.created_at ? formatDate(item.created_at) : "",
+      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+    }));
 
-  // Add an empty row with all headers if filteredCityname is empty (optional)
-  if (dataToExport.length === 0) {
-    dataToExport.push({
-      Name: "",
-      "Added By": "",
-      "Created At": "",
-      "Updated At": "",
-    });
-  }
+    // Add an empty row with all headers if filteredCityname is empty (optional)
+    if (dataToExport.length === 0) {
+      dataToExport.push({
+        Name: "",
+        "Added By": "",
+        "Created At": "",
+        "Updated At": "",
+      });
+    }
 
-  const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "District");
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "District");
 
-  XLSX.writeFile(workbook, "District_List.xlsx");
-};
-if (!id) return <div>Loading...</div>;
+    XLSX.writeFile(workbook, "District_List.xlsx");
+  };
+  if (!id) return <div>Loading...</div>;
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
@@ -313,7 +314,7 @@ if (!id) return <div>Loading...</div>;
                     onChange={(e) => handleFileUpload(e)}
                   />
                 </label>
-                 <button
+                <button
                   onClick={handleExportToExcel}
                   style={{
                     backgroundColor: "#28a745",

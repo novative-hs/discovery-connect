@@ -14,7 +14,7 @@ import moment from "moment";
 const TestResultUnitArea = () => {
   const id = sessionStorage.getItem("userID");
 
- const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -38,17 +38,17 @@ const TestResultUnitArea = () => {
 
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-   const fetchTestResultUnitname = async () => {
-    try {
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testresultunit`
-      );
-      setFilteredTestResultunitname(response.data);
-      setTestResultUnitname(response.data); // Store fetched TestMethod in state
-    } catch (error) {
-      console.error("Error fetching Test ResultUnit :", error);
-    }
-  };
+    const fetchTestResultUnitname = async () => {
+      try {
+        const response = await axios.get(
+          `${url}/samplefields/get-samplefields/testresultunit`
+        );
+        setFilteredTestResultunitname(response.data);
+        setTestResultUnitname(response.data); // Store fetched TestMethod in state
+      } catch (error) {
+        console.error("Error fetching Test ResultUnit :", error);
+      }
+    };
     fetchTestResultUnitname();
   }, [url]);
 
@@ -63,7 +63,7 @@ const TestResultUnitArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestResultunitname,currentPage]);
+  }, [filteredTestResultunitname, currentPage]);
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -81,10 +81,10 @@ const TestResultUnitArea = () => {
   const handleFilterChange = (field, value) => {
     const filtered = value.trim()
       ? testResultUnitname.filter((testresultunit) =>
-          field === "added_by"
-            ? "registration admin".includes(value.toLowerCase())
-            : testresultunit[field]?.toString().toLowerCase().includes(value.toLowerCase())
-        )
+        field === "added_by"
+          ? "registration admin".includes(value.toLowerCase())
+          : testresultunit[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      )
       : testResultUnitname;
     setFilteredTestResultunitname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
@@ -178,7 +178,7 @@ const TestResultUnitArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/testresultunit`, { bulkData: payload });
@@ -219,10 +219,10 @@ const TestResultUnitArea = () => {
     XLSX.writeFile(workbook, "Test_System_List.xlsx");
   };
 
-  
+
   if (!id) return <div>Loading...</div>;
 
- return (
+  return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">

@@ -70,10 +70,10 @@ const TestSystemArea = () => {
   const handleFilterChange = (field, value) => {
     const filtered = value.trim()
       ? testsystemname.filter((testsystem) =>
-          field === "added_by"
-            ? "registration admin".includes(value.toLowerCase())
-            : testsystem[field]?.toString().toLowerCase().includes(value.toLowerCase())
-        )
+        field === "added_by"
+          ? "registration admin".includes(value.toLowerCase())
+          : testsystem[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      )
       : testsystemname;
     setFilteredTestSystemname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
@@ -167,7 +167,7 @@ const TestSystemArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/testsystem`, { bulkData: payload });
@@ -208,10 +208,10 @@ const TestSystemArea = () => {
     XLSX.writeFile(workbook, "Test_System_List.xlsx");
   };
 
-  
+
   if (!id) return <div>Loading...</div>;
 
-   return (
+  return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">

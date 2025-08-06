@@ -23,42 +23,42 @@ const LoginForm = () => {
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
- const onSubmit = async (data) => {
-  try {
-    const result = await loginUser(data);
-    if (result?.error) {
-      const errorData = result.error?.data;
-      const errorMsg =
-        errorData?.message || errorData?.error || result.error?.statusText || "Internal Server Error";
-      notifyError(errorMsg);
-    } else {
-      const { id, accountType, action, authToken } = result?.data?.user || {};
-      if (!id) return notifyError("Unexpected error: User ID is missing.");
-
-      sessionStorage.setItem("userID", id);
-      sessionStorage.setItem("accountType", accountType);
-      if (typeof action !== "undefined") {
-        sessionStorage.setItem("staffAction", action);
-      }
-      notifySuccess("Login successfully");
-
-      document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
-
-      const fromPage = router.query.from;
-
-      // ✅ Handle redirect after login based on source
-      if (fromPage === "cart") {
-        router.push("/cart?triggerCheckout=true"); // ✅ re-run pricing logic in cart
-      } else if (fromPage === "checkout") {
-        router.push("/dashboardheader?tab=Checkout");
+  const onSubmit = async (data) => {
+    try {
+      const result = await loginUser(data);
+      if (result?.error) {
+        const errorData = result.error?.data;
+        const errorMsg =
+          errorData?.message || errorData?.error || result.error?.statusText || "Internal Server Error";
+        notifyError(errorMsg);
       } else {
-        router.push("/dashboardheader");
+        const { id, accountType, action, authToken } = result?.data?.user || {};
+        if (!id) return notifyError("Unexpected error: User ID is missing.");
+
+        sessionStorage.setItem("userID", id);
+        sessionStorage.setItem("accountType", accountType);
+        if (typeof action !== "undefined") {
+          sessionStorage.setItem("staffAction", action);
+        }
+        notifySuccess("Login successfully");
+
+        document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
+
+        const fromPage = router.query.from;
+
+        // ✅ Handle redirect after login based on source
+        if (fromPage === "cart") {
+          router.push("/cart?triggerCheckout=true"); // ✅ re-run pricing logic in cart
+        } else if (fromPage === "checkout") {
+          router.push("/dashboardheader?tab=Checkout");
+        } else {
+          router.push("/dashboardheader");
+        }
       }
+    } catch (error) {
+      notifyError(error?.response?.data?.error || error?.message || "Something went wrong.");
     }
-  } catch (error) {
-    notifyError(error?.response?.data?.error || error?.message || "Something went wrong.");
-  }
-};
+  };
 
 
   return (
