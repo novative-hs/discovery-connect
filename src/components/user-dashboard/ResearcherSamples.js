@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
 import { useRouter } from "next/router";
@@ -8,18 +8,14 @@ const SampleArea = () => {
   const router = useRouter();
   const id = sessionStorage.getItem("userID");
   const tableHeaders = [
-    { label: "Analyte", key: "Analyte" },
-    { label: "Volume", key: "volume" },
-    { label: "Price", key: "price" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
-    { label: "Quantity", key: "quantity" },
-    { label: "Test Result", key: "TestResult" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Status", key: "status" },
-    { label: "Sample Visibility", key: "sample_visibility" },
 
-
+    { label: "Order ID", key: "tracking_id" },
+    { label: "Order Date", key: "created_at" },
+    { label: "Total Payment", key: "price" },
+    { label: "Payment Type", key: "payment_method" },
+    { label: "Payment Status", key: "payment_status" },
+    { label: "Total Items", key: "total" },
+    { label: "Order status", key: "order_status" }
   ];
 
   const fieldsToShowInOrder = [
@@ -55,35 +51,80 @@ const SampleArea = () => {
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
   const [error, setError] = useState(null);
-  const fetchSamples = useCallback(async () => {
-  setLoading(true);
-  try {
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
-    );
+  const [orders, setOrders] = useState([]); // group by tracking ID
+  const [totalOrderPayment, setTotalOrderPayment] = useState(0);
 
-    if (response.data.error) {
-      setError(response.data.error);
-      setSamples([]);
-    } else {
-      setSamples(response.data);
+  const fetchSamples = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
+      );
+
+      if (response.data.error) {
+        setError(response.data.error);
+        setSamples([]);
+        setOrders([]);
+        setTotalOrderPayment(0);
+      } else {
+        const grouped = groupSamplesByOrder(response.data);
+        setSamples(response.data);
+        console.log(response.data)
+        setOrders(grouped);
+
+        // ✅ Correct: Sum total payments from all individual samples
+        const total = response.data.reduce((sum, sample) => {
+          const payment = parseFloat(sample.totalpayment);
+          return sum + (payment || 0);
+        }, 0);
+        setTotalOrderPayment(total);
+      }
+    } catch (error) {
+      setError("An error occurred while fetching the samples.");
+      setTotalOrderPayment(0);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    
-    setError("An error occurred while fetching the samples.");
-  } finally {
-    setLoading(false);
-  }
-}, [id]);
+  }, [id]);
+
+
+
+  const groupSamplesByOrder = (samples) => {
+    const grouped = {};
+    samples.forEach((sample) => {
+      const key = sample.tracking_id;
+      if (!grouped[key]) {
+        grouped[key] = {
+          tracking_id: key,
+          created_at: sample.created_at,
+          order_status: sample.order_status,
+          payment_type: sample.payment_method,
+          payment_status: sample.payment_status,
+          samples: [],
+          totalpayment: 0, // 🔧 Initialize total per group
+        };
+      }
+      grouped[key].samples.push(sample);
+
+      const price = parseFloat(sample.totalpayment);
+      if (!isNaN(price)) {
+        grouped[key].totalpayment += price; // 🔧 Add price to this group's total
+      }
+    });
+
+    return Object.values(grouped);
+  };
+
+
 
   // Fetch samples from backend when component loads
- useEffect(() => {
-  if (id !== null) {
-    fetchSamples();
-    const intervalId = setInterval(fetchSamples, 30000);
-    return () => clearInterval(intervalId);
-  }
-}, [id, fetchSamples]); 
+  useEffect(() => {
+    if (id !== null) {
+      fetchSamples();
+      const intervalId = setInterval(fetchSamples, 30000);
+      return () => clearInterval(intervalId);
+    }
+  }, [id, fetchSamples]);
 
 
   useEffect(() => {
@@ -93,7 +134,7 @@ const SampleArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [samples,currentPage]);
+  }, [samples, currentPage]);
   const currentData = samples.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
@@ -132,6 +173,7 @@ const SampleArea = () => {
         <div className="row justify-content-center">
           <div className="table-responsive w-100">
             <table className="table table-bordered table-hover text-center align-middle w-auto border">
+
               <thead className="table-primary text-dark">
                 <tr>
                   {tableHeaders.map(({ label, key }, index) => {
@@ -183,145 +225,41 @@ const SampleArea = () => {
                 </tr>
               </thead>
               <tbody>
-                {currentData.length > 0 ? (
-                  currentData.map((sample) => (
-                    <tr key={sample.id}>
-                      {tableHeaders.map(({ key, render }, index) => {
-                        // 🔁 Handle Price column with currency
-                        if (key === "price") {
-                          return (
-                            <td key={index}>
-                              {sample.price
-                                ? `${sample.price} ${sample.SamplePriceCurrency || ""}`
-                                : "----"}
-                            </td>
-                          );
-                        }
-                        // 🔁 Handle Total Payment column with currency
-                        if (key === "totalpayment") {
-                          return (
-                            <td key={index}>
-                              {sample.totalpayment
-                                ? `${sample.totalpayment} ${sample.SamplePriceCurrency || ""}`
-                                : "----"}
-                            </td>
-                          );
-                        }
-                        // ✅ Custom logic for committee_status
-                        if (key === "committee_status") {
-                          let displayValue = sample[key];
+                {orders.length > 0 ? (
+                  orders.map((order, index) => (
+                    <tr key={index}>
+                      <td>{order.tracking_id}</td>
+                      <td>{new Date(order.created_at).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: '2-digit'
+                      }).replace(/ /g, '-')}</td>
 
-                          if (
-                            sample.technical_admin_status === "Rejected" &&
-                            sample.committee_status === "rejected" &&
-                            sample.order_status === "Rejected"
-                          ) {
-                            displayValue = "Rejected";
-                          } else if (sample.technical_admin_status === "Rejected") {
-                            displayValue = "No further processing";
-                          } else if (
-                            sample.technical_admin_status === "Accepted" &&
-                            (displayValue === null || displayValue === undefined)
-                          ) {
-                            displayValue = "Awaiting Admin to Forward to Committee";
-                          } else if (displayValue === null || displayValue === undefined) {
-                            displayValue = "Pending Admin Action";
-                          }
+                      <td className="text-end">
+                        {order.samples[0]?.SamplePriceCurrency || "Rs"} {order.totalpayment.toLocaleString()}
+                      </td>
 
-                          return <td key={index}>{displayValue}</td>;
-                        }
-
-                        // ✅ Custom logic for Analyte with clickable modal
-                        if (key === "Analyte") {
-                          return (
-                            <td key={index}>
-                              <span
-                                className="sample-name text-primary fw-semibold fs-6 text-decoration-underline"
-                                role="button"
-                                title="Sample Details"
-                                onClick={() => openModal(sample)}
-                                style={{
-                                  cursor: "pointer",
-                                  transition: "color 0.2s",
-                                }}
-                                onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                                onMouseOut={(e) => (e.target.style.color = "")}
-                              >
-                                {sample.Analyte || "----"}
-                              </span>
-                            </td>
-                          );
-                        }
-                        // ✅ Custom logic for volume + VolumeUnit
-                        if (key === "volume") {
-                          return (
-                            <td key={index}>
-                              {sample.volume
-                                ? `${sample.volume} ${sample.VolumeUnit || ""}`
-                                : "----"}
-                            </td>
-                          );
-                        }
-                        // ✅ Custom logic for age
-                        if (key === "age") {
-                          return (
-                            <td key={index}>
-                              {sample.age ? `${sample.age} years` : "----"}
-                            </td>
-                          );
-                        }
-                        // ✅ Custom logic for TestResult
-                        if (key === "TestResult") {
-                          return (
-                            <td key={index}>
-                              {sample.TestResult
-                                ? `${sample.TestResult} ${sample.TestResultUnit || ""}`
-                                : "----"}
-                            </td>
-                          );
-                        }
-                        // 🔁 Default render for all other fields
-                        return (
-                          <td key={index}>
-                            {render ? render(sample[key]) : sample[key] || "----"}
-                          </td>
-                        );
-                      })}
-
-                      {/* Handle Analyte click to open modal */}
+                      <td>{order.payment_type || "----"}</td>
+                      <td>{order.payment_status}</td>
+                      <td>{order.samples.length}</td>
+                      <td>{order.samples[0].order_status}</td>
                       <td>
                         <button
-                          className="btn btn-outline-success btn-l d-flex align-items-center gap-1"
-                          onClick={() =>
-                            router.push({
-                              pathname: "/order-confirmation",
-                              query: {
-                                id: sample.tracking_id,
-                                created_at: sample.created_at,
-                                orderStatus: sample.order_status || "Placed",
-                                technical_admin_status: sample.technical_admin_status,
-                                committee_status: sample.committee_status,
-                              },
-                            })
-                          }
-                          title="Track Order"
+                          className="btn btn-outline-info btn-sm"
+                          onClick={() => openModal(order)}
                         >
-                          <span>Track Order</span>
+                          View Order Detail
                         </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td
-                      colSpan={tableHeaders.length + 1}
-                      className="text-center"
-                    >
-                      No samples available
-                    </td>
+                    <td colSpan="5" className="text-center">No orders found</td>
                   </tr>
                 )}
               </tbody>
+
             </table>
           </div>
           {totalPages >= 0 && (
@@ -333,8 +271,71 @@ const SampleArea = () => {
           )}
         </div>
       </div>
+
+      <Modal show={showModal} onHide={closeModal} size="xl" centered>
+        <Modal.Header closeButton>
+          <Modal.Title className="fw-bold text-danger">
+            Order Detail - {selectedSample?.tracking_id}
+          </Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }}>
+          {selectedSample?.samples?.length > 0 ? (
+            <table className="table table-bordered text-center align-middle">
+              <thead className="table-secondary">
+                <tr>
+                  <th>Analyte</th>
+                  <th>Age</th>
+                  <th>Gender</th>
+                  <th>Volume</th>
+                  <th>Test Result</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  
+                </tr>
+              </thead>
+              <tbody>
+                {selectedSample.samples.map((s, i) => (
+                  <tr key={i}>
+                    <td>{s.Analyte || "----"}</td>
+                    <td>{s.age ? `${s.age} years` : "----"}</td>
+                    <td>{s.gender || "----"}</td>
+                    <td>{s.volume ? `${s.volume} ${s.VolumeUnit || ""}` : "----"}</td>
+                    <td>{s.TestResult ? `${s.TestResult} ${s.TestResultUnit || ""}` : "----"}</td>
+                    <td className="text-end">{s.SamplePriceCurrency}{s.price.toLocaleString()}</td>
+                    <td>{s.quantity || "----"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p>No samples available for this order.</p>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer className="d-flex justify-content-end">
+          <Button
+            variant="primary"
+            onClick={() =>
+              router.push({
+                pathname: "/order-confirmation",
+                query: {
+                  id: selectedSample.tracking_id,
+                  created_at: selectedSample.created_at,
+                  orderStatus: selectedSample.samples[0]?.order_status || "Placed",
+                  technical_admin_status: selectedSample.samples[0]?.technical_admin_status,
+                  committee_status: selectedSample.samples[0]?.committee_status,
+                },
+              })
+            }
+          >
+            Track Order
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
       {/* Modal for sample details */}
-      <Modal show={showModal}
+      {/* <Modal show={showModal}
         onHide={closeModal}
         size="lg"
         centered
@@ -369,7 +370,7 @@ const SampleArea = () => {
         </Modal.Body>
 
         <Modal.Footer className="border-0"></Modal.Footer>
-      </Modal>
+      </Modal> */}
     </section>
   );
 };

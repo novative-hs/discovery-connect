@@ -3,52 +3,61 @@ const { sendEmail } = require("../config/email");
 
 const notifyResearcher = (cartIds, message, subject) => {
   return new Promise((resolve, reject) => {
-    // Ensure cartIds is an array
     const ids = Array.isArray(cartIds) ? cartIds : [cartIds];
-
-    // SQL placeholders
     const placeholders = ids.map(() => '?').join(',');
+
     const getResearcherEmailQuery = `
-      SELECT ua.email, c.created_at, c.id AS cartId
+      SELECT ua.email, c.created_at, c.tracking_id, c.id AS cartId
       FROM user_account ua
       JOIN cart c ON ua.id = c.user_id
       WHERE c.id IN (${placeholders})
     `;
 
     mysqlConnection.query(getResearcherEmailQuery, ids, (emailErr, emailResults) => {
-      if (emailErr) {
-        return reject(emailErr);
-      }
+      if (emailErr) return reject(emailErr);
+      if (emailResults.length === 0) return reject(new Error('No data found for provided cart IDs'));
 
-      if (emailResults.length === 0) {
-        return reject(new Error('No data found for provided cart IDs'));
-      }
-
-      // Get the researcher email from the first result
       const researcherEmail = emailResults[0].email;
 
-      // Build cart list in HTML format
-      const cartIdsList = emailResults
-        .map((detail) => `<li>Cart ID: ${detail.cartId} (Created At: ${new Date(detail.created_at).toLocaleString()})</li>`)
-        .join('');
-
-      // Build email message in HTML
+      // Email HTML layout
       const emailMessage = `
-        <p>Dear Researcher,</p>
-        <p>${message}</p>
-        <p>Details for the following carts:</p>
-        <ul>${cartIdsList}</ul>
-        <p>Best regards,</p>
-        <p>Discovery Connect Team</p>
+        <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px; text-align: center;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: left;">
+            
+            <h2 style="color: #2c3e50; text-align: center;">Dear Researcher,</h2>
+            
+            <p style="font-size: 16px;">${message}</p>
+
+            <p style="font-size: 16px;">Here are the details of your cart(s):</p>
+
+            <ul style="list-style: none; padding: 0;">
+              ${emailResults.map(detail => `
+                <li style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 10px;">
+                  <p><strong>Tracking ID:</strong> ${detail.tracking_id}</p>
+                  <p><strong>Created At:</strong> ${new Date(detail.created_at).toLocaleString()}</p>
+                </li>
+              `).join('')}
+            </ul>
+
+            <p style="margin-top: 30px;">Best regards,<br/><strong>Discovery Connect Team</strong></p>
+
+            <hr style="margin-top: 40px; border: none; border-top: 1px solid #ccc;" />
+
+            <p style="font-size: 12px; color: #888; text-align: center;">
+              This is an automated message. Please do not reply directly to this email.
+            </p>
+          </div>
+        </div>
       `;
 
-      // Send single email
       sendEmail(researcherEmail, subject, emailMessage)
         .then(() => resolve())
         .catch((emailError) => reject(emailError));
     });
   });
 };
+
+
 
 const createCartTable = () => {
   const cartTableQuery = `

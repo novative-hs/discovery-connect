@@ -1015,18 +1015,17 @@ const updateSampleStatus = (id, status, callback) => {
 const updatetestResultandUnit = (id, data, callback) => {
   const query = `
     UPDATE sample
-    SET samplemode = ?, TestResult = ?, TestResultUnit = ?,samplepdf=?
+    SET samplemode = ?, TestResult = ?, TestResultUnit = ?, samplepdf = ?, status = ?
     WHERE id = ?`;
 
   mysqlConnection.query(
     query,
-    [data.mode, data.TestResult, data.TestResultUnit, data.samplepdf, id],
+    [data.mode, data.TestResult, data.TestResultUnit, data.samplepdf, data.status, id],
     (err, result) => {
       callback(err, result);
     }
   );
 };
-
 
 
 

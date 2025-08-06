@@ -50,12 +50,22 @@ const QuoteRequestTable = () => {
   }, []);
 
   // Group samples by researcher
-  const groupedByResearcher = samples.reduce((acc, sample) => {
-    const key = `${sample.ResearcherName}-${sample.OrganizationName}-${sample.city_name}-${sample.district_name}-${sample.country_name}`;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(sample);
-    return acc;
-  }, {});
+  const groupedByResearcherStatus = {};
+
+  // Separate researcher requests into 2 types: priced and unpriced
+  samples.forEach((sample) => {
+    const researcher = sample.ResearcherName;
+    const statusKey = sample.status === 'priced' ? 'priced' : 'pending';
+    const key = `${researcher}_${statusKey}`;
+
+    if (!groupedByResearcherStatus[key]) {
+      groupedByResearcherStatus[key] = [];
+    }
+
+    groupedByResearcherStatus[key].push(sample);
+  });
+
+
 
   // Submit price for one sample
   const submitSamplePrice = async (sampleId, currency) => {
@@ -107,9 +117,16 @@ const QuoteRequestTable = () => {
           </tr>
         </thead>
         <tbody>
-          {Object.entries(groupedByResearcher).map(([key, samples]) => {
-            const { ResearcherName, OrganizationName, city_name, district_name, country_name } = samples[0];
-            const allPriced = samples.every(sample => sample.status === "priced");
+          {Object.entries(groupedByResearcherStatus).map(([key, samples]) => {
+            const {
+              ResearcherName,
+              OrganizationName,
+              city_name,
+              district_name,
+              country_name,
+            } = samples[0];
+
+            const allPriced = samples.every((s) => s.status === "priced");
 
             return (
               <tr key={key}>
@@ -123,6 +140,7 @@ const QuoteRequestTable = () => {
                     <button
                       className="btn btn-sm btn-secondary"
                       onClick={() => {
+                        console.log(samples)
                         setSelectedQuote(samples);
                         setShowCartModal(true);
                         setIsReadOnly(true);
@@ -149,6 +167,7 @@ const QuoteRequestTable = () => {
               </tr>
             );
           })}
+
         </tbody>
       </table>
 
@@ -190,8 +209,8 @@ const QuoteRequestTable = () => {
                 <tr>
                   <th>Sample ID</th>
                   <th>Analyte</th>
-                  <th>Quantity</th>
                   <th>Test Result</th>
+                  <th>Quantity X Volume</th>
                   <th>Price</th>
                 </tr>
               </thead>
@@ -200,7 +219,7 @@ const QuoteRequestTable = () => {
                   <tr key={sample.sample_id}>
                     <td>{sample.masterID}</td>
                     <td>{sample.analyte}</td>
-                    <td>{sample.quantity}</td>
+                    <td>{sample.quantity} X {sample.volume}{sample.VolumeUnit}</td>
                     <td>
                       {sample.TestResult} {sample.TestResultUnit}
                     </td>

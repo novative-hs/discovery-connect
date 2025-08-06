@@ -186,7 +186,11 @@ const ShippingSampleArea = () => {
                 groupedList.map(([researcher, records]) => (
                   <tr key={researcher}>
                     <td>{records[0].tracking_id || "---"}</td>
-                    <td>{new Date(records[0].created_at).toLocaleString()}</td>
+                     <td>{new Date(records[0].created_at).toLocaleDateString('en-GB', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: '2-digit'
+                      }).replace(/ /g, '-')}</td>
                     <td>{researcher}</td>
                     <td>{records[0].organization_name}</td>
                     {/* <td>

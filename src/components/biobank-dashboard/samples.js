@@ -514,7 +514,7 @@ const BioBankSampleArea = () => {
 
     // ✅ 3. Append selected samples if it's truly a pooled sample
     if (
-      (effectiveMode === "Pooled" || effectiveMode === "AddtoPool") &&
+      (effectiveMode !== "Individual") &&
       Array.isArray(selectedSamples) &&
       selectedSamples.length > 0
     ) {
@@ -844,7 +844,7 @@ const BioBankSampleArea = () => {
     let updatedMode = mode;
     if (
       mode !== "Individual" &&
-      formData.TestResult?.trim() &&
+      formData.TestResult?.trim() ||
       formData.TestResultUnit?.trim()
     ) {
       updatedMode = "Pooled";
@@ -867,7 +867,7 @@ const BioBankSampleArea = () => {
 
     try {
       // 👇 Conditional API endpoint
-      const apiUrl = formData.TestResultUnit?.trim()
+      const apiUrl = formData.TestResult?.trim()
         ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/updatetestresultandunit/${selectedSampleId}`
         : `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`;
 
@@ -1562,6 +1562,14 @@ const BioBankSampleArea = () => {
                             } else if (key === "volume") {
                               return `${sample.volume} ${sample.VolumeUnit || ""}`;
                             }
+                            else if (key === "samplemode" && ["Low", "Medium", "High"].includes(sample.samplemode)) {
+                              return (
+                                <span className="text-danger fw-semibold">
+                                  Add to Pool - {sample.samplemode}
+                                </span>
+                              );
+                            }
+
                             else if (key === "barcode") {
                               return <button
                                 className="btn btn-outline-primary btn-sm"
@@ -4150,30 +4158,27 @@ const BioBankSampleArea = () => {
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body
-          style={{ maxHeight: "500px", overflowY: "auto" }}
-          className="bg-light rounded"
-        >
+        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
           {selectedSample ? (
             <div className="p-3">
               <div className="row g-3">
-                {fieldsToShowInOrder.map(({ key, label }) => {
-                  const value = selectedSample[key];
-                  if (value === undefined) return null;
-
-                  return (
+                {fieldsToShowInOrder
+                  .filter(({ key }) => {
+                    const value = selectedSample[key];
+                    return value !== undefined && value !== null && value !== "";
+                  })
+                  .map(({ key, label }) => (
                     <div className="col-md-6" key={key}>
                       <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
                         <span className="text-muted small fw-bold mb-1">
                           {label}
                         </span>
                         <span className="fs-6 text-dark">
-                          {value?.toString() || "----"}
+                          {selectedSample[key]?.toString() || "----"}
                         </span>
                       </div>
                     </div>
-                  );
-                })}
+                  ))}
               </div>
             </div>
           ) : (
