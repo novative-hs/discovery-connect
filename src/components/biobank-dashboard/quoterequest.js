@@ -209,8 +209,8 @@ const QuoteRequestTable = () => {
                 <tr>
                   <th>Sample ID</th>
                   <th>Analyte</th>
-                  <th>Test Result</th>
                   <th>Quantity X Volume</th>
+                  <th>Test Result</th>
                   <th>Price</th>
                 </tr>
               </thead>
