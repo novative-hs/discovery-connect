@@ -125,7 +125,11 @@ const CompletedSampleArea = () => {
                     <td>{sample.tracking_id || "----"}</td>
                     <td>{sample.researcher_name}</td>
                     <td>{sample.Analyte}</td>
-                    <td>{new Date(sample.created_at).toLocaleString()}</td>
+                    <td>{new Date(sample.created_at).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: '2-digit'
+                    }).replace(/ /g, '-')}</td>
                     <td>{sample.order_status}</td>
                   </tr>
                 ))

@@ -99,7 +99,7 @@ const CartArea = () => {
       handleProceedToCheckout();
 
       if (triggerFromQuery) {
-        router.replace("/cart", undefined, { shallow: true });
+        router.replace("/cart");
       }
     }
   }, [router.query, userID]);

@@ -507,6 +507,8 @@ SELECT
       s.gender,
       s.TestResult,
       s.price,
+      s.volume,
+      s.VolumeUnit,
       s.SamplePriceCurrency,
       s.TestResultUnit,
       r.ResearcherName,

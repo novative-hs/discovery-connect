@@ -55,7 +55,9 @@ const SampleArea = () => {
   const SampleHeader = [
     { label: "Analyte", key: "Analyte" },
     { label: "Quantity X Volume", key: "quantity" },
-    { label: "Location", key: "locationids" },
+    { label: "Age", key: "age" },
+    { label: "Gender", key: "gender" },
+    { label: "Test Result & Unit", key: "gender" },
   ];
 
   const fetchSamples = useCallback(async (page = 1, pageSize = 10, filters = {}) => {
@@ -186,68 +188,68 @@ const SampleArea = () => {
     setShowModal(false);
   };
 
- const handleSubmit = async () => {
-  const trimmedComment = comment.trim();
+  const handleSubmit = async () => {
+    const trimmedComment = comment.trim();
 
-  if (!id || !selectedResearcherSamples || selectedResearcherSamples.length === 0 || !trimmedComment) {
-    alert("Please enter a comment.");
-    return;
-  }
+    if (!id || !selectedResearcherSamples || selectedResearcherSamples.length === 0 || !trimmedComment) {
+      alert("Please enter a comment.");
+      return;
+    }
 
-  try {
-    // Prepare payload with all cart_ids at once
-    const payload = {
-      committee_member_id: id,
-      committee_status: actionType, // "Approved" or "Refused"
-      comments: trimmedComment,
-      cart_ids: selectedResearcherSamples.map(sample => sample.cart_id),
-    };
+    try {
+      // Prepare payload with all cart_ids at once
+      const payload = {
+        committee_member_id: id,
+        committee_status: actionType, // "Approved" or "Refused"
+        comments: trimmedComment,
+        cart_ids: selectedResearcherSamples.map(sample => sample.cart_id),
+      };
 
-    // Send a single request
-    await axios.put(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/bulk-committee-approval`,
-      payload
-    );
+      // Send a single request
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/bulk-committee-approval`,
+        payload
+      );
 
-    notifySuccess(`${actionType} successful for all samples.`);
-    setShowModal(false);
-    setComment("");
+      notifySuccess(`${actionType} successful for all samples.`);
+      setShowModal(false);
+      setComment("");
 
-    // ✅ Refetch updated data
-    const updatedOrderRes = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
-    );
-    const updatedDocRes = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
-    );
+      // ✅ Refetch updated data
+      const updatedOrderRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
+      );
+      const updatedDocRes = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
+      );
 
-    const updatedOrders = updatedOrderRes.data.results || [];
-    const updatedDocuments = updatedDocRes.data.results || [];
+      const updatedOrders = updatedOrderRes.data.results || [];
+      const updatedDocuments = updatedDocRes.data.results || [];
 
-    const updatedDocMap = {};
-    updatedDocuments.forEach((doc) => {
-      if (doc.cart_id) {
-        updatedDocMap[doc.cart_id] = doc;
-      }
-    });
+      const updatedDocMap = {};
+      updatedDocuments.forEach((doc) => {
+        if (doc.cart_id) {
+          updatedDocMap[doc.cart_id] = doc;
+        }
+      });
 
-    const updatedMerged = updatedOrders.map((order) => ({
-      ...order,
-      ...(updatedDocMap[order.cart_id] || {}),
-    }));
+      const updatedMerged = updatedOrders.map((order) => ({
+        ...order,
+        ...(updatedDocMap[order.cart_id] || {}),
+      }));
 
-    setSamples(updatedMerged);
+      setSamples(updatedMerged);
 
-    const updatedGroup = updatedMerged.filter(
-      (s) => s.tracking_id === selectedResearcherSamples[0].tracking_id
-    );
-    setSelectedResearcherSamples(updatedGroup);
+      const updatedGroup = updatedMerged.filter(
+        (s) => s.tracking_id === selectedResearcherSamples[0].tracking_id
+      );
+      setSelectedResearcherSamples(updatedGroup);
 
-  } catch (error) {
-    console.error("❌ Error updating samples:", error);
-    notifyError("Bulk approval/refusal failed. Please check logs.");
-  }
-};
+    } catch (error) {
+      console.error("❌ Error updating samples:", error);
+      notifyError("Bulk approval/refusal failed. Please check logs.");
+    }
+  };
 
 
 
@@ -305,14 +307,11 @@ const SampleArea = () => {
           <tbody>
             {Object.entries(groupedByResearcher).map(([researcher, group], idx) => (
               <tr key={idx}>
-                <td>
-                  {(() => {
-                    const date = new Date(group[0].created_at);
-                    const day = date.getDate().toString().padStart(2, '0');
-                    const month = date.toLocaleString('en-GB', { month: 'short' });
-                    const year = date.getFullYear();
-                    return `${day}-${month}-${year}`;
-                  })()}
+                <td>{new Date(group[0].created_at).toLocaleDateString('en-GB', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: '2-digit'
+                }).replace(/ /g, '-')}
                 </td>
                 <td>{group[0].tracking_id}</td>
                 <td>{group[0].researcher_name}</td>
@@ -392,25 +391,30 @@ const SampleArea = () => {
             </div>
 
             {/* Approve / Reject buttons - shown once */}
-            {selectedResearcherSamples &&
-              selectedResearcherSamples.some((sample) => sample.committee_status !== "Approved") && (
-                <div className="mb-3 d-flex gap-2">
-                  <button
-                    className="btn btn-success btn-sm"
-                    onClick={() => handleOpenModal("Approved", selectedResearcherSamples)}
-                  >
-                    <FontAwesomeIcon icon={faCheck} className="me-1" />
-                    Approve
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => handleOpenModal("Refused", selectedResearcherSamples)}
-                  >
-                    <FontAwesomeIcon icon={faTimes} className="me-1" />
-                    Refuse
-                  </button>
-                </div>
-              )}
+        {selectedResearcherSamples &&
+  selectedResearcherSamples.some(
+    (sample) =>
+      sample.committee_status !== "Approved" &&
+      sample.committee_status !== "Refused"
+  ) && (
+    <div className="mb-3 d-flex gap-2">
+      <button
+        className="btn btn-success btn-sm"
+        onClick={() => handleOpenModal("Approved", selectedResearcherSamples)}
+      >
+        <FontAwesomeIcon icon={faCheck} className="me-1" />
+        Approve
+      </button>
+      <button
+        className="btn btn-danger btn-sm"
+        onClick={() => handleOpenModal("Refused", selectedResearcherSamples)}
+      >
+        <FontAwesomeIcon icon={faTimes} className="me-1" />
+        Refuse
+      </button>
+    </div>
+)}
+
 
 
             {/* Sample Table */}
@@ -459,26 +463,7 @@ const SampleArea = () => {
                             {key === "Analyte" ? (
                               <>
                                 <span style={{ textDecoration: "underline" }}>{sample.Analyte || "N/A"}</span>
-                                <div
-                                  className="text-muted small mt-1"
-                                  style={{ textDecoration: "none", cursor: "default" }}
-                                >
-                                  {/* Gender and Age */}
-                                  {(sample.gender || sample.age) && (
-                                    <>
-                                      {sample.gender}
-                                      {sample.age ? `${sample.gender ? ', ' : ''}${sample.age} years` : ''}
-                                    </>
-                                  )}
-
-                                  {/* Separator + TestResult */}
-                                  {(sample.TestResult || sample.TestResultUnit) && (sample.gender || sample.age) && ' | '}
-                                  {(sample.TestResult || sample.TestResultUnit) && (
-                                    <>
-                                      {sample.TestResult ?? ''} {sample.TestResultUnit ?? ''}
-                                    </>
-                                  )}
-                                </div>
+                              
                               </>
                             ) : ["study_copy", "irb_file", "nbc_file"].includes(key) ? (
                               "----"

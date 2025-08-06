@@ -17,79 +17,53 @@ const OrderConfirmation = () => {
     let width = "10%";
     let stepColors = Array(6).fill("secondary");
 
-    // Step 1: Placed Order
+    // Step 0: Placed
     stepColors[0] = "success";
     width = "10%";
 
-    if (orderStatus === "Pending") width = "10%";
-
-    // Step 2: Admin Approval
-    if (orderStatus === "Accepted") {
+    // Step 1: Committee
+    if (committee_status === "Pending") {
+      stepColors[1] = "warning";
+      width = "20%";
+    } else if (committee_status === "rejected") {
+      stepColors[1] = "danger";
+      width = "20%";
+    } else if (committee_status === "Accepted") {
       stepColors[1] = "success";
-      stepColors[2] = "danger";
       width = "30%";
     }
-    if (orderStatus === "Rejected") {
-      stepColors[1] = "success";
-      width = "20%";
+
+    // Step 2: Admin
+    if (committee_status === "Accepted") {
+      if (technical_admin_status === "Pending") {
+        stepColors[2] = "warning";
+        width = "40%";
+      } else if (technical_admin_status === "Rejected") {
+        stepColors[2] = "danger";
+        width = "40%";
+      } else if (technical_admin_status === "Accepted") {
+        stepColors[2] = "success";
+        width = "50%";
+      }
     }
 
-    // Step 3: Committee Approval
-    if (orderStatus === "UnderReview") {
-      stepColors[1] = "success";
-      stepColors[2] = "warning";
-      width = "35%";
-    }
-
-    // Special: Admin accepted but committee_status missing (pending)
-    if (technical_admin_status === "Accepted" && !committee_status && orderStatus !== "Rejected") {
-      stepColors[1] = "success";
-      stepColors[2] = "warning"; // Show warning on committee step
-      width = "20%";
-    }
-
-    // Step 4: Dispatched
-    if (orderStatus === "Dispatched") {
-      stepColors[1] = "success";
-      stepColors[2] = "success";
-      stepColors[3] = "success";
-      width = "65%";
-    }
-
-    // Step 5: Shipped
-    if (orderStatus === "Shipped") {
-      stepColors[1] = "success";
-      stepColors[2] = "success";
-      stepColors[3] = "success";
-      stepColors[4] = "success";
-      width = "85%";
-    }
-
-    // Step 6: Completed
-    if (orderStatus === "Completed") {
-      stepColors[1] = "success";
-      stepColors[2] = "success";
-      stepColors[3] = "success";
-      stepColors[4] = "success";
-      stepColors[5] = "success";
-      width = "100%";
-    }
-
-    // Rejected scenarios
-    if (technical_admin_status === "Rejected" && orderStatus === "Rejected") {
-      stepColors[1] = "danger"; // Admin rejected
-      width = "20%";
-    }
-    if (technical_admin_status === "Rejected" && orderStatus === "Rejected" && committee_status === "rejected") {
-      stepColors[1] = "danger"; // Admin rejected
-      stepColors[2] = "danger";
-      width = "40%";
-    }
-
-    if (technical_admin_status === "Accepted" && committee_status === "rejected") {
-      stepColors[1] = "success"; // Admin accepted
-      stepColors[2] = "danger"; // Committee rejected
-      width = "40%";
+    // Step 3–5: Further progress only if admin accepted
+    if (technical_admin_status === "Accepted") {
+      if (orderStatus === "Dispatched") {
+        stepColors[3] = "success";
+        width = "65%";
+      }
+      if (orderStatus === "Shipped") {
+        stepColors[3] = "success";
+        stepColors[4] = "success";
+        width = "85%";
+      }
+      if (orderStatus === "Completed") {
+        stepColors[3] = "success";
+        stepColors[4] = "success";
+        stepColors[5] = "success";
+        width = "100%";
+      }
     }
 
     setProgressWidth(width);
@@ -124,8 +98,22 @@ const OrderConfirmation = () => {
         <Card className="mt-4 p-4 shadow-lg rounded-4 border-0 bg-light">
           <p className="text-dark fs-6">
             Order <strong>#{id || "----"}</strong> was placed on{" "}
-            <strong>{(created_at)}</strong> and is currently in progress.
+            <strong>
+              {new Date(created_at).toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: '2-digit',
+              }).replace(/ /g, '-')}{" "}
+              {new Date(created_at).toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true, // Show AM/PM
+              })}
+            </strong>{" "}
+            and is currently in progress.
           </p>
+
+
 
           {/* Progress Bar */}
           <div
@@ -150,35 +138,35 @@ const OrderConfirmation = () => {
             {/* Step Circles */}
             <div className="position-relative d-flex w-100 justify-content-between">
               {steps.map((stepColor, idx) => {
-                let icon = <i className="bi bi-check-lg"></i>; // Default icon
-                let color = stepColor;
+                let icon = <i className="bi bi-check-lg"></i>;
 
-                if (idx === 1 && technical_admin_status === "Rejected" && orderStatus === "Rejected") {
-                  icon = <i className="bi bi-x-lg"></i>;
-                  color = "danger";
+                if (idx === 1) {
+                  if (committee_status === "Pending") {
+                    icon = <i className="bi bi-hourglass-split"></i>;
+                  } else if (committee_status === "rejected") {
+                    icon = <i className="bi bi-x-lg"></i>;
+                  }
                 }
 
-
-                if (idx === 2 && (committee_status === "rejected")) {
-                  icon = <i className="bi bi-x-lg"></i>;
-                  color = "danger";
-                }
-
-                if (idx === 2 && !committee_status && technical_admin_status === "Accepted" && orderStatus !== "Rejected") {
-                  icon = <i className="bi bi-hourglass-split"></i>; // Pending hourglass icon
-                  color = "warning";
+                if (idx === 2 && committee_status === "Accepted") {
+                  if (technical_admin_status === "Pending") {
+                    icon = <i className="bi bi-hourglass-split"></i>;
+                  } else if (technical_admin_status === "Rejected") {
+                    icon = <i className="bi bi-x-lg"></i>;
+                  }
                 }
 
                 return (
                   <div
                     key={idx}
-                    className={`rounded-circle bg-${color} text-white d-flex align-items-center justify-content-center fw-bold shadow`}
+                    className={`rounded-circle bg-${stepColor} text-white d-flex align-items-center justify-content-center fw-bold shadow`}
                     style={{ width: "40px", height: "40px", zIndex: "1" }}
                   >
                     {icon}
                   </div>
                 );
               })}
+
             </div>
           </div>
 
@@ -186,8 +174,8 @@ const OrderConfirmation = () => {
           <Row className="text-center py-3">
             {[
               "Placed Order",
-              "Admin Approval",
               "Committee Approval",
+              "Admin Approval",
               "Dispatched",
               "Shipped",
               "Completed",
