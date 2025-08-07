@@ -1,18 +1,26 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
-
 const InvoicePage = () => {
-  const [userdata, setUserData] = useState()
+  const [userdata, setUserData] = useState();
   const { cart_products } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const invoiceRef = useRef(null);
+
+  const invoiceCurrency = cart_products[0]?.currency || 'PKR';
+
+  const currencyNames = {
+    PKR: 'Pakistani Rupee',
+    USD: 'US Dollar',
+    EUR: 'Euro'
+    // Add other currencies as needed
+  };
+
   useEffect(() => {
     const user = sessionStorage.getItem("userdetail");
     if (user) {
-      const parsedUser = JSON.parse(user); // ✅ Parse the string
+      const parsedUser = JSON.parse(user);
       setUserData(parsedUser);
-
     }
     document.title = "Invoice";
   }, []);
@@ -32,6 +40,7 @@ const InvoicePage = () => {
       html2pdf().set(opt).from(element).save();
     }
   };
+
   const handlePrint = () => {
     const printContents = invoiceRef.current.innerHTML;
     const printWindow = window.open("", "_blank", "width=800,height=600");
@@ -44,6 +53,8 @@ const InvoicePage = () => {
           table { width: 100%; border-collapse: collapse; }
           th, td { border: 1px solid #ddd; padding: 8px; }
           th { background-color: #f2f2f2; }
+          .text-right { text-align: right; }
+          .total-row { font-weight: bold; font-size: 1.1rem; }
         </style>
       </head>
       <body>
@@ -57,11 +68,9 @@ const InvoicePage = () => {
     printWindow.close();
   };
 
-
   return (
     <div className="bg-light min-vh-100 py-5">
       <div ref={invoiceRef} className="container py-5" style={{ maxWidth: "1000px" }}>
-
         <div className="d-flex justify-content-between align-items-start mb-4">
           <div>
             <h4 className="fw-bold">Invoice Detail</h4>
@@ -69,7 +78,6 @@ const InvoicePage = () => {
           {userdata?.orderid && (
             <h5 className="fw-bold">Order ID: {userdata.orderid}</h5>
           )}
-
         </div>
 
         <hr />
@@ -84,17 +92,12 @@ const InvoicePage = () => {
             <p className="mb-1">Address: {userdata?.address || "-"}</p>
             <p className="mb-1">City: {userdata?.city || "-"}</p>
             <p className="mb-1">Country: {userdata?.country || "-"}</p>
-
-            {/* 
-          <h6 className="fw-bold mt-4">Payment Detail:</h6>
-          <p className="mb-1">Cash</p>
-          <p className="mb-1">Not Paid</p> */}
           </div>
 
           <div className="col-md-6">
             <h6 className="fw-bold mt-4">Order Detail:</h6>
             <p className="mb-1 text-danger">
-              Invoice Generated Date Time: {new Date().toLocaleString("en-GB", {
+              Invoice Date: {new Date().toLocaleString("en-GB", {
                 day: "2-digit",
                 month: "short",
                 year: "numeric",
@@ -103,7 +106,6 @@ const InvoicePage = () => {
                 hour12: true,
               })}
             </p>
-
           </div>
         </div>
 
@@ -116,8 +118,8 @@ const InvoicePage = () => {
               <th>Volume (unit)</th>
               <th>Test Result /Unit</th>
               <th>Quantity</th>
-              <th>Price</th>
-              <th>Sub Total</th>
+              <th className="text-right">Price</th>
+              <th className="text-right">Sub Total</th>
             </tr>
           </thead>
 
@@ -125,59 +127,58 @@ const InvoicePage = () => {
             {cart_products?.length > 0 ? (
               <>
                 {cart_products.map((item, index) => {
-                  const price = Number(item.price) || "-";
+                  const price = Number(item.price) || 0;
                   const quantity = Number(item.orderQuantity) || 1;
-                  const subTotal = price * quantity || "-";
+                  const subTotal = price * quantity;
 
                   return (
                     <tr key={index}>
                       <td>{index + 1}</td>
                       <td>{item.Analyte}</td>
                       <td>{item.Volume} {item.VolumeUnit}</td>
-                      <td>{item.TestResult ? item.TestResult : "----"} {item.TestResultUnit}</td>
+                      <td>{item.TestResult || "----"} {item.TestResultUnit}</td>
                       <td>{quantity}</td>
-                      <td>{price.toLocaleString()}</td>
-                      <td>{subTotal.toLocaleString()}</td>
+                      <td className="text-end pe-3">
+                        {currencyNames[item.currency] || item.currency} {price.toLocaleString()}
+                      </td>
+                      <td className="text-end pe-3">
+                        {currencyNames[item.currency] || item.currency} {subTotal.toLocaleString()}
+                      </td>
                     </tr>
                   );
                 })}
 
-                {/* Sampling Fee Row */}
-                {/* <tr>
-        <td colSpan="5" className="text-end fw-semibold">Sampling Fee</td>
-        <td>500</td>
-      </tr> */}
 
                 {/* Platform Charges Row */}
-                {/* Platform Charges Row */}
                 <tr>
-                  <td colSpan="6" className="text-end fw-semibold">Platform Charges</td>
-                  <td>0</td>
+                  <td colSpan="5"></td>
+                  <td className="text-end pe-3 fw-semibold">Platform Charges</td>
+                  <td className="text-end pe-3">
+                    0
+                  </td>
                 </tr>
 
                 {/* Total Row */}
-                <tr>
-                  <td colSpan="6" className="text-end fw-bold fs-5">Total</td>
-                  <td className="fw-bold fs-5">
-                    {(
+                <tr className="total-row">
+                  <td colSpan="5"></td>
+                  <td className="text-end fw-bold pe-3">Total</td>
+                  <td className="text-end fw-bold" style={{ paddingRight: '16px' }}>
+                    {currencyNames[invoiceCurrency] || invoiceCurrency} {(
                       cart_products.reduce((sum, item) => {
                         const price = Number(item.price) || 0;
                         const qty = Number(item.orderQuantity) || 1;
-                        return sum + (isNaN(price) ? 0 : price * qty);
+                        return sum + (isNaN(price) ? 0 : price * qty)
                       }, 0)
                     ).toLocaleString()}
                   </td>
                 </tr>
-
               </>
             ) : (
               <tr>
-                <td colSpan="6" className="text-center text-danger">No items in cart.</td>
+                <td colSpan="7" className="text-center text-danger">No items in cart.</td>
               </tr>
             )}
           </tbody>
-
-
         </table>
 
         <p className="text-danger mt-2" style={{ fontSize: "0.9rem" }}>
@@ -192,7 +193,6 @@ const InvoicePage = () => {
             <i className="bi bi-download"></i> Download
           </button>
         </div>
-
       </div>
     </div>
   );

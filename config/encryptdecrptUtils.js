@@ -36,8 +36,12 @@ function decrypt(encryptedText) {
 // For display only (8 characters)
 function decryptAndShort(encryptedText) {
   const full = decrypt(encryptedText);
+  if (!full || typeof full !== "string") {
+    return "Invalid";
+  }
   return full.substring(0, 8);
 }
+
 
 module.exports = {
   encrypt,
