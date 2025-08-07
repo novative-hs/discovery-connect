@@ -138,7 +138,10 @@ const InvoicePage = () => {
                     </tr>
                   );
                 })}
-
+                {/* 
+          <h6 className="fw-bold mt-4">Payment Detail:</h6>
+          <p className="mb-1">Cash</p>
+          <p className="mb-1">Not Paid</p> */}
 
                 {/* Platform Charges Row */}
                 <tr>
