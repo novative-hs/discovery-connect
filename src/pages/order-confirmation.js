@@ -99,6 +99,7 @@ const OrderConfirmation = () => {
           <p className="text-dark fs-6">
             Order <strong>#{id || "----"}</strong> was placed on{" "}
             <strong>
+              
               {new Date(created_at).toLocaleDateString('en-GB', {
                 day: '2-digit',
                 month: 'short',

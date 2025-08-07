@@ -165,6 +165,7 @@ const createCart = (data, callback) => {
     nbc_file,
   } = data;
   const tracking_id = generateTrackingId();
+  let created_at=0;
   // Validate required fields
   if (
     !researcher_id ||
@@ -224,7 +225,7 @@ const createCart = (data, callback) => {
           mysqlConnection.query(getCreatedAtQuery, [cartId], (err, createdAtResult) => {
             if (err) return reject(err);
 
-            const created_at = createdAtResult?.[0]?.created_at;
+            created_at = createdAtResult?.[0]?.created_at;
 
             const insertApprovalQuery = `
               INSERT INTO technicaladminsampleapproval (cart_id, technical_admin_id, technical_admin_status)
@@ -300,7 +301,7 @@ const createCart = (data, callback) => {
 
           sendEmail(researcherEmail, subject, emailMessage)
             .then(() => {
-              callback(null, { message: "Cart created successfully", tracking_id });
+              callback(null, { message: "Cart created successfully", tracking_id,created_at });
             })
             .catch((emailSendErr) => {
               console.error("Failed to send researcher email:", emailSendErr);

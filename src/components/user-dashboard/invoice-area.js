@@ -6,16 +6,6 @@ const InvoicePage = () => {
   const { cart_products } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const invoiceRef = useRef(null);
-
-  const invoiceCurrency = cart_products[0]?.currency || 'PKR';
-
-  const currencyNames = {
-    PKR: 'Pakistani Rupee',
-    USD: 'US Dollar',
-    EUR: 'Euro'
-    // Add other currencies as needed
-  };
-
   useEffect(() => {
     const user = sessionStorage.getItem("userdetail");
     if (user) {
@@ -138,16 +128,17 @@ const InvoicePage = () => {
                       <td>{item.Volume} {item.VolumeUnit}</td>
                       <td>{item.TestResult || "----"} {item.TestResultUnit}</td>
                       <td>{quantity}</td>
-                      <td className="text-end pe-3">
-                        {currencyNames[item.currency] || item.currency} {price.toLocaleString()}
-                      </td>
-                      <td className="text-end pe-3">
-                        {currencyNames[item.currency] || item.currency} {subTotal.toLocaleString()}
-                      </td>
+                      <td>{price.toLocaleString()}</td>
+                      <td>{subTotal.toLocaleString()}</td>
                     </tr>
                   );
                 })}
 
+                {/* Sampling Fee Row */}
+                {/* <tr>
+        <td colSpan="5" className="text-end fw-semibold">Sampling Fee</td>
+        <td>500</td>
+      </tr> */}
 
                 {/* Platform Charges Row */}
                 <tr>
@@ -159,15 +150,14 @@ const InvoicePage = () => {
                 </tr>
 
                 {/* Total Row */}
-                <tr className="total-row">
-                  <td colSpan="5"></td>
-                  <td className="text-end fw-bold pe-3">Total</td>
-                  <td className="text-end fw-bold" style={{ paddingRight: '16px' }}>
-                    {currencyNames[invoiceCurrency] || invoiceCurrency} {(
+                <tr>
+                  <td colSpan="6" className="text-end fw-bold fs-5">Total</td>
+                  <td className="fw-bold fs-5">
+                    {(
                       cart_products.reduce((sum, item) => {
                         const price = Number(item.price) || 0;
                         const qty = Number(item.orderQuantity) || 1;
-                        return sum + (isNaN(price) ? 0 : price * qty)
+                        return sum + (isNaN(price) ? 0 : price * qty);
                       }, 0)
                     ).toLocaleString()}
                   </td>
