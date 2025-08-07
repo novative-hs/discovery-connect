@@ -162,7 +162,9 @@ const SampleLost = () => {
                     </div>
                   </th>
                 ))}
-
+                <th className="p-2 text-center" style={{ minWidth: "50px" }}>
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody className="table-light">

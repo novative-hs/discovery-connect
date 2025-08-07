@@ -88,17 +88,19 @@ try {
   );
 
   const result = response.data;
+  console.log(result)
   const trackingId = result.tracking_id;
+  const created_at=result.created_at;
 
   sessionStorage.setItem("tracking_id", trackingId); // ✅ store tracking ID
-
+sessionStorage.setItem("created_at",created_at)
   dispatch(clear_cart());
   notifySuccess("Order placed successfully!");
 
   setTimeout(() => {
     router.push({
       pathname: "/order-confirmation",
-      query: { id: trackingId }, // ✅ optional: pass it to confirmation page
+      query: { id: trackingId,created_at }, // ✅ optional: pass it to confirmation page
     });
   }, 1000);
 

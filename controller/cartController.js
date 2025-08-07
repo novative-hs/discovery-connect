@@ -83,9 +83,11 @@ const createCart = (req, res) => {
       console.error("Error creating cart:", err);
       return res.status(400).json({ error: err.message || "Error creating Cart" });
     }
+    console.log("res",result)
    return res.status(201).json({
   message: "Cart created successfully",
-  tracking_id: result.tracking_id
+  tracking_id: result.tracking_id,
+  created_at:result.created_at
 });
 
   });

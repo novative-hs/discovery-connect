@@ -22,6 +22,8 @@ const BioBankSampleArea = () => {
   const [totalPages, setTotalPages] = useState(0);
 
   const fieldsToShowInOrder = [
+    { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Date Of Sampling", key: "DateOfSampling" },
     { label: "Storage Temperature", key: "storagetemp" },
@@ -47,11 +49,8 @@ const BioBankSampleArea = () => {
   const tableHeaders = [
     { label: "Analyte", key: "Analyte" },
     { label: "Volume", key: "volume" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
+    { label: "Gender & Age", key: "gender_age" },
     { label: "Price", key: "price" },
-    { label: "Container Type", key: "ContainerType" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Test Result", key: "TestResult" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
@@ -152,7 +151,7 @@ const BioBankSampleArea = () => {
       await axios.delete(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/delete/${selectedSampleId}`
       );
-     
+
       const sampleData = await fetchSamples();
       setSamples(sampleData);
       setFilteredSamples(sampleData);
@@ -233,22 +232,22 @@ const BioBankSampleArea = () => {
           <table className="table table-bordered table-hover text-center align-middle w-auto border">
             <thead className="table-primary text-dark">
               <tr className="text-center">
-               {tableHeaders.map(({ label, key }, index) => (
-  <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
-    <div className="d-flex flex-column align-items-center">
-      <input
-        type="text"
-        className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
-        placeholder={`Search ${label}`}
-        onChange={(e) => handleFilterChange(key, e.target.value)}
-        style={{ minWidth: "110px" }}
-      />
-      <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
-        {label}
-      </span>
-    </div>
-  </th>
-))}
+                {tableHeaders.map(({ label, key }, index) => (
+                  <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
+                    <div className="d-flex flex-column align-items-center">
+                      <input
+                        type="text"
+                        className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        style={{ minWidth: "110px" }}
+                      />
+                      <span className="fw-bold mt-1 text-center fs-6" style={{ whiteSpace: "nowrap" }}>
+                        {label}
+                      </span>
+                    </div>
+                  </th>
+                ))}
 
                 <th className="p-2 text-center" style={{ minWidth: "50px" }}>
                   Action
@@ -293,8 +292,15 @@ const BioBankSampleArea = () => {
                           </span>
                         ) : key === "volume" ? (
                           `${sample.volume || "----"} ${sample.VolumeUnit || ""}`
-                        ) : key === "age" ? (
-                          `${sample.age || "----"} years`
+                        ) : key === "gender_age" ? (
+                          (sample.gender && sample.age ?
+                            `${sample.gender} | ${sample.age} years` :
+                            sample.gender ?
+                              sample.gender :
+                              sample.age ?
+                                `${sample.age} years` :
+                                "----"
+                          )
                         ) : key === "TestResult" ? (
                           `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
                         ) : key === "price" ? (
@@ -517,26 +523,33 @@ const BioBankSampleArea = () => {
         backdrop="static"
         keyboard={false}>
         <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
+          <Modal.Title className="fw-bold text-danger">
+            {" "}
+            Sample Details
+          </Modal.Title>
         </Modal.Header>
 
         <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
           {selectedSample ? (
             <div className="p-3">
               <div className="row g-3">
-                {fieldsToShowInOrder.map(({ key, label }) => {
-                  const value = selectedSample[key];
-                  if (value === undefined) return null;
-
-                  return (
+                {fieldsToShowInOrder
+                  .filter(({ key }) => {
+                    const value = selectedSample[key];
+                    return value !== undefined && value !== null && value !== "";
+                  })
+                  .map(({ key, label }) => (
                     <div className="col-md-6" key={key}>
                       <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                        <span className="text-muted small fw-bold mb-1">{label}</span>
-                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                        <span className="text-muted small fw-bold mb-1">
+                          {label}
+                        </span>
+                        <span className="fs-6 text-dark">
+                          {selectedSample[key]?.toString() || "----"}
+                        </span>
                       </div>
                     </div>
-                  );
-                })}
+                  ))}
               </div>
             </div>
           ) : (
