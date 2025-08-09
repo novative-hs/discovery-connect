@@ -108,8 +108,7 @@ export default function Shop({ query }) {
     );
   }
   // Prevent flicker before sessionStorage is read
-  if (loadingUser) return <div>Loading...</div>;
-  console.log("Shope.js",filtered_samples)
+  if (loadingUser) return <div>Loading...</div>
   return (
     <Wrapper>
       <SEO pageTitle={"Shop"} />

@@ -88,7 +88,6 @@ try {
   );
 
   const result = response.data;
-  console.log(result)
   const trackingId = result.tracking_id;
   const created_at=result.created_at;
 

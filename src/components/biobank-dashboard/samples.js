@@ -288,8 +288,6 @@ const BioBankSampleArea = () => {
   // Fetch samples from the backend
   const fetchSamples = useCallback(async (page = 1, pageSize = 50, filters = {}) => {
     try {
-      console.log("Incoming filters:", filters);  // Debug incoming filters
-
       let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamples/${id}?page=${page}&pageSize=${pageSize}`;
 
       // Add all filters dynamically
@@ -298,8 +296,6 @@ const BioBankSampleArea = () => {
           url += `&${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
         }
       });
-
-      console.log("Final request URL:", url); // Debug final request
 
       const response = await axios.get(url);
       const { samples, totalCount, pageSize: serverPageSize, currentPage: serverPage } = response.data;
@@ -323,8 +319,6 @@ const BioBankSampleArea = () => {
       visibility: visibility,
       priceFilter: priceFilter
     };
-
-    console.log("Sending filters:", filters);
 
     fetchSamples(currentPage + 1, itemsPerPage, filters);
   }, [analyte, gender, collectionSite, visibility, priceFilter, currentPage]);

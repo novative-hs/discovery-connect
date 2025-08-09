@@ -548,6 +548,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
           console.error("Error fetching cart data:", err);
           callback(err, null);
         } else {
+          
           results.forEach(order => {
             if (order.order_status !== 'Dispatched' && order.order_status !== 'Shipped') {
               updateCartStatusToCompleted(order.order_id, (updateErr) => {

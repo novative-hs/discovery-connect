@@ -37,7 +37,7 @@ const QuoteRequestTable = () => {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getPriceCount`
         );
-        console.log(response.data)
+        
         setSamples(response.data);
       } catch (error) {
         console.error("Error fetching quote requests:", error);
@@ -140,7 +140,7 @@ const QuoteRequestTable = () => {
                     <button
                       className="btn btn-sm btn-secondary"
                       onClick={() => {
-                        console.log(samples)
+                        
                         setSelectedQuote(samples);
                         setShowCartModal(true);
                         setIsReadOnly(true);
@@ -262,7 +262,7 @@ const QuoteRequestTable = () => {
             {!isReadOnly && (
               <div className="text-end">
                 <button className="btn btn-success" onClick={handleSubmitAll}>
-                  Submit All
+                  Submit
                 </button>
               </div>
             )}

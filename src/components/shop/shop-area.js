@@ -106,17 +106,6 @@ const aggregatedProducts = useMemo(() => {
   }));
 }, [filteredProducts]);
 
-
-  console.log(
-  "Zinc samples in all products:",
-  products.filter(p => p.Analyte?.trim().toLowerCase() === "zinc")
-);
-console.log(
-  "Zinc samples in filtered products:",
-  filteredProducts.filter(p => p.Analyte?.trim().toLowerCase() === "zinc")
-);
-
-
   return (
     <section className="shop__area pb-40">
       <div className="container">

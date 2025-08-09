@@ -69,7 +69,6 @@ const SampleArea = () => {
       } else {
         const grouped = groupSamplesByOrder(response.data);
         setSamples(response.data);
-        console.log(response.data)
         setOrders(grouped);
 
         // ✅ Correct: Sum total payments from all individual samples

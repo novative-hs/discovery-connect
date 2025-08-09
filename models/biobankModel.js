@@ -56,7 +56,6 @@ const getBiobankSamples = (
     if (!value || field === "page" || field === "pageSize" || field === "priceFilter" || field === "searchField" || field === "searchValue") return;
 
     const likeValue = `%${value.toLowerCase()}%`;
-    console.log("FIELD being processed:", field);
 
     switch (field) {
       case "locationids":
