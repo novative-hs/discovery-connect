@@ -10,7 +10,9 @@ import { setProduct } from "src/redux/features/productSlice";
 import Modal from "react-bootstrap/Modal";
 import FilterProductArea from "@components/user-dashboard/filter-samples";
 
-const SingleListProduct = ({ product,selectedFilters }) => {
+const SingleListProduct = ({ product, selectedFilters }) => {
+  console.log(product)
+  const { analyteImage,imageUrl, Analyte, total_allocated, total_stock } = product || {};
   const dispatch = useDispatch();
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
@@ -50,11 +52,12 @@ const SingleListProduct = ({ product,selectedFilters }) => {
           <div className="col-5">
             <div className="rounded overflow-hidden" style={{ height: "240px" }}>
               <Image
-                src={product.imageUrl}
-                alt="product"
-                width={960}
-                height={1125}
-                className="w-100 h-100 object-fit-cover rounded"
+                src={analyteImage}
+                alt="product image"
+                width={250}
+                height={150}
+                className="w-100 object-fit-cover rounded"
+                unoptimized
               />
             </div>
           </div>
@@ -71,17 +74,17 @@ const SingleListProduct = ({ product,selectedFilters }) => {
               onMouseOut={(e) => (e.currentTarget.style.color = "#212529")}
               title="Go to Shop"
             >
-              {product.Analyte}
+              {Analyte}
             </h3>
 
             {/* <div className="text-muted mb-1">
               Price: <strong className="text-dark">Rs. {product.price}</strong>
             </div> */}
             <div className="text-muted mb-1">
-              Stock: {product.total_quantity}
+              Stock: {total_stock}
             </div>
             <div className="text-muted mb-2">
-              Allocated: <strong>{product.total_allocated ?? 0}</strong>
+              Allocated: <strong>{total_allocated ?? 0}</strong>
             </div>
 
             <p style={{ fontSize: "14px", color: "#555" }}>
@@ -106,7 +109,7 @@ const SingleListProduct = ({ product,selectedFilters }) => {
         </Modal.Header>
         <Modal.Body>
           {selectedProduct && (
-           <FilterProductArea
+            <FilterProductArea
               selectedProduct={selectedProduct}
               selectedFilters={selectedFilters}
               closeModals={() => setShowModal(false)}
