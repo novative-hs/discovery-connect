@@ -22,9 +22,9 @@ const SingleProduct = ({ product, selectedFilters }) => {
         className={`product-card-hover border rounded-3 shadow bg-white d-flex flex-column p-3 h-100 ${total_quantity - total_allocated <= 0 ? "border-danger disabled-card" : "border-secondary"
           }`}
         onClick={() =>
-          total_quantity - total_allocated > 0 ? 
+          // total_quantity - total_allocated > 0 ? 
           handleViewDetails(product) 
-          : null
+          // : null
         }
         role="button"
         title={
@@ -49,11 +49,11 @@ const SingleProduct = ({ product, selectedFilters }) => {
 
         {/* Analyte Name */}
         <h6 className="fw-bold text-dark mb-2 min-height-40">{Analyte}</h6>
-        {total_quantity - total_allocated <= 0 && (
+        {/* {total_quantity - total_allocated <= 0 && (
           <div className="badge bg-danger text-white w-fit-content px-2 py-1 rounded small">
             Not Available Shortly
           </div>
-        )}
+        )} */}
 
         {/* Stock & Allocation Info */}
         <div className="text-muted small mb-1">
