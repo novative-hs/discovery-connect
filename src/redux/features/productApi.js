@@ -1,11 +1,15 @@
 import { apiSlice } from "src/redux/api/apiSlice";
 
 export const authApi = apiSlice.injectEndpoints({
-  overrideExisting:true,
+  overrideExisting: true,
   endpoints: (builder) => ({
     // get all samples
     getAllSamples: builder.query({
       query: () => "api/sample/getAllSamples",
+    }),
+
+    getAllSampleinDiscover: builder.query({
+      query: () => "api/sample/getAllSampleinDiscover",
     }),
     // get discount products
     getDiscountProducts: builder.query({
@@ -24,8 +28,8 @@ export const authApi = apiSlice.injectEndpoints({
     // getRelatedProducts
     getRelatedProducts: builder.query({
       query: ({ id, tags }) => {
-        const queryString = 
-        `api/products/relatedProduct?tags=${tags.join(",")}`;
+        const queryString =
+          `api/products/relatedProduct?tags=${tags.join(",")}`;
         return queryString;
       },
       providesTags: (result, error, arg) => [
@@ -39,7 +43,7 @@ export const authApi = apiSlice.injectEndpoints({
       query: (tableName) => `api/samplefields/get-samplefields/${tableName}`,
       keepUnusedDataFor: 600,
     }),
-    
+
   }),
 });
 
@@ -48,6 +52,7 @@ export const {
   useGetDiscountProductsQuery,
   useGetProductQuery,
   useGetAllSamplesQuery,
+  useGetAllSampleinDiscoverQuery,
   useGetRelatedProductsQuery,
   useGetSampleFieldsQuery
 } = authApi;

@@ -13,12 +13,12 @@ import ShopLoader from "@components/loader/shop-loader";
 import { useRouter } from "next/router";
 // Import API hook
 import { useGetAllSamplesQuery } from "src/redux/features/productApi";
-
+import { useGetAllSampleinDiscoverQuery } from "src/redux/features/productApi";
 export default function Shop({ query }) {
   const router = useRouter();
   const [userId, setUserId] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
-  const { data: response, isError, isLoading, error } = useGetAllSamplesQuery(router.asPath);
+  const { data: response, isError, isLoading, error } = useGetAllSampleinDiscoverQuery(router.asPath);
   const samples = response?.data;
   const [shortValue, setShortValue] = useState("");
 
@@ -39,39 +39,13 @@ export default function Shop({ query }) {
     setShortValue(e.value);
   };
 
-const getDistinctAnalytes = (samples) => {
-  
-  const analyteMap = new Map();
-
-  samples.forEach(sample => {
-    const name = sample.analyte?.trim();
-
-    // ⚠️ TEMP FIX: Allow empty analyte names (not ideal)
-    if (Number(sample.total_stock) <= 0) return;
-
-    const key = name || sample.id; // Use ID to make key unique if no analyte
-
-    if (!analyteMap.has(key)) {
-      analyteMap.set(key, { ...sample });
-    } else {
-      const existing = analyteMap.get(key);
-      existing.total_stock = (Number(existing.total_stock) || 0) + (Number(sample.total_stock) || 0);
-      existing.total_allocated = (Number(existing.total_allocated) || 0) + (Number(sample.total_allocated) || 0);
-      existing.total_remaining = Math.max(0, existing.total_stock - existing.total_allocated);
-    }
-  });
-
-  return Array.from(analyteMap.values());
-};
-
-
   // Filtering and Sorting
- const filtered_samples = useMemo(() => {
+  const filtered_samples = useMemo(() => {
     if (!samples) return [];
 
     let sortedSamples = [...samples];
     const { priceMin, priceMax } = router.query || {};
-  
+
     if (priceMin || priceMax) {
       sortedSamples = sortedSamples.filter((sample) => {
         const price = Number(sample.price);
@@ -88,9 +62,8 @@ const getDistinctAnalytes = (samples) => {
       sortedSamples.sort((a, b) => b.price - a.price);
     }
 
-    return getDistinctAnalytes(sortedSamples);
-
-
+    // No grouping, since backend is already distinct
+    return sortedSamples;
   }, [samples, shortValue, router.query]);
 
 
@@ -126,17 +99,17 @@ const getDistinctAnalytes = (samples) => {
 
   } else {
     content = (
-    <ShopArea
-  products={filtered_samples}
-  all_products={samples}
-  shortHandler={selectShortHandler}
-/>
+      <ShopArea
+        products={filtered_samples}
+        all_products={samples}
+        shortHandler={selectShortHandler}
+      />
 
     );
   }
   // Prevent flicker before sessionStorage is read
   if (loadingUser) return <div>Loading...</div>;
-
+  console.log("Shope.js",filtered_samples)
   return (
     <Wrapper>
       <SEO pageTitle={"Shop"} />

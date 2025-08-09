@@ -6,7 +6,7 @@ import FilterProductArea from "@components/user-dashboard/filter-samples";
 
 const SingleProduct = ({ product, selectedFilters }) => {
 
-  const { imageUrl,total_remaining, Analyte, total_allocated, total_quantity } = product || {};
+  const { analyteImage,imageUrl,total_remaining, Analyte, total_allocated, total_quantity } = product || {};
   const dispatch = useDispatch();
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -22,7 +22,9 @@ const SingleProduct = ({ product, selectedFilters }) => {
         className={`product-card-hover border rounded-3 shadow bg-white d-flex flex-column p-3 h-100 ${total_quantity - total_allocated <= 0 ? "border-danger disabled-card" : "border-secondary"
           }`}
         onClick={() =>
-          total_quantity - total_allocated > 0 ? handleViewDetails(product) : null
+          total_quantity - total_allocated > 0 ? 
+          handleViewDetails(product) 
+          : null
         }
         role="button"
         title={
@@ -35,7 +37,7 @@ const SingleProduct = ({ product, selectedFilters }) => {
         {/* Product Image */}
         <div className="product__thumb mb-3 rounded overflow-hidden border border-black">
           <Image
-            src={imageUrl}
+            src={analyteImage}
             alt="product image"
             width={250}
             height={150}

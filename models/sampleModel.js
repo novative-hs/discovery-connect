@@ -418,15 +418,17 @@ const getAllSampleinIndex = (analyte, limit, offset, filters, callback) => {
     queryParams.push(exactAge);
   }
   else {
-    if (ageMin !== null) {
-      baseWhere += ` AND age >= ?`;
-      queryParams.push(ageMin);
-    }
+   if (ageMin !== null && ageMax !== null) {
+  baseWhere += ` AND (age >= ? AND age <= ? OR age IS NULL)`;
+  queryParams.push(ageMin, ageMax);
+} else if (ageMin !== null) {
+  baseWhere += ` AND (age >= ? OR age IS NULL)`;
+  queryParams.push(ageMin);
+} else if (ageMax !== null) {
+  baseWhere += ` AND (age <= ? OR age IS NULL)`;
+  queryParams.push(ageMax);
+}
 
-    if (ageMax !== null) {
-      baseWhere += ` AND age <= ?`;
-      queryParams.push(ageMax);
-    }
   }
 
   if (gender) {
@@ -497,6 +499,137 @@ const getAllSampleinIndex = (analyte, limit, offset, filters, callback) => {
     });
   });
 };
+
+const getAllSampleinDiscover = (filters, callback) => {
+  let baseWhere = `s.quantity > 0 AND s.sample_visibility = "Public" AND s.status = "In Stock"`;
+  let queryParams = [];
+
+  const {
+    ageMin,
+    ageMax,
+    gender,
+    sampleType,
+    smokingStatus,
+    search,
+    TestResult,
+    exactAge,
+  } = filters;
+
+  if (exactAge !== null) {
+    baseWhere += ` AND s.age = ?`;
+    queryParams.push(exactAge);
+  } else {
+    if (ageMin !== null) {
+      baseWhere += ` AND s.age >= ?`;
+      queryParams.push(ageMin);
+    }
+    if (ageMax !== null) {
+      baseWhere += ` AND s.age <= ?`;
+      queryParams.push(ageMax);
+    }
+  }
+
+  if (gender) {
+    baseWhere += ` AND s.gender = ?`;
+    queryParams.push(gender);
+  }
+
+  if (sampleType) {
+    baseWhere += ` AND s.sampleType = ?`;
+    queryParams.push(sampleType);
+  }
+
+  if (smokingStatus) {
+    baseWhere += ` AND s.smokingStatus = ?`;
+    queryParams.push(smokingStatus);
+  }
+
+  if (TestResult) {
+    baseWhere += ` AND s.TestResult = ?`;
+    queryParams.push(TestResult);
+  }
+
+  if (search) {
+    baseWhere += ` AND (s.PatientName LIKE ? OR s.masterID LIKE ?)`;
+    queryParams.push(`%${search}%`, `%${search}%`);
+  }
+
+  // Query 1: Get all samples
+  const sampleQuery = `
+    SELECT s.*
+    FROM sample s
+    WHERE ${baseWhere}
+  `;
+
+  // Query 2: Get all analyte images (distinct analyte)
+  const imageQuery = `
+    SELECT a.name AS analyteName, a.image AS analyteImage
+    FROM analyte a
+  `;
+
+
+  // Step 1: Get all samples
+  mysqlConnection.query(sampleQuery, queryParams, (err, samples) => {
+    if (err) {
+      console.error("Database query error (samples):", err);
+      return callback(err, null);
+    }
+
+    const countParams = queryParams.slice(0, queryParams.length - 2);
+
+    // Step 2: Get analyte images
+    mysqlConnection.query(imageQuery, [], (err, images) => {
+      if (err) {
+        console.error("Database query error (images):", err);
+        return callback(err, null);
+      }
+
+      // Map analyte name → image
+      const imageMap = {};
+      images.forEach(img => {
+        imageMap[img.analyteName] = img.analyteImage;
+      });
+
+      // Step 3: Merge images into samples
+      const mergedResults = samples.map(sample => {
+        let safeMasterID = null;
+        try {
+          safeMasterID =decryptAndShort(sample.masterID)
+            
+        } catch (err) {
+          console.error("Error decrypting masterID:", sample.masterID, err.message);
+          safeMasterID = null;
+        }
+
+        return {
+          ...sample,
+          masterID: safeMasterID,
+          analyteImage: imageMap[sample.Analyte] || null
+        };
+      });
+
+      // Step 4: Get total count for pagination
+      const countQuery = `
+        SELECT COUNT(*) AS total
+        FROM sample s
+        WHERE ${baseWhere};
+      `;
+      mysqlConnection.query(countQuery, countParams, (err, countResults) => {
+        if (err) {
+          console.error("Database query error (count):", err);
+          return callback(err, null);
+        }
+
+        callback(null, {
+          data: mergedResults,
+          total: countResults[0].total,
+        });
+      });
+    });
+  });
+};
+
+
 
 const getAllCSSamples = (limit, offset, callback) => {
   const dataQuery = `
@@ -1154,5 +1287,6 @@ module.exports = {
   updatetestResultandUnit,
   createPriceRequest,
   getsingleSamples,
-  updateReservedSample
+  updateReservedSample,
+  getAllSampleinDiscover
 };

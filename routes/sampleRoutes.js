@@ -14,6 +14,7 @@ const upload = multer({
 
 // Sample Routes
 router.get("/sample/getAllSampleinindex/:name", SampleController.getAllSampleinIndex);
+router.get("/sample/getAllSampleinDiscover",SampleController.getAllSampleinDiscover)
 router.get("/sample/getVolumnUnits/:name", SampleController.getAllVolumnUnits)
 router.get("/sample/filterdata", SampleController.getFilteredSamples);
 router.get('/create-table', SampleController.createSampleTable);

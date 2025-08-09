@@ -1,87 +1,122 @@
-import React, { useState } from "react";
-// internal
+import React, { useState, useMemo } from "react";
 import { ShopShortSelect, ShopShortTab, ShowingResult } from "./shop-top-bar";
 import ShopSidebar from "@components/common/sidebar/shop-sidebar/index";
 import ProductGridItems from "./prd-grid-items";
 import ProductListItems from "./prd-list-items";
 
 const ShopArea = ({ products, all_products, shortHandler }) => {
-  
   const [showingGridItems, setShowingGridItems] = useState(0);
   const [showingListItems, setShowingListItems] = useState(0);
   const [tabActive, setActiveTab] = useState("grid");
   const id = sessionStorage.getItem("userID");
 
-  // New filter states
-
+  // Filter states
   const [selectedSampleType, setSelectedSampleType] = useState(null);
-  const [selectedGender, setSelectedGender] = useState(null); // Ensure this is initialized to null
-  const [selectedSmokingStatus, setSelectedSmokingStatus] = useState(null); // Ensure this is initialized to null
-  // const [selectedPrice, setSelectedPrice] = useState(null);
+  const [selectedGender, setSelectedGender] = useState(null);
+  const [selectedSmokingStatus, setSelectedSmokingStatus] = useState(null);
   const [selectedAge, setSelectedAge] = useState(null);
-  const [selectedSampleName, setSelectedSampleName] = useState([]); // Initialize as an empty array
-
-  // Search state
+  const [selectedSampleName, setSelectedSampleName] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const handleTab = (value) => {
-    setActiveTab(value);
-  };
+  const handleTab = (value) => setActiveTab(value);
 
   const handleReset = () => {
     setSelectedSampleType(null);
     setSelectedGender(null);
     setSelectedSmokingStatus(null);
-    // setSelectedPrice(null);
     setSelectedAge(null);
     setSelectedSampleName([]);
     setSearchQuery("");
   };
-console.log("product",products)
-  const filteredProducts = products.filter((product) => {
 
-    let matchesSampleType =
-      !selectedSampleType || product.SampleTypeMatrix.includes(selectedSampleType);
+  // Step 1: Filter data
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      let matchesSampleType =
+        !selectedSampleType || product.SampleTypeMatrix?.includes(selectedSampleType);
 
-    let matchesGender = !selectedGender || product.gender === selectedGender;
-    let matchesSmoking =
-      !selectedSmokingStatus || product.SmokingStatus === selectedSmokingStatus;
-    // let matchesPrice =
-    //   !selectedPrice ||
-    //   (product.price >= selectedPrice.min &&
-    //     product.price <= selectedPrice.max);
-    
-let matchesAge = true;
-if (selectedAge && typeof selectedAge === "object") {
-  const productAge = Number(product.age);
-  if (!isNaN(productAge)) {
-    matchesAge = productAge >= selectedAge.min && productAge <= selectedAge.max;
-    console.log("age",matchesAge)
-  } else {
-    matchesAge = false;
-  }
-}
+      let matchesGender = !selectedGender || product.gender === selectedGender;
+      let matchesSmoking =
+        !selectedSmokingStatus || product.SmokingStatus === selectedSmokingStatus;
 
+      let matchesAge = true;
+      if (selectedAge && typeof selectedAge === "object") {
+        const productAge = Number(product.age);
+        matchesAge =
+          !isNaN(productAge) &&
+          productAge >= selectedAge.min &&
+          productAge <= selectedAge.max;
+      }
 
-    let matchesSampleName =
-      selectedSampleName.length === 0 ||
-      selectedSampleName.some((name) => product.Analyte.includes(name));
+      let matchesSampleName =
+        selectedSampleName.length === 0 ||
+        selectedSampleName.some((name) => product.Analyte?.includes(name));
 
-    let matchesSearch =
-      searchQuery === "" ||
-      product.Analyte.toLowerCase().includes(searchQuery.toLowerCase());
+      let matchesSearch =
+        searchQuery === "" ||
+        product.Analyte?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return (
-      matchesSampleType &&
-      matchesGender &&
-      matchesSmoking &&
-      // matchesPrice &&
-      matchesAge &&
-      matchesSampleName &&
-      matchesSearch
-    );
+      return (
+        matchesSampleType &&
+        matchesGender &&
+        matchesSmoking &&
+        matchesAge &&
+        matchesSampleName &&
+        matchesSearch
+      );
+    });
+  }, [
+    products,
+    selectedSampleType,
+    selectedGender,
+    selectedSmokingStatus,
+    selectedAge,
+    selectedSampleName,
+    searchQuery,
+  ]);
+
+  // Step 2: Aggregate quantities per analyte from filteredProducts
+const aggregatedProducts = useMemo(() => {
+  const analyteMap = new Map();
+
+  filteredProducts.forEach((sample) => {
+    const analyteNameKey = sample.Analyte?.trim().toLowerCase();
+    if (!analyteNameKey) return;
+
+    const quantity = Number(sample.quantity) || 0;
+    const allocated = Number(sample.quantity_allocated) || 0;
+
+    if (!analyteMap.has(analyteNameKey)) {
+      analyteMap.set(analyteNameKey, {
+        Analyte: sample.Analyte.trim(),
+        analyteImage: sample.image || sample.analyteImage || "",
+        total_stock: quantity,
+        total_allocated: allocated,
+      });
+    } else {
+      const existing = analyteMap.get(analyteNameKey);
+      existing.total_stock += quantity;
+      existing.total_allocated += allocated;
+    }
   });
-console.log("filter",filteredProducts)
+
+  return Array.from(analyteMap.values()).map((item) => ({
+    ...item,
+    total_remaining: item.total_stock - item.total_allocated,
+  }));
+}, [filteredProducts]);
+
+
+  console.log(
+  "Zinc samples in all products:",
+  products.filter(p => p.Analyte?.trim().toLowerCase() === "zinc")
+);
+console.log(
+  "Zinc samples in filtered products:",
+  filteredProducts.filter(p => p.Analyte?.trim().toLowerCase() === "zinc")
+);
+
+
   return (
     <section className="shop__area pb-40">
       <div className="container">
@@ -97,21 +132,20 @@ console.log("filter",filteredProducts)
             Please Sign up or Log in before submitting request for Sample.
           </p>
         )}
+
         <div className="shop__top mb-50">
           <div className="row align-items-center">
             <div className="col-lg-6 col-md-5">
               <ShowingResult
-                show={
-                  tabActive === "grid" ? showingGridItems : showingListItems
-                }
-                total={filteredProducts.length}
+                show={tabActive === "grid" ? showingGridItems : showingListItems}
+                total={aggregatedProducts.length}
               />
+              
             </div>
 
-            {/* Search Input Field */}
+            {/* Search */}
             <div className="col-lg-6 col-md-7">
               <div className="shop__sort d-flex align-items-center justify-content-between">
-                {/* Search Input Field */}
                 <div
                   className="input-group search-input-group me-3"
                   style={{ maxWidth: "250px" }}
@@ -128,7 +162,6 @@ console.log("filter",filteredProducts)
                   />
                 </div>
 
-                {/* Sorting Options */}
                 <ShopShortTab handleTab={handleTab} />
                 <ShopShortSelect shortHandler={shortHandler} />
               </div>
@@ -147,8 +180,6 @@ console.log("filter",filteredProducts)
                 setSelectedGender={setSelectedGender}
                 selectedSmokingStatus={selectedSmokingStatus}
                 setSelectedSmokingStatus={setSelectedSmokingStatus}
-                // selectedPrice={selectedPrice}
-                // setSelectedPrice={setSelectedPrice}
                 selectedAge={selectedAge}
                 setSelectedAge={setSelectedAge}
                 handleReset={handleReset}
@@ -161,7 +192,7 @@ console.log("filter",filteredProducts)
                 <div className="tab-content" id="shop_tab_content">
                   <ProductGridItems
                     itemsPerPage={12}
-                    items={filteredProducts}
+                    items={aggregatedProducts}
                     setShowingGridItems={setShowingGridItems}
                     selectedFilters={{
                       sampleType: selectedSampleType,
@@ -172,10 +203,10 @@ console.log("filter",filteredProducts)
                       searchQuery,
                     }}
                   />
-
                   <ProductListItems
                     itemsPerPage={5}
-                    items={filteredProducts}
+                    items={aggregatedProducts}
+                    setShowingListItems={setShowingListItems}
                     selectedFilters={{
                       sampleType: selectedSampleType,
                       gender: selectedGender,
@@ -184,10 +215,8 @@ console.log("filter",filteredProducts)
                       sampleNames: selectedSampleName,
                       searchQuery,
                     }}
-                    setShowingListItems={setShowingListItems}
                   />
                 </div>
-
               </div>
             </div>
           </div>
