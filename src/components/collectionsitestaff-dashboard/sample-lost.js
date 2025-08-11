@@ -96,8 +96,9 @@ const SampleLost = () => {
           const combinedVolume = `${sample.volume ?? ""} ${sample.VolumeUnit ?? ""}`.toLowerCase();
           return combinedVolume.includes(lowerValue);
         }
-        if (field === "gender" || field === "sample_visibility") {
-          return sample[field]?.toLowerCase().startsWith(lowerValue);
+        if (field === "gender_age") {
+          const combinedagegender = `${sample.gender ?? ""} ${sample.age ?? ""}`.toLowerCase();
+          return combinedagegender.includes(lowerValue);
         }
         return sample[field]?.toString().toLowerCase().includes(lowerValue);
       });

@@ -179,8 +179,9 @@ const SampleDispatchArea = () => {
           return combinedPrice.includes(lowerValue);
         }
 
-        if (field === "gender") {
-          return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
+        if (field === "gender_age") {
+          const combinedagegender = `${sample.gender ?? ""} ${sample.age ?? ""}`.toLowerCase();
+          return combinedagegender.includes(lowerValue);
         }
         if (field === "sample_visibility") {
           return sample.sample_visibility?.toLowerCase().startsWith(lowerValue); // safe partial match

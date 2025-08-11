@@ -5,6 +5,7 @@ import { faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 
 const QuoteRequestTable = () => {
+  const [currencyError, setCurrencyError] = useState("");
   const [samples, setSamples] = useState([]);
   const [selectedQuote, setSelectedQuote] = useState(null);
   const [showCartModal, setShowCartModal] = useState(false);
@@ -88,19 +89,37 @@ const QuoteRequestTable = () => {
 
   // Submit all samples in selected quote
   const handleSubmitAll = async () => {
-    if (!selectedQuote || selectedQuote.length === 0 || !groupCurrency) return;
+    if (!selectedQuote || selectedQuote.length === 0) return;
 
-    for (const sample of selectedQuote) {
-      const sampleId = sample.sample_id;
-      await submitSamplePrice(sampleId, groupCurrency);
+    // Validate currency selection
+    if (!groupCurrency) {
+      setCurrencyError("Please select a currency");
+      return;
     }
 
-    alert("All prices updated successfully!");
-    setShowCartModal(false);
-    setSelectedQuote(null);
-    setPriceInputs({});
-    setGroupCurrency("");
+    try {
+      for (const sample of selectedQuote) {
+        const sampleId = sample.sample_id;
+        const price = priceInputs[sampleId];
+
+        // Skip if no price entered for this sample
+        if (!price) continue;
+
+        await submitSamplePrice(sampleId, groupCurrency);
+      }
+
+      alert("All prices updated successfully!");
+      setShowCartModal(false);
+      setSelectedQuote(null);
+      setPriceInputs({});
+      setGroupCurrency("");
+      setCurrencyError(""); // Clear error on success
+    } catch (error) {
+      console.error("Error submitting prices:", error);
+      alert("Failed to update prices. Please try again.");
+    }
   };
+
 
   return (
     <div className="container-fluid">
@@ -185,10 +204,13 @@ const QuoteRequestTable = () => {
               <div className="d-flex justify-content-end align-items-center gap-2 mb-3">
                 <label className="mb-0 fw-bold">Currency:</label>
                 <select
-                  className="form-select form-select-sm"
+                  className={`form-select form-select-sm ${currencyError ? "is-invalid" : ""}`}
                   style={{ width: "160px" }}
                   value={groupCurrency}
-                  onChange={(e) => setGroupCurrency(e.target.value)}
+                  onChange={(e) => {
+                    setGroupCurrency(e.target.value);
+                    setCurrencyError(""); // Clear error when user selects currency
+                  }}
                 >
                   <option value="">Select</option>
                   {currencyOptions.map((currency, index) => (
@@ -197,6 +219,13 @@ const QuoteRequestTable = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {/* Show error message if exists */}
+            {currencyError && (
+              <div className="invalid-feedback d-block" style={{ fontSize: "0.9rem", marginLeft: "600px" }}>
+                {currencyError}
               </div>
             )}
             <div className="d-flex justify-content-end align-items-center gap-2">
