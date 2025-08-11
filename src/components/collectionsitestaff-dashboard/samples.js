@@ -73,6 +73,10 @@ const SampleArea = () => {
   const [testsystemNames, setTestSystemNames] = useState([]);
   const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
   const [AnalyteNames, setAnalyteNames] = useState([]);
+  const analyteOptions = AnalyteNames.map((item) => ({
+    value: item.name,
+    label: item.name,
+  }));
   const [showAdditionalFields, setShowAdditionalFields] = React.useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [samplePdfPreview, setSamplePdfPreview] = useState(null);
@@ -89,7 +93,7 @@ const SampleArea = () => {
   const [gender, setGender] = useState("");
   const [collectionSite, setCollectionSite] = useState("");
   const [visibility, setVisibility] = useState("");
-const [analyteOptions, setAnalyteOptions] = useState([]);
+
   const [filters, setFilters] = useState({});
 
   const [transferDetails, setTransferDetails] = useState({
@@ -1908,6 +1912,7 @@ const [analyteOptions, setAnalyteOptions] = useState([]);
                                         target: { name: "Analyte", value: selectedOption?.value || "" },
                                       })
                                     }
+                                    required
                                     isClearable
                                     classNamePrefix="react-select"
                                     menuPortalTarget={document.body}

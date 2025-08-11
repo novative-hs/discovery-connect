@@ -6,10 +6,7 @@ import Wrapper from "@layout/wrapper";
 import CartBreadcrumb from "@components/cart/cart-breadcrumb";
 import CartArea from "@components/cart/cart-area";
 
-import { useGetAllSamplesQuery } from "src/redux/features/productApi";
-
 export default function Cart({ query }) {
-  const { data: product, isError, isLoading, error } = useGetAllSamplesQuery();
 
   const [userId, setUserId] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -30,13 +27,13 @@ export default function Cart({ query }) {
       {userId ? (
         <>
           <CartBreadcrumb title="Cart" subtitle="Cart" />
-          <CartArea product={product} />
+          <CartArea />
         </>
       ) : (
         <>
           <Header style_2={true} />
           <CartBreadcrumb title="Cart" subtitle="Cart" />
-          <CartArea product={product} />
+          <CartArea/>
           <Footer />
         </>
       )}

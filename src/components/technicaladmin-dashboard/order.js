@@ -58,6 +58,7 @@ const OrderPage = () => {
 
   useEffect(() => {
     const storedUserID = sessionStorage.getItem("userID");
+    //  localStorage.removeItem("transferredOrders")
     if (storedUserID) {
       setUserID(storedUserID);
 
@@ -429,60 +430,80 @@ const OrderPage = () => {
 
               <Modal.Body>
                 {/* 📦 Status + Actions Section */}
-                <div className="border rounded p-4 bg-white shadow-sm mb-4">
-                  <div className="row align-items-center">
-                    {/* 🟢 Technical Admin Status */}
-                    <div className="col-md-4 mb-3 mb-md-0">
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="fw-bold text-dark">Technical Admin Status:</span>
-                        <span className={`fs-6 badge rounded-pill ${selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted") ? "bg-success" : "bg-warning text-dark"}`}>
-                          {selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted") ? "All Accepted" : "Pending"}
-                        </span>
-                      </div>
-                    </div>
+                <div className="p-4 rounded-3 shadow-sm bg-white border border-light mb-4">
+                  <div className="d-flex flex-wrap align-items-center justify-content-between">
 
-                    {/* 🔵 Order Status */}
-                    <div className="col-md-4 mb-3 mb-md-0">
-                      <div className="d-flex align-items-center gap-2">
-                        <span className="fw-bold text-dark">Order Status:</span>
-                        <span className={`fs-6 badge rounded-pill ${selectedOrder.order_status ? "bg-info text-dark" : "bg-secondary"}`}>
-                          {selectedOrder.order_status}
-                        </span>
-                      </div>
+                    {/* 🟢 Technical Admin Status */}
+                    <div className="d-flex align-items-center mb-2 mb-md-0">
+                      <span className="fw-semibold text-secondary me-2 fs-5">
+                        <i className="bi bi-person-check-fill text-success me-1"></i> Technical Admin Status:
+                      </span>
+                      <span
+                        className={`badge px-3 py-2 fs-5 rounded-pill ${selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted")
+                          ? "bg-success-subtle text-success"
+                          : "bg-warning-subtle text-danger"
+                          }`}
+                      >
+                        {selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted")
+                          ? "✅ Accepted"
+                          : " Pending"}
+                      </span>
                     </div>
 
                     {/* 🎯 Action Buttons */}
-                    <div className="col-md-4 text-md-end d-flex flex-wrap justify-content-md-end gap-2 mt-3 mt-md-0">
+                    <div className="d-flex flex-wrap gap-2">
+                      {/* Review Comments */}
                       <Button
-                        variant="secondary"
+                        variant="primary"
                         size="sm"
-                        className="me-2"
+                        className="fw-semibold shadow-sm"
                         onClick={() => {
-                          const reviews = selectedOrder.analytes.map(item => ({
-                            member: item.committee_member_name || 'N/A',
-                            committee: item.scientific_committee_status ? 'Scientific' : 'Ethical',
-                            comment: item.committee_comments || '',
-                            status: item.scientific_committee_status || item.ethical_committee_status || 'Pending'
-                          }));
+                          const reviews = [];
+
+                          selectedOrder.analytes.forEach(item => {
+                            if (item.committee_comments && item.committee_comments.trim() !== "") {
+                              // If Scientific committee exists, add it
+                              if (item.scientific_committee_status) {
+                                reviews.push({
+                                  member: item.committee_member_name || 'N/A',
+                                  committee: 'Scientific',
+                                  comment: item.committee_comments,
+                                  status: item.scientific_committee_status
+                                });
+                              }
+                              // If Ethical committee exists, add it separately
+                              if (item.ethical_committee_status) {
+                                reviews.push({
+                                  member: item.committee_member_name || 'N/A',
+                                  committee: 'Ethical',
+                                  comment: item.committee_comments,
+                                  status: item.ethical_committee_status
+                                });
+                              }
+                            }
+                          });
                           setReviewData(reviews);
                           setShowReviewModal(true);
                         }}
                       >
-                        Review Comment Status
+                        💬 Review Comments
                       </Button>
 
+
+                      {/* Accept */}
                       {selectedOrder.technical_admin_status === 'Pending' && (
                         <>
-                          {/* Accept */}
-                          <button
-                            className={`btn btn-sm ${selectedOrder.analytes?.some(
-                              item =>
-                                item.scientific_committee_status === "Approved" &&
-                                (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent")
-                            )
-                              ? "btn-outline-success"
-                              : "btn-secondary"
-                              }`}
+                          <Button
+                            variant={
+                              selectedOrder.analytes?.some(
+                                item =>
+                                  item.scientific_committee_status === "Approved" &&
+                                  (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent")
+                              )
+                                ? "outline-success"
+                                : "secondary"
+                            }
+                            size="sm"
                             onClick={() => {
                               setActionType("Accepted");
                               setShowModal(true);
@@ -495,24 +516,36 @@ const OrderPage = () => {
                               )
                             }
                           >
-                            Accept
-                          </button>
+                            ✅ Accept
+                          </Button>
+
+                          {selectedOrder.analytes?.length > 0 &&
+                            selectedOrder.analytes.every(item => {
+                              const sciStatus = (item.scientific_committee_status || "").trim().toLowerCase();
+                              const ethStatus = (item.ethical_committee_status || "").trim().toLowerCase();
+
+                              // Scientific must be approved or refused
+                              const sciDone = ["approved", "refused", "not sent"].includes(sciStatus);
+
+                              // Ethical must be approved/refused OR not sent
+                              const ethDone = ["approved", "refused", "not sent"].includes(ethStatus);
+
+                              return sciDone && ethDone;
+                            }) && (
+                              <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={() => {
+                                  setActionType("Rejected");
+                                  setSelectedOrderId(selectedOrder.order_id || selectedOrder.analytes?.[0]?.order_id);
+                                  setShowModal(true);
+                                }}
+                              >
+                                ❌ Reject
+                              </Button>
+                            )}
 
 
-
-                          {/* Reject */}
-                          {selectedOrder && selectedOrder.committee_member_status === 'Pending' && (
-                            <button
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() => {
-                                setActionType("Rejected");
-                                setSelectedOrderId(selectedOrder.order_id || selectedOrder.analytes?.[0]?.order_id);
-                                setShowModal(true);
-                              }}
-                            >
-                              Reject
-                            </button>
-                          )}
 
                           {/* Transfer */}
                           {!transferredOrders.includes(selectedOrder.order_id) && (
@@ -523,11 +556,13 @@ const OrderPage = () => {
                               Transfer
                             </button>
                           )}
+
                         </>
                       )}
                     </div>
                   </div>
                 </div>
+
 
 
                 {/* Analytes Table */}
@@ -540,7 +575,7 @@ const OrderPage = () => {
                         <th>Age</th>
                         <th>Gender</th>
                         <th>Test Result & Unit</th>
-                        
+
                       </tr>
                     </thead>
                     <tbody>
@@ -555,7 +590,7 @@ const OrderPage = () => {
                             </span>
 
                             <div className="text-muted small" style={{ textDecoration: "none", cursor: "default" }}>
-                              
+
                             </div>
                           </td>
 
@@ -563,11 +598,11 @@ const OrderPage = () => {
                           <td>{order.age || "---"}</td>
                           <td>{order.gender || "---"}</td>
                           <td>
-                             {(order.TestResult || order.TestResultUnit) && (
-                                <>
-                                  {order.TestResult ?? ''} {order.TestResultUnit ?? ''}
-                                </>
-                              )}
+                            {(order.TestResult || order.TestResultUnit) && (
+                              <>
+                                {order.TestResult ?? ''} {order.TestResultUnit ?? ''}
+                              </>
+                            )}
                           </td>
 
                         </tr>
@@ -597,9 +632,12 @@ const OrderPage = () => {
             size="md"
           >
             <Modal.Header closeButton>
-              <Modal.Title>Review Comment Status</Modal.Title>
+              <Modal.Title style={{ fontWeight: "600", fontSize: "1.25rem" }}>
+                Review Comment Status
+              </Modal.Title>
             </Modal.Header>
-            <Modal.Body>
+
+            <Modal.Body style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
               {reviewData.length > 0 ? (
                 reviewData
                   .filter(
@@ -609,45 +647,110 @@ const OrderPage = () => {
                         (t) =>
                           t.member === item.member &&
                           t.status === item.status &&
-                          t.comment === item.comment
+                          t.comment === item.comment &&
+                          t.committee === item.committee
                       )
                   )
                   .map((r, i) => {
-                    let committeeName = '',
-                      committeeType = '',
-                      commentText = r.comment;
+                    let committeeComment = null,
+                      committeeName = "";
 
-                    if (r.comment && r.comment.includes(':')) {
-                      const [leftPart, rightPart] = r.comment.split(':');
-                      commentText = rightPart.trim();
+                    if (r.comment) {
+                      const parts = r.comment.split(" | ");
 
-                      if (leftPart.includes('(')) {
-                        const nameStart = leftPart.indexOf('(');
-                        committeeName = leftPart.slice(0, nameStart).trim();
-                        committeeType = leftPart.slice(nameStart + 1, leftPart.indexOf(')')).trim();
-                      } else {
-                        committeeName = leftPart.trim();
+                      for (const part of parts) {
+                        const [leftPart, rightPart] = part.split(":");
+
+                        let committeeType = "";
+                        if (leftPart && leftPart.includes("(")) {
+                          const nameStart = leftPart.indexOf("(");
+                          committeeType = leftPart
+                            .slice(nameStart + 1, leftPart.indexOf(")"))
+                            .trim();
+                          committeeName = leftPart.slice(0, nameStart).trim();
+                        }
+
+                        if (
+                          committeeType.toLowerCase() ===
+                          r.committee.toLowerCase()
+                        ) {
+                          committeeComment = rightPart ? rightPart.trim() : "";
+                          break;
+                        }
                       }
                     }
 
                     return (
-                      <div key={i} className="mb-3 p-3 border rounded">
-                        <p><strong>Committee Name:</strong> {committeeName}</p>
-                        <p><strong>Committee Type:</strong> {committeeType}</p>
-                        <p><strong>Status:</strong> {r.status}</p>
-                        <p><strong>Comment:</strong> {commentText || <span className="fst-italic text-muted">No comment</span>}</p>
+                      <div
+                        key={i}
+                        style={{
+                          marginBottom: "1.8rem",
+                          borderBottom: "1px solid #e0e0e0",
+                          paddingBottom: "1rem",
+                        }}
+                      >
+                        <p
+                          style={{
+                            marginBottom: "0.3rem",
+                            color: "#444",
+                            fontWeight: "600",
+                            fontSize: "1.05rem",
+                          }}
+                        >
+                     Committee Member Name: {committeeName || "Committee Member"}
+                        </p>
+                        <p
+                          style={{
+                            marginBottom: "0.4rem",
+                            color: "#777",
+                            fontSize: "0.9rem",
+                            fontStyle: "italic",
+                          }}
+                        >
+                       Committee Member Type:   {r.committee}
+                        </p>
+                        <p
+                          style={{
+                            marginBottom: "0.6rem",
+                            fontWeight: "600",
+                            color:
+                              r.status.toLowerCase() === "approved"
+                                ? "#2e7d32"
+                                : r.status.toLowerCase() === "refused"
+                                  ? "#c62828"
+                                  : "#555",
+                            fontSize: "0.95rem",
+                          }}
+                        >
+                          Status:  {r.status}
+                        </p>
+                        <p
+                          style={{
+                            color: "#333",
+                            lineHeight: "1.4",
+                            fontSize: "0.95rem",
+                            whiteSpace: "pre-wrap",
+                          }}
+                        >
+                           Committee Member Comments: {committeeComment || <span style={{ color: "#999", fontStyle: "italic" }}>No comment</span>}
+                        </p>
                       </div>
                     );
                   })
               ) : (
-                <p className="text-muted">No committee data available.</p>
+                <p
+                  style={{
+                    color: "#999",
+                    textAlign: "center",
+                    fontStyle: "italic",
+                    marginTop: "1rem",
+                    fontSize: "1rem",
+                  }}
+                >
+                  No committee data available.
+                </p>
               )}
             </Modal.Body>
-            <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowReviewModal(false)}>
-                Close
-              </Button>
-            </Modal.Footer>
           </Modal>
 
 
@@ -839,13 +942,12 @@ const OrderPage = () => {
                 }}
               ></div>
 
-
               {/* Modal Container */}
               <div
                 className="modal show d-block"
                 role="dialog"
                 style={{
-                  zIndex: 1060, // Increased z-index to be above Bootstrap modals
+                  zIndex: 1060,
                   position: "fixed",
                   top: "50%",
                   left: "50%",
@@ -857,18 +959,15 @@ const OrderPage = () => {
                   width: "90vw",
                   maxWidth: "700px",
                   maxHeight: "80vh",
-                  overflow: "hidden",
+                  overflow: "auto",
                 }}
               >
-
                 {/* Modal Header */}
                 <div
                   className="modal-header d-flex justify-content-between align-items-center"
                   style={{ backgroundColor: "#cfe2ff", color: "#000" }}
                 >
-                  <h5 className="fw-bold">
-                    {selectedSample.Analyte} Details:
-                  </h5>
+                  <h5 className="fw-bold">{selectedSample.Analyte} Details:</h5>
                   <button
                     type="button"
                     className="close"
@@ -890,71 +989,111 @@ const OrderPage = () => {
                     {/* Left Side: Image & Basic Details */}
                     <div className="col-md-5 text-center">
                       <div className="mt-3 p-2 bg-light rounded text-start">
-                        <p>
-                          <strong>Order Quantity:</strong> {selectedSample.quantity}
-                        </p>
-                        <p>
-                          <strong>Volume:</strong>{" "}
-                          {selectedSample.volume} {selectedSample.Volumeunit}
-                        </p>
-                        <p>
-                          <strong>Age:</strong> {selectedSample.age} years |{" "}
-                          <strong>Gender:</strong> {selectedSample.gender} |{" "}
-                        </p>
-                        <p>
-                          <strong>Ethnicity:</strong> {selectedSample.ethnicity}
+                        {selectedSample.quantity != null && (
+                          <p>
+                            <strong>Order Quantity:</strong> {selectedSample.quantity}
+                          </p>
+                        )}
 
-                        </p>
-                        <p>
-                          <strong>Country of Collection:</strong>{" "}
-                          {selectedSample.CountryofCollection}
-                        </p>
+                        {(selectedSample.volume || selectedSample.Volumeunit) && (
+                          <p>
+                            <strong>Volume:</strong>{" "}
+                            {selectedSample.volume} {selectedSample.Volumeunit}
+                          </p>
+                        )}
 
+                        {(selectedSample.age != null || selectedSample.gender) && (
+                          <p>
+                            {selectedSample.age != null && (
+                              <>
+                                <strong>Age:</strong> {selectedSample.age} years{" "}
+                                {selectedSample.gender && "| "}
+                              </>
+                            )}
+                            {selectedSample.gender && (
+                              <>
+                                <strong>Gender:</strong> {selectedSample.gender}
+                              </>
+                            )}
+                          </p>
+                        )}
+
+                        {selectedSample.ethnicity && (
+                          <p>
+                            <strong>Ethnicity:</strong> {selectedSample.ethnicity}
+                          </p>
+                        )}
+
+                        {selectedSample.CountryofCollection && (
+                          <p>
+                            <strong>Country of Collection:</strong>{" "}
+                            {selectedSample.CountryofCollection}
+                          </p>
+                        )}
                       </div>
                     </div>
 
                     {/* Right Side: Detailed Information */}
                     <div className="col-md-7">
-                      <p>
-                        <strong>Storage Temperature:</strong>{" "}
-                        {selectedSample.storagetemp}
-                      </p>
-                      <p>
-                        <strong>Sample Type:</strong>{" "}
-                        {selectedSample.SampleTypeMatrix}
-                      </p>
+                      {selectedSample.storagetemp && (
+                        <p>
+                          <strong>Storage Temperature:</strong> {selectedSample.storagetemp}
+                        </p>
+                      )}
 
-                      <p>
-                        <strong>Test Result:</strong>{" "}
-                        {selectedSample.TestResult}{" "}
-                        {selectedSample.TestResultUnit}
-                      </p>
-                      <p>
-                        <strong>Test Method:</strong>{" "}
-                        {selectedSample.TestMethod}
-                      </p>
-                      <p>
-                        <strong>Test Kit Manufacturer:</strong>{" "}
-                        {selectedSample.TestKitManufacturer}
-                      </p>
-                      <p>
-                        <strong>Concurrent Medical Conditions:</strong>{" "}
-                        {selectedSample.ConcurrentMedicalConditions}
-                      </p>
-                      <p>
-                        <strong>Infectious Disease Testing:</strong>{" "}
-                        {selectedSample.InfectiousDiseaseTesting}
-                      </p>
-                      <p>
-                        <strong>Infectious Disease Result:</strong>{" "}
-                        {selectedSample.InfectiousDiseaseResult}
-                      </p>
+                      {selectedSample.SampleTypeMatrix && (
+                        <p>
+                          <strong>Sample Type:</strong> {selectedSample.SampleTypeMatrix}
+                        </p>
+                      )}
+
+                      {(selectedSample.TestResult || selectedSample.TestResultUnit) && (
+                        <p>
+                          <strong>Test Result:</strong> {selectedSample.TestResult}{" "}
+                          {selectedSample.TestResultUnit}
+                        </p>
+                      )}
+
+                      {selectedSample.TestMethod && (
+                        <p>
+                          <strong>Test Method:</strong> {selectedSample.TestMethod}
+                        </p>
+                      )}
+
+                      {selectedSample.TestKitManufacturer && (
+                        <p>
+                          <strong>Test Kit Manufacturer:</strong>{" "}
+                          {selectedSample.TestKitManufacturer}
+                        </p>
+                      )}
+
+                      {selectedSample.ConcurrentMedicalConditions && (
+                        <p>
+                          <strong>Concurrent Medical Conditions:</strong>{" "}
+                          {selectedSample.ConcurrentMedicalConditions}
+                        </p>
+                      )}
+
+                      {selectedSample.InfectiousDiseaseTesting && (
+                        <p>
+                          <strong>Infectious Disease Testing:</strong>{" "}
+                          {selectedSample.InfectiousDiseaseTesting}
+                        </p>
+                      )}
+
+                      {selectedSample.InfectiousDiseaseResult && (
+                        <p>
+                          <strong>Infectious Disease Result:</strong>{" "}
+                          {selectedSample.InfectiousDiseaseResult}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
             </>
           )}
+
         </div>
       </div>
     </section>

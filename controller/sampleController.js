@@ -45,6 +45,35 @@ const getAllSampleinIndex = (req, res) => {
   );
 };
 
+const getAllSampleinDiscover = (req, res) => {
+
+  // Get filters
+  const ageMin = req.query.ageMin ? parseInt(req.query.ageMin) : null;
+  const ageMax = req.query.ageMax ? parseInt(req.query.ageMax) : null;
+  const gender = req.query.gender || null;
+  const sampleType = req.query.sampleType || null;
+  const smokingStatus = req.query.smokingStatus || null;
+  const search = req.query.search || null;
+  const TestResult = req.query.TestResult || null;
+  const exactAge = req.query.age ? parseInt(req.query.age) : null;
+
+
+  // Now pass these to your model function
+  SampleModel.getAllSampleinDiscover(
+    { ageMin, ageMax, exactAge, gender, sampleType, smokingStatus, search, TestResult },
+    (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: "Error fetching samples detail" });
+      }
+
+      res.status(200).json({
+        data: results.data,
+        total: results.total,
+      });
+    }
+  );
+};
+
 
 // Controller to get all samples
 const getSamples = (req, res) => {
@@ -332,5 +361,6 @@ module.exports = {
   getPoolSampleDetails,
   updatetestResultandUnit,
   getsingleSamples,
-  updateReservedSample
+  updateReservedSample,
+  getAllSampleinDiscover
 };
