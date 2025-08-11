@@ -418,17 +418,18 @@ const getAllSampleinIndex = (analyte, limit, offset, filters, callback) => {
     queryParams.push(exactAge);
   }
   else {
-   if (ageMin !== null && ageMax !== null) {
-  baseWhere += ` AND (age >= ? AND age <= ? OR age IS NULL)`;
-  queryParams.push(ageMin, ageMax);
-} else if (ageMin !== null) {
-  baseWhere += ` AND (age >= ? OR age IS NULL)`;
-  queryParams.push(ageMin);
-} else if (ageMax !== null) {
-  baseWhere += ` AND (age <= ? OR age IS NULL)`;
-  queryParams.push(ageMax);
-}
+    const isValidNumber = (value) => typeof value === 'number' && !isNaN(value);
 
+    if (isValidNumber(ageMin) && isValidNumber(ageMax)) {
+      baseWhere += ` AND (age >= ? AND age <= ? OR age IS NULL)`;
+      queryParams.push(ageMin, ageMax);
+    } else if (isValidNumber(ageMin)) {
+      baseWhere += ` AND (age >= ? OR age IS NULL)`;
+      queryParams.push(ageMin);
+    } else if (isValidNumber(ageMax)) {
+      baseWhere += ` AND (age <= ? OR age IS NULL)`;
+      queryParams.push(ageMax);
+    }
   }
 
   if (gender) {
@@ -594,8 +595,8 @@ const getAllSampleinDiscover = (filters, callback) => {
       const mergedResults = samples.map(sample => {
         let safeMasterID = null;
         try {
-          safeMasterID =decryptAndShort(sample.masterID)
-            
+          safeMasterID = decryptAndShort(sample.masterID)
+
         } catch (err) {
           console.error("Error decrypting masterID:", sample.masterID, err.message);
           safeMasterID = null;
