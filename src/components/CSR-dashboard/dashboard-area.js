@@ -5,8 +5,8 @@ import { useRouter } from "next/router";  // Importing useRouter for redirect
 import ChangePassword from './change-password';
 import Header from '../../layout/dashboardheader';
 import OrderInfo from "./order-info";
-import ShippingSampleArea from "./shippingorder";
-import DispatchSampleArea from "./dispatchorder";
+import ShippingSampleArea from "./dispatchedorder";
+import DispatchSampleArea from "./shippingorder";
 import CompletedSampleArea from "./completedorder";
 const DashboardArea = () => {
    const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"

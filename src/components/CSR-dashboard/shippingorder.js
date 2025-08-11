@@ -1,97 +1,103 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Modal, Button, Form } from "react-bootstrap";
 import Pagination from "@ui/Pagination";
-import { notifySuccess, notifyError } from "@utils/toast";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFileInvoice } from "@fortawesome/free-solid-svg-icons";
 
-const ShippingSampleArea = () => {
-  const id = sessionStorage.getItem("userID");
-
-  const [staffAction, setStaffAction] = useState(() => sessionStorage.getItem("staffAction") || "");
+const DispatchSampleArea = () => {
+  const [staffAction, setStaffAction] = useState("");
   const [samples, setSamples] = useState([]);
-  const [filteredSamplename, setFilteredSamplename] = useState([]);
-  const [showOrderStatusModal, setShowOrderStatusModal] = useState(false);
-  const [orderStatus, setOrderStatus] = useState("");
+  const [filteredSamples, setFilteredSamples] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
-  const [selectedUserSamples, setSelectedUserSamples] = useState([]);
-  const [selectedUserName, setSelectedUserName] = useState("");
-  const [showOrderStatusError, setShowOrderStatusError] = useState(false);
-  const [deliveryDate, setDeliveryDate] = useState("");
-  const [deliveryTime, setDeliveryTime] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
 
-  if (id === null) return <div>Loading...</div>;
+  const id = typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    if (name === "DeliveryDate") setDeliveryDate(value);
-    if (name === "DeliveryTime") setDeliveryTime(value);
-  };
+  // Fetch staffAction only once when component mounts
+  useEffect(() => {
+    const action = sessionStorage.getItem("staffAction") || "";
+    setStaffAction(action);
+  }, []);
 
-  const tableHeaders = [
-    { label: "Order ID", key: "tracking_id" },
-    { label: "Order Date", key: "created_at" },
-    { label: "Researcher Name", key: "researcher_name" },
-    { label: "Organization Name", key: "organization_name" },
-    // { label: "Source Name", key: "source_name" },
-    { label: "Status", key: "order_status" },
-  ];
+  // Fetch samples on first render & when staffAction changes
+  useEffect(() => {
+    if (id && staffAction) {
+      fetchSamples(staffAction);
+    }
+  }, [id, staffAction]);
 
-  const fetchSamples = async (action = staffAction) => {
+  const fetchSamples = async (staffAction) => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
         {
-          params: {
-            csrUserId: id,
-            staffAction: action,
-          },
+          params: { csrUserId: id, staffAction },
         }
       );
+
       const shippingSamples = response.data.filter(
-        (sample) => sample.order_status === "Dispatched"
+        (sample) => sample.order_status === "Shipped"
       );
+
       setSamples(shippingSamples);
-      setFilteredSamplename(shippingSamples);
+      setFilteredSamples(shippingSamples);
     } catch (error) {
       console.error("Error fetching samples:", error);
     }
   };
 
-  const groupedSamples = filteredSamplename.reduce((acc, sample) => {
-    const key = sample.researcher_name;
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(sample);
-    return acc;
-  }, {});
+  // Group by tracking_id helper
+  const getGroupedData = (data) => {
+    const grouped = Object.values(
+      data.reduce((acc, sample) => {
+        if (!acc[sample.tracking_id]) {
+          acc[sample.tracking_id] = { ...sample, analytes: [] };
+        }
+        acc[sample.tracking_id].analytes.push(sample.Analyte);
+        return acc;
+      }, {})
+    );
+    return grouped;
+  };
 
-  const groupedList = Object.entries(groupedSamples).slice(
+  // Update pagination whenever filteredSamples or currentPage changes
+  useEffect(() => {
+    const pages = Math.max(1, Math.ceil(filteredSamples.length / 10));
+    setTotalPages(pages);
+
+    if (currentPage >= pages) {
+      setCurrentPage(0);
+    }
+  }, [filteredSamples, currentPage]);
+
+  const tableHeaders = [
+    { label: "Order ID", key: "tracking_id" },
+    { label: "User Name", key: "researcher_name" },
+    { label: "Analyte", key: "Analyte" },
+    { label: "Order Date", key: "created_at" },
+    { label: "Status", key: "order_status" },
+    { label: "Action", key: "action" },
+  ];
+
+  const itemsPerPage = 10;
+
+  // Group filtered samples by tracking_id
+  const groupedData = getGroupedData(filteredSamples);
+
+  // Paginate grouped data
+  const currentData = groupedData.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
 
-  useEffect(() => {
-    if (id) {
-      fetchSamples(staffAction);
-    }
-  }, [staffAction, id]);
-
-  useEffect(() => {
-    const pages = Math.max(1, Math.ceil(Object.keys(groupedSamples).length / itemsPerPage));
-    setTotalPages(pages);
-    if (currentPage >= pages) setCurrentPage(0);
-  }, [filteredSamplename]);
-
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
+    setExpandedId(null); // Collapse any open details when page changes
   };
 
+  // Filter samples by field and value; filters original samples, not grouped data
   const handleFilterChange = (field, value) => {
     let filtered = [];
+
     if (value.trim() === "") {
       filtered = samples;
     } else {
@@ -99,123 +105,89 @@ const ShippingSampleArea = () => {
         sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
     }
-    setFilteredSamplename(filtered);
+
+    setFilteredSamples(filtered);
     setCurrentPage(0);
+    setExpandedId(null); // Collapse details on filter change
   };
 
-  const handleOrderStatusSubmit = async () => {
-    setIsSubmitting(true);
-    const ids = selectedUserSamples.map((s) => s.id);
-
-    if (!ids.length) {
-      notifyError("No items selected.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (orderStatus !== "Shipped") {
-      setShowOrderStatusError(true);
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!deliveryDate || !deliveryTime) {
-      notifyError("Please select both delivery date and time.");
-      setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      const res = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/cartstatusbyCSR`,
-        {
-          ids: ids,
-          cartStatus: orderStatus,
-          deliveryDate,
-          deliveryTime,
-        }
-      );
-
-      notifySuccess(res.data.message);
-      setShowOrderStatusModal(false);
-      setIsSubmitting(false);
-      setShowOrderStatusError(false);
-      setOrderStatus("");
-      setDeliveryDate("");
-      setDeliveryTime("");
-      fetchSamples();
-    } catch (error) {
-      console.error("Error updating order status:", error);
-      notifyError("Failed to update order status.");
-      setIsSubmitting(false);
-    }
+  const toggleExpand = (id) => {
+    setExpandedId(expandedId === id ? null : id);
   };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
-        <h4 className="text-center text-dark fw-bold mb-4">
-          📦 Orders Ready for Packaging
-        </h4>
+        <h4 className="text-center text-dark fw-bold mb-4">🚚 Ordered Sample Shipped</h4>
+
+        {/* Table */}
         <div className="table-responsive w-100">
           <table className="table table-bordered table-hover text-center align-middle table-sm shadow-sm rounded">
             <thead className="table-primary text-white">
               <tr>
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
-                    <div className="d-flex flex-column align-items-center">
-                      <input
-                        type="text"
-                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                        placeholder={`Search ${label}`}
-                        onChange={(e) => handleFilterChange(key, e.target.value)}
-                        style={{ minWidth: "150px" }}
-                      />
+                    {key !== "action" ? (
+                      <div className="d-flex flex-column align-items-center">
+                        <input
+                          type="text"
+                          className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                          placeholder={`Search ${label}`}
+                          onChange={(e) => handleFilterChange(key, e.target.value)}
+                          style={{ minWidth: "150px" }}
+                        />
+                        <span className="fw-bold mt-1 d-block text-wrap fs-6">{label}</span>
+                      </div>
+                    ) : (
                       <span className="fw-bold mt-1 d-block text-wrap fs-6">{label}</span>
-                    </div>
+                    )}
                   </th>
                 ))}
-                <th className="p-2 text-center" style={{ width: "1%", whiteSpace: "nowrap" }}>
-                  Action
-                </th>
-
               </tr>
             </thead>
-            <tbody className="bg-light">
-              {groupedList.length > 0 ? (
-                groupedList.map(([researcher, records]) => (
-                  <tr key={researcher}>
-                    <td>{records[0].tracking_id || "---"}</td>
-                     <td>{new Date(records[0].created_at).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: '2-digit'
-                      }).replace(/ /g, '-')}</td>
-                    <td>{researcher}</td>
-                    <td>{records[0].organization_name}</td>
-                    {/* <td>
-                      {records[0].BiobankName || records[0].CollectionSiteName || "---"}
-                    </td> */}
+            <tbody className="table-light">
+              {currentData.length > 0 ? (
+                currentData.map((sample) => (
+                  <React.Fragment key={sample.tracking_id}>
+                    <tr>
+                      <td>{sample.tracking_id || "----"}</td>
+                      <td>{sample.researcher_name}</td>
+                      <td>
+                        {expandedId === sample.tracking_id ? (
+                          <ul style={{ textAlign: "left", paddingLeft: "20px", margin: 0 }}>
+                            {sample.analytes.map((analyte, i) => (
+                              <li key={i}>{analyte}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          `${sample.analytes.length} item(s)`
+                        )}
+                      </td>
 
-                    <td>{records[0].order_status}</td>
-                    <td>
-                      <button
-                        className="btn btn-outline-success btn-sm d-flex justify-content-center align-items-center gap-2  rounded-pill shadow"
-                        onClick={() => {
-                          setSelectedUserSamples(records);
-                          setSelectedUserName(researcher);
-                          setShowOrderStatusModal(true);
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faFileInvoice} />
-                        View
-                      </button>
-                    </td>
-                  </tr>
+                      <td>
+                        {new Date(sample.created_at)
+                          .toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "short",
+                            year: "2-digit",
+                          })
+                          .replace(/ /g, "-")}
+                      </td>
+                      <td>{sample.order_status}</td>
+                      <td>
+                        <button
+                          className="btn btn-sm btn-primary"
+                          onClick={() => toggleExpand(sample.tracking_id)}
+                        >
+                          {expandedId === sample.tracking_id ? "Hide Details" : "View Details"}
+                        </button>
+                      </td>
+                    </tr>
+                  </React.Fragment>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="text-center">
+                  <td colSpan={tableHeaders.length} className="text-center">
                     No samples available
                   </td>
                 </tr>
@@ -224,126 +196,17 @@ const ShippingSampleArea = () => {
           </table>
         </div>
 
-        <Pagination pageCount={totalPages} onPageChange={handlePageChange} />
-
-        {showOrderStatusModal && (
-          <Modal show onHide={() => setShowOrderStatusModal(false)} size="lg" centered>
-            <Modal.Body className="p-4 bg-light rounded-3 shadow-sm">
-              <div className="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <h5 className="fw-bold text-dark mb-2">
-                    <span className="text-primary">👤 Name:</span>{" "}
-                    {selectedUserSamples[0]?.researcher_name}
-                  </h5>
-                </div>
-                <div className="text-end small text-secondary">
-                  <div>
-                    <span className="fw-bold text-primary">📍 Address:</span>
-                    <br />
-                    {selectedUserSamples[0]?.fullAddress},<br />
-                    {selectedUserSamples[0]?.district_name},{" "}
-                    {selectedUserSamples[0]?.city_name},{" "}
-                    {selectedUserSamples[0]?.country_name}
-                  </div>
-                  <div className="mt-2">
-                    <span className="fw-bold">🗓️ Created:</span>{" "}
-                    {new Date(selectedUserSamples[0]?.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-
-              <hr className="mb-4" />
-
-              <div className="table-responsive">
-                <table className="table table-bordered table-hover text-center table-sm align-middle bg-white rounded shadow-sm">
-                  <thead className="table-success text-dark">
-                    <tr>
-                      <th>Item</th>
-                      <th>Source Name</th>
-                      <th>Qty</th>
-                      <th>Unit Price</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedUserSamples.map((sample, i) => (
-                      <tr key={i}>
-                        <td>{sample.Analyte}</td>
-                        <td>{sample.BiobankName || sample.CollectionSiteName || "---"}</td>
-                        <td>{sample.quantity || "-"}</td>
-                        <td>{sample.price || "-"}</td>
-                        <td>{sample.totalpayment || "-"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-light">
-                    <tr>
-                      <td colSpan="4" className="text-end fw-bold">
-                        Total
-                      </td>
-                      <td className="fw-bold text-success">
-                        {selectedUserSamples
-                          .reduce((sum, s) => sum + Number(s.totalpayment || 0), 0)
-                          .toFixed(2)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-
-              <Form.Group className="mt-4">
-                <Form.Label>Delivery Date</Form.Label>
-                <Form.Control
-                  type="date"
-                  name="DeliveryDate"
-                  value={deliveryDate}
-                  onChange={handleInputChange}
-                />
-              </Form.Group>
-
-              <Form.Group className="mt-2">
-                <Form.Label>Delivery Time</Form.Label>
-                <Form.Control
-                  type="time"
-                  name="DeliveryTime"
-                  value={deliveryTime}
-                  onChange={handleInputChange}
-                />
-              </Form.Group>
-
-              {showOrderStatusError && (
-                <div className="text-danger mt-2">Please select "Shipped" status.</div>
-              )}
-
-              <Form.Group className="mt-3">
-                <Form.Label>Order Status</Form.Label>
-                <Form.Select
-                  value={orderStatus}
-                  onChange={(e) => setOrderStatus(e.target.value)}
-                >
-                  <option value="">Select Status</option>
-                  <option value="Shipped">Shipped</option>
-                </Form.Select>
-              </Form.Group>
-
-              <div className="mt-4 d-flex justify-content-end gap-3">
-                <Button variant="secondary" onClick={() => setShowOrderStatusModal(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  variant="success"
-                  onClick={handleOrderStatusSubmit}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Submitting..." : "Confirm Shipment"}
-                </Button>
-              </div>
-            </Modal.Body>
-          </Modal>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Pagination
+            handlePageClick={handlePageChange}
+            pageCount={totalPages}
+            focusPage={currentPage}
+          />
         )}
       </div>
     </section>
   );
 };
 
-export default ShippingSampleArea;
+export default DispatchSampleArea;

@@ -739,6 +739,13 @@ const getAllOrderByOrderPacking = (csrUserId, staffAction, callback) => {
       org.OrganizationName AS organization_name,
       s.id AS sample_id,
       s.Analyte, 
+      s.SamplePriceCurrency,
+      s.volume,
+      s.volumeUnit,
+      s.TestResult,
+      s.TestResultUnit,
+      s.gender,
+      s.age,
       c.order_status,  
       c.created_at,
 
@@ -788,44 +795,81 @@ const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comme
   try {
     const updateResults = [];
 
-    for (const id of cartIds) {
-      // Step 1: Update technical admin status
-      const updateQuery = `
-        UPDATE technicaladminsampleapproval 
-        SET technical_admin_status = ?, Comments = ?
-        WHERE cart_id = ?
-      `;
-      await queryAsync(updateQuery, [technical_admin_status, comment, id]);
+    // Step 1: Update status for all cart IDs
+    await Promise.all(cartIds.map(async (id) => {
+      await queryAsync(
+        `UPDATE technicaladminsampleapproval 
+         SET technical_admin_status = ?, Comments = ?
+         WHERE cart_id = ?`,
+        [technical_admin_status, comment, id]
+      );
 
-      // Step 2: Determine new cart status
       let newCartStatus = null;
-      if (technical_admin_status === 'Accepted') {
-        newCartStatus = 'Dispatched';
-      } else if (technical_admin_status === 'Rejected') {
-        newCartStatus = 'Rejected';
-      }
-
-      if (newCartStatus) {
-        await updateCartStatus(id, newCartStatus);
-      }
-
-      // Step 3: Email message
-      const message =
-        technical_admin_status === 'Accepted'
-          ? "Your sample request has been <b>approved</b> by the Technical Admin.<br/>"
-          : technical_admin_status === 'Rejected'
-            ? "Your sample request has been <b>rejected</b> by the Technical Admin.<br/>"
-            : "Your sample request is still <b>pending</b> approval by the Technical Admin.<br/>";
-
-      // Optional comment addition
-      const fullMessage = comment
-        ? `${message}<br/><b>Comment:</b> ${comment}`
-        : message;
-
-      // Step 4: Notify researcher (email)
-      await notifyResearcher(id, fullMessage, "Sample Request Status Update");
+      if (technical_admin_status === 'Accepted') newCartStatus = 'Dispatched';
+      if (technical_admin_status === 'Rejected') newCartStatus = 'Rejected';
+      if (newCartStatus) await updateCartStatus(id, newCartStatus);
 
       updateResults.push({ id, status: 'updated' });
+    }));
+
+    // Step 2: Fetch all carts with researcher email and tracking ID
+    const placeholders = cartIds.map(() => '?').join(',');
+    const cartDetails = await queryAsync(
+      `
+      SELECT ua.email, c.created_at, c.tracking_id, c.id AS cartId
+      FROM user_account ua
+      JOIN cart c ON ua.id = c.user_id
+      WHERE c.id IN (${placeholders})
+      `,
+      cartIds
+    );
+
+    // Step 3: Group carts by tracking_id
+    const trackingMap = {};
+    cartDetails.forEach(row => {
+      if (!trackingMap[row.tracking_id]) {
+        trackingMap[row.tracking_id] = { email: row.email, carts: [] };
+      }
+      trackingMap[row.tracking_id].carts.push(row);
+    });
+
+    // Step 4: Prepare message template
+    const baseMessage =
+      technical_admin_status === 'Accepted'
+        ? "Your sample request has been <b>approved</b> by the Technical Admin.<br/>"
+        : technical_admin_status === 'Rejected'
+          ? "Your sample request has been <b>rejected</b> by the Technical Admin.<br/>"
+          : "Your sample request is still <b>pending</b> approval by the Technical Admin.<br/>";
+
+    const fullMessage = comment ? `${baseMessage}<br/><b>Comment:</b> ${comment}` : baseMessage;
+
+    // Step 5: Send one email per tracking_id
+    for (const [trackingId, data] of Object.entries(trackingMap)) {
+      const emailMessage = `
+        <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px; text-align: center;">
+          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: left;">
+            <h2 style="color: #2c3e50; text-align: center;">Dear Researcher,</h2>
+            <p style="font-size: 16px;">${fullMessage}</p>
+            <p style="font-size: 16px;">Here are the details of your cart(s) for tracking ID: <strong>${trackingId}</strong></p>
+            <ul style="list-style: none; padding: 0;">
+              ${data.carts.map(detail => `
+                <li style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 10px;">
+                  <p><strong>Cart ID:</strong> ${detail.cartId}</p>
+                  <p><strong>Created At:</strong> ${new Date(detail.created_at).toLocaleString()}</p>
+                </li>
+              `).join('')}
+            </ul>
+            <p style="margin-top: 30px;">Best regards,<br/><strong>Discovery Connect Team</strong></p>
+            <hr style="margin-top: 40px; border: none; border-top: 1px solid #ccc;" />
+            <p style="font-size: 12px; color: #888; text-align: center;">
+              This is an automated message. Please do not reply directly to this email.
+            </p>
+          </div>
+        </div>
+      `;
+
+      await sendEmail(data.email, "Sample Request Status Update", emailMessage);
+      console.log(`Email sent to ${data.email} for tracking ID ${trackingId}`);
     }
 
     return updateResults;
@@ -834,6 +878,8 @@ const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comme
     throw new Error("Bulk update in model failed");
   }
 };
+
+
 
 
 const updateCartStatusbyCSR = async (ids, req, callback) => {
@@ -845,42 +891,71 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
         : "Your sample request status has been updated.<br/>";
 
     const subject = "Sample Request Status Update";
+    const deliveredAt = `${deliveryDate} ${deliveryTime}:00`; // Ensure full DATETIME
 
-    const deliveredAt = `${deliveryDate} ${deliveryTime}:00`; // Ensuring full DATETIME format
-
-    // Step 1: Update each cart status + delivered_at
-    for (const id of ids) {
-      await queryAsync(
+    // Step 1: Update all cart statuses
+    await Promise.all(ids.map(id =>
+      queryAsync(
         `UPDATE cart SET order_status = ?, delivered_at = ? WHERE id = ?`,
         [cartStatus, deliveredAt, id]
-      );
-    }
+      )
+    ));
 
-    // Step 2: Get email info for the FIRST cart only
-    const getFirstCartEmailQuery = `
-      SELECT ua.email, c.created_at, c.id AS cartId
+    // Step 2: Get all carts' researcher emails and details
+    const placeholders = ids.map(() => '?').join(',');
+    const cartDetails = await queryAsync(
+      `
+      SELECT ua.email, c.created_at, c.tracking_id, c.id AS cartId
       FROM user_account ua
       JOIN cart c ON ua.id = c.user_id
-      WHERE c.id = ?`;
+      WHERE c.id IN (${placeholders})
+      `,
+      ids
+    );
 
-    const result = await queryAsync(getFirstCartEmailQuery, [ids[0]]);
-
-    if (!result || result.length === 0) {
-      throw new Error(`No researcher found for cart ID: ${ids[0]}`);
+    if (!cartDetails.length) {
+      throw new Error(`No researcher found for provided cart IDs`);
     }
 
-    const { email, created_at, cartId } = result[0];
+    // Step 3: Group carts by email
+    const emailMap = {};
+    cartDetails.forEach(row => {
+      if (!emailMap[row.email]) {
+        emailMap[row.email] = [];
+      }
+      emailMap[row.email].push(row);
+    });
 
-    const cartList = ids.map(id => `Cart ID: ${id}`).join("<br/>");
-    const emailMessage = `Dear Researcher,<br/>${message}<br/>Updated Cart(s):<br/>${cartList}<br/><br/>Best regards,<br/>Lab Hazir`;
+    // Step 4: Send one email per researcher
+    for (const [email, carts] of Object.entries(emailMap)) {
+      const cartList = carts
+        .map(detail =>
+          `<li>
+            <strong>Tracking ID:</strong> ${detail.tracking_id} <br/>
+            <strong>Created At:</strong> ${new Date(detail.created_at).toLocaleString()}
+          </li>`
+        )
+        .join('');
 
-    await sendEmail(email, subject, emailMessage);
+      const emailMessage = `
+        <div style="font-family: Arial, sans-serif;">
+          Dear Researcher,<br/>
+          ${message}
+          <br/><br/>
+        
+          <br/>Best regards,<br/>Lab Hazir
+        </div>
+      `;
 
-    // Send success message
+      await sendEmail(email, subject, emailMessage);
+      console.log(`Email sent to ${email}`);
+    }
+
+    // Callback or return success
     if (typeof callback === 'function') {
-      callback(null, "Cart status updated and researcher notified.");
+      callback(null, "Cart status updated and researcher(s) notified.");
     } else {
-      return "Cart status updated and researcher notified.";
+      return "Cart status updated and researcher(s) notified.";
     }
   } catch (err) {
     console.error("Error in update and notify:", err);
@@ -891,6 +966,7 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
     }
   }
 };
+
 
 const queryAsync = (sql, params) => {
   return new Promise((resolve, reject) => {
@@ -943,32 +1019,32 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
     }
 
     // Step 3: Get email info for the FIRST cart only
-    const getFirstCartEmailQuery = `
-      SELECT ua.email
-      FROM user_account ua
-      JOIN cart c ON ua.id = c.user_id
-      WHERE c.id = ?
-    `;
-    const result = await queryAsync(getFirstCartEmailQuery, [ids[0]]);
+    // const getFirstCartEmailQuery = `
+    //   SELECT ua.email
+    //   FROM user_account ua
+    //   JOIN cart c ON ua.id = c.user_id
+    //   WHERE c.id = ?
+    // `;
+    // const result = await queryAsync(getFirstCartEmailQuery, [ids[0]]);
 
-    if (!result || result.length === 0) {
-      throw new Error(`No researcher found for cart ID: ${ids[0]}`);
-    }
+    // if (!result || result.length === 0) {
+    //   throw new Error(`No researcher found for cart ID: ${ids[0]}`);
+    // }
 
-    const { email } = result[0];
+    // const { email } = result[0];
 
-    // Step 4: Build email message
-    const cartList = ids.map(id => `Cart ID: ${id}`).join("<br/>");
-    const emailMessage = `Dear Researcher,<br/>${message}<br/>Updated Cart(s):<br/>${cartList}<br/>Best regards,<br/>Lab Hazir`;
+    // // Step 4: Build email message
+    // const cartList = ids.map(id => `Cart ID: ${id}`).join("<br/>");
+    // const emailMessage = `Dear Researcher,<br/>${message}<br/>Updated Cart(s):<br/>${cartList}<br/>Best regards,<br/>Lab Hazir`;
 
-    // Step 5: Send email
-    await sendEmail(email, subject, emailMessage);
+    // // Step 5: Send email
+    // await sendEmail(email, subject, emailMessage);
 
-    if (typeof callback === 'function') {
-      callback(null, "Cart status updated, sample quantity adjusted (if rejected), and researcher notified.");
-    } else {
-      return "Cart status updated, sample quantity adjusted (if rejected), and researcher notified.";
-    }
+    // if (typeof callback === 'function') {
+    //   callback(null, "Cart status updated, sample quantity adjusted (if rejected), and researcher notified.");
+    // } else {
+    //   return "Cart status updated, sample quantity adjusted (if rejected), and researcher notified.";
+    // }
   } catch (err) {
     console.error("Error in update and notify:", err);
     if (typeof callback === 'function') {

@@ -234,7 +234,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                   ? [
                     { label: "Profile", tab: "order-info" },
                     { label: "Order Dispatch List", tab: "dispatchorder" },
-                    { label: "Order Packaging List", tab: "shippingorder" },
+                    { label: "Order Shipped List", tab: "shippingorder" },
                     { label: "Order Completed List", tab: "completedorder" },
                   ]
                   : [];
