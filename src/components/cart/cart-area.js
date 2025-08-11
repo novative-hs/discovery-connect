@@ -135,7 +135,7 @@ const CartArea = () => {
               TestResult: item.TestResult,
               TestResultUnit: item.TestResultUnit,
               price: item.price,
-              quantity:item.quantity
+              quantity: item.quantity
             })),
           }),
         });
@@ -167,7 +167,7 @@ const CartArea = () => {
   };
 
   return (
-    <section className="cart-area py-5" style={{ backgroundColor: "#f4f8fb", minHeight: "100vh" }}>
+    <section className="cart-area py-5">
       <div className="container py-5">
         {/* Note at the top */}
         <div className="alert alert-info text-center fw-medium mb-4">
