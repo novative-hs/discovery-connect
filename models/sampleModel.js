@@ -413,24 +413,23 @@ const getAllSampleinIndex = (analyte, limit, offset, filters, callback) => {
   let queryParams = [analyte];
 
   const { ageMin, ageMax, gender, sampleType, smokingStatus, search, TestResult, exactAge, } = filters;
-  if (exactAge !== null) {
+  const isValidNumber = (value) => typeof value === "number" && !isNaN(value);
+
+  if (isValidNumber(exactAge)) {
     baseWhere += ` AND age = ?`;
     queryParams.push(exactAge);
+  } else if (isValidNumber(ageMin) && isValidNumber(ageMax)) {
+    baseWhere += ` AND age >= ? AND age <= ?`;
+    queryParams.push(ageMin, ageMax);
+  } else if (isValidNumber(ageMin)) {
+    // age > 61 case
+    baseWhere += ` AND age > ?`;
+    queryParams.push(ageMin);
+  } else if (isValidNumber(ageMax)) {
+    baseWhere += ` AND age <= ?`;
+    queryParams.push(ageMax);
   }
-  else {
-    const isValidNumber = (value) => typeof value === 'number' && !isNaN(value);
 
-    if (isValidNumber(ageMin) && isValidNumber(ageMax)) {
-      baseWhere += ` AND (age >= ? AND age <= ? OR age IS NULL)`;
-      queryParams.push(ageMin, ageMax);
-    } else if (isValidNumber(ageMin)) {
-      baseWhere += ` AND (age >= ? OR age IS NULL)`;
-      queryParams.push(ageMin);
-    } else if (isValidNumber(ageMax)) {
-      baseWhere += ` AND (age <= ? OR age IS NULL)`;
-      queryParams.push(ageMax);
-    }
-  }
 
   if (gender) {
     baseWhere += ` AND gender = ?`;
