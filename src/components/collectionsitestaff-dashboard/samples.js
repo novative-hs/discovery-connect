@@ -1912,6 +1912,7 @@ const SampleArea = () => {
                                         target: { name: "Analyte", value: selectedOption?.value || "" },
                                       })
                                     }
+                                    required
                                     isClearable
                                     classNamePrefix="react-select"
                                     menuPortalTarget={document.body}
