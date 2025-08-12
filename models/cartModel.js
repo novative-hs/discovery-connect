@@ -125,9 +125,9 @@ const updateCartStatusToCompleted = (cartId, callback) => {
 
     if (deliveredDateOnly <= nowDateOnly && currentOrderStatus === 'Dispatched') {
       const updateStatusQuery = `
-        UPDATE cart 
-        SET order_status = 'Completed' 
-        WHERE id = ?`;
+    UPDATE cart 
+    SET order_status = 'Completed' 
+    WHERE id = ?`;
 
       mysqlConnection.query(updateStatusQuery, [cartId], (updateErr, updateResults) => {
         if (updateErr) {
@@ -135,17 +135,46 @@ const updateCartStatusToCompleted = (cartId, callback) => {
           return callback(updateErr, null);
         }
 
-        notifyResearcher(cartId, "Your sample request has been completed.<br/>", "Sample Request Status Update", (notifyErr) => {
-          if (notifyErr) {
-            return callback(notifyErr, null);
+        // ✅ Send email ONLY after status becomes Completed
+        const getEmailQuery = `
+      SELECT ua.email
+      FROM cart c
+      JOIN user_account ua ON c.user_id = ua.id
+      WHERE c.id = ? AND c.order_status = 'Completed'`;
+
+        mysqlConnection.query(getEmailQuery, [cartId], (emailErr, emailResults) => {
+          if (emailErr) {
+            console.error("Error retrieving researcher email:", emailErr);
+            return callback(emailErr, null);
           }
 
-          return callback(null, updateResults);
+          if (emailResults.length === 0) {
+            return callback(new Error("Email not found or status not Completed"), null);
+          }
+
+          const researcherEmail = emailResults[0].email;
+
+          const emailBody = `
+        <p>Dear Researcher,</p>
+        <p>Your sample request has been <b>completed</b>.</p>
+        <p>Tracking ID: <b>${tracking_id}</b></p>
+        <p>Please check your dashboard for more details.</p>
+        <p>Regards,<br/>Discovery Connect Team</p>
+      `;
+
+          sendEmail(researcherEmail, "Sample Request Status Update", emailBody, (emailSendErr) => {
+            if (emailSendErr) {
+              return callback(emailSendErr, null);
+            }
+            return callback(null, updateResults);
+          });
         });
       });
-    } else {
-      return callback(null, null);
     }
+    else{
+         return callback(null, null);
+    }
+
   });
 };
 
@@ -165,7 +194,7 @@ const createCart = (data, callback) => {
     nbc_file,
   } = data;
   const tracking_id = generateTrackingId();
-  let created_at=0;
+  let created_at = 0;
   // Validate required fields
   if (
     !researcher_id ||
@@ -274,8 +303,7 @@ const createCart = (data, callback) => {
 
     Promise.all(insertPromises)
       .then(() => {
-        const message =
-          "Your sample request has been <b>successfully created</b>. Please check your dashboard for more details.";
+
         const subject = "Sample Request Status Update";
 
         const getResearcherEmailQuery = `
@@ -297,11 +325,34 @@ const createCart = (data, callback) => {
             .map((detail) => `Cart ID: ${detail.cartId} (Created At: ${detail.created_at})`)
             .join("<br/>");
 
-          const emailMessage = `Dear Researcher,<br/>${message}<br/>Tracking ID: <b>${tracking_id}</b><br/>Best regards,<br/>Discovery Connect`;
+          const emailMessage = `
+                <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
+                  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    
+                    <p style="font-size: 16px; color: #333;">Dear Researcher,</p>
+
+                    <p style="font-size: 15px; color: #555;">
+                      Your sample request has been <b style="color: green;">successfully created</b>. 
+                      Please check your dashboard for more details.
+                    </p>
+
+                    <p style="font-size: 15px; color: #555;">
+                      Tracking ID: <b>${tracking_id}</b>
+                    </p>
+
+                    <p style="font-size: 15px; color: #333; margin-top: 20px;">
+                      Best regards,<br>
+                      <strong>Discovery Connect</strong>
+                    </p>
+
+                  </div>
+                </div>
+              `;
+
 
           sendEmail(researcherEmail, subject, emailMessage)
             .then(() => {
-              callback(null, { message: "Cart created successfully", tracking_id,created_at });
+              callback(null, { message: "Cart created successfully", tracking_id, created_at });
             })
             .catch((emailSendErr) => {
               console.error("Failed to send researcher email:", emailSendErr);
@@ -548,7 +599,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
           console.error("Error fetching cart data:", err);
           callback(err, null);
         } else {
-          
+
           results.forEach(order => {
             if (order.order_status !== 'Dispatched' && order.order_status !== 'Shipped') {
               updateCartStatusToCompleted(order.order_id, (updateErr) => {
@@ -816,13 +867,21 @@ const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comme
     const placeholders = cartIds.map(() => '?').join(',');
     const cartDetails = await queryAsync(
       `
-      SELECT ua.email, c.created_at, c.tracking_id, c.id AS cartId
-      FROM user_account ua
-      JOIN cart c ON ua.id = c.user_id
-      WHERE c.id IN (${placeholders})
-      `,
+  SELECT 
+    ua.email, 
+    c.created_at, 
+    c.tracking_id, 
+    c.id AS cartId,
+    c.status,
+    s.Analyte
+  FROM user_account ua
+  JOIN cart c ON ua.id = c.user_id
+  JOIN sample s ON c.sampleId = s.id
+  WHERE c.id IN (${placeholders})
+  `,
       cartIds
     );
+
 
     // Step 3: Group carts by tracking_id
     const trackingMap = {};
@@ -844,33 +903,40 @@ const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comme
     const fullMessage = comment ? `${baseMessage}<br/><b>Comment:</b> ${comment}` : baseMessage;
 
     // Step 5: Send one email per tracking_id
-    for (const [trackingId, data] of Object.entries(trackingMap)) {
+    const entries = Object.entries(trackingMap);
+    if (entries.length > 0) {
+      const [trackingId, data, status] = entries[0];  // Take only the first tracking ID
+
       const emailMessage = `
-        <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px; text-align: center;">
-          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: left;">
-            <h2 style="color: #2c3e50; text-align: center;">Dear Researcher,</h2>
-            <p style="font-size: 16px;">${fullMessage}</p>
-            <p style="font-size: 16px;">Here are the details of your cart(s) for tracking ID: <strong>${trackingId}</strong></p>
-            <ul style="list-style: none; padding: 0;">
-              ${data.carts.map(detail => `
-                <li style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 10px;">
-                  <p><strong>Cart ID:</strong> ${detail.cartId}</p>
-                  <p><strong>Created At:</strong> ${new Date(detail.created_at).toLocaleString()}</p>
-                </li>
-              `).join('')}
-            </ul>
-            <p style="margin-top: 30px;">Best regards,<br/><strong>Discovery Connect Team</strong></p>
-            <hr style="margin-top: 40px; border: none; border-top: 1px solid #ccc;" />
-            <p style="font-size: 12px; color: #888; text-align: center;">
-              This is an automated message. Please do not reply directly to this email.
-            </p>
-          </div>
-        </div>
-      `;
+    <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px; text-align: center;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: left;">
+        <h2 style="color: #2c3e50; text-align: center;">Dear Researcher,</h2>
+        <p style="font-size: 16px;">${fullMessage}</p>
+        <p><strong>Order Status:</strong> ${status}</p>
+        <p style="font-size: 16px;">Here are the details of your cart(s) for tracking ID: <strong>${trackingId}</strong></p>
+        <ul style="list-style: none; padding: 0;">
+          ${data.carts.map(detail => `
+            <li style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 10px;">
+              <p><strong>Cart ID:</strong> ${detail.Analyte}</p>
+              <p><strong>Created At:</strong> ${new Date(detail.created_at).toLocaleString()}</p>
+            </li>
+          `).join('')}
+        </ul>
+        <p style="margin-top: 30px;">Best regards,<br/><strong>Discovery Connect Team</strong></p>
+        <hr style="margin-top: 40px; border: none; border-top: 1px solid #ccc;" />
+        <p style="font-size: 12px; color: #888; text-align: center;">
+          This is an automated message. Please do not reply directly to this email.
+        </p>
+      </div>
+    </div>
+  `;
 
       await sendEmail(data.email, "Sample Request Status Update", emailMessage);
       console.log(`Email sent to ${data.email} for tracking ID ${trackingId}`);
+    } else {
+      console.log("No tracking IDs found to send email.");
     }
+
 
     return updateResults;
   } catch (err) {
@@ -885,10 +951,35 @@ const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comme
 const updateCartStatusbyCSR = async (ids, req, callback) => {
   try {
     const { cartStatus, deliveryDate, deliveryTime } = req.body;
-    const message =
-      cartStatus === 'Shipped'
-        ? "Your sample request has been <b>Shipped</b> and is on its way.<br/>"
-        : "Your sample request status has been updated.<br/>";
+   const message = `
+  <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
+    <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+
+      <p style="font-size: 16px; color: #333;">
+        Dear Researcher,
+      </p>
+
+      <p style="font-size: 15px; color: #555;">
+        ${
+          cartStatus === 'Shipped'
+            ? "📦 Your sample request has been <b style='color:#007bff;'>Shipped</b> and is on its way."
+            : "ℹ️ Your sample request status has been updated."
+        }
+      </p>
+
+      <p style="font-size: 15px; color: #555;">
+        Please check your dashboard for more details.
+      </p>
+
+      <p style="font-size: 15px; color: #333; margin-top: 20px;">
+        Regards,<br>
+        <strong>Discovery Connect Team</strong>
+      </p>
+
+    </div>
+  </div>
+`;
+
 
     const subject = "Sample Request Status Update";
     const deliveredAt = `${deliveryDate} ${deliveryTime}:00`; // Ensure full DATETIME
@@ -943,7 +1034,7 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
           ${message}
           <br/><br/>
         
-          <br/>Best regards,<br/>Lab Hazir
+          <br/>Best regards,<br/>Discovery connect Team
         </div>
       `;
 
@@ -1035,7 +1126,7 @@ const updateCartStatus = async (cartIds, cartStatus, callback) => {
 
     // // Step 4: Build email message
     // const cartList = ids.map(id => `Cart ID: ${id}`).join("<br/>");
-    // const emailMessage = `Dear Researcher,<br/>${message}<br/>Updated Cart(s):<br/>${cartList}<br/>Best regards,<br/>Lab Hazir`;
+    // const emailMessage = `Dear Researcher,<br/>${message}<br/>Updated Cart(s):<br/>${cartList}<br/>Best regards,<br/>Discovery connect Team`;
 
     // // Step 5: Send email
     // await sendEmail(email, subject, emailMessage);

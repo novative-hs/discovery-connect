@@ -174,6 +174,11 @@ const SampleDispatchArea = () => {
           return combinedVolume.includes(lowerValue);
         }
 
+        if (field === "gender_age") {
+          const combinedagegender = `${sample.gender ?? ""} ${sample.age ?? ""}`.toLowerCase();
+          return combinedagegender.includes(lowerValue);
+        }
+
         if (field === "TestResult") {
           const combinedPrice = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""}`.toLowerCase();
           return combinedPrice.includes(lowerValue);
@@ -361,18 +366,18 @@ const SampleDispatchArea = () => {
                             </span>
                           ) : key === "volume" ? (
                             `${sample.volume || "----"} ${sample.VolumeUnit || ""}`
-                          ) :  key === "gender_age" ? (
-                          (sample.gender && sample.age ?
-                          `${sample.gender} | ${sample.age} years` :
-                          sample.gender ?
-                          sample.gender :
-                          sample.age ?
-                          `${sample.age} years` :
-                          "----"
-                          ) ): key === "TestResult" ? (
-                          `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
-                          ) : (
-                          sample[key] || "----"
+                          ) : key === "gender_age" ? (
+                            (sample.gender && sample.age ?
+                              `${sample.gender} | ${sample.age} years` :
+                              sample.gender ?
+                                sample.gender :
+                                sample.age ?
+                                  `${sample.age} years` :
+                                  "----"
+                            )) : key === "TestResult" ? (
+                              `${sample.TestResult || "----"} ${sample.TestResultUnit || ""}`
+                            ) : (
+                            sample[key] || "----"
                           )}
                         </td>
                       ))}

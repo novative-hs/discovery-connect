@@ -15,6 +15,7 @@ import Barcode from "react-barcode";
 import Pagination from "@ui/Pagination";
 import NiceSelect from "@ui/NiceSelect";
 import InputMask from "react-input-mask";
+import { notifyError } from "@utils/toast";
 
 const BioBankSampleArea = () => {
 
@@ -86,7 +87,7 @@ const BioBankSampleArea = () => {
   const [samplePrice, setSamplePrice] = useState([]);
   const [selectedSampleVisibilityId, setSelectedSampleVisibilityId] = useState(null);
   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
 
   const [poolMode, setPoolMode] = useState(false);
   const [visibilitystatuschange, setVisibilityStatusChange] = useState(false);
@@ -310,6 +311,10 @@ const BioBankSampleArea = () => {
     }
   }, [id]);
 
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0]; // format: YYYY-MM-DD
+    setDateTo(today); // auto-select today's date
+  }, []);
 
   useEffect(() => {
     const filters = {
@@ -357,6 +362,7 @@ const BioBankSampleArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
+    const trimmed = value.trim?.() || value;
     setCurrentPage(0);
 
     if (field === "price") {
@@ -364,12 +370,24 @@ const BioBankSampleArea = () => {
       setSearchField("");
       setSearchValue("");
       fetchSamples(1, itemsPerPage, { priceFilter: value });
+
     } else if (field === "visibility") {
       setVisibility(value);
       setSearchField("");
       setSearchValue("");
       setPriceFilter("");
       fetchSamples(1, itemsPerPage, { visibility: value });
+
+    } else if (field === "date_from" || field === "date_to") {
+      if (field === "date_from") setDateFrom(trimmed);
+      if (field === "date_to") setDateTo(trimmed);
+
+      // ✅ Send both dates together to the API
+      fetchSamples(1, itemsPerPage, {
+        date_from: field === "date_from" ? trimmed : dateFrom,
+        date_to: field === "date_to" ? trimmed : dateTo
+      });
+
     } else {
       setSearchField(field);
       setSearchValue(value);
@@ -908,30 +926,28 @@ const BioBankSampleArea = () => {
       return;
     }
 
+    setIsLoading(true); // Start loading
+
     try {
-      // Update each selected sample one by one
-      for (const sampleId of selectedSamples) {
-        const response = await fetch(
+      // Create an array of promises for all API calls
+      const updatePromises = selectedSamples.map(sampleId =>
+        axios.put(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/UpdateSampleStatus/${sampleId}`,
           {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              sample_visibility: visibilitystatus,
-              added_by: id,
-            }),
+            sample_visibility: visibilitystatus,
+            added_by: id,
           }
-        );
+        )
+      );
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Failed for sample ${sampleId}:`, errorText);
-          throw new Error(`Failed to update sample ${sampleId}`);
-        }
-      }
+      // Execute all updates in parallel
+      await Promise.all(updatePromises);
 
-      // All updates succeeded
-      setSuccessMessage("Successfully changed sample visibility status");
+      // Success handling
+      setSuccessMessage(`Successfully updated ${selectedSamples.length} samples`);
+
+
+
       setTimeout(() => setSuccessMessage(""), 3000);
 
       // Reset UI
@@ -940,13 +956,14 @@ const BioBankSampleArea = () => {
       setVisibilityStatusChange(false);
       setSelectedSamples([]);
 
-      // Refresh sample list
+      // Refresh sample list - consider a more optimized refresh if possible
       fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
-
-
 
     } catch (error) {
       console.error("Update error:", error);
+      alert("Some updates failed. Please try again.");
+    } finally {
+      setIsLoading(false); // Stop loading regardless of success/failure
     }
   };
 
@@ -1265,40 +1282,44 @@ const BioBankSampleArea = () => {
             {/* Date From */}
             <div className="d-flex flex-wrap align-items-center gap-3 mb-4">
               {/* Date From */}
-              <div className="d-flex align-items-center gap-2">
-                <label htmlFor="dateFrom" className="form-label mb-0 fw-bold">Date From:</label>
+              <div className="form-group">
+                <label className="form-label fw-semibold mb-1">Date From</label>
                 <input
                   type="date"
-                  id="dateFrom"
-                  className="form-control"
+                  className="form-control border rounded-3"
                   style={{ width: "200px", height: "42px" }}
                   value={dateFrom}
+                  min="2025-05-01"
                   onChange={(e) => {
-                    setDateFrom(e.target.value);
-                    handleFilterChange("date_from", e.target.value);
+                    const value = e.target.value;
+                    setDateFrom(value);
+                    handleFilterChange("date_from", value);
+                    if (dateTo) {
+                      handleFilterChange("date_to", dateTo);
+                    }
                   }}
-                  min="2024-01-01"
                 />
               </div>
 
               {/* Date To */}
-              <div className="d-flex align-items-center gap-2">
-                <label htmlFor="dateTo" className="form-label mb-0 fw-bold">Date To:</label>
+              <div className="form-group">
+                <label className="form-label fw-semibold mb-1">Date To</label>
                 <input
                   type="date"
-                  id="dateTo"
-                  className="form-control"
+                  className="form-control border rounded-3"
                   style={{ width: "200px", height: "42px" }}
                   value={dateTo}
+                  min={dateFrom || "2025-05-01"} // Optional: prevent selecting before "From" date
+                  max={new Date().toISOString().split("T")[0]} // max = today
                   onChange={(e) => {
-                    setDateTo(e.target.value);
-                    handleFilterChange("date_to", e.target.value);
+                    const value = e.target.value;
+                    setDateTo(value);
+                    handleFilterChange("date_to", value);
                   }}
-                  min="2024-01-01"
                 />
               </div>
-
             </div>
+
 
 
             {/* Clear Button */}
@@ -3513,8 +3534,17 @@ const BioBankSampleArea = () => {
                     </div>
 
                     <div className="modal-footer">
-                      <button type="submit" className="btn btn-primary">
-                        Save
+                      <button
+                        type="submit"
+                        className="btn btn-primary"
+                        disabled={isLoading}
+                      >
+                        {isLoading ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            Loading...
+                          </>
+                        ) : "Save"}
                       </button>
                     </div>
                   </form>

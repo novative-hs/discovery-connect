@@ -12,7 +12,7 @@ const QuoteRequestTable = () => {
   const [groupCurrency, setGroupCurrency] = useState("");
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [isReadOnly, setIsReadOnly] = useState(false);
-
+const [currencyError, setCurrencyError] = useState(""); 
   // Fetch currency options
   useEffect(() => {
     const fetchCurrencies = async () => {
@@ -89,7 +89,10 @@ const QuoteRequestTable = () => {
   // Submit all samples in selected quote
   const handleSubmitAll = async () => {
     if (!selectedQuote || selectedQuote.length === 0 || !groupCurrency) return;
-
+ if (!groupCurrency) {
+      setCurrencyError("Please select a currency");
+      return;
+    }
     for (const sample of selectedQuote) {
       const sampleId = sample.sample_id;
       await submitSamplePrice(sampleId, groupCurrency);
@@ -188,7 +191,9 @@ const QuoteRequestTable = () => {
                   className="form-select form-select-sm"
                   style={{ width: "160px" }}
                   value={groupCurrency}
-                  onChange={(e) => setGroupCurrency(e.target.value)}
+                  onChange={(e) =>{
+                     setGroupCurrency(e.target.value)
+                     setCurrencyError("")}}
                 >
                   <option value="">Select</option>
                   {currencyOptions.map((currency, index) => (
@@ -197,6 +202,11 @@ const QuoteRequestTable = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+            {currencyError && (
+              <div className="invalid-feedback d-block" style={{ fontSize: "0.9rem", marginLeft: "600px" }}>
+                {currencyError}
               </div>
             )}
             <div className="d-flex justify-content-end align-items-center gap-2">

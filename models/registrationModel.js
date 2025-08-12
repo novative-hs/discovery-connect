@@ -252,7 +252,7 @@ const createAccount = (req, callback) => {
     added_by,
 
   } = req.body;
-  
+
   const CNICBuffer = req.files?.CNIC?.[0]?.buffer || null;
   const OrgCardBuffer = req.files?.Org_card?.[0]?.buffer || null;
   let logo = null;
@@ -570,7 +570,7 @@ const updateAccount = (req, callback) => {
                         CSRName = ?, phoneNumber = ?, fullAddress = ?, city = ?, district = ?, permission = ?,
                         country = ?,collection_id=? WHERE user_account_id = ?
                     `;
-                  values = [CSRName, phoneNumber, fullAddress, city, district, permission,country, collectionsitename, user_account_id];
+                  values = [CSRName, phoneNumber, fullAddress, city, district, permission, country, collectionsitename, user_account_id];
                   break;
 
                 default:
@@ -644,7 +644,7 @@ const updateAccount = (req, callback) => {
                     previousData.country || null,
                     previousData.logo || null,
                     previousData.added_by || null,
-                    previousData.permission||null,
+                    previousData.permission || null,
                     organizationID || null,
                     researcherID || null,
                     collectionSiteID || null,
@@ -762,24 +762,24 @@ const loginAccount = (data, callback) => {
         });
       }
       else if (user.accountType === 'CollectionSitesStaff') {
-  const collectionsiteQuery =
-    `SELECT status, permission,collectionsite_id AS collection_id FROM collectionsitestaff WHERE user_account_id = ?`;
+        const collectionsiteQuery =
+          `SELECT status, permission,collectionsite_id AS collection_id FROM collectionsitestaff WHERE user_account_id = ?`;
 
-  mysqlConnection.query(collectionsiteQuery, [user.id], (err, collectionsitestaffResults) => {
-    if (err) {
-      return callback(err, null); // Pass error to the controller
-    }
+        mysqlConnection.query(collectionsiteQuery, [user.id], (err, collectionsitestaffResults) => {
+          if (err) {
+            return callback(err, null); // Pass error to the controller
+          }
 
-    if (collectionsitestaffResults.length > 0 && collectionsitestaffResults[0].status === 'active') {
-      // Attach action to the user object
-      user.action = collectionsitestaffResults[0].permission;
-      
-      return callback(null, user); // Return user with action included
-    } else {
-      return callback({ status: "fail", message: "Account is not active" }, null);
-    }
-  });
-}
+          if (collectionsitestaffResults.length > 0 && collectionsitestaffResults[0].status === 'active') {
+            // Attach action to the user object
+            user.action = collectionsitestaffResults[0].permission;
+
+            return callback(null, user); // Return user with action included
+          } else {
+            return callback({ status: "fail", message: "Account is not active" }, null);
+          }
+        });
+      }
 
       else if (user.accountType === 'Committeemember') {
         const CommitteememberQuery =
@@ -791,8 +791,8 @@ const loginAccount = (data, callback) => {
           }
 
           if (CommitteememberResults.length > 0 && CommitteememberResults[0].status.toLowerCase() === "active") {
-            
-             user.committeetype = CommitteememberResults[0].committeetype;
+
+            user.committeetype = CommitteememberResults[0].committeetype;
             return callback(null, user); // Return user info if approved
           } else {
             return callback({ status: "fail", message: "Account is not approved" }, null);
@@ -1021,7 +1021,7 @@ const sendEmailForOrder = async (req, callback) => {
     for (const item of newQuotes) {
       await mysqlConnection.promise().query(
         `INSERT INTO quote_requests (researcher_id,quantity, sample_id, status) VALUES (?,?, ?, 'pending')`,
-        [userID, item.quantity,item.id]
+        [userID, item.quantity, item.id]
       );
     }
 
@@ -1043,8 +1043,8 @@ const sendEmailForOrder = async (req, callback) => {
         </thead>
         <tbody>
           ${newQuotes
-            .map(
-              (item, index) => `
+        .map(
+          (item, index) => `
               <tr>
                 <td>${index + 1}</td>
                 <td>${item.masterid || "-"}</td>
@@ -1055,17 +1055,33 @@ const sendEmailForOrder = async (req, callback) => {
                 <td>-</td>
               </tr>
             `
-            )
-            .join("")}
+        )
+        .join("")}
         </tbody>
       </table>
     `;
 
     const researcherEmailText = `
-      <p>Dear ${researcherName},</p>
-      <p>Thank you for your submission.</p>
-      <p>Some items in your cart are awaiting price confirmation from the Biobank. You will be notified once pricing is updated so you can proceed with checkout.</p>
-      <p>Thank you for your patience.</p>
+     <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
+  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <p style="font-size: 16px; color: #333;">Dear {{researcherName}},</p>
+
+    <p style="font-size: 15px; color: #555;">Thank you for your submission.</p>
+
+    <p style="font-size: 15px; color: #555;">
+      Some items in your cart are awaiting price confirmation from the Biobank. 
+      You will be notified once the pricing is updated so you can proceed with checkout.
+    </p>
+
+    <p style="font-size: 15px; color: #555;">Thank you for your patience.</p>
+
+    <p style="font-size: 15px; color: #333; margin-top: 20px;">
+      Regards,<br>
+      <strong>Discovery Connect Team</strong>
+    </p>
+  </div>
+</div>
+
     `;
 
     // ✅ Send emails if new quotes exist
