@@ -511,8 +511,8 @@ const OrderPage = () => {
                             disabled={
                               !selectedOrder.analytes?.some(
                                 item =>
-                                  item.scientific_committee_status === "Approved" &&
-                                  (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent")
+                                  (item.scientific_committee_status === "Approved" || item.scientific_committee_status === "Refused") &&
+                                  (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent" || item.ethical_committee_status === "Refused")
                               )
                             }
                           >
@@ -595,7 +595,8 @@ const OrderPage = () => {
                           </td>
 
                           <td>{order.quantity} X {order.volume}{order.VolumeUnit}</td>
-                          <td>{order.age || "---"}</td>
+                          <td>{order.age ? `${order.age} year` : "---"}</td>
+
                           <td>{order.gender || "---"}</td>
                           <td>
                             {(order.TestResult || order.TestResultUnit) && (

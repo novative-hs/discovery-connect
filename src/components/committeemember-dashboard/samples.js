@@ -57,7 +57,7 @@ const SampleArea = () => {
     { label: "Quantity X Volume", key: "quantity" },
     { label: "Age", key: "age" },
     { label: "Gender", key: "gender" },
-    { label: "Test Result & Unit", key: "gender" },
+    { label: "Test Result & Unit", key: "TestResult" },
   ];
 
   const fetchSamples = useCallback(async (page = 1, pageSize = 10, filters = {}) => {
@@ -390,29 +390,29 @@ const SampleArea = () => {
             </div>
 
             {/* Approve / Reject buttons - shown once */}
-        {selectedResearcherSamples &&
-  selectedResearcherSamples.some(
-    (sample) =>
-      sample.committee_status !== "Approved" &&
-      sample.committee_status !== "Refused"
-  ) && (
-    <div className="mb-3 d-flex gap-2">
-      <button
-        className="btn btn-success btn-sm"
-        onClick={() => handleOpenModal("Approved", selectedResearcherSamples)}
-      >
-        <FontAwesomeIcon icon={faCheck} className="me-1" />
-        Approve
-      </button>
-      <button
-        className="btn btn-danger btn-sm"
-        onClick={() => handleOpenModal("Refused", selectedResearcherSamples)}
-      >
-        <FontAwesomeIcon icon={faTimes} className="me-1" />
-        Refuse
-      </button>
-    </div>
-)}
+            {selectedResearcherSamples &&
+              selectedResearcherSamples.some(
+                (sample) =>
+                  sample.committee_status !== "Approved" &&
+                  sample.committee_status !== "Refused"
+              ) && (
+                <div className="mb-3 d-flex gap-2">
+                  <button
+                    className="btn btn-success btn-sm"
+                    onClick={() => handleOpenModal("Approved", selectedResearcherSamples)}
+                  >
+                    <FontAwesomeIcon icon={faCheck} className="me-1" />
+                    Approve
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleOpenModal("Refused", selectedResearcherSamples)}
+                  >
+                    <FontAwesomeIcon icon={faTimes} className="me-1" />
+                    Refuse
+                  </button>
+                </div>
+              )}
 
 
 
@@ -425,7 +425,7 @@ const SampleArea = () => {
               <table className="table table-bordered table-hover text-center align-middle">
                 <thead className="table-primary text-dark">
                   <tr>
-                    {SampleHeader?.map(({ label }, index) => (
+                    {SampleHeader?.map(({ label, key }, index) => (
                       <th key={index} className="px-2">
                         <span className="fw-bold mt-1 d-block text-wrap fs-10">
                           {label}
@@ -433,6 +433,7 @@ const SampleArea = () => {
                       </th>
                     ))}
                   </tr>
+
                 </thead>
 
                 <tbody className="table-light">
@@ -462,7 +463,7 @@ const SampleArea = () => {
                             {key === "Analyte" ? (
                               <>
                                 <span style={{ textDecoration: "underline" }}>{sample.Analyte || "N/A"}</span>
-                              
+
                               </>
                             ) : ["study_copy", "irb_file", "nbc_file"].includes(key) ? (
                               "----"
@@ -502,16 +503,29 @@ const SampleArea = () => {
                               )
                             ) : key === "quantity" ? (
                               `${sample.quantity || 0} × ${sample.volume || 0}${sample.VolumeUnit || ''}`
-                            ) : key === "locationids" ? (
-                              <span
-                                style={{ cursor: "pointer" }}
-                                title="Location ID's = Room Number, Freezer ID and Box ID"
-                              >
-                                {sample[key] || "----"}
-                              </span>
-                            ) : (
-                              sample[key] || "----"
-                            )}
+                            )
+                              : key === "TestResult" ? (
+                                (sample.TestResult || sample.TestResultUnit) ? (
+                                  <span>{`${sample.TestResult ?? ''} ${sample.TestResultUnit ?? ''}`}</span>
+                                ) : null
+                              )
+                                : key === "age" ? (
+                                  <td>
+                                    {sample.age ? `${sample.age} year` : "---"}
+                                  </td>
+
+
+                                )
+                                  : key === "locationids" ? (
+                                    <span
+                                      style={{ cursor: "pointer" }}
+                                      title="Location ID's = Room Number, Freezer ID and Box ID"
+                                    >
+                                      {sample[key] || "----"}
+                                    </span>
+                                  ) : (
+                                    sample[key] || "----"
+                                  )}
 
                           </td>
                         ))}
@@ -531,158 +545,158 @@ const SampleArea = () => {
           </Modal.Body>
         </Modal>
       )}
-{showSampleModal && selectedSample && (
-  <>
-    {/* Backdrop */}
-    <div
-      className="modal-backdrop fade show"
-      style={{
-        backdropFilter: "blur(5px)",
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        zIndex: 1040,
-      }}
-    ></div>
+      {showSampleModal && selectedSample && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="modal-backdrop fade show"
+            style={{
+              backdropFilter: "blur(5px)",
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              zIndex: 1040,
+            }}
+          ></div>
 
-    {/* Modal Container */}
-    <div
-      className="modal show d-block"
-      role="dialog"
-      style={{
-        zIndex: 1060,
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        backgroundColor: "#fff",
-        padding: "20px",
-        borderRadius: "10px",
-        boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
-        width: "90vw",
-        maxWidth: "700px",
-        maxHeight: "80vh",
-        overflow: "auto", // scroll if content too tall
-      }}
-    >
-      {/* Modal Header */}
-      <div
-        className="modal-header d-flex justify-content-between align-items-center"
-        style={{ backgroundColor: "#cfe2ff", color: "#000" }}
-      >
-        <h5 className="fw-bold">{selectedSample.Analyte}</h5>
-        <button
-          type="button"
-          className="close"
-          onClick={() => setSampleShowModal(false)}
-          style={{
-            fontSize: "1.5rem",
-            border: "none",
-            background: "none",
-            cursor: "pointer",
-          }}
-        >
-          &times;
-        </button>
-      </div>
+          {/* Modal Container */}
+          <div
+            className="modal show d-block"
+            role="dialog"
+            style={{
+              zIndex: 1060,
+              position: "fixed",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              backgroundColor: "#fff",
+              padding: "20px",
+              borderRadius: "10px",
+              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
+              width: "90vw",
+              maxWidth: "700px",
+              maxHeight: "80vh",
+              overflow: "auto", // scroll if content too tall
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              className="modal-header d-flex justify-content-between align-items-center"
+              style={{ backgroundColor: "#cfe2ff", color: "#000" }}
+            >
+              <h5 className="fw-bold">{selectedSample.Analyte}</h5>
+              <button
+                type="button"
+                className="close"
+                onClick={() => setSampleShowModal(false)}
+                style={{
+                  fontSize: "1.5rem",
+                  border: "none",
+                  background: "none",
+                  cursor: "pointer",
+                }}
+              >
+                &times;
+              </button>
+            </div>
 
-      {/* Modal Body */}
-      <div className="modal-body">
-        <div className="row">
-          {/* Left Side: Image & Basic Details */}
-          <div className="col-md-5 text-center">
-            <div className="mt-3 p-2 bg-light rounded text-start">
-              {selectedSample.price != null && (
-                <p>
-                  <strong>Price:</strong> {selectedSample.price}{" "}
-                  {selectedSample.SamplePriceCurrency}
-                </p>
-              )}
-              {selectedSample.volume != null && (
-                <p>
-                  <strong>Volume:</strong> {selectedSample.volume}{" "}
-                  {selectedSample.VolumeUnit}
-                </p>
-              )}
-              {selectedSample.CountryofCollection && (
-                <p>
-                  <strong>Country of Collection:</strong>{" "}
-                  {selectedSample.CountryofCollection}
-                </p>
-              )}
+            {/* Modal Body */}
+            <div className="modal-body">
+              <div className="row">
+                {/* Left Side: Image & Basic Details */}
+                <div className="col-md-5 text-center">
+                  <div className="mt-3 p-2 bg-light rounded text-start">
+                    {selectedSample.price != null && (
+                      <p>
+                        <strong>Price:</strong> {selectedSample.price}{" "}
+                        {selectedSample.SamplePriceCurrency}
+                      </p>
+                    )}
+                    {selectedSample.volume != null && (
+                      <p>
+                        <strong>Volume:</strong> {selectedSample.volume}{" "}
+                        {selectedSample.VolumeUnit}
+                      </p>
+                    )}
+                    {selectedSample.CountryofCollection && (
+                      <p>
+                        <strong>Country of Collection:</strong>{" "}
+                        {selectedSample.CountryofCollection}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Side: Detailed Information */}
+                <div className="col-md-7">
+                  {(selectedSample.age != null || selectedSample.gender) && (
+                    <p>
+                      {selectedSample.age != null && (
+                        <>
+                          <strong>Age:</strong> {selectedSample.age} years{" "}
+                          {selectedSample.gender && "| "}
+                        </>
+                      )}
+                      {selectedSample.gender && <strong>Gender:</strong>}{" "}
+                      {selectedSample.gender}
+                    </p>
+                  )}
+
+                  {selectedSample.ethnicity && (
+                    <p>
+                      <strong>Ethnicity:</strong> {selectedSample.ethnicity}
+                    </p>
+                  )}
+                  {selectedSample.storagetemp && (
+                    <p>
+                      <strong>Storage Temperature:</strong> {selectedSample.storagetemp}
+                    </p>
+                  )}
+                  {selectedSample.SampleTypeMatrix && (
+                    <p>
+                      <strong>Sample Type:</strong> {selectedSample.SampleTypeMatrix}
+                    </p>
+                  )}
+                  {(selectedSample.TestResult || selectedSample.TestResultUnit) && (
+                    <p>
+                      <strong>Test Result:</strong> {selectedSample.TestResult}{" "}
+                      {selectedSample.TestResultUnit}
+                    </p>
+                  )}
+                  {selectedSample.TestMethod && (
+                    <p>
+                      <strong>Test Method:</strong> {selectedSample.TestMethod}
+                    </p>
+                  )}
+                  {selectedSample.TestKitManufacturer && (
+                    <p>
+                      <strong>Test Kit Manufacturer:</strong>{" "}
+                      {selectedSample.TestKitManufacturer}
+                    </p>
+                  )}
+                  {selectedSample.ConcurrentMedicalConditions && (
+                    <p>
+                      <strong>Concurrent Medical Conditions:</strong>{" "}
+                      {selectedSample.ConcurrentMedicalConditions}
+                    </p>
+                  )}
+                  {(selectedSample.InfectiousDiseaseTesting ||
+                    selectedSample.InfectiousDiseaseResult) && (
+                      <p>
+                        <strong>Infectious Disease Testing:</strong>{" "}
+                        {selectedSample.InfectiousDiseaseTesting} (
+                        {selectedSample.InfectiousDiseaseResult})
+                      </p>
+                    )}
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* Right Side: Detailed Information */}
-          <div className="col-md-7">
-            {(selectedSample.age != null || selectedSample.gender) && (
-              <p>
-                {selectedSample.age != null && (
-                  <>
-                    <strong>Age:</strong> {selectedSample.age} years{" "}
-                    {selectedSample.gender && "| "}
-                  </>
-                )}
-                {selectedSample.gender && <strong>Gender:</strong>}{" "}
-                {selectedSample.gender}
-              </p>
-            )}
-
-            {selectedSample.ethnicity && (
-              <p>
-                <strong>Ethnicity:</strong> {selectedSample.ethnicity}
-              </p>
-            )}
-            {selectedSample.storagetemp && (
-              <p>
-                <strong>Storage Temperature:</strong> {selectedSample.storagetemp}
-              </p>
-            )}
-            {selectedSample.SampleTypeMatrix && (
-              <p>
-                <strong>Sample Type:</strong> {selectedSample.SampleTypeMatrix}
-              </p>
-            )}
-            {(selectedSample.TestResult || selectedSample.TestResultUnit) && (
-              <p>
-                <strong>Test Result:</strong> {selectedSample.TestResult}{" "}
-                {selectedSample.TestResultUnit}
-              </p>
-            )}
-            {selectedSample.TestMethod && (
-              <p>
-                <strong>Test Method:</strong> {selectedSample.TestMethod}
-              </p>
-            )}
-            {selectedSample.TestKitManufacturer && (
-              <p>
-                <strong>Test Kit Manufacturer:</strong>{" "}
-                {selectedSample.TestKitManufacturer}
-              </p>
-            )}
-            {selectedSample.ConcurrentMedicalConditions && (
-              <p>
-                <strong>Concurrent Medical Conditions:</strong>{" "}
-                {selectedSample.ConcurrentMedicalConditions}
-              </p>
-            )}
-            {(selectedSample.InfectiousDiseaseTesting ||
-              selectedSample.InfectiousDiseaseResult) && (
-              <p>
-                <strong>Infectious Disease Testing:</strong>{" "}
-                {selectedSample.InfectiousDiseaseTesting} (
-                {selectedSample.InfectiousDiseaseResult})
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  </>
-)}
+        </>
+      )}
 
       {showModal && (
         <Modal show={showModal} onHide={handleCloseModal}>

@@ -54,11 +54,21 @@ const OrderInfo = ({ setActiveTab }) => {
         }
       );
 
-      const shipping = data.filter(item => item.order_status === "Shipped").length;
-      const dispatch = data.filter(item => item.order_status === "Dispatched").length;
-      const completed = data.filter(item => item.order_status === "Completed").length;
+     // Get unique tracking IDs for each status
+const shipping = new Set(
+  data.filter(item => item.order_status === "Shipped").map(item => item.tracking_id)
+).size;
 
-      setCounts({ shipping, dispatch, completed });
+const dispatch = new Set(
+  data.filter(item => item.order_status === "Dispatched").map(item => item.tracking_id)
+).size;
+
+const completed = new Set(
+  data.filter(item => item.order_status === "Completed").map(item => item.tracking_id)
+).size;
+
+setCounts({ shipping, dispatch, completed });
+
     } catch (error) {
       console.error("Failed to fetch sample counts:", error);
     } finally {
