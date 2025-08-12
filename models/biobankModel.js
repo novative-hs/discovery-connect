@@ -86,12 +86,15 @@ const getBiobankSamples = (
         paramsOwn.push(likeValue);
         break;
 
-      case "gender":
-        baseWhereShared += ` AND LOWER(sample.gender) = ?`;
-        baseWhereOwn += ` AND LOWER(sample.gender) = ?`;
-        paramsShared.push(`${value.toLowerCase()}%`);
-        paramsOwn.push(`${value.toLowerCase()}%`);
-        break;
+     case "gender":
+    baseWhereShared += ` AND LOWER(sample.gender) = ?`;
+    baseWhereOwn += ` AND LOWER(sample.gender) = ?`;
+    paramsShared.push(value.toLowerCase());
+    paramsOwn.push(value.toLowerCase());
+    break;
+
+    break;
+
       case "date_from":
         baseWhereShared += ` AND sample.created_at >= ?`;
         baseWhereOwn += ` AND sample.created_at >= ?`;
