@@ -6,6 +6,7 @@ import { useRouter } from "next/router";  // Importing useRouter for redirect
 import ChangePassword from './change-password';
 import UpdateCommitteemember from './update-committeemember';
 import SampleArea from './samples';
+import SampleArea1 from './review-done';
 import Header from '../../layout/dashboardheader';
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples"); // Default to "Samples"
@@ -45,6 +46,8 @@ const DashboardArea = () => {
         return <ChangePassword />;
       case "update-committeemember":
         return <UpdateCommitteemember />;
+      case "review-done":
+        return <SampleArea1 />;
       default:
         return <SampleArea />;
     }
