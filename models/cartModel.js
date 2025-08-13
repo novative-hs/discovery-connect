@@ -580,15 +580,27 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
   WHERE ca.cart_id = c.id
 ) AS committee_Approval_date,
 
-    -- Sample documents
-    (
-  SELECT GROUP_CONCAT(
-    CONCAT_WS(' | ', sd.study_copy, sd.irb_file, sd.nbc_file,sd.reporting_mechanism)
-    SEPARATOR ' || '
-  )
+   -- Sample documents: separate columns for each file
+(
+  SELECT sd.study_copy
   FROM sampledocuments sd
   WHERE sd.cart_id = c.id
-) AS sample_documents
+  LIMIT 1
+) AS study_copy,
+
+(
+  SELECT sd.irb_file
+  FROM sampledocuments sd
+  WHERE sd.cart_id = c.id
+  LIMIT 1
+) AS irb_file,
+
+(
+  SELECT sd.nbc_file
+  FROM sampledocuments sd
+  WHERE sd.cart_id = c.id
+  LIMIT 1
+) AS nbc_file
 
   FROM cart c
   JOIN user_account u ON c.user_id = u.id
@@ -629,7 +641,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
           console.error("Error fetching cart data:", err);
           callback(err, null);
         } else {
-          console.log("Res", results)
+          
           results.forEach(order => {
             if (order.order_status !== 'Dispatched' && order.order_status !== 'Shipped') {
               updateCartStatusToCompleted(order.order_id, (updateErr) => {

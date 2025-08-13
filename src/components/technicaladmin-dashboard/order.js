@@ -111,7 +111,7 @@ const OrderPage = () => {
       });
 
       const groupedOrders = Object.values(grouped);
-      console.log(groupedOrders)
+      
       setOrders(groupedOrders);
       setAllOrders(groupedOrders);
       setAllOrdersRaw(groupedOrders);
@@ -276,13 +276,15 @@ const OrderPage = () => {
     }
   };
 
-  const getBase64FromBuffer = (bufferObj) => {
-    if (!bufferObj || !bufferObj.data) return null;
-    const byteArray = new Uint8Array(bufferObj.data);
-    let binary = '';
-    byteArray.forEach((b) => binary += String.fromCharCode(b));
-    return window.btoa(binary);
+  const getBase64FromBuffer = (buffer) => {
+    if (!buffer) return null;
+
+    let arr = buffer.data ? buffer.data : buffer;
+    let blob = new Blob([new Uint8Array(arr)], { type: "application/pdf" });
+    return URL.createObjectURL(blob);
   };
+
+
 
 
   useEffect(() => {
@@ -792,28 +794,40 @@ const OrderPage = () => {
                     <tbody>
                       <tr>
                         <th>Technical Admin Receive Order Date</th>
-                        <td>{new Date(selectedHistory.Technicaladmindate).toLocaleString()}</td>
+                        <td>{new Date(selectedHistory.Technicaladmindate).toLocaleString() || "---"}</td>
                       </tr>
                       <tr>
                         <th>Committee Member Documents</th>
                         <td>
-                          {selectedHistory.sample_documents && selectedHistory.sample_documents.data ? (
-                            <a
-                              href={`data:application/pdf;base64,${getBase64FromBuffer(selectedHistory.sample_documents)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              View Document
-                            </a>
-                          ) : (
-                            "No documents"
-                          )}
+                          <div className="mb-3 d-flex flex-wrap gap-2">
+                            {["study_copy", "irb_file", "nbc_file"].map((docKey) => {
+                              return selectedHistory[docKey] ? (
+                                <button
+                                  key={docKey}
+                                  className="btn btn-outline-primary btn-sm"
+                                  onClick={() => {
+                                    const url = getBase64FromBuffer(selectedHistory[docKey]); // safe blob URL
+                                    if (url) {
+                                      window.open(url, "_blank");
+                                    }
+                                  }}
+                                >
+                                  Download {docKey.replace("_", " ").toUpperCase()}
+                                </button>
+                              ) : (
+                                <span key={docKey} className="text-muted">
+                                  {docKey.replace("_", " ").toUpperCase()} Not Available
+                                </span>
+                              );
+                            })}
+                          </div>
                         </td>
+
                       </tr>
 
                       <tr>
                         <th>Transfer to Committee Member Date</th>
-                        <td>{selectedHistory.committee_created_dates}</td>
+                        <td>{selectedHistory.committee_created_dates || "---"}</td>
                       </tr>
                       <tr>
                         <th>Committee Member Status</th>
@@ -831,7 +845,7 @@ const OrderPage = () => {
 
                       <tr>
                         <th>Committee Member Approval Date</th>
-                        <td>{selectedHistory.committee_Approval_date}</td>
+                        <td>{selectedHistory.committee_Approval_date || "---"}</td>
                       </tr>
                       <tr>
                         <th>Technical Admin Approval Date</th>

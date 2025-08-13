@@ -280,13 +280,7 @@ const OrderRejectedPage = () => {
                             variant="secondary"
                             size="sm"
                             onClick={() => {
-                              setSelectedHistory({
-                                Technicaladmindate: orderGroup.Technicaladmindate,
-                                committeeDocs: orderGroup.committee_documents || "No documents",
-                                transferDate: orderGroup.committee_transfer_date || "N/A",
-                                status: orderGroup.committee_status || "N/A",
-                                statusChangeDate: orderGroup.committee_status_change_date || "N/A",
-                              });
+                              setSelectedHistory(orderGroup);
                               setShowHistoryModal(true);
                             }}
                           >
@@ -438,6 +432,8 @@ const OrderRejectedPage = () => {
               </Modal.Body>
             </Modal>
           )}
+
+
           <Modal
             show={showHistoryModal}
             onHide={() => setShowHistoryModal(false)}
@@ -453,36 +449,63 @@ const OrderRejectedPage = () => {
                   <table className="table table-bordered">
                     <tbody>
                       <tr>
-                        <th>Order Date</th>
-                        <td>{new Date(selectedHistory.Technicaladmindate).toLocaleString()}</td>
+                        <th>Technical Admin Receive Order Date</th>
+                        <td>{new Date(selectedHistory.Technicaladmindate).toLocaleString() || "---"}</td>
                       </tr>
                       <tr>
                         <th>Committee Member Documents</th>
                         <td>
-                          {selectedHistory.committeeDocs !== "No documents" ? (
-                            <a
-                              href={selectedHistory.committeeDocs}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              View Document
-                            </a>
-                          ) : (
-                            "No documents"
-                          )}
+                          <div className="mb-3 d-flex flex-wrap gap-2">
+                            {["study_copy", "irb_file", "nbc_file"].map((docKey) => {
+                              return selectedHistory[docKey] ? (
+                                <button
+                                  key={docKey}
+                                  className="btn btn-outline-primary btn-sm"
+                                  onClick={() => {
+                                    const url = getBase64FromBuffer(selectedHistory[docKey]); // safe blob URL
+                                    if (url) {
+                                      window.open(url, "_blank");
+                                    }
+                                  }}
+                                >
+                                  Download {docKey.replace("_", " ").toUpperCase()}
+                                </button>
+                              ) : (
+                                <span key={docKey} className="text-muted">
+                                  {docKey.replace("_", " ").toUpperCase()} Not Available
+                                </span>
+                              );
+                            })}
+                          </div>
                         </td>
+
                       </tr>
+
                       <tr>
-                        <th>Committee Member Transfer Date</th>
-                        <td>{selectedHistory.transferDate}</td>
+                        <th>Transfer to Committee Member Date</th>
+                        <td>{selectedHistory.committee_created_dates || "---"}</td>
                       </tr>
                       <tr>
                         <th>Committee Member Status</th>
-                        <td>{selectedHistory.status}</td>
+                        <td>
+                          <div>
+                            <strong>Scientific:</strong>{" "}
+                            {selectedHistory.scientific_committee_status || "Pending"}
+                          </div>
+                          <div>
+                            <strong>Ethical:</strong>{" "}
+                            {selectedHistory.ethical_committee_status || "Pending"}
+                          </div>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <th>Committee Member Approval Date</th>
+                        <td>{selectedHistory.committee_Approval_date || "---"}</td>
                       </tr>
                       <tr>
-                        <th>Status Change Date & Time</th>
-                        <td>{selectedHistory.statusChangeDate}</td>
+                        <th>Technical Admin Approval Date</th>
+                        <td>{selectedHistory.TechnicaladminApproval_date || "---"}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -492,7 +515,6 @@ const OrderRejectedPage = () => {
               )}
             </Modal.Body>
           </Modal>
-
 
           {/* Reviw comments */}
           <Modal
