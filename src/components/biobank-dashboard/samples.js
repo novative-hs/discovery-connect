@@ -1838,8 +1838,9 @@ const BioBankSampleArea = () => {
                                       height: "45px",
                                       fontSize: "14px",
                                       backgroundColor: !formData.age
-                                        ? "#fdecea"
+                                        ? "#fff"
                                         : "#fff",
+
                                     }}
                                   />
                                 </div>
@@ -1883,7 +1884,7 @@ const BioBankSampleArea = () => {
                                       height: "45px",
                                       fontSize: "14px",
                                       backgroundColor: !formData.MRNumber
-                                        ? "#fdecea"
+                                        ? "#fff"
                                         : "#fff",
                                     }}
                                   />
@@ -1903,7 +1904,7 @@ const BioBankSampleArea = () => {
                                       height: "45px",
                                       fontSize: "14px",
                                       backgroundColor: !formData.phoneNumber
-                                        ? "#fdecea"
+                                        ? "#fff"
                                         : "#fff",
                                     }}
                                     pattern="03[0-9]{2}-[0-9]{7}"
@@ -2805,7 +2806,7 @@ const BioBankSampleArea = () => {
                           className="form-check-label"
                           htmlFor="toggleDetails"
                         >
-                          Add Additional Details
+                          Add Additional Details <span className="text-danger">(can be added if above mandatory fields are enter)</span>
                         </label>
                       </div>
                       <button type="submit" className="btn btn-primary">

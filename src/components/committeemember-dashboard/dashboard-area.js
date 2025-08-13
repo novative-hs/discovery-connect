@@ -2,11 +2,12 @@ import Link from "next/link";
 import { React, useState, useEffect } from "react";
 import { useRouter } from "next/router";  // Importing useRouter for redirect
 // internal
-
+import SampleArea1 from './reviewdone'
 import ChangePassword from './change-password';
 import UpdateCommitteemember from './update-committeemember';
 import SampleArea from './samples';
 import Header from '../../layout/dashboardheader';
+
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples"); // Default to "Samples"
   const router = useRouter();
@@ -45,6 +46,8 @@ const DashboardArea = () => {
         return <ChangePassword />;
       case "update-committeemember":
         return <UpdateCommitteemember />;
+        case "reviewdone":
+          return <SampleArea1 />
       default:
         return <SampleArea />;
     }

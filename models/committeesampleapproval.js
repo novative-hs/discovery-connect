@@ -216,7 +216,8 @@ const updateCommitteeStatus = async (cart_ids, committee_member_id, committee_st
 
     const updateQuery = `
       UPDATE committeesampleapproval 
-      SET committee_status = ?, comments = ? 
+      SET committee_status = ?, comments = ? ,
+     Approval_date = NOW()
       WHERE committee_member_id = ? AND cart_id = ?`;
 
     await new Promise((resolve) => {

@@ -9,8 +9,25 @@ const tablesAndColumns = [
         type: "VARCHAR(500)",
         nullable: true,
       },
+      {
+        column:"Approval_date",
+        type:"TIMESTAMP",
+        nullable: true,
+      }
     ]
   },
+  {
+    table:"committeesampleapproval",
+    columnsToAdd:[
+      
+      {
+        column:"Approval_date",
+        type:"TIMESTAMP",
+        nullable: true,
+      }
+    ]
+  },
+
 
   {
     table: "sample",

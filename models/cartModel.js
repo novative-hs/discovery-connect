@@ -171,8 +171,8 @@ const updateCartStatusToCompleted = (cartId, callback) => {
         });
       });
     }
-    else{
-         return callback(null, null);
+    else {
+      return callback(null, null);
     }
 
   });
@@ -508,72 +508,102 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
     queryParams.push(`%${searchValue}%`);
     whereClauses.push(searchCondition);
   }
-  if (status === 'Rejected') {
-    whereClauses.push("c.order_status = 'Rejected'");
-  } else if (status === 'Accepted') {
-    whereClauses.push("c.order_status != 'Rejected'");
-  } else {
-    // Handles specific statuses like Pending, Dispatched, Shipped etc.
-    whereClauses.push("c.order_status = ?");
-    queryParams.push(status);
+  if (status === 'Pending') {
+    whereClauses.push("c.order_status = 'Pending'");
   }
 
   const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
   const sqlQuery = `
-    SELECT 
-      c.id AS order_id, 
-      c.tracking_id,
-      c.user_id, 
-      u.email AS user_email,
-      r.ResearcherName AS researcher_name,
-      r.phoneNumber AS phoneNumber, 
-      org.OrganizationName AS organization_name,
-      cs.CollectionSiteName AS collectionsitename,
-      b.Name AS biobankname,
-      COALESCE(cs.CollectionSiteName, b.Name) AS source_name,
-      c.sample_id, 
-      s.Analyte, 
-      s.VolumeUnit,
-      s.volume,
-      s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
-      s.CountryofCollection, s.VolumeUnit, s.SampleTypeMatrix, s.SmokingStatus, 
-      s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
-      s.FreezeThawCycles, s.dateOfSampling, s.ConcurrentMedicalConditions, 
-      s.ConcurrentMedications, s.Analyte, s.TestResult, 
-      s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
-      s.TestSystemManufacturer, s.SamplePriceCurrency,
-      c.price, 
-      c.quantity,  
-      c.totalpayment, 
-      c.order_status,
-      c.created_at,
-      IFNULL(ra.technical_admin_status, NULL) AS technical_admin_status,
+  SELECT 
+    c.id AS order_id, 
+    c.tracking_id,
+    c.user_id, 
+    u.email AS user_email,
+    r.ResearcherName AS researcher_name,
+    r.phoneNumber AS phoneNumber, 
+    org.OrganizationName AS organization_name,
+    cs.CollectionSiteName AS collectionsitename,
+    b.Name AS biobankname,
+    COALESCE(cs.CollectionSiteName, b.Name) AS source_name,
+    c.sample_id, 
+    s.Analyte, 
+    s.VolumeUnit,
+    s.volume,
+    s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
+    s.CountryofCollection, s.VolumeUnit, s.SampleTypeMatrix, s.SmokingStatus, 
+    s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
+    s.FreezeThawCycles, s.dateOfSampling, s.ConcurrentMedicalConditions, 
+    s.ConcurrentMedications, s.Analyte, s.TestResult, 
+    s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
+    s.TestSystemManufacturer, s.SamplePriceCurrency,
+    c.price, 
+    c.quantity,  
+    c.totalpayment, 
+    c.order_status,
+    c.created_at,
+    IFNULL(ra.technical_admin_status, NULL) AS technical_admin_status,
+    ra.created_at AS Technicaladmindate,
+    ra.Approval_date AS TechnicaladminApproval_date,
+    ${baseCommitteeStatus('Ethical')} AS ethical_committee_status,
+    ${baseCommitteeStatus('Scientific')} AS scientific_committee_status,
 
-      ${baseCommitteeStatus('Ethical')} AS ethical_committee_status,
-      ${baseCommitteeStatus('Scientific')} AS scientific_committee_status,
+    -- Comments only
+(
+  SELECT GROUP_CONCAT(
+    DISTINCT CONCAT(cm.CommitteeMemberName, ' (', cm.committeetype, ') : ', ca.comments)
+    SEPARATOR ' | '
+  )
+  FROM committeesampleapproval ca
+  JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+  WHERE ca.cart_id = c.id
+) AS committee_comments,
 
-      (SELECT GROUP_CONCAT(
-          DISTINCT CONCAT(cm.CommitteeMemberName, ' (', cm.committeetype, ') : ', ca.comments) 
-          SEPARATOR ' | ')
-       FROM committeesampleapproval ca
-       JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-       WHERE ca.cart_id = c.id
-      ) AS committee_comments
+-- Dates only
+(
+  SELECT GROUP_CONCAT(
+    DISTINCT DATE_FORMAT(ca.created_at, '%Y-%m-%d %H:%i:%s')
+    SEPARATOR ' | '
+  )
+  FROM committeesampleapproval ca
+  JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+  WHERE ca.cart_id = c.id
+) AS committee_created_dates,
 
-    FROM cart c
-    JOIN user_account u ON c.user_id = u.id
-    LEFT JOIN researcher r ON u.id = r.user_account_id 
-    LEFT JOIN organization org ON r.nameofOrganization = org.id
-    JOIN sample s ON c.sample_id = s.id
-    LEFT JOIN biobank b ON s.user_account_id = b.user_account_id
-    LEFT JOIN collectionsitestaff css ON s.user_account_id = css.user_account_id
-    LEFT JOIN collectionsite cs ON css.collectionsite_id = cs.id
-    LEFT JOIN technicaladminsampleapproval ra ON c.id = ra.cart_id
-    ${whereClause}
-    ORDER BY c.created_at DESC
-    LIMIT ? OFFSET ?
-  `;
+(
+  SELECT GROUP_CONCAT(
+    DISTINCT DATE_FORMAT(ca.Approval_date, '%Y-%m-%d %H:%i:%s')
+    SEPARATOR ' | '
+  )
+  FROM committeesampleapproval ca
+  JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+  WHERE ca.cart_id = c.id
+) AS committee_Approval_date,
+
+    -- Sample documents
+    (
+  SELECT GROUP_CONCAT(
+    CONCAT_WS(' | ', sd.study_copy, sd.irb_file, sd.nbc_file,sd.reporting_mechanism)
+    SEPARATOR ' || '
+  )
+  FROM sampledocuments sd
+  WHERE sd.cart_id = c.id
+) AS sample_documents
+
+  FROM cart c
+  JOIN user_account u ON c.user_id = u.id
+  LEFT JOIN researcher r ON u.id = r.user_account_id 
+  LEFT JOIN organization org ON r.nameofOrganization = org.id
+  JOIN sample s ON c.sample_id = s.id
+  LEFT JOIN biobank b ON s.user_account_id = b.user_account_id
+  LEFT JOIN collectionsitestaff css ON s.user_account_id = css.user_account_id
+  LEFT JOIN collectionsite cs ON css.collectionsite_id = cs.id
+  LEFT JOIN technicaladminsampleapproval ra ON c.id = ra.cart_id
+  ${whereClause}
+  ORDER BY c.created_at DESC
+  LIMIT ? OFFSET ?
+`;
+
   queryParams.push(parseInt(pageSize), parseInt(offset));
 
   const countQuery = `
@@ -599,7 +629,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
           console.error("Error fetching cart data:", err);
           callback(err, null);
         } else {
-
+          console.log("Res", results)
           results.forEach(order => {
             if (order.order_status !== 'Dispatched' && order.order_status !== 'Shipped') {
               updateCartStatusToCompleted(order.order_id, (updateErr) => {
@@ -628,7 +658,9 @@ const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, ca
 
   if (searchField && searchValue) {
     let dbField = searchField;
-
+    if (searchField === "created_at") {
+      dbField = "c.created_at";
+    }
     // Mapping fields to DB fields
     if (searchField === "tracking_id") {
       dbField = "c.tracking_id";
@@ -850,7 +882,7 @@ const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comme
     await Promise.all(cartIds.map(async (id) => {
       await queryAsync(
         `UPDATE technicaladminsampleapproval 
-         SET technical_admin_status = ?, Comments = ?
+         SET technical_admin_status = ?, Comments = ?,Approval_date = NOW()
          WHERE cart_id = ?`,
         [technical_admin_status, comment, id]
       );
@@ -951,7 +983,7 @@ const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comme
 const updateCartStatusbyCSR = async (ids, req, callback) => {
   try {
     const { cartStatus, deliveryDate, deliveryTime } = req.body;
-   const message = `
+    const message = `
   <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
     <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
 
@@ -960,11 +992,10 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
       </p>
 
       <p style="font-size: 15px; color: #555;">
-        ${
-          cartStatus === 'Shipped'
-            ? "📦 Your sample request has been <b style='color:#007bff;'>Shipped</b> and is on its way."
-            : "ℹ️ Your sample request status has been updated."
-        }
+        ${cartStatus === 'Shipped'
+        ? "📦 Your sample request has been <b style='color:#007bff;'>Shipped</b> and is on its way."
+        : "ℹ️ Your sample request status has been updated."
+      }
       </p>
 
       <p style="font-size: 15px; color: #555;">

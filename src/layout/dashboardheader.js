@@ -223,12 +223,15 @@ const Header = ({ setActiveTab, activeTab }) => {
               { label: "Quote Pending Request", tab: "pendingquoterequest" },
               { label: "Quarantine Stock", tab: "Quarantine-Stock" },
             ]
+
             : userType == "committeemember"
-              ? [{ label: "Pending Review List", tab: "samples" }]
+              ? [{ label: "Review Pending", tab: "samples" },
+              { label: "Review Done List", tab: "reviewdone" }
+              ]
               : userType == "technicaladmin"
                 ? [
-                  { label: "Order List", tab: "order" },
-                  { label: "Order Rejected List", tab: "orderrejected" },
+                  { label: "Review Pending List", tab: "order" },
+                  { label: "Review Done List", tab: "orderrejected" },
                 ]
                 : userType == "csr"
                   ? [

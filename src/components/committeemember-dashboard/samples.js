@@ -45,12 +45,11 @@ const SampleArea = () => {
     created_at: "",
   });
   const tableHeaders = [
-    { label: "Order Date", key: "created_at" },
     { label: "Order ID", key: "tracking_id" },
+    { label: "Order Date", key: "created_at" },
     { label: "Researcher Name", key: "researcher_name" },
     { label: "Organization Name", key: "organization_name" },
     { label: "Review Status", key: "committee_status" },
-    { label: "Review Comments", key: "comments" },
   ];
   const SampleHeader = [
     { label: "Analyte", key: "Analyte" },
@@ -82,9 +81,11 @@ const SampleArea = () => {
         axios.get(orderUrl),
         axios.get(docUrl),
       ]);
+      const orders = (orderRes.data.results || []).filter(order =>
+        order.committee_status === "Pending" // Filter for Pending status
+      );
 
-      const orders = orderRes.data.results || [];
-      const totalCount = orderRes.data.totalCount || 0;
+      const totalCount = orders.length; // Adjusted count
       const documents = docRes.data.results || [];
 
       const docMap = {};
@@ -98,13 +99,14 @@ const SampleArea = () => {
         ...order,
         ...(docMap[order.cart_id] || {}),
       }));
+
       setSamples(merged);
       setFilteredSamplename(merged);
       setTotalPages(Math.ceil(totalCount / pageSize));
     } catch (error) {
       console.error("Error fetching data:", error);
     }
-  }, [id]); // Only depend on `id`
+  }, [id]);
 
   useEffect(() => {
     if (id) {
@@ -222,8 +224,10 @@ const SampleArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
       );
 
-      const updatedOrders = updatedOrderRes.data.results || [];
       const updatedDocuments = updatedDocRes.data.results || [];
+      const updatedOrders = (orderRes.data.results || []).filter(order =>
+        order.committee_status === "Pending" // Filter for Pending status
+      );
 
       const updatedDocMap = {};
       updatedDocuments.forEach((doc) => {
@@ -271,7 +275,7 @@ const SampleArea = () => {
   if (!id) return <div>Loading...</div>;
   return (
     <div className="container py-3">
-      <h4 className="text-center text-success">Pending Review List</h4>
+      <h4 className="text-center text-success">Review Pending List</h4>
       <div
         onScroll={handleScroll}
         className="table-responsive"
@@ -306,17 +310,18 @@ const SampleArea = () => {
           <tbody>
             {Object.entries(groupedByResearcher).map(([researcher, group], idx) => (
               <tr key={idx}>
+
+                <td>{group[0].tracking_id}</td>
                 <td>{new Date(group[0].created_at).toLocaleDateString('en-GB', {
                   day: 'numeric',
                   month: 'short',
                   year: '2-digit'
                 }).replace(/ /g, '-')}
                 </td>
-                <td>{group[0].tracking_id}</td>
                 <td>{group[0].researcher_name}</td>
                 <td>{group[0].organization_name}</td>
                 <td>{group[0].committee_status}</td>
-                <td>{group[0].comments || "----"}</td>
+
 
                 <td>
                   <button
