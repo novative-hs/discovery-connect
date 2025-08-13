@@ -86,11 +86,27 @@ const getBiobankSamples = (
         paramsOwn.push(likeValue);
         break;
 
-      case "gender":
-        baseWhereShared += ` AND LOWER(sample.gender) LIKE ?`;
-        baseWhereOwn += ` AND LOWER(sample.gender) LIKE ?`;
-        paramsShared.push(`${value.toLowerCase()}%`);
-        paramsOwn.push(`${value.toLowerCase()}%`);
+     case "gender":
+    baseWhereShared += ` AND LOWER(sample.gender) = ?`;
+    baseWhereOwn += ` AND LOWER(sample.gender) = ?`;
+    paramsShared.push(value.toLowerCase());
+    paramsOwn.push(value.toLowerCase());
+    break;
+
+    break;
+
+      case "date_from":
+        baseWhereShared += ` AND sample.created_at >= ?`;
+        baseWhereOwn += ` AND sample.created_at >= ?`;
+        paramsShared.push(value + " 00:00:00");
+        paramsOwn.push(value + " 00:00:00");
+        break;
+
+      case "date_to":
+        baseWhereShared += ` AND sample.created_at <= ?`;
+        baseWhereOwn += ` AND sample.created_at <= ?`;
+        paramsShared.push(value + " 23:59:59");
+        paramsOwn.push(value + " 23:59:59");
         break;
 
       case "Analyte":
@@ -421,10 +437,24 @@ const postSamplePrice = (data, callback) => {
 
               // ✅ Send email to researcher
               const emailBody = `
-                <p>Dear ${quote.ResearcherName},</p>
-                <p>The price for one of your requested samples has been updated.</p>
-                <p>You can now proceed to order this sample from your dashboard.</p>
-                <p>Regards,<br/>Biobank Team</p>
+                <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
+                  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <p style="font-size: 16px; color: #333;">Dear ${quote.ResearcherName},</p>
+
+                    <p style="font-size: 15px; color: #555;">
+                      The price for one of your requested samples has been updated.
+                    </p>
+
+                    <p style="font-size: 15px; color: #555;">
+                      You can now proceed to order this sample from your dashboard.
+                    </p>
+
+                    <p style="font-size: 15px; color: #333; margin-top: 20px;">
+                      Regards,<br>
+                      <strong>Biobank Team</strong>
+                    </p>
+                  </div>
+                </div>
               `;
 
               try {

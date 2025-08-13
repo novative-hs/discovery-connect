@@ -1,4 +1,3 @@
-// Modified SampleArea Component with Grouped Researcher View
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
@@ -164,97 +163,6 @@ const SampleArea1 = () => {
 
         return hasViewedRequired && hasViewedOptional;
     };
-
-    // OPEN MODAL HANDLER
-    const handleOpenModal = (type, samplesGroup) => {
-        if (!samplesGroup || !samplesGroup.length) {
-            alert("Sample data is missing.");
-            return;
-        }
-
-        if (!allDocumentsViewed()) {
-            alert("Please view all required documents before proceeding.");
-            return;
-        }
-
-        setSelectedSample(samplesGroup[0]); // Use first sample as reference
-        setActionType(type);
-        setShowModal(true);
-    };
-
-    // Close Modal
-    const handleCloseModal = () => {
-        setSelectedSample(null); // Ensure the selected sample is set
-        setActionType(null);
-        setShowModal(false);
-    };
-
-    const handleSubmit = async () => {
-        const trimmedComment = comment.trim();
-
-        if (!id || !selectedResearcherSamples || selectedResearcherSamples.length === 0 || !trimmedComment) {
-            alert("Please enter a comment.");
-            return;
-        }
-
-        try {
-            // Prepare payload with all cart_ids at once
-            const payload = {
-                committee_member_id: id,
-                committee_status: actionType, // "Approved" or "Refused"
-                comments: trimmedComment,
-                cart_ids: selectedResearcherSamples.map(sample => sample.cart_id),
-            };
-
-            // Send a single request
-            await axios.put(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/bulk-committee-approval`,
-                payload
-            );
-
-            notifySuccess(`${actionType} successful for all samples.`);
-            setShowModal(false);
-            setComment("");
-
-            // ✅ Refetch updated data
-            const updatedOrderRes = await axios.get(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
-            );
-            const updatedDocRes = await axios.get(
-                `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
-            );
-
-            const updatedOrders = updatedOrderRes.data.results || [];
-            const updatedDocuments = updatedDocRes.data.results || [];
-
-            const updatedDocMap = {};
-            updatedDocuments.forEach((doc) => {
-                if (doc.cart_id) {
-                    updatedDocMap[doc.cart_id] = doc;
-                }
-            });
-
-            const updatedMerged = updatedOrders.map((order) => ({
-                ...order,
-                ...(updatedDocMap[order.cart_id] || {}),
-            }));
-
-            setSamples(updatedMerged);
-
-            const updatedGroup = updatedMerged.filter(
-                (s) => s.tracking_id === selectedResearcherSamples[0].tracking_id
-            );
-            setSelectedResearcherSamples(updatedGroup);
-
-        } catch (error) {
-            console.error("❌ Error updating samples:", error);
-            notifyError("Bulk approval/refusal failed. Please check logs.");
-        }
-    };
-
-
-
-
 
     const handleScroll = (e) => {
         const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;

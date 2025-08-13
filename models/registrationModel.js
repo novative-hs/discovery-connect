@@ -792,8 +792,8 @@ const loginAccount = (data, callback) => {
           }
 
           if (CommitteememberResults.length > 0 && CommitteememberResults[0].status.toLowerCase() === "active") {
-            
-             user.committeetype = CommitteememberResults[0].committeetype;
+
+            user.committeetype = CommitteememberResults[0].committeetype;
             return callback(null, user); // Return user info if approved
           } else {
             return callback({ status: "fail", message: "Account is not approved" }, null);
@@ -1022,7 +1022,7 @@ const sendEmailForOrder = async (req, callback) => {
     for (const item of newQuotes) {
       await mysqlConnection.promise().query(
         `INSERT INTO quote_requests (researcher_id,quantity, sample_id, status) VALUES (?,?, ?, 'pending')`,
-        [userID, item.quantity,item.id]
+        [userID, item.quantity, item.id]
       );
     }
 
@@ -1063,10 +1063,26 @@ const sendEmailForOrder = async (req, callback) => {
     `;
 
     const researcherEmailText = `
-      <p>Dear ${researcherName},</p>
-      <p>Thank you for your submission.</p>
-      <p>Some items in your cart are awaiting price confirmation from the Biobank. You will be notified once pricing is updated so you can proceed with checkout.</p>
-      <p>Thank you for your patience.</p>
+     <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
+  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <p style="font-size: 16px; color: #333;">Dear {{researcherName}},</p>
+
+    <p style="font-size: 15px; color: #555;">Thank you for your submission.</p>
+
+    <p style="font-size: 15px; color: #555;">
+      Some items in your cart are awaiting price confirmation from the Biobank. 
+      You will be notified once the pricing is updated so you can proceed with checkout.
+    </p>
+
+    <p style="font-size: 15px; color: #555;">Thank you for your patience.</p>
+
+    <p style="font-size: 15px; color: #333; margin-top: 20px;">
+      Regards,<br>
+      <strong>Discovery Connect Team</strong>
+    </p>
+  </div>
+</div>
+
     `;
 
     // ✅ Send emails if new quotes exist

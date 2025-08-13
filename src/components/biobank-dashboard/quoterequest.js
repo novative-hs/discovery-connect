@@ -13,7 +13,6 @@ const QuoteRequestTable = () => {
   const [groupCurrency, setGroupCurrency] = useState("");
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [isReadOnly, setIsReadOnly] = useState(false);
-
   // Fetch currency options
   useEffect(() => {
     const fetchCurrencies = async () => {
@@ -38,7 +37,7 @@ const QuoteRequestTable = () => {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getPriceCount`
         );
-        
+
         setSamples(response.data);
       } catch (error) {
         console.error("Error fetching quote requests:", error);
@@ -89,37 +88,22 @@ const QuoteRequestTable = () => {
 
   // Submit all samples in selected quote
   const handleSubmitAll = async () => {
-    if (!selectedQuote || selectedQuote.length === 0) return;
-
-    // Validate currency selection
+    if (!selectedQuote || selectedQuote.length === 0 || !groupCurrency) return;
     if (!groupCurrency) {
       setCurrencyError("Please select a currency");
       return;
     }
-
-    try {
-      for (const sample of selectedQuote) {
-        const sampleId = sample.sample_id;
-        const price = priceInputs[sampleId];
-
-        // Skip if no price entered for this sample
-        if (!price) continue;
-
-        await submitSamplePrice(sampleId, groupCurrency);
-      }
-
-      alert("All prices updated successfully!");
-      setShowCartModal(false);
-      setSelectedQuote(null);
-      setPriceInputs({});
-      setGroupCurrency("");
-      setCurrencyError(""); // Clear error on success
-    } catch (error) {
-      console.error("Error submitting prices:", error);
-      alert("Failed to update prices. Please try again.");
+    for (const sample of selectedQuote) {
+      const sampleId = sample.sample_id;
+      await submitSamplePrice(sampleId, groupCurrency);
     }
-  };
 
+    alert("All prices updated successfully!");
+    setShowCartModal(false);
+    setSelectedQuote(null);
+    setPriceInputs({});
+    setGroupCurrency("");
+  };
 
   return (
     <div className="container-fluid">
@@ -159,7 +143,7 @@ const QuoteRequestTable = () => {
                     <button
                       className="btn btn-sm btn-secondary"
                       onClick={() => {
-                        
+
                         setSelectedQuote(samples);
                         setShowCartModal(true);
                         setIsReadOnly(true);
@@ -204,12 +188,12 @@ const QuoteRequestTable = () => {
               <div className="d-flex justify-content-end align-items-center gap-2 mb-3">
                 <label className="mb-0 fw-bold">Currency:</label>
                 <select
-                  className={`form-select form-select-sm ${currencyError ? "is-invalid" : ""}`}
+                  className="form-select form-select-sm"
                   style={{ width: "160px" }}
                   value={groupCurrency}
                   onChange={(e) => {
-                    setGroupCurrency(e.target.value);
-                    setCurrencyError(""); // Clear error when user selects currency
+                    setGroupCurrency(e.target.value)
+                    setCurrencyError("")
                   }}
                 >
                   <option value="">Select</option>
@@ -221,8 +205,6 @@ const QuoteRequestTable = () => {
                 </select>
               </div>
             )}
-
-            {/* Show error message if exists */}
             {currencyError && (
               <div className="invalid-feedback d-block" style={{ fontSize: "0.9rem", marginLeft: "600px" }}>
                 {currencyError}

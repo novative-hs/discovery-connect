@@ -126,7 +126,16 @@ const BioBankSampleArea = () => {
             }`.toLowerCase();
           return combinedVolume.includes(lowerValue);
         }
-
+        if (field === "gender_age") {
+          // Check if input is just a gender
+          if (["male", "female"].includes(lowerValue)) {
+            return sample.gender?.toLowerCase() === lowerValue;
+          }
+          const genderMatch = sample.gender?.toLowerCase().includes(lowerValue);
+          const ageMatch = sample.age?.toString().toLowerCase().includes(lowerValue);
+          const combined = `${sample.gender || ""} ${sample.age || ""}`.toLowerCase().trim();
+          return genderMatch || ageMatch || combined.includes(lowerValue);
+        }
         if (field === "price") {
           const combinedPrice = `${sample.price ?? ""} ${sample.SamplePriceCurrency ?? ""
             }`.toLowerCase();

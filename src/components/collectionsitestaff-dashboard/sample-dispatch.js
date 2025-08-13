@@ -174,6 +174,11 @@ const SampleDispatchArea = () => {
           return combinedVolume.includes(lowerValue);
         }
 
+        if (field === "gender_age") {
+          const combinedagegender = `${sample.gender ?? ""} ${sample.age ?? ""}`.toLowerCase();
+          return combinedagegender.includes(lowerValue);
+        }
+
         if (field === "TestResult") {
           const combinedPrice = `${sample.TestResult ?? ""} ${sample.TestResultUnit ?? ""}`.toLowerCase();
           return combinedPrice.includes(lowerValue);

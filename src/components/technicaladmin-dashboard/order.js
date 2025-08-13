@@ -4,12 +4,7 @@ import Pagination from "@ui/Pagination";
 import { Modal, Button, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faCheck,
-  faEllipsisV,
-  faExchangeAlt,
-  faEye,
-  faTimes,
-  faTruck,
+  faDownload
 } from "@fortawesome/free-solid-svg-icons";
 import { notifyError, notifySuccess } from "@utils/toast";
 
@@ -19,11 +14,11 @@ const OrderPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showSampleModal, setSampleShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
-  const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [actionType, setActionType] = useState("");
@@ -37,6 +32,10 @@ const OrderPage = () => {
     const saved = localStorage.getItem("transferredOrders");
     return saved ? JSON.parse(saved) : [];
   });
+  // New state
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedHistory, setSelectedHistory] = useState(null);
+
 
   const [comment, setComment] = useState("");
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -50,7 +49,11 @@ const OrderPage = () => {
 
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-
+  const [viewedDocuments, setViewedDocuments] = useState({
+    study_copy: false,
+    irb_file: false,
+    nbc_file: false,
+  });
   const handleCloseModal = () => {
     setSelectedOrderId(null);
     setShowModal(false);
@@ -86,7 +89,7 @@ const OrderPage = () => {
     setLoading(true);
     try {
       const { searchField, searchValue } = filters;
-      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder?page=${page}&pageSize=${pageSize}&status=Accepted`;
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder?page=${page}&pageSize=${pageSize}&status=Pending`;
 
       if (searchField && searchValue) {
         url += `&searchField=${searchField}&searchValue=${encodeURIComponent(searchValue)}`;
@@ -108,7 +111,7 @@ const OrderPage = () => {
       });
 
       const groupedOrders = Object.values(grouped);
-
+      console.log(groupedOrders)
       setOrders(groupedOrders);
       setAllOrders(groupedOrders);
       setAllOrdersRaw(groupedOrders);
@@ -273,6 +276,14 @@ const OrderPage = () => {
     }
   };
 
+  const getBase64FromBuffer = (bufferObj) => {
+    if (!bufferObj || !bufferObj.data) return null;
+    const byteArray = new Uint8Array(bufferObj.data);
+    let binary = '';
+    byteArray.forEach((b) => binary += String.fromCharCode(b));
+    return window.btoa(binary);
+  };
+
 
   useEffect(() => {
     if (showSampleModal || showTransferModal || showCommentsModal) {
@@ -297,7 +308,7 @@ const OrderPage = () => {
 
         <div className="row justify-content-center">
           <h4 className="tp-8 fw-bold text-success text-center pb-2">
-            Order Detail
+            Review Pending
           </h4>
 
           {/* Table */}
@@ -313,7 +324,7 @@ const OrderPage = () => {
                     },
                     { label: "Client Name", field: "researcher_name" },
                     { label: "Client Email", field: "user_email" },
-                    { label: "Client Contact", field: "phoneNumber" },
+
                     {
                       label: "Organization Name",
                       field: "organization_name",
@@ -377,7 +388,6 @@ const OrderPage = () => {
                       }).replace(/ /g, '-')}</td>
                       <td>{orderGroup.researcher_name}</td>
                       <td>{orderGroup.user_email}</td>
-                      <td>{orderGroup.phoneNumber}</td>
                       <td>{orderGroup.organization_name}</td>
                       <td>
                         <span className={`badge text-uppercase fw-semibold text-dark fs-6
@@ -394,19 +404,31 @@ const OrderPage = () => {
 
 
                       <td>
-                        <span
-                          className="text-primary"
-                          style={{ cursor: "pointer" }}
-                          onClick={() => {
+                        <div className="d-flex gap-2 justify-content-center">
+                          <span
+                            className="text-primary"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => {
+                              setSelectedOrder(orderGroup);
+                              setShowOrderModal(true);
+                            }}
+                          >
+                            View Details
+                          </span>
 
-                            setSelectedOrder(orderGroup); // save full group
-                            setShowOrderModal(true);
-
-                          }}
-                        >
-                          View Details
-                        </span>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedHistory(orderGroup);
+                              setShowHistoryModal(true);
+                            }}
+                          >
+                            History
+                          </Button>
+                        </div>
                       </td>
+
 
                     </tr>
                   ))
@@ -497,7 +519,7 @@ const OrderPage = () => {
                             variant={
                               selectedOrder.analytes?.some(
                                 item =>
-                                  item.scientific_committee_status === "Approved" &&
+                                  (item.scientific_committee_status === "Approved" || item.scientific_committee_status === "Not Sent" || item.scientific_committee_status === "Refused") &&
                                   (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent")
                               )
                                 ? "outline-success"
@@ -511,7 +533,7 @@ const OrderPage = () => {
                             disabled={
                               !selectedOrder.analytes?.some(
                                 item =>
-                                  (item.scientific_committee_status === "Approved" || item.scientific_committee_status === "Refused") &&
+                                  (item.scientific_committee_status === "Approved" || item.scientific_committee_status === "Not Sent" || item.scientific_committee_status === "Refused") &&
                                   (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent" || item.ethical_committee_status === "Refused")
                               )
                             }
@@ -698,7 +720,7 @@ const OrderPage = () => {
                             fontSize: "1.05rem",
                           }}
                         >
-                     Committee Member Name: {committeeName || "Committee Member"}
+                          Committee Member Name: {committeeName || "Committee Member"}
                         </p>
                         <p
                           style={{
@@ -708,7 +730,7 @@ const OrderPage = () => {
                             fontStyle: "italic",
                           }}
                         >
-                       Committee Member Type:   {r.committee}
+                          Committee Member Type:   {r.committee}
                         </p>
                         <p
                           style={{
@@ -733,7 +755,7 @@ const OrderPage = () => {
                             whiteSpace: "pre-wrap",
                           }}
                         >
-                           Committee Member Comments: {committeeComment || <span style={{ color: "#999", fontStyle: "italic" }}>No comment</span>}
+                          Committee Member Comments: {committeeComment || <span style={{ color: "#999", fontStyle: "italic" }}>No comment</span>}
                         </p>
                       </div>
                     );
@@ -754,6 +776,75 @@ const OrderPage = () => {
             </Modal.Body>
           </Modal>
 
+          <Modal
+            show={showHistoryModal}
+            onHide={() => setShowHistoryModal(false)}
+            centered
+            size="md"
+          >
+            <Modal.Header closeButton>
+              <Modal.Title>Order History</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              {selectedHistory ? (
+                <div className="table-responsive">
+                  <table className="table table-bordered">
+                    <tbody>
+                      <tr>
+                        <th>Technical Admin Receive Order Date</th>
+                        <td>{new Date(selectedHistory.Technicaladmindate).toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <th>Committee Member Documents</th>
+                        <td>
+                          {selectedHistory.sample_documents && selectedHistory.sample_documents.data ? (
+                            <a
+                              href={`data:application/pdf;base64,${getBase64FromBuffer(selectedHistory.sample_documents)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              View Document
+                            </a>
+                          ) : (
+                            "No documents"
+                          )}
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <th>Transfer to Committee Member Date</th>
+                        <td>{selectedHistory.committee_created_dates}</td>
+                      </tr>
+                      <tr>
+                        <th>Committee Member Status</th>
+                        <td>
+                          <div>
+                            <strong>Scientific:</strong>{" "}
+                            {selectedHistory.scientific_committee_status || "Pending"}
+                          </div>
+                          <div>
+                            <strong>Ethical:</strong>{" "}
+                            {selectedHistory.ethical_committee_status || "Pending"}
+                          </div>
+                        </td>
+                      </tr>
+
+                      <tr>
+                        <th>Committee Member Approval Date</th>
+                        <td>{selectedHistory.committee_Approval_date}</td>
+                      </tr>
+                      <tr>
+                        <th>Technical Admin Approval Date</th>
+                        <td>{selectedHistory.TechnicaladminApproval_date || "---"}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p>No history available.</p>
+              )}
+            </Modal.Body>
+          </Modal>
 
 
 
