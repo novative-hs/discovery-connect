@@ -181,7 +181,7 @@ const SampleArea1 = () => {
     if (!id) return <div>Loading...</div>;
     return (
         <div className="container py-3">
-            <h4 className="text-center text-success">Review Pending</h4>
+            <h4 className="text-center text-success">Review Done List</h4>
             <div
                 onScroll={handleScroll}
                 className="table-responsive"

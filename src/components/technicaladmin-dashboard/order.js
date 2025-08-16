@@ -111,7 +111,7 @@ const OrderPage = () => {
       });
 
       const groupedOrders = Object.values(grouped);
-      
+
       setOrders(groupedOrders);
       setAllOrders(groupedOrders);
       setAllOrdersRaw(groupedOrders);
@@ -651,216 +651,353 @@ const OrderPage = () => {
           )}
 
           <Modal
-            show={showReviewModal}
-            onHide={() => setShowReviewModal(false)}
-            centered
-            size="md"
-          >
-            <Modal.Header closeButton>
-              <Modal.Title style={{ fontWeight: "600", fontSize: "1.25rem" }}>
-                Review Comment Status
-              </Modal.Title>
-            </Modal.Header>
-
-            <Modal.Body style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
-              {reviewData.length > 0 ? (
-                reviewData
-                  .filter(
-                    (item, index, self) =>
-                      index ===
-                      self.findIndex(
-                        (t) =>
-                          t.member === item.member &&
-                          t.status === item.status &&
-                          t.comment === item.comment &&
-                          t.committee === item.committee
-                      )
-                  )
-                  .map((r, i) => {
-                    let committeeComment = null,
-                      committeeName = "";
-
-                    if (r.comment) {
-                      const parts = r.comment.split(" | ");
-
-                      for (const part of parts) {
-                        const [leftPart, rightPart] = part.split(":");
-
-                        let committeeType = "";
-                        if (leftPart && leftPart.includes("(")) {
-                          const nameStart = leftPart.indexOf("(");
-                          committeeType = leftPart
-                            .slice(nameStart + 1, leftPart.indexOf(")"))
-                            .trim();
-                          committeeName = leftPart.slice(0, nameStart).trim();
-                        }
-
-                        if (
-                          committeeType.toLowerCase() ===
-                          r.committee.toLowerCase()
-                        ) {
-                          committeeComment = rightPart ? rightPart.trim() : "";
-                          break;
-                        }
-                      }
-                    }
-
-                    return (
-                      <div
-                        key={i}
-                        style={{
-                          marginBottom: "1.8rem",
-                          borderBottom: "1px solid #e0e0e0",
-                          paddingBottom: "1rem",
-                        }}
-                      >
-                        <p
-                          style={{
-                            marginBottom: "0.3rem",
-                            color: "#444",
-                            fontWeight: "600",
-                            fontSize: "1.05rem",
-                          }}
-                        >
-                          Committee Member Name: {committeeName || "Committee Member"}
-                        </p>
-                        <p
-                          style={{
-                            marginBottom: "0.4rem",
-                            color: "#777",
-                            fontSize: "0.9rem",
-                            fontStyle: "italic",
-                          }}
-                        >
-                          Committee Member Type:   {r.committee}
-                        </p>
-                        <p
-                          style={{
-                            marginBottom: "0.6rem",
-                            fontWeight: "600",
-                            color:
-                              r.status.toLowerCase() === "approved"
-                                ? "#2e7d32"
-                                : r.status.toLowerCase() === "refused"
-                                  ? "#c62828"
-                                  : "#555",
-                            fontSize: "0.95rem",
-                          }}
-                        >
-                          Status:  {r.status}
-                        </p>
-                        <p
-                          style={{
-                            color: "#333",
-                            lineHeight: "1.4",
-                            fontSize: "0.95rem",
-                            whiteSpace: "pre-wrap",
-                          }}
-                        >
-                          Committee Member Comments: {committeeComment || <span style={{ color: "#999", fontStyle: "italic" }}>No comment</span>}
-                        </p>
-                      </div>
-                    );
-                  })
-              ) : (
-                <p
-                  style={{
-                    color: "#999",
-                    textAlign: "center",
-                    fontStyle: "italic",
-                    marginTop: "1rem",
-                    fontSize: "1rem",
-                  }}
-                >
-                  No committee data available.
-                </p>
-              )}
-            </Modal.Body>
-          </Modal>
-
-          <Modal
             show={showHistoryModal}
             onHide={() => setShowHistoryModal(false)}
             centered
-            size="md"
+            size="lg"
           >
-            <Modal.Header closeButton>
-              <Modal.Title>Order History</Modal.Title>
+            <Modal.Header closeButton className="bg-primary text-white">
+              <Modal.Title className="d-flex align-items-center">
+                <i className="fas fa-comments me-3" style={{ fontSize: '1.5rem' }}></i>
+                <span>Order History</span>
+              </Modal.Title>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body style={{ backgroundColor: '#f5f5f5', padding: '25px' }}>
               {selectedHistory ? (
-                <div className="table-responsive">
-                  <table className="table table-bordered">
-                    <tbody>
-                      <tr>
-                        <th>Technical Admin Receive Order Date</th>
-                        <td>{new Date(selectedHistory.Technicaladmindate).toLocaleString() || "---"}</td>
-                      </tr>
-                      <tr>
-                        <th>Committee Member Documents</th>
-                        <td>
-                          <div className="mb-3 d-flex flex-wrap gap-2">
-                            {["study_copy", "irb_file", "nbc_file"].map((docKey) => {
-                              return selectedHistory[docKey] ? (
-                                <button
-                                  key={docKey}
-                                  className="btn btn-outline-primary btn-sm"
-                                  onClick={() => {
-                                    const url = getBase64FromBuffer(selectedHistory[docKey]); // safe blob URL
-                                    if (url) {
-                                      window.open(url, "_blank");
-                                    }
-                                  }}
-                                >
-                                  Download {docKey.replace("_", " ").toUpperCase()}
-                                </button>
-                              ) : (
-                                <span key={docKey} className="text-muted">
-                                  {docKey.replace("_", " ").toUpperCase()} Not Available
-                                </span>
-                              );
+                <div className="timeline-container">
+                  {/* Technical Admin Received */}
+                  <div className="timeline-item">
+                    <div className="timeline-badge bg-success">
+                      <i className="fas fa-user-shield" style={{ fontSize: '1.2rem' }}></i>
+                    </div>
+                    <div className="timeline-panel">
+                      <div className="timeline-heading">
+                        <h5 className="timeline-title d-flex align-items-center">
+                          <i style={{ minWidth: '25px' }}></i>
+                          Order Received by Technical Admin
+                        </h5>
+                        <p className="text-muted small mt-2">
+                          <i className="far fa-clock me-2"></i>
+                          {selectedHistory.Technicaladmindate
+                            ? new Date(selectedHistory.Technicaladmindate).toLocaleDateString('en-US', {
+                              year: '2-digit',
+                              month: 'numeric',
+                              day: 'numeric'
+                            })
+                            : "Date not available"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Documents Section */}
+                  <div className="timeline-item">
+                    <div className="timeline-badge bg-info">
+                      <i className="fas fa-file-alt" style={{ fontSize: '1.2rem' }}></i>
+                    </div>
+                    <div className="timeline-panel">
+                      <div className="timeline-heading">
+                        <h5 className="timeline-title d-flex align-items-center">
+                          <i style={{ minWidth: '25px' }}></i>
+                          Documents Submitted
+                        </h5>
+                      </div>
+                      <div className="timeline-body mt-3">
+                        <div className="d-flex flex-wrap gap-3">
+                          {["study_copy", "irb_file", "nbc_file"].map((docKey) => (
+                            selectedHistory[docKey] ? (
+                              <button
+                                key={docKey}
+                                className="btn btn-sm btn-outline-primary d-flex align-items-center"
+                                onClick={() => {
+                                  const url = getBase64FromBuffer(selectedHistory[docKey]);
+                                  if (url) window.open(url, "_blank");
+                                }}
+                              >
+                                <i className="fas fa-download me-2"></i>
+                                {docKey.replace("_", " ").toUpperCase()}
+                              </button>
+                            ) : (
+                              <span key={docKey} className="badge bg-light text-muted d-flex align-items-center">
+                                <i className="fas fa-times-circle me-2"></i>
+                                {docKey.replace("_", " ").toUpperCase()} Not Available
+                              </span>
+                            )
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Transfer to Committee */}
+                  <div className="timeline-item">
+                    <div className="timeline-badge bg-warning">
+                      <i className="fas fa-share-alt" style={{ fontSize: '1.2rem' }}></i>
+                    </div>
+                    <div className="timeline-panel">
+                      <div className="timeline-heading">
+                        <h5 className="timeline-title d-flex align-items-center">
+                          <i style={{ minWidth: '25px' }}></i>
+                          Transferred to Committee Members
+                        </h5>
+                      </div>
+                      <div className="timeline-body mt-3">
+                        <div className="committee-transfer">
+                          <div className="transfer-item d-flex align-items-center">
+                            <i className="fas fa-flask me-3 text-primary" style={{ minWidth: '25px' }}></i>
+                            <span className="transfer-label flex-grow-1">Scientific Committee:</span>
+                            <span className="transfer-date">
+                              {selectedHistory.scientific_transfer_date
+                                ? new Date(selectedHistory.scientific_transfer_date).toLocaleDateString('en-US', {
+                                  year: '2-digit',
+                                  month: 'numeric',
+                                  day: 'numeric'
+                                })
+                                : "Not transferred"}
+                            </span>
+                          </div>
+                          <div className="transfer-item d-flex align-items-center mt-2">
+                            <i className="fas fa-hand-holding-heart me-3 text-success" style={{ minWidth: '25px' }}></i>
+                            <span className="transfer-label flex-grow-1">Ethical Committee:</span>
+                            <span className="transfer-date">
+                              {selectedHistory.ethical_transfer_date
+                                ? new Date(selectedHistory.ethical_transfer_date).toLocaleDateString('en-US', {
+                                  year: '2-digit',
+                                  month: 'numeric',
+                                  day: 'numeric'
+                                })
+                                : "Not transferred"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Committee Reviews */}
+                  <div className="timeline-item">
+                    <div className="timeline-badge bg-purple">
+                      <i className="fas fa-clipboard-check" style={{ fontSize: '1.2rem' }}></i>
+                    </div>
+                    <div className="timeline-panel">
+                      <div className="timeline-heading">
+                        <h5 className="timeline-title d-flex align-items-center">
+                          <i style={{ minWidth: '25px' }}></i>
+                          Committee Reviews
+                        </h5>
+                      </div>
+                      <div className="timeline-body mt-3">
+                        <div className="committee-review">
+                          <div className="review-item scientific">
+                            <div className="review-header d-flex align-items-center">
+                              <i className="fas fa-flask me-3 text-primary" style={{ minWidth: '25px' }}></i>
+                              <span className="review-type flex-grow-1">Scientific Committee</span>
+                              <span className={`review-status ${selectedHistory.scientific_committee_status?.toLowerCase()}`}>
+                                {selectedHistory.scientific_committee_status || "Pending"}
+                              </span>
+                            </div>
+                            {selectedHistory.scientific_approval_date && (
+                              <div className="review-date mt-2 ps-4">
+                                <i className="far fa-calendar-alt me-2"></i>
+                                {new Date(selectedHistory.scientific_approval_date).toLocaleDateString('en-US', {
+                                  year: '2-digit',
+                                  month: 'numeric',
+                                  day: 'numeric'
+                                })}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="review-item ethical mt-3">
+                            <div className="review-header d-flex align-items-center">
+                              <i className="fas fa-hand-holding-heart me-3 text-success" style={{ minWidth: '25px' }}></i>
+                              <span className="review-type flex-grow-1">Ethical Committee</span>
+                              <span className={`review-status ${selectedHistory.ethical_committee_status?.toLowerCase()}`}>
+                                {selectedHistory.ethical_committee_status || "Pending"}
+                              </span>
+                            </div>
+                            {selectedHistory.ethical_approval_date && (
+                              <div className="review-date mt-2 ps-4">
+                                <i className="far fa-calendar-alt me-2"></i>
+                                {new Date(selectedHistory.ethical_approval_date).toLocaleDateString('en-US', {
+                                  year: '2-digit',
+                                  month: 'numeric',
+                                  day: 'numeric'
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Final Approval */}
+                  <div className="timeline-item">
+                    <div className="timeline-badge bg-success">
+                      <i className="fas fa-check-circle" style={{ fontSize: '1.2rem' }}></i>
+                    </div>
+                    <div className="timeline-panel">
+                      <div className="timeline-heading">
+                        <h5 className="timeline-title d-flex align-items-center">
+                          <i style={{ minWidth: '25px' }}></i>
+                          Technical Admin Final Approval
+                        </h5>
+                        {selectedHistory.TechnicaladminApproval_date && (
+                          <p className="text-muted small mt-2 ps-4">
+                            <i className="far fa-clock me-2"></i>
+                            {new Date(selectedHistory.TechnicaladminApproval_date).toLocaleDateString('en-US', {
+                              year: '2-digit',
+                              month: 'numeric',
+                              day: 'numeric'
                             })}
-                          </div>
-                        </td>
-
-                      </tr>
-
-                      <tr>
-                        <th>Transfer to Committee Member Date</th>
-                        <td>{selectedHistory.committee_created_dates || "---"}</td>
-                      </tr>
-                      <tr>
-                        <th>Committee Member Status</th>
-                        <td>
-                          <div>
-                            <strong>Scientific:</strong>{" "}
-                            {selectedHistory.scientific_committee_status || "Pending"}
-                          </div>
-                          <div>
-                            <strong>Ethical:</strong>{" "}
-                            {selectedHistory.ethical_committee_status || "Pending"}
-                          </div>
-                        </td>
-                      </tr>
-
-                      <tr>
-                        <th>Committee Member Approval Date</th>
-                        <td>{selectedHistory.committee_Approval_date || "---"}</td>
-                      </tr>
-                      <tr>
-                        <th>Technical Admin Approval Date</th>
-                        <td>{selectedHistory.TechnicaladminApproval_date || "---"}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <p>No history available.</p>
+                <div className="text-center py-4">
+                  <i className="far fa-folder-open fa-3x text-muted mb-3"></i>
+                  <p className="text-muted">No history available for this order</p>
+                </div>
               )}
             </Modal.Body>
+            <style jsx>{`
+    .timeline-container {
+      position: relative;
+      padding-left: 60px;
+    }
+    
+    .timeline-item {
+      position: relative;
+      margin-bottom: 30px;
+    }
+    
+    .timeline-badge {
+      position: absolute;
+      left: -30px;
+      top: 0;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.5rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 2;
+    }
+    
+    .timeline-panel {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+      position: relative;
+      z-index: 1;
+    }
+    
+    .timeline-panel::before {
+      content: '';
+      position: absolute;
+      left: -15px;
+      top: 30px;
+      width: 15px;
+      height: 2px;
+      background: #dee2e6;
+    }
+    
+    .committee-transfer {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .transfer-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .transfer-label {
+      font-weight: 600;
+      margin-right: 10px;
+    }
+    
+    .committee-review {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .review-item {
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid;
+    }
+    
+    .review-item.scientific {
+      border-left-color: #4e73df;
+      background-color: #f8f9fc;
+    }
+    
+    .review-item.ethical {
+      border-left-color: #1cc88a;
+      background-color: #f0f9f5;
+    }
+    
+    .review-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .review-type {
+      font-weight: 600;
+      flex-grow: 1;
+    }
+    
+    .review-status {
+      padding: 3px 10px;
+      border-radius: 15px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    
+    .review-status.approved {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .review-status.refused {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    .review-status.pending {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    
+    .review-date {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+    
+    .bg-purple {
+      background-color: #6f42c1;
+    }
+    
+    .text-purple {
+      color: #6f42c1;
+    }
+  `}</style>
           </Modal>
-
-
 
           {showModal && (
             <Modal show={showModal} onHide={handleCloseModal}>
