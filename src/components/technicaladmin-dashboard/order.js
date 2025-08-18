@@ -285,6 +285,16 @@ const OrderPage = () => {
       .map(([transfer, items]) => ({ transfer, items }));
   };
 
+  // Utility: Remove duplicates by key
+  const uniqueByKey = (arr, keyFn) => {
+    const seen = new Set();
+    return arr.filter(item => {
+      const key = keyFn(item);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
 
   const handleHistory = async (orderGroup) => {
     const trackingIds = orderGroup.analytes.map(a => a.tracking_id);
@@ -298,8 +308,11 @@ const OrderPage = () => {
       // API se nested array aa raha hai → flatten kar do
       const rawHistory = response.data.results.flat();
 
+      // 🔹 Remove duplicate committee records
+      const dedupedHistory = uniqueByKey(rawHistory, (h) => `${h.committeetype}_${h.CommitteeMemberName}_${h.committee_status}_${h.committee_approval_date}`);
+
       // group by transfer
-      const groupedHistory = groupHistoryByTransfer(rawHistory);
+      const groupedHistory = groupHistoryByTransfer(dedupedHistory);
 
       setSelectedHistory(groupedHistory);
       setShowHistoryModal(true);
@@ -309,6 +322,7 @@ const OrderPage = () => {
       setShowHistoryModal(false);
     }
   };
+
 
 
   useEffect(() => {
@@ -799,7 +813,7 @@ const OrderPage = () => {
                   : transferGroup.items;
 
                 const firstHistory = histories[0];
-
+                console.log("history", histories)
                 return (
                   <div key={idx} className="mb-4">
                     {/* Transfer Header */}
