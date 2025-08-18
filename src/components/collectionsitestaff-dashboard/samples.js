@@ -84,14 +84,14 @@ const SampleArea = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [searchField, setSearchField] = useState(null);
   const [searchValue, setSearchValue] = useState(null);
+  const today = new Date().toISOString().split("T")[0]; // e.g. "2025-08-18"
   const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateTo, setDateTo] = useState(today);
+  const [filters, setFilters] = useState({ date_to: today });
   const [analyte, setAnalyte] = useState("");
   const [gender, setGender] = useState("");
   const [collectionSite, setCollectionSite] = useState("");
   const [visibility, setVisibility] = useState("");
-
-  const [filters, setFilters] = useState({});
 
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -269,10 +269,8 @@ const SampleArea = () => {
     { name: "/get/analyte", setter: setAnalyteNames },
     { name: "infectiousdiseasetesting", setter: setInfectiousdiseasetestingNames },
   ];
-  useEffect(() => {
-    const today = new Date().toISOString().split("T")[0]; // format: YYYY-MM-DD
-    setDateTo(today); // auto-select today's date
-  }, []);
+
+
   const handleTransferClick = (sample) => {
 
     setSelectedSampleId(sample.id);
@@ -400,38 +398,26 @@ const SampleArea = () => {
       setCurrentPage(totalPages); // Adjust down if needed
     }
   }, [totalPages]);
+
   const handleFilterChange = (field, value) => {
-  const trimmed = value.trim?.() || value;
+    const updatedFilters = { ...filters };
 
-  // Use updated value, not stale state
-  const effectiveDateFrom = field === "date_from" ? trimmed : dateFrom;
-  const effectiveDateTo = field === "date_to" ? trimmed : dateTo;
+    if (value) {
+      updatedFilters[field] = value;
+    } else {
+      delete updatedFilters[field];
+    }
 
-  if (field === "date_to" && trimmed && !effectiveDateFrom) {
-    notifyError("Please select 'Date From' first.");
-    return;
-  }
+    setFilters(updatedFilters);
 
-  const updatedFilters = {
-    ...filters,
-    [field]: trimmed,
+    // ✅ Only fire once when filters are valid
+    if (updatedFilters.date_to && updatedFilters.date_from) {
+      fetchSamples(currentPage, itemsPerPage, updatedFilters);
+    } else if (updatedFilters.date_to && !updatedFilters.date_from) {
+      // If only date_to → fetch with that
+      fetchSamples(currentPage, itemsPerPage, { date_to: updatedFilters.date_to });
+    }
   };
-
-  if (trimmed === "") {
-    delete updatedFilters[field];
-  }
-
-  setFilters(updatedFilters);
-
-  // ✅ Only apply fetch if both dates are selected, or if it's not a date field
-  if (
-    (field === "date_from" && value && effectiveDateTo) ||
-    (field === "date_to" && value && effectiveDateFrom) ||
-    (field !== "date_from" && field !== "date_to")
-  ) {
-    fetchSamples(currentPage, itemsPerPage, updatedFilters);
-  }
-};
 
 
 
@@ -1239,19 +1225,16 @@ const SampleArea = () => {
                 style={{ width: "200px", height: "42px" }}
                 value={dateFrom}
                 min="2025-05-01"
+                max={today}
                 onChange={(e) => {
                   const value = e.target.value;
                   setDateFrom(value);
                   handleFilterChange("date_from", value);
-
-                  if (dateTo) {
-                    handleFilterChange("date_to", dateTo); // Re-apply if already selected
-                  }
                 }}
-
               />
             </div>
 
+            {/* Date To */}
             <div className="form-group">
               <label className="form-label fw-semibold mb-1">Date To</label>
               <input
@@ -1260,17 +1243,16 @@ const SampleArea = () => {
                 style={{ width: "200px", height: "42px" }}
                 value={dateTo}
                 min="2025-05-01"
+                max={today}
                 onChange={(e) => {
                   const value = e.target.value;
                   setDateTo(value);
-                  handleFilterChange("date_to", value); // Apply immediately
-                  if (dateFrom) {
-                    handleFilterChange("date_from", dateFrom); // Re-apply if already selected
-                  }
+                  handleFilterChange("date_to", value);
                 }}
-
               />
             </div>
+
+
 
 
             {/* Analyte */}
