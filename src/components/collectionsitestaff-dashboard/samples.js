@@ -1302,7 +1302,7 @@ const SampleArea = () => {
                     setCollectionSite("");
                     setVisibility("");
                     setDateFrom("");
-                    setDateTo("");
+                    setDateTo(today);
                     fetchSamples(1, itemsPerPage, {});
                   }}
                 >
