@@ -34,7 +34,7 @@ const OrderPage = () => {
   });
   // New state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedHistory, setSelectedHistory] = useState(null);
+  const [selectedHistory, setSelectedHistory] = useState([]);
 
 
   const [comment, setComment] = useState("");
@@ -61,12 +61,14 @@ const OrderPage = () => {
 
   useEffect(() => {
     const storedUserID = sessionStorage.getItem("userID");
-    //  localStorage.removeItem("transferredOrders")
     if (storedUserID) {
       setUserID(storedUserID);
 
     }
   }, []);
+  // Helper function to parse statuses
+
+
   useEffect(() => {
     fetchOrders(currentPage, ordersPerPage);
   }, [currentPage]);
@@ -204,26 +206,11 @@ const OrderPage = () => {
     setShowTransferModal(true);
     const updatedOrders = [...transferredOrders, orderId];
     setTransferredOrders(updatedOrders);
-    localStorage.setItem("transferredOrders", JSON.stringify(updatedOrders));
-  };
-
-  const [expandedComments, setExpandedComments] = useState({});
-
-  const openModal = (sample) => {
-
-    setSelectedOrder(sample);
-    setShowOrderModal(true);
   };
 
   const closeModal = () => {
     setSelectedOrder(null);
     setShowOrderModal(false);
-  };
-  const toggleComments = (orderId) => {
-    setExpandedComments((prev) => ({
-      ...prev,
-      [orderId]: !prev[orderId],
-    }));
   };
 
 
@@ -284,7 +271,43 @@ const OrderPage = () => {
     return URL.createObjectURL(blob);
   };
 
+  const groupHistoryByTransfer = (historyData) => {
+    const grouped = historyData.reduce((acc, item) => {
+      const transfer = item.transfer || 1;
+      if (!acc[transfer]) acc[transfer] = [];
+      acc[transfer].push(item);
+      return acc;
+    }, {});
 
+    return Object.entries(grouped)
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .map(([transfer, items]) => ({ transfer, items }));
+  };
+
+
+  const handleHistory = async (orderGroup) => {
+    const trackingIds = orderGroup.analytes.map(a => a.tracking_id);
+
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/getHistory`,
+        { params: { trackingIds: trackingIds.join(','), status: 'Pending' } }
+      );
+
+      // API se nested array aa raha hai → flatten kar do
+      const rawHistory = response.data.results.flat();
+
+      // group by transfer
+      const groupedHistory = groupHistoryByTransfer(rawHistory);
+
+      setSelectedHistory(groupedHistory);
+      setShowHistoryModal(true);
+
+    } catch (error) {
+      console.error(error);
+      setShowHistoryModal(false);
+    }
+  };
 
 
   useEffect(() => {
@@ -332,8 +355,8 @@ const OrderPage = () => {
                       field: "organization_name",
                     },
                     {
-                      label: "Order status",
-                      field: "order_status",
+                      label: "Review status",
+                      field: "committee_status",
                     },
 
 
@@ -392,19 +415,17 @@ const OrderPage = () => {
                       <td>{orderGroup.user_email}</td>
                       <td>{orderGroup.organization_name}</td>
                       <td>
-                        <span className={`badge text-uppercase fw-semibold text-dark fs-6
-                          ${orderGroup.order_status === 'Pending' ? 'bg-warning text-dark' : ''}
-                          ${orderGroup.order_status === 'Accepted' ? 'bg-success' : ''}
-                          ${orderGroup.order_status === 'Shipped' ? 'bg-primary' : ''}
-                          ${orderGroup.order_status === 'Dispatch' ? 'bg-secondary' : ''}
-                          ${orderGroup.order_status === 'Completed' ? 'bg-success' : ''}
-                        `}>
-                          {orderGroup.order_status}
-                        </span>
+                        <div>
+                          <span className="fw-bold">
+                            Scientific: {orderGroup.scientific_committee_status || "---"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="fw-bold">
+                            Ethical: {orderGroup.ethical_committee_status || "---"}
+                          </span>
+                        </div>
                       </td>
-
-
-
                       <td>
                         <div className="d-flex gap-2 justify-content-center">
                           <span
@@ -421,10 +442,7 @@ const OrderPage = () => {
                           <Button
                             variant="secondary"
                             size="sm"
-                            onClick={() => {
-                              setSelectedHistory(orderGroup);
-                              setShowHistoryModal(true);
-                            }}
+                            onClick={() => handleHistory(orderGroup)}
                           >
                             History
                           </Button>
@@ -650,11 +668,13 @@ const OrderPage = () => {
             />
           )}
 
+          {/* Comments */}
           <Modal
             show={showHistoryModal}
             onHide={() => setShowHistoryModal(false)}
             centered
-            size="lg"
+            size="md"
+            scrollable
           >
             <Modal.Header closeButton className="bg-primary text-white">
               <Modal.Title className="d-flex align-items-center">
@@ -662,343 +682,269 @@ const OrderPage = () => {
                 <span>Order History</span>
               </Modal.Title>
             </Modal.Header>
-            <Modal.Body style={{ backgroundColor: '#f5f5f5', padding: '25px' }}>
-              {selectedHistory ? (
-                <div className="timeline-container">
-                  {/* Technical Admin Received */}
-                  <div className="timeline-item">
-                    <div className="timeline-badge bg-success">
-                      <i className="fas fa-user-shield" style={{ fontSize: '1.2rem' }}></i>
-                    </div>
-                    <div className="timeline-panel">
-                      <div className="timeline-heading">
-                        <h5 className="timeline-title d-flex align-items-center">
-                          <i style={{ minWidth: '25px' }}></i>
-                          Order Received by Technical Admin
-                        </h5>
-                        <p className="text-muted small mt-2">
-                          <i className="far fa-clock me-2"></i>
-                          {selectedHistory.Technicaladmindate
-                            ? new Date(selectedHistory.Technicaladmindate).toLocaleDateString('en-US', {
-                              year: '2-digit',
-                              month: 'numeric',
-                              day: 'numeric'
-                            })
-                            : "Date not available"}
+
+            <Modal.Body
+              style={{
+                fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                maxHeight: "400px",
+                overflowY: "auto",
+              }}
+            >
+              {reviewData.length > 0 ? (
+                (() => {
+                  // Get the first non-empty comment field
+                  const commentString = reviewData.find(r => r.comment)?.comment || "";
+                  const parts = commentString.split(" | "); // each committee entry
+
+                  return parts.map((part, idx) => {
+                    let committeeName = "";
+                    let committeeType = "";
+                    let committeeComment = "";
+                    let committeeStatus = "";
+
+                    const [leftPart, rest] = part.split(":");
+                    if (leftPart && leftPart.includes("(")) {
+                      const nameStart = leftPart.indexOf("(");
+                      committeeType = leftPart.slice(nameStart + 1, leftPart.indexOf(")")).trim();
+                      committeeName = leftPart.slice(0, nameStart).trim();
+                    }
+
+                    if (rest) {
+                      const statusMatch = rest.match(/\[(.*?)\]$/);
+                      if (statusMatch) {
+                        committeeStatus = statusMatch[1].trim();
+                        committeeComment = rest.replace(/\[.*?\]$/, "").trim();
+                      } else {
+                        committeeComment = rest.trim();
+                      }
+                    }
+
+                    return (
+                      <div
+                        key={idx}
+                        style={{
+                          marginBottom: "1.8rem",
+                          borderBottom: "1px solid #e0e0e0",
+                          paddingBottom: "1rem",
+                        }}
+                      >
+                        <p style={{ marginBottom: "0.3rem", color: "#444", fontWeight: "600", fontSize: "1.05rem" }}>
+                          Committee Member Name: {committeeName || "-----"}
+                        </p>
+                        <p style={{ marginBottom: "0.4rem", color: "#777", fontSize: "0.9rem", fontStyle: "italic" }}>
+                          Committee Member Type: {committeeType || "----"}
+                        </p>
+                        <p
+                          style={{
+                            marginBottom: "0.6rem",
+                            fontWeight: "600",
+                            color:
+                              committeeStatus.toLowerCase() === "approved"
+                                ? "#2e7d32"
+                                : committeeStatus.toLowerCase() === "refused"
+                                  ? "#c62828"
+                                  : "#555",
+                            fontSize: "0.95rem",
+                          }}
+                        >
+                          Status: {committeeStatus || "---"}
+                        </p>
+                        <p style={{ color: "#333", lineHeight: "1.4", fontSize: "0.95rem", whiteSpace: "pre-wrap" }}>
+                          Committee Member Comments:{" "}
+                          {committeeComment || <span style={{ color: "#999", fontStyle: "italic" }}>No comment</span>}
                         </p>
                       </div>
-                    </div>
-                  </div>
+                    );
+                  });
+                })()
+              ) : (
+                <p
+                  style={{
+                    color: "#999",
+                    textAlign: "center",
+                    fontStyle: "italic",
+                    marginTop: "1rem",
+                    fontSize: "1rem",
+                  }}
+                >
+                  No committee data available.
+                </p>
+              )}
+            </Modal.Body>
 
-                  {/* Documents Section */}
-                  <div className="timeline-item">
-                    <div className="timeline-badge bg-info">
-                      <i className="fas fa-file-alt" style={{ fontSize: '1.2rem' }}></i>
-                    </div>
-                    <div className="timeline-panel">
-                      <div className="timeline-heading">
-                        <h5 className="timeline-title d-flex align-items-center">
-                          <i style={{ minWidth: '25px' }}></i>
-                          Documents Submitted
-                        </h5>
+
+          </Modal>
+
+
+          {/* History */}
+          <Modal
+            show={showHistoryModal}
+            onHide={() => setShowHistoryModal(false)}
+            centered
+            size="lg"
+            scrollable
+          >
+
+            <Modal.Header closeButton>
+              <Modal.Title className="fw-bold text-primary">
+                📝 Technical Admin Review History
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body style={{ background: "#f0f2f8" }}>
+              {selectedHistory.map((transferGroup, idx) => {
+                const histories = Array.isArray(transferGroup.items[0])
+                  ? transferGroup.items[0]
+                  : transferGroup.items;
+
+                const firstHistory = histories[0];
+
+                return (
+                  <div key={idx} className="mb-4">
+                    {/* Transfer Header */}
+                    <div className="text-center mb-4">
+                      <div
+                        className="d-inline-block px-4 py-3 rounded-4 shadow-sm"
+                        style={{
+                          background: "linear-gradient(135deg, #007bff, #00c6ff)",
+                          color: "white",
+                          fontWeight: "600",
+                          fontSize: "1.1rem",
+                          letterSpacing: "0.5px",
+                          boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+                        }}
+                      >
+                        🚀 Transfer <span style={{ fontWeight: "700" }}>{transferGroup.transfer}</span>
                       </div>
-                      <div className="timeline-body mt-3">
-                        <div className="d-flex flex-wrap gap-3">
-                          {["study_copy", "irb_file", "nbc_file"].map((docKey) => (
-                            selectedHistory[docKey] ? (
-                              <button
-                                key={docKey}
-                                className="btn btn-sm btn-outline-primary d-flex align-items-center"
-                                onClick={() => {
-                                  const url = getBase64FromBuffer(selectedHistory[docKey]);
-                                  if (url) window.open(url, "_blank");
-                                }}
-                              >
-                                <i className="fas fa-download me-2"></i>
-                                {docKey.replace("_", " ").toUpperCase()}
-                              </button>
-                            ) : (
-                              <span key={docKey} className="badge bg-light text-muted d-flex align-items-center">
-                                <i className="fas fa-times-circle me-2"></i>
-                                {docKey.replace("_", " ").toUpperCase()} Not Available
-                              </span>
-                            )
+                    </div>
+
+
+                    {/* Card Bubble */}
+                    <div className="p-4 rounded-4 shadow bg-white">
+
+                      {/* Admin Reference Date */}
+                      <div className="mb-3">
+                        <h6 className="fw-bold text-dark mb-1">📌 Technical Admin Reference Order Date</h6>
+                        <span className="badge bg-light text-dark px-3 py-2">
+                          {firstHistory?.Technicaladmindate
+                            ? new Date(firstHistory.Technicaladmindate).toLocaleString("en-GB", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                              hour: "numeric",
+                              minute: "numeric",
+                              hour12: true,
+                            })
+                            : "---"}
+                        </span>
+                      </div>
+
+                      {/* Transfer to Committee */}
+                      <div className="mb-3">
+                        <h6 className="fw-bold text-dark mb-1">📩 Transfer to Committee Member Date</h6>
+                        <span className="badge bg-info text-white px-3 py-2">
+                          {firstHistory?.committee_created_at
+                            ? new Date(firstHistory.committee_created_at).toLocaleString("en-GB", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                              hour: "numeric",
+                              minute: "numeric",
+                              hour12: true,
+                            })
+                            : "---"}
+                        </span>
+                      </div>
+
+                      {/* Committee Member Status */}
+                      <div className="mb-3">
+                        <h6 className="fw-bold text-dark mb-2">👥 Committee Member Status</h6>
+                        <div className="list-group">
+                          {histories.map((history, i) => (
+                            <div
+                              key={i}
+                              className="list-group-item d-flex flex-column align-items-start mb-2 rounded shadow-sm border"
+                            >
+                              <div className="fw-bold">
+                                {history.committeetype} - {history.CommitteeMemberName}
+                              </div>
+                              <div>
+                                Status: <span className="text-primary">{history.committee_status || "---"}</span>
+                              </div>
+                              <small className="text-muted">
+                                Approval:{" "}
+                                {history.committee_approval_date
+                                  ? new Date(history.committee_approval_date).toLocaleString("en-GB", {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                    hour: "numeric",
+                                    minute: "numeric",
+                                    hour12: true,
+                                  })
+                                  : "---"}
+                              </small>
+                            </div>
                           ))}
                         </div>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Transfer to Committee */}
-                  <div className="timeline-item">
-                    <div className="timeline-badge bg-warning">
-                      <i className="fas fa-share-alt" style={{ fontSize: '1.2rem' }}></i>
-                    </div>
-                    <div className="timeline-panel">
-                      <div className="timeline-heading">
-                        <h5 className="timeline-title d-flex align-items-center">
-                          <i style={{ minWidth: '25px' }}></i>
-                          Transferred to Committee Members
-                        </h5>
-                      </div>
-                      <div className="timeline-body mt-3">
-                        <div className="committee-transfer">
-                          <div className="transfer-item d-flex align-items-center">
-                            <i className="fas fa-flask me-3 text-primary" style={{ minWidth: '25px' }}></i>
-                            <span className="transfer-label flex-grow-1">Scientific Committee:</span>
-                            <span className="transfer-date">
-                              {selectedHistory.scientific_transfer_date
-                                ? new Date(selectedHistory.scientific_transfer_date).toLocaleDateString('en-US', {
-                                  year: '2-digit',
-                                  month: 'numeric',
-                                  day: 'numeric'
-                                })
-                                : "Not transferred"}
+                      <div className="mb-3">
+                        <h6 className="fw-bold text-dark mb-2">📂 Documents</h6>
+                        {["study_copy", "irb_file", "nbc_file"].map((docKey) =>
+                          firstHistory?.[docKey] ? (
+                            <button
+                              key={docKey}
+                              className="btn btn-outline-primary btn-sm me-2 mb-1"
+                              onClick={() => {
+                                // Convert Node.js Buffer -> Uint8Array
+                                const byteArray = new Uint8Array(firstHistory[docKey].data);
+                                const blob = new Blob([byteArray], { type: "application/pdf" });
+                                const url = URL.createObjectURL(blob);
+                                window.open(url, "_blank");
+                              }}
+                            >
+                              Download {docKey.toUpperCase()}
+                            </button>
+                          ) : (
+                            <span
+                              key={docKey}
+                              className="text-muted me-2 mb-1 d-inline-block"
+                            >
+                              {docKey.toUpperCase()} Not Attached
                             </span>
-                          </div>
-                          <div className="transfer-item d-flex align-items-center mt-2">
-                            <i className="fas fa-hand-holding-heart me-3 text-success" style={{ minWidth: '25px' }}></i>
-                            <span className="transfer-label flex-grow-1">Ethical Committee:</span>
-                            <span className="transfer-date">
-                              {selectedHistory.ethical_transfer_date
-                                ? new Date(selectedHistory.ethical_transfer_date).toLocaleDateString('en-US', {
-                                  year: '2-digit',
-                                  month: 'numeric',
-                                  day: 'numeric'
-                                })
-                                : "Not transferred"}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Committee Reviews */}
-                  <div className="timeline-item">
-                    <div className="timeline-badge bg-purple">
-                      <i className="fas fa-clipboard-check" style={{ fontSize: '1.2rem' }}></i>
-                    </div>
-                    <div className="timeline-panel">
-                      <div className="timeline-heading">
-                        <h5 className="timeline-title d-flex align-items-center">
-                          <i style={{ minWidth: '25px' }}></i>
-                          Committee Reviews
-                        </h5>
-                      </div>
-                      <div className="timeline-body mt-3">
-                        <div className="committee-review">
-                          <div className="review-item scientific">
-                            <div className="review-header d-flex align-items-center">
-                              <i className="fas fa-flask me-3 text-primary" style={{ minWidth: '25px' }}></i>
-                              <span className="review-type flex-grow-1">Scientific Committee</span>
-                              <span className={`review-status ${selectedHistory.scientific_committee_status?.toLowerCase()}`}>
-                                {selectedHistory.scientific_committee_status || "Pending"}
-                              </span>
-                            </div>
-                            {selectedHistory.scientific_approval_date && (
-                              <div className="review-date mt-2 ps-4">
-                                <i className="far fa-calendar-alt me-2"></i>
-                                {new Date(selectedHistory.scientific_approval_date).toLocaleDateString('en-US', {
-                                  year: '2-digit',
-                                  month: 'numeric',
-                                  day: 'numeric'
-                                })}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="review-item ethical mt-3">
-                            <div className="review-header d-flex align-items-center">
-                              <i className="fas fa-hand-holding-heart me-3 text-success" style={{ minWidth: '25px' }}></i>
-                              <span className="review-type flex-grow-1">Ethical Committee</span>
-                              <span className={`review-status ${selectedHistory.ethical_committee_status?.toLowerCase()}`}>
-                                {selectedHistory.ethical_committee_status || "Pending"}
-                              </span>
-                            </div>
-                            {selectedHistory.ethical_approval_date && (
-                              <div className="review-date mt-2 ps-4">
-                                <i className="far fa-calendar-alt me-2"></i>
-                                {new Date(selectedHistory.ethical_approval_date).toLocaleDateString('en-US', {
-                                  year: '2-digit',
-                                  month: 'numeric',
-                                  day: 'numeric'
-                                })}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Final Approval */}
-                  <div className="timeline-item">
-                    <div className="timeline-badge bg-success">
-                      <i className="fas fa-check-circle" style={{ fontSize: '1.2rem' }}></i>
-                    </div>
-                    <div className="timeline-panel">
-                      <div className="timeline-heading">
-                        <h5 className="timeline-title d-flex align-items-center">
-                          <i style={{ minWidth: '25px' }}></i>
-                          Technical Admin Final Approval
-                        </h5>
-                        {selectedHistory.TechnicaladminApproval_date && (
-                          <p className="text-muted small mt-2 ps-4">
-                            <i className="far fa-clock me-2"></i>
-                            {new Date(selectedHistory.TechnicaladminApproval_date).toLocaleDateString('en-US', {
-                              year: '2-digit',
-                              month: 'numeric',
-                              day: 'numeric'
-                            })}
-                          </p>
+                          )
                         )}
                       </div>
+
+
+                      {/* Technical Admin Approval */}
+                      <div>
+                        <h6 className="fw-bold text-dark mb-1">✅ Technical Admin Approval Date</h6>
+                        <span className="badge bg-success text-white px-3 py-2">
+                          {firstHistory?.TechnicaladminApproval_date
+                            ? new Date(firstHistory.TechnicaladminApproval_date).toLocaleString("en-GB", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                              hour: "numeric",
+                              minute: "numeric",
+                              hour12: true,
+                            })
+                            : "---"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className="text-center py-4">
-                  <i className="far fa-folder-open fa-3x text-muted mb-3"></i>
-                  <p className="text-muted">No history available for this order</p>
-                </div>
-              )}
+                );
+              })}
             </Modal.Body>
-            <style jsx>{`
-    .timeline-container {
-      position: relative;
-      padding-left: 60px;
-    }
-    
-    .timeline-item {
-      position: relative;
-      margin-bottom: 30px;
-    }
-    
-    .timeline-badge {
-      position: absolute;
-      left: -30px;
-      top: 0;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 1.5rem;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      z-index: 2;
-    }
-    
-    .timeline-panel {
-      background: white;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-      position: relative;
-      z-index: 1;
-    }
-    
-    .timeline-panel::before {
-      content: '';
-      position: absolute;
-      left: -15px;
-      top: 30px;
-      width: 15px;
-      height: 2px;
-      background: #dee2e6;
-    }
-    
-    .committee-transfer {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    
-    .transfer-item {
-      display: flex;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid #eee;
-    }
-    
-    .transfer-label {
-      font-weight: 600;
-      margin-right: 10px;
-    }
-    
-    .committee-review {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    
-    .review-item {
-      padding: 15px;
-      border-radius: 8px;
-      border-left: 4px solid;
-    }
-    
-    .review-item.scientific {
-      border-left-color: #4e73df;
-      background-color: #f8f9fc;
-    }
-    
-    .review-item.ethical {
-      border-left-color: #1cc88a;
-      background-color: #f0f9f5;
-    }
-    
-    .review-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    
-    .review-type {
-      font-weight: 600;
-      flex-grow: 1;
-    }
-    
-    .review-status {
-      padding: 3px 10px;
-      border-radius: 15px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-    
-    .review-status.approved {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    
-    .review-status.refused {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-    
-    .review-status.pending {
-      background-color: #fff3cd;
-      color: #856404;
-    }
-    
-    .review-date {
-      font-size: 0.9rem;
-      color: #6c757d;
-    }
-    
-    .bg-purple {
-      background-color: #6f42c1;
-    }
-    
-    .text-purple {
-      color: #6f42c1;
-    }
-  `}</style>
           </Modal>
 
+
+
+
+
+          {/* Admin Approval Modal */}
           {showModal && (
             <Modal show={showModal} onHide={handleCloseModal}>
               <Modal.Header closeButton>
@@ -1037,104 +983,7 @@ const OrderPage = () => {
             </Modal>
           )}
 
-          {showCommentsModal && (
-            <>
-              {/* Backdrop */}
-              <div
-                className="modal-backdrop fade show"
-                style={{
-                  backdropFilter: "blur(5px)",
-                  backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%", // Changed from 80% to full height
-                  zIndex: 1040,
-                }}
-              ></div>
-
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                role="dialog"
-                style={{
-                  zIndex: 1060,
-                  position: "fixed",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  backgroundColor: "#fff",
-                  padding: "20px",
-                  borderRadius: "10px",
-                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
-                  width: "90vw",
-                  maxWidth: "700px",
-                  maxHeight: "90vh", // Limit modal height
-                  overflow: "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <div className="modal-header d-flex justify-content-between align-items-center">
-                  <h5 className="fw-bold">Committee Member Comments</h5>
-                  <button
-                    type="button"
-                    className="close"
-                    onClick={() => setShowCommentsModal(false)}
-                    style={{
-                      fontSize: "1.5rem",
-                      border: "none",
-                      background: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    &times;
-                  </button>
-                </div>
-
-                <div
-                  className="modal-body"
-                  style={{
-                    overflowY: "auto",
-                    flexGrow: 1,
-                    paddingRight: "5px",
-                  }}
-                >
-                  {selectedComments ? (
-                    selectedComments.split(" | ").map((comment, idx) => {
-                      const [name, text] = comment.split(" : ");
-                      return (
-                        <div
-                          key={idx}
-                          className="p-3 mb-3 rounded"
-                          style={{
-                            backgroundColor: "#f8f9fa",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          <p
-                            className="mb-1"
-                            style={{ color: "#0d6efd", fontWeight: "600" }}
-                          >
-                            Name: {name?.trim()}
-                          </p>
-                          <p className="mb-0" style={{ color: "#343a40" }}>
-                            <strong>Comments:</strong> {text?.trim()}
-                          </p>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <p className="text-muted fst-italic">No comments available</p>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-
-
-          {/* Approval  */}
+          {/* Transfer  */}
           <Modal
             show={showTransferModal}
             onHide={() => setShowTransferModal(false)}

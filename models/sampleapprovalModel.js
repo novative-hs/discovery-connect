@@ -8,6 +8,7 @@ const createSampleApprovalTable = () => {
   technical_admin_id INT NOT NULL,
   Comments VARCAR(500), 
   technical_admin_status ENUM('Pending', 'Accepted', 'Rejected') NOT NULL DEFAULT 'Pending',
+    Approval_date TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (cart_id) REFERENCES cart(id),
   FOREIGN KEY (technical_admin_id) REFERENCES user_account(id)

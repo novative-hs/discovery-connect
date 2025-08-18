@@ -2,10 +2,15 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
 import { Modal, Button, Form } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faDownload
+} from "@fortawesome/free-solid-svg-icons";
 import { notifyError, notifySuccess } from "@utils/toast";
 
-const OrderRejectedPage = () => {
+const OrderPage = () => {
   const [orders, setOrders] = useState([]); // Filtered orders
+  const [allOrders, setAllOrders] = useState([]); // Original full orders list
   const [currentPage, setCurrentPage] = useState(1);
   const [showSampleModal, setSampleShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
@@ -27,6 +32,10 @@ const OrderRejectedPage = () => {
     const saved = localStorage.getItem("transferredOrders");
     return saved ? JSON.parse(saved) : [];
   });
+  // New state
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [selectedHistory, setSelectedHistory] = useState([]);
+
 
   const [comment, setComment] = useState("");
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -37,13 +46,14 @@ const OrderRejectedPage = () => {
   const [searchField, setSearchField] = useState(null);
   const [searchValue, setSearchValue] = useState(null);
   const [allOrdersRaw, setAllOrdersRaw] = useState([]);
-  // New state
-  const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedHistory, setSelectedHistory] = useState(null);
 
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-
+  const [viewedDocuments, setViewedDocuments] = useState({
+    study_copy: false,
+    irb_file: false,
+    nbc_file: false,
+  });
   const handleCloseModal = () => {
     setSelectedOrderId(null);
     setShowModal(false);
@@ -51,12 +61,14 @@ const OrderRejectedPage = () => {
 
   useEffect(() => {
     const storedUserID = sessionStorage.getItem("userID");
-    //  localStorage.removeItem("transferredOrders")
     if (storedUserID) {
       setUserID(storedUserID);
 
     }
   }, []);
+  // Helper function to parse statuses
+
+
   useEffect(() => {
     fetchOrders(currentPage, ordersPerPage);
   }, [currentPage]);
@@ -103,6 +115,7 @@ const OrderRejectedPage = () => {
       const groupedOrders = Object.values(grouped);
 
       setOrders(groupedOrders);
+      setAllOrders(groupedOrders);
       setAllOrdersRaw(groupedOrders);
       setTotalPages(Math.ceil(totalCount / pageSize));
 
@@ -142,11 +155,47 @@ const OrderRejectedPage = () => {
     setShowOrderModal(false);
   };
 
+  const groupHistoryByTransfer = (historyData) => {
+    const grouped = historyData.reduce((acc, item) => {
+      const transfer = item.transfer || 1;
+      if (!acc[transfer]) acc[transfer] = [];
+      acc[transfer].push(item);
+      return acc;
+    }, {});
 
+    return Object.entries(grouped)
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .map(([transfer, items]) => ({ transfer, items }));
+  };
+
+
+  const handleHistory = async (orderGroup) => {
+    const trackingIds = orderGroup.analytes.map(a => a.tracking_id);
+
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/getHistory`,
+        { params: { trackingIds: trackingIds.join(','), status: 'Pending' } }
+      );
+
+      // API se nested array aa raha hai → flatten kar do
+      const rawHistory = response.data.results.flat();
+
+      // group by transfer
+      const groupedHistory = groupHistoryByTransfer(rawHistory);
+
+      setSelectedHistory(groupedHistory);
+      setShowHistoryModal(true);
+
+    } catch (error) {
+      console.error(error);
+      setShowHistoryModal(false);
+    }
+  };
 
 
   useEffect(() => {
-    if (showSampleModal || showCommentsModal) {
+    if (showSampleModal || showTransferModal || showCommentsModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -155,7 +204,7 @@ const OrderRejectedPage = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showSampleModal, showCommentsModal]);
+  }, [showSampleModal, showTransferModal, showCommentsModal]);
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
@@ -168,7 +217,7 @@ const OrderRejectedPage = () => {
 
         <div className="row justify-content-center">
           <h4 className="tp-8 fw-bold text-success text-center pb-2">
-            Review Done List
+            Review Done
           </h4>
 
           {/* Table */}
@@ -190,8 +239,8 @@ const OrderRejectedPage = () => {
                       field: "organization_name",
                     },
                     {
-                      label: "Order status",
-                      field: "order_status",
+                      label: "Review status",
+                      field: "committee_status",
                     },
 
 
@@ -250,19 +299,17 @@ const OrderRejectedPage = () => {
                       <td>{orderGroup.user_email}</td>
                       <td>{orderGroup.organization_name}</td>
                       <td>
-                        <span className={`badge text-uppercase fw-semibold text-dark fs-6
-                          ${orderGroup.order_status === 'Pending' ? 'bg-warning text-dark' : ''}
-                          ${orderGroup.order_status === 'Accepted' ? 'bg-success' : ''}
-                          ${orderGroup.order_status === 'Shipped' ? 'bg-primary' : ''}
-                          ${orderGroup.order_status === 'Dispatch' ? 'bg-secondary' : ''}
-                          ${orderGroup.order_status === 'Completed' ? 'bg-success' : ''}
-                        `}>
-                          {orderGroup.order_status}
-                        </span>
+                        <div>
+                          <span className="fw-bold">
+                            Scientific: {orderGroup.scientific_committee_status || "---"}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="fw-bold">
+                            Ethical: {orderGroup.ethical_committee_status || "---"}
+                          </span>
+                        </div>
                       </td>
-
-
-
                       <td>
                         <div className="d-flex gap-2 justify-content-center">
                           <span
@@ -279,15 +326,13 @@ const OrderRejectedPage = () => {
                           <Button
                             variant="secondary"
                             size="sm"
-                            onClick={() => {
-                              setSelectedHistory(orderGroup);
-                              setShowHistoryModal(true);
-                            }}
+                            onClick={() => handleHistory(orderGroup)}
                           >
                             History
                           </Button>
                         </div>
                       </td>
+
 
                     </tr>
                   ))
@@ -302,16 +347,6 @@ const OrderRejectedPage = () => {
 
             </table>
           </div>
-
-          {/* Pagination Controls */}
-          {totalPages >= 0 && (
-            <Pagination
-              handlePageClick={handlePageChange}
-              pageCount={totalPages}
-              focusPage={currentPage - 1}
-            />
-          )}
-
           {/* Order Detail  */}
           {selectedOrder && (
             <Modal show={showOrderModal} onHide={closeModal} size="lg" centered>
@@ -380,9 +415,81 @@ const OrderRejectedPage = () => {
                         💬 Review Comments
                       </Button>
 
+                      {/* Accept */}
+                      {selectedOrder.technical_admin_status === 'Pending' && (
+                        <>
+                          <Button
+                            variant={
+                              selectedOrder.analytes?.some(
+                                item =>
+                                  (item.scientific_committee_status === "Approved" || item.scientific_committee_status === "Not Sent" || item.scientific_committee_status === "Refused") &&
+                                  (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent")
+                              )
+                                ? "outline-success"
+                                : "secondary"
+                            }
+                            size="sm"
+                            onClick={() => {
+                              setActionType("Accepted");
+                              setShowModal(true);
+                            }}
+                            disabled={
+                              !selectedOrder.analytes?.some(
+                                item =>
+                                  (item.scientific_committee_status === "Approved" || item.scientific_committee_status === "Not Sent" || item.scientific_committee_status === "Refused") &&
+                                  (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent" || item.ethical_committee_status === "Refused")
+                              )
+                            }
+                          >
+                            ✅ Accept
+                          </Button>
+
+                          {selectedOrder.analytes?.length > 0 &&
+                            selectedOrder.analytes.every(item => {
+                              const sciStatus = (item.scientific_committee_status || "").trim().toLowerCase();
+                              const ethStatus = (item.ethical_committee_status || "").trim().toLowerCase();
+
+                              // Scientific must be approved or refused
+                              const sciDone = ["approved", "refused", "not sent"].includes(sciStatus);
+
+                              // Ethical must be approved/refused OR not sent
+                              const ethDone = ["approved", "refused", "not sent"].includes(ethStatus);
+
+                              return sciDone && ethDone;
+                            }) && (
+                              <Button
+                                variant="outline-danger"
+                                size="sm"
+                                onClick={() => {
+                                  setActionType("Rejected");
+                                  setSelectedOrderId(selectedOrder.order_id || selectedOrder.analytes?.[0]?.order_id);
+                                  setShowModal(true);
+                                }}
+                              >
+                                ❌ Reject
+                              </Button>
+                            )}
+
+
+
+                          {/* Transfer */}
+                          {!transferredOrders.includes(selectedOrder.order_id) && (
+                            <button
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() => handleToggleTransferOptions(selectedOrder.order_id)}
+                            >
+                              Transfer
+                            </button>
+                          )}
+
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
+
+
+
                 {/* Analytes Table */}
                 <div className="table-responsive">
                   <table className="table table-bordered table-hover align-middle text-center">
@@ -434,94 +541,23 @@ const OrderRejectedPage = () => {
           )}
 
 
-          <Modal
-            show={showHistoryModal}
-            onHide={() => setShowHistoryModal(false)}
-            centered
-            size="md"
-          >
-            <Modal.Header closeButton>
-              <Modal.Title>Order History</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              {selectedHistory ? (
-                <div className="table-responsive">
-                  <table className="table table-bordered">
-                    <tbody>
-                      <tr>
-                        <th>Technical Admin Receive Order Date</th>
-                        <td>{new Date(selectedHistory.Technicaladmindate).toLocaleString() || "---"}</td>
-                      </tr>
-                      <tr>
-                        <th>Committee Member Documents</th>
-                        <td>
-                          <div className="mb-3 d-flex flex-wrap gap-2">
-                            {["study_copy", "irb_file", "nbc_file"].map((docKey) => {
-                              return selectedHistory[docKey] ? (
-                                <button
-                                  key={docKey}
-                                  className="btn btn-outline-primary btn-sm"
-                                  onClick={() => {
-                                    const url = getBase64FromBuffer(selectedHistory[docKey]); // safe blob URL
-                                    if (url) {
-                                      window.open(url, "_blank");
-                                    }
-                                  }}
-                                >
-                                  Download {docKey.replace("_", " ").toUpperCase()}
-                                </button>
-                              ) : (
-                                <span key={docKey} className="text-muted">
-                                  {docKey.replace("_", " ").toUpperCase()} Not Available
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </td>
 
-                      </tr>
+          {/* Pagination Controls */}
+          {totalPages >= 0 && (
+            <Pagination
+              handlePageClick={handlePageChange}
+              pageCount={totalPages}
+              focusPage={currentPage - 1}
+            />
+          )}
 
-                      <tr>
-                        <th>Transfer to Committee Member Date</th>
-                        <td>{selectedHistory.committee_created_dates || "---"}</td>
-                      </tr>
-                      <tr>
-                        <th>Committee Member Status</th>
-                        <td>
-                          <div>
-                            <strong>Scientific:</strong>{" "}
-                            {selectedHistory.scientific_committee_status || "Pending"}
-                          </div>
-                          <div>
-                            <strong>Ethical:</strong>{" "}
-                            {selectedHistory.ethical_committee_status || "Pending"}
-                          </div>
-                        </td>
-                      </tr>
-
-                      <tr>
-                        <th>Committee Member Approval Date</th>
-                        <td>{selectedHistory.committee_Approval_date || "---"}</td>
-                      </tr>
-                      <tr>
-                        <th>Technical Admin Approval Date</th>
-                        <td>{selectedHistory.TechnicaladminApproval_date || "---"}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p>No history available.</p>
-              )}
-            </Modal.Body>
-          </Modal>
-
-          {/* Reviw comments */}
+          {/* Comments */}
           <Modal
             show={showReviewModal}
             onHide={() => setShowReviewModal(false)}
             centered
             size="md"
+            scrollable
           >
             <Modal.Header closeButton>
               <Modal.Title style={{ fontWeight: "600", fontSize: "1.25rem" }}>
@@ -529,106 +565,80 @@ const OrderRejectedPage = () => {
               </Modal.Title>
             </Modal.Header>
 
-            <Modal.Body style={{ fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+            <Modal.Body
+              style={{
+                fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                maxHeight: "400px",
+                overflowY: "auto",
+              }}
+            >
               {reviewData.length > 0 ? (
-                reviewData
-                  .filter(
-                    (item, index, self) =>
-                      index ===
-                      self.findIndex(
-                        (t) =>
-                          t.member === item.member &&
-                          t.status === item.status &&
-                          t.comment === item.comment &&
-                          t.committee === item.committee
-                      )
-                  )
-                  .map((r, i) => {
-                    let committeeComment = null,
-                      committeeName = "";
+                (() => {
+                  // Get the first non-empty comment field
+                  const commentString = reviewData.find(r => r.comment)?.comment || "";
+                  const parts = commentString.split(" | "); // each committee entry
 
-                    if (r.comment) {
-                      const parts = r.comment.split(" | ");
+                  return parts.map((part, idx) => {
+                    let committeeName = "";
+                    let committeeType = "";
+                    let committeeComment = "";
+                    let committeeStatus = "";
 
-                      for (const part of parts) {
-                        const [leftPart, rightPart] = part.split(":");
+                    const [leftPart, rest] = part.split(":");
+                    if (leftPart && leftPart.includes("(")) {
+                      const nameStart = leftPart.indexOf("(");
+                      committeeType = leftPart.slice(nameStart + 1, leftPart.indexOf(")")).trim();
+                      committeeName = leftPart.slice(0, nameStart).trim();
+                    }
 
-                        let committeeType = "";
-                        if (leftPart && leftPart.includes("(")) {
-                          const nameStart = leftPart.indexOf("(");
-                          committeeType = leftPart
-                            .slice(nameStart + 1, leftPart.indexOf(")"))
-                            .trim();
-                          committeeName = leftPart.slice(0, nameStart).trim();
-                        }
-
-                        if (
-                          committeeType.toLowerCase() ===
-                          r.committee.toLowerCase()
-                        ) {
-                          committeeComment = rightPart ? rightPart.trim() : "";
-                          break;
-                        }
+                    if (rest) {
+                      const statusMatch = rest.match(/\[(.*?)\]$/);
+                      if (statusMatch) {
+                        committeeStatus = statusMatch[1].trim();
+                        committeeComment = rest.replace(/\[.*?\]$/, "").trim();
+                      } else {
+                        committeeComment = rest.trim();
                       }
                     }
 
                     return (
                       <div
-                        key={i}
+                        key={idx}
                         style={{
                           marginBottom: "1.8rem",
                           borderBottom: "1px solid #e0e0e0",
                           paddingBottom: "1rem",
                         }}
                       >
-                        <p
-                          style={{
-                            marginBottom: "0.3rem",
-                            color: "#444",
-                            fontWeight: "600",
-                            fontSize: "1.05rem",
-                          }}
-                        >
-                          Committee Member Name: {committeeName || "Committee Member"}
+                        <p style={{ marginBottom: "0.3rem", color: "#444", fontWeight: "600", fontSize: "1.05rem" }}>
+                          Committee Member Name: {committeeName || "-----"}
                         </p>
-                        <p
-                          style={{
-                            marginBottom: "0.4rem",
-                            color: "#777",
-                            fontSize: "0.9rem",
-                            fontStyle: "italic",
-                          }}
-                        >
-                          Committee Member Type:   {r.committee}
+                        <p style={{ marginBottom: "0.4rem", color: "#777", fontSize: "0.9rem", fontStyle: "italic" }}>
+                          Committee Member Type: {committeeType || "----"}
                         </p>
                         <p
                           style={{
                             marginBottom: "0.6rem",
                             fontWeight: "600",
                             color:
-                              r.status.toLowerCase() === "approved"
+                              committeeStatus.toLowerCase() === "approved"
                                 ? "#2e7d32"
-                                : r.status.toLowerCase() === "refused"
+                                : committeeStatus.toLowerCase() === "refused"
                                   ? "#c62828"
                                   : "#555",
                             fontSize: "0.95rem",
                           }}
                         >
-                          Status:  {r.status}
+                          Status: {committeeStatus || "---"}
                         </p>
-                        <p
-                          style={{
-                            color: "#333",
-                            lineHeight: "1.4",
-                            fontSize: "0.95rem",
-                            whiteSpace: "pre-wrap",
-                          }}
-                        >
-                          Committee Member Comments: {committeeComment || <span style={{ color: "#999", fontStyle: "italic" }}>No comment</span>}
+                        <p style={{ color: "#333", lineHeight: "1.4", fontSize: "0.95rem", whiteSpace: "pre-wrap" }}>
+                          Committee Member Comments:{" "}
+                          {committeeComment || <span style={{ color: "#999", fontStyle: "italic" }}>No comment</span>}
                         </p>
                       </div>
                     );
-                  })
+                  });
+                })()
               ) : (
                 <p
                   style={{
@@ -643,104 +653,250 @@ const OrderRejectedPage = () => {
                 </p>
               )}
             </Modal.Body>
+
+
           </Modal>
 
 
-          {showCommentsModal && (
-            <>
-              {/* Backdrop */}
-              <div
-                className="modal-backdrop fade show"
-                style={{
-                  backdropFilter: "blur(5px)",
-                  backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%", // Changed from 80% to full height
-                  zIndex: 1040,
-                }}
-              ></div>
+          {/* History */}
+          <Modal
+            show={showHistoryModal}
+            onHide={() => setShowHistoryModal(false)}
+            centered
+            size="lg"
+            scrollable
+          >
 
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                role="dialog"
-                style={{
-                  zIndex: 1060,
-                  position: "fixed",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  backgroundColor: "#fff",
-                  padding: "20px",
-                  borderRadius: "10px",
-                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
-                  width: "90vw",
-                  maxWidth: "700px",
-                  maxHeight: "90vh", // Limit modal height
-                  overflow: "hidden",
-                  display: "flex",
-                  flexDirection: "column",
-                }}
-              >
-                <div className="modal-header d-flex justify-content-between align-items-center">
-                  <h5 className="fw-bold">Committee Member Comments</h5>
-                  <button
-                    type="button"
-                    className="close"
-                    onClick={() => setShowCommentsModal(false)}
-                    style={{
-                      fontSize: "1.5rem",
-                      border: "none",
-                      background: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    &times;
-                  </button>
-                </div>
+            <Modal.Header closeButton>
+              <Modal.Title className="fw-bold text-primary">
+                📝 Technical Admin Review History
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body style={{ background: "#f0f2f8" }}>
+              {selectedHistory.map((transferGroup, idx) => {
+                const histories = Array.isArray(transferGroup.items[0])
+                  ? transferGroup.items[0]
+                  : transferGroup.items;
 
-                <div
-                  className="modal-body"
-                  style={{
-                    overflowY: "auto",
-                    flexGrow: 1,
-                    paddingRight: "5px",
-                  }}
-                >
-                  {selectedComments ? (
-                    selectedComments.split(" | ").map((comment, idx) => {
-                      const [name, text] = comment.split(" : ");
-                      return (
-                        <div
-                          key={idx}
-                          className="p-3 mb-3 rounded"
-                          style={{
-                            backgroundColor: "#f8f9fa",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          <p
-                            className="mb-1"
-                            style={{ color: "#0d6efd", fontWeight: "600" }}
-                          >
-                            Name: {name?.trim()}
-                          </p>
-                          <p className="mb-0" style={{ color: "#343a40" }}>
-                            <strong>Comments:</strong> {text?.trim()}
-                          </p>
+                const firstHistory = histories[0];
+
+                return (
+                  <div key={idx} className="mb-4">
+                    {/* Transfer Header */}
+                    <div className="text-center mb-4">
+                      <div
+                        className="d-inline-block px-4 py-3 rounded-4 shadow-sm"
+                        style={{
+                          background: "linear-gradient(135deg, #007bff, #00c6ff)",
+                          color: "white",
+                          fontWeight: "600",
+                          fontSize: "1.1rem",
+                          letterSpacing: "0.5px",
+                          boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+                        }}
+                      >
+                        🚀 Transfer <span style={{ fontWeight: "700" }}>{transferGroup.transfer}</span>
+                      </div>
+                    </div>
+
+
+                    {/* Card Bubble */}
+                    <div className="p-4 rounded-4 shadow bg-white">
+
+                      {/* Admin Reference Date */}
+                      <div className="mb-3">
+                        <h6 className="fw-bold text-dark mb-1">📌 Technical Admin Reference Order Date</h6>
+                        <span className="badge bg-light text-dark px-3 py-2">
+                          {firstHistory?.Technicaladmindate
+                            ? new Date(firstHistory.Technicaladmindate).toLocaleString("en-GB", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                              hour: "numeric",
+                              minute: "numeric",
+                              hour12: true,
+                            })
+                            : "---"}
+                        </span>
+                      </div>
+
+                      {/* Transfer to Committee */}
+                      <div className="mb-3">
+                        <h6 className="fw-bold text-dark mb-1">📩 Transfer to Committee Member Date</h6>
+                        <span className="badge bg-info text-white px-3 py-2">
+                          {firstHistory?.committee_created_at
+                            ? new Date(firstHistory.committee_created_at).toLocaleString("en-GB", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                              hour: "numeric",
+                              minute: "numeric",
+                              hour12: true,
+                            })
+                            : "---"}
+                        </span>
+                      </div>
+
+                      {/* Committee Member Status */}
+                      <div className="mb-3">
+                        <h6 className="fw-bold text-dark mb-2">👥 Committee Member Status</h6>
+                        <div className="list-group">
+                          {histories.map((history, i) => (
+                            <div
+                              key={i}
+                              className="list-group-item d-flex flex-column align-items-start mb-2 rounded shadow-sm border"
+                            >
+                              <div className="fw-bold">
+                                {history.committeetype} - {history.CommitteeMemberName}
+                              </div>
+                              <div>
+                                Status: <span className="text-primary">{history.committee_status || "---"}</span>
+                              </div>
+                              <small className="text-muted">
+                                Approval:{" "}
+                                {history.committee_approval_date
+                                  ? new Date(history.committee_approval_date).toLocaleString("en-GB", {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                    hour: "numeric",
+                                    minute: "numeric",
+                                    hour12: true,
+                                  })
+                                  : "---"}
+                              </small>
+                            </div>
+                          ))}
                         </div>
-                      );
-                    })
-                  ) : (
-                    <p className="text-muted fst-italic">No comments available</p>
-                  )}
-                </div>
-              </div>
-            </>
+                      </div>
+
+                      <div className="mb-3">
+                        <h6 className="fw-bold text-dark mb-2">📂 Documents</h6>
+                        {["study_copy", "irb_file", "nbc_file"].map((docKey) =>
+                          firstHistory?.[docKey] ? (
+                            <button
+                              key={docKey}
+                              className="btn btn-outline-primary btn-sm me-2 mb-1"
+                              onClick={() => {
+                                // Convert Node.js Buffer -> Uint8Array
+                                const byteArray = new Uint8Array(firstHistory[docKey].data);
+                                const blob = new Blob([byteArray], { type: "application/pdf" });
+                                const url = URL.createObjectURL(blob);
+                                window.open(url, "_blank");
+                              }}
+                            >
+                              Download {docKey.toUpperCase()}
+                            </button>
+                          ) : (
+                            <span
+                              key={docKey}
+                              className="text-muted me-2 mb-1 d-inline-block"
+                            >
+                              {docKey.toUpperCase()} Not Attached
+                            </span>
+                          )
+                        )}
+                      </div>
+
+
+                      {/* Technical Admin Approval */}
+                      <div>
+                        <h6 className="fw-bold text-dark mb-1">✅ Technical Admin Approval Date</h6>
+                        <span className="badge bg-success text-white px-3 py-2">
+                          {firstHistory?.TechnicaladminApproval_date
+                            ? new Date(firstHistory.TechnicaladminApproval_date).toLocaleString("en-GB", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                              hour: "numeric",
+                              minute: "numeric",
+                              hour12: true,
+                            })
+                            : "---"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </Modal.Body>
+          </Modal>
+
+
+
+
+
+          {/* Admin Approval Modal */}
+          {showModal && (
+            <Modal show={showModal} onHide={handleCloseModal}>
+              <Modal.Header closeButton>
+                <Modal.Title>Confirm Action</Modal.Title>
+              </Modal.Header>
+
+              <Modal.Body>
+                <p>
+                  Are you sure you want to <strong>{actionType}</strong> items?
+                </p>
+
+                {actionType === "Rejected" && (
+                  <Form.Group controlId="rejectionComment">
+                    <Form.Label>Reason for Rejection</Form.Label>
+                    <Form.Control
+                      as="textarea"
+                      rows={3}
+                      placeholder="Enter your comment here..."
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                    />
+                  </Form.Group>
+                )}
+              </Modal.Body>
+
+              <Modal.Footer>
+
+                <Button
+                  variant={actionType === "Accepted" ? "success" : "danger"}
+                  onClick={() => handleAdminStatus(actionType)}
+                  disabled={loading}
+                >
+                  {loading ? "Processing..." : `Confirm ${actionType}`}
+                </Button>
+              </Modal.Footer>
+            </Modal>
           )}
+
+          {/* Transfer  */}
+          <Modal
+            show={showTransferModal}
+            onHide={() => setShowTransferModal(false)}
+            centered
+            backdrop="static"
+          >
+            <Modal.Header closeButton>
+              <Modal.Title>Send Approval</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p>Select approval type:</p>
+              <Form.Select
+                value={selectedApprovalType}
+                onChange={(e) => setSelectedApprovalType(e.target.value)}
+              >
+                <option value="">Select an option</option>
+                <option value="scientific">Scientific Approval</option>
+                <option value="ethical">Ethical Approval</option>
+                <option value="both">Both Approvals</option>
+              </Form.Select>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                variant="primary"
+                onClick={() => handleCommitteeApproval(selectedApprovalType)}
+                disabled={!selectedApprovalType || transferLoading}
+              >
+                {transferLoading ? "Processing..." : "Save"}
+              </Button>
+            </Modal.Footer>
+          </Modal>
 
           {/* Sample details Modal */}
           {showSampleModal && selectedSample && (
@@ -918,4 +1074,4 @@ const OrderRejectedPage = () => {
   );
 };
 
-export default OrderRejectedPage;
+export default OrderPage;

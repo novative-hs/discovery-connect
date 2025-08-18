@@ -462,24 +462,58 @@ const baseCommitteeStatus = (committeeType) => `
     SELECT 
       CASE 
         WHEN NOT EXISTS (
-            SELECT 1 FROM committeesampleapproval ca
+            SELECT 1 
+            FROM committeesampleapproval ca
             JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-            WHERE ca.cart_id = c.id AND cm.committeetype = '${committeeType}'
-        ) AND EXISTS (
-            SELECT 1 FROM committeesampleapproval ca
+            WHERE ca.cart_id = c.id 
+              AND cm.committeetype = '${committeeType}'
+              AND ca.transfer = (
+                SELECT MAX(transfer) 
+                FROM committeesampleapproval 
+                WHERE cart_id = c.id
+              )
+        ) 
+        AND EXISTS (
+            SELECT 1 
+            FROM committeesampleapproval ca
             JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-            WHERE ca.cart_id = c.id AND cm.committeetype = '${committeeType === 'Scientific' ? 'Ethical' : 'Scientific'}'
-        ) THEN 'Not Sent'
-        WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
-        WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Pending') > 0 THEN 'Pending'
-        WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Approved') = COUNT(*) THEN 'Approved'
+            WHERE ca.cart_id = c.id 
+              AND cm.committeetype = '${committeeType === 'Scientific' ? 'Ethical' : 'Scientific'}'
+              AND ca.transfer = (
+                SELECT MAX(transfer) 
+                FROM committeesampleapproval 
+                WHERE cart_id = c.id
+              )
+        ) 
+        THEN 'Not Sent'
+
+        WHEN COUNT(*) > 0 
+          AND SUM(ca.committee_status = 'Refused') > 0 
+        THEN 'Refused'
+
+        WHEN COUNT(*) > 0 
+          AND SUM(ca.committee_status = 'Pending') > 0 
+        THEN 'Pending'
+
+        WHEN COUNT(*) > 0 
+          AND SUM(ca.committee_status = 'Approved') = COUNT(*) 
+        THEN 'Approved'
+
         ELSE NULL
       END
     FROM committeesampleapproval ca 
-    JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-    WHERE ca.cart_id = c.id AND cm.committeetype = '${committeeType}'
+    JOIN committee_member cm 
+      ON cm.user_account_id = ca.committee_member_id
+    WHERE ca.cart_id = c.id 
+      AND cm.committeetype = '${committeeType}'
+      AND ca.transfer = (
+        SELECT MAX(transfer) 
+        FROM committeesampleapproval 
+        WHERE cart_id = c.id
+      )
   )
 `;
+
 
 const getAllOrder = (page, pageSize, searchField, searchValue, status, callback) => {
   const offset = (page - 1) * pageSize;
@@ -511,6 +545,10 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
   if (status === 'Pending') {
     whereClauses.push("c.order_status = 'Pending'");
   }
+  else
+    if (status === 'Accepted') {
+      whereClauses.push("c.order_status!='Pending'");
+    }
 
   const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
@@ -547,61 +585,36 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
     ra.Approval_date AS TechnicaladminApproval_date,
     ${baseCommitteeStatus('Ethical')} AS ethical_committee_status,
     ${baseCommitteeStatus('Scientific')} AS scientific_committee_status,
-
+    CASE
+      WHEN (${baseCommitteeStatus('Scientific')} = 'Refused' 
+            OR ${baseCommitteeStatus('Ethical')} = 'Refused') 
+           THEN 'Refused'
+      WHEN (${baseCommitteeStatus('Scientific')} = 'Pending' 
+            OR ${baseCommitteeStatus('Ethical')} = 'Pending') 
+           THEN 'Pending'
+      WHEN (${baseCommitteeStatus('Scientific')} = 'Approved' 
+            AND ${baseCommitteeStatus('Ethical')} = 'Approved') 
+           THEN 'Approved'
+      WHEN (${baseCommitteeStatus('Scientific')} = 'Not Sent' 
+            OR ${baseCommitteeStatus('Ethical')} = 'Not Sent') 
+           THEN 'Not Sent'
+      ELSE '---'
+    END AS final_committee_status,
     -- Comments only
 (
   SELECT GROUP_CONCAT(
-    DISTINCT CONCAT(cm.CommitteeMemberName, ' (', cm.committeetype, ') : ', ca.comments)
-    SEPARATOR ' | '
+    DISTINCT CONCAT(
+      cm.CommitteeMemberName, 
+      ' (', cm.committeetype, ') : ', 
+      ca.comments,
+      ' [', ca.committee_status, ']'
+    ) SEPARATOR ' | '
   )
   FROM committeesampleapproval ca
-  JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
+  JOIN committee_member cm 
+    ON cm.user_account_id = ca.committee_member_id
   WHERE ca.cart_id = c.id
-) AS committee_comments,
-
--- Dates only
-(
-  SELECT GROUP_CONCAT(
-    DISTINCT DATE_FORMAT(ca.created_at, '%Y-%m-%d %H:%i:%s')
-    SEPARATOR ' | '
-  )
-  FROM committeesampleapproval ca
-  JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-  WHERE ca.cart_id = c.id
-) AS committee_created_dates,
-
-(
-  SELECT GROUP_CONCAT(
-    DISTINCT DATE_FORMAT(ca.Approval_date, '%Y-%m-%d %H:%i:%s')
-    SEPARATOR ' | '
-  )
-  FROM committeesampleapproval ca
-  JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-  WHERE ca.cart_id = c.id
-) AS committee_Approval_date,
-
-   -- Sample documents: separate columns for each file
-(
-  SELECT sd.study_copy
-  FROM sampledocuments sd
-  WHERE sd.cart_id = c.id
-  LIMIT 1
-) AS study_copy,
-
-(
-  SELECT sd.irb_file
-  FROM sampledocuments sd
-  WHERE sd.cart_id = c.id
-  LIMIT 1
-) AS irb_file,
-
-(
-  SELECT sd.nbc_file
-  FROM sampledocuments sd
-  WHERE sd.cart_id = c.id
-  LIMIT 1
-) AS nbc_file
-
+) AS committee_comments
   FROM cart c
   JOIN user_account u ON c.user_id = u.id
   LEFT JOIN researcher r ON u.id = r.user_account_id 
@@ -641,7 +654,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
           console.error("Error fetching cart data:", err);
           callback(err, null);
         } else {
-          
+
           results.forEach(order => {
             if (order.order_status !== 'Dispatched' && order.order_status !== 'Shipped') {
               updateCartStatusToCompleted(order.order_id, (updateErr) => {
@@ -916,11 +929,11 @@ const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comme
     c.created_at, 
     c.tracking_id, 
     c.id AS cartId,
-    c.status,
+    c.order_status,
     s.Analyte
   FROM user_account ua
   JOIN cart c ON ua.id = c.user_id
-  JOIN sample s ON c.sampleId = s.id
+  JOIN sample s ON c.sample_id = s.id
   WHERE c.id IN (${placeholders})
   `,
       cartIds

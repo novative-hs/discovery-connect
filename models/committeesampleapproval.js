@@ -9,6 +9,8 @@ const createcommitteesampleapprovalTable = () => {
   committee_member_id INT NOT NULL, 
   committee_status ENUM('Pending', 'Approved', 'Refused') NOT NULL DEFAULT 'Pending',
   comments TEXT NULL, 
+  Approval_date TIMESTAMP,
+  transfer INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE CASCADE,
   FOREIGN KEY (sender_id) REFERENCES user_account(id) ON DELETE CASCADE,
@@ -77,71 +79,89 @@ const insertCommitteeApproval = (cartIds, senderId, committeeType, callback) => 
       }
     }
 
-    const insertQuery = `
-      INSERT INTO committeesampleapproval (cart_id, sender_id, committee_member_id, committee_status)
-      VALUES ?
+    // Step 1: Get transfer id for each cart
+    const transferQuery = `
+      SELECT cart_id, COALESCE(MAX(transfer), 0) AS maxTransferId
+      FROM committeesampleapproval
+      WHERE cart_id IN (?)
+      GROUP BY cart_id
     `;
-    const values = [];
-    cartIds.forEach(cartId => {
-      activeMembers.forEach(member => {
-        values.push([cartId, senderId, member.user_account_id, "Pending"]);
-      });
-    });
 
-
-    mysqlConnection.query(insertQuery, [values], (insertErr, insertResult) => {
-      if (insertErr) {
-        console.error("Error inserting committee approval records:", insertErr);
-        return callback(insertErr, null);
+    mysqlConnection.query(transferQuery, [cartIds], (transferErr, transferResults) => {
+      if (transferErr) {
+        console.error("Error fetching transfer ids:", transferErr);
+        return callback(transferErr, null);
       }
-      const updateCartStatusQuery = `
-  UPDATE cart
-  SET order_status = 'Pending'
-  WHERE id IN (?)
-`;
 
-      mysqlConnection.query(updateCartStatusQuery, [cartIds], (updateErr) => {
+      const transferMap = {};
+      transferResults.forEach(row => {
+        transferMap[row.cart_id] = row.maxTransferId;
+      });
 
-        if (updateErr) {
-          console.error("Error updating cart status:", updateErr);
-          return callback(updateErr, null);
+      const values = [];
+      cartIds.forEach(cartId => {
+        const newTransferId = (transferMap[cartId] || 0) + 1; // increment by 1
+        activeMembers.forEach(member => {
+          values.push([cartId, senderId, member.user_account_id, "Pending", newTransferId]);
+        });
+      });
+
+      const insertQuery = `
+        INSERT INTO committeesampleapproval (cart_id, sender_id, committee_member_id, committee_status, transfer)
+        VALUES ?
+      `;
+
+      mysqlConnection.query(insertQuery, [values], (insertErr, insertResult) => {
+        if (insertErr) {
+          console.error("Error inserting committee approval records:", insertErr);
+          return callback(insertErr, null);
         }
 
+        const updateCartStatusQuery = `
+          UPDATE cart
+          SET order_status = 'Pending'
+          WHERE id IN (?)
+        `;
 
-
-        const getEmailQuery = `
-  SELECT DISTINCT ua.email, r.researcherName, c.tracking_id
-  FROM user_account ua
-  JOIN cart c ON ua.id = c.user_id
-  JOIN researcher r ON ua.id = r.user_account_id
-  WHERE c.id IN (?)
-`;
-
-        mysqlConnection.query(getEmailQuery, [cartIds], async (emailErr, emailResults) => {
-          if (emailErr) {
-            console.error("Error fetching user emails:", emailErr);
-            return callback(emailErr, null);
+        mysqlConnection.query(updateCartStatusQuery, [cartIds], (updateErr) => {
+          if (updateErr) {
+            console.error("Error updating cart status:", updateErr);
+            return callback(updateErr, null);
           }
 
-          // Group by email and researcherName
-          const emailMap = new Map();
+          const getEmailQuery = `
+            SELECT DISTINCT ua.email, r.researcherName, c.tracking_id
+            FROM user_account ua
+            JOIN cart c ON ua.id = c.user_id
+            JOIN researcher r ON ua.id = r.user_account_id
+            WHERE c.id IN (?)
+          `;
 
-          emailResults.forEach(({ email, researcherName, tracking_id }) => {
-            const key = `${email}|${researcherName}`;
-            if (!emailMap.has(key)) {
-              emailMap.set(key, []);
+          mysqlConnection.query(getEmailQuery, [cartIds], async (emailErr, emailResults) => {
+            if (emailErr) {
+              console.error("Error fetching user emails:", emailErr);
+              return callback(emailErr, null);
             }
-            emailMap.get(key).push(tracking_id);
-          });
 
-          let emailFailures = [];
+            // Group by email and researcherName
+            const emailMap = new Map();
 
-          for (const [key, trackingIds] of emailMap.entries()) {
-            const [email, researcherName] = key.split("|");
+            emailResults.forEach(({ email, researcherName, tracking_id }) => {
+              const key = `${email}|${researcherName}`;
+              if (!emailMap.has(key)) {
+                emailMap.set(key, []);
+              }
+              emailMap.get(key).push(tracking_id);
+            });
 
-            const subject = "Your Sample Submission is Under Review";
+            let emailFailures = [];
 
-            const text = `
+            for (const [key, trackingIds] of emailMap.entries()) {
+              const [email, researcherName] = key.split("|");
+
+              const subject = "Your Sample Submission is Under Review";
+
+              const text = `
  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px;">
       <h2 style="color: #2c3e50;">Sample Request Under Review</h2>
 
@@ -161,32 +181,28 @@ const insertCommitteeApproval = (cartIds, senderId, committeeType, callback) => 
     </div>
     `.trim();
 
-            try {
-              await sendEmail(email, subject, text);
-            } catch (err) {
-              console.error("Failed to send email to", email, ":", err);
-              emailFailures.push(email);
+              try {
+                await sendEmail(email, subject, text);
+              } catch (err) {
+                console.error("Failed to send email to", email, ":", err);
+                emailFailures.push(email);
+              }
             }
-          }
 
-          const finalMsg =
-            notice +
-            "Committee status updated" +
-            (emailFailures.length > 0
-              ? `, but email failed to send to: ${emailFailures.join(", ")}.`
-              : " and emails sent successfully!");
+            const finalMsg =
+              notice +
+              "Committee status updated" +
+              (emailFailures.length > 0
+                ? `, but email failed to send to: ${emailFailures.join(", ")}.`
+                : " and emails sent successfully!");
 
-          return callback(null, { message: finalMsg });
+            return callback(null, { message: finalMsg });
+          });
         });
-
-
       });
     });
   });
 };
-
-
-
 
 const updateCommitteeStatus = async (cart_ids, committee_member_id, committee_status, comments, callback) => {
 
@@ -218,7 +234,7 @@ const updateCommitteeStatus = async (cart_ids, committee_member_id, committee_st
       UPDATE committeesampleapproval 
       SET committee_status = ?, comments = ? ,
      Approval_date = NOW()
-      WHERE committee_member_id = ? AND cart_id = ?`;
+      WHERE committee_member_id = ? AND cart_id = ? AND committee_status='Pending'`;
 
     await new Promise((resolve) => {
       mysqlConnection.query(updateQuery, [committee_status, comments, committee_member_id, cartid], async (err) => {
@@ -228,13 +244,13 @@ const updateCommitteeStatus = async (cart_ids, committee_member_id, committee_st
           return resolve();
         }
 
-        if (committee_status === 'Refused') {
-          try {
-            revertSampleQuantity(cartid);
-          } catch (revertErr) {
-            console.error(`❌ Error reverting quantity for cart ${cartid}:`, revertErr);
-          }
-        }
+        // if (committee_status === 'Refused') {
+        //   try {
+        //     revertSampleQuantity(cartid);
+        //   } catch (revertErr) {
+        //     console.error(`❌ Error reverting quantity for cart ${cartid}:`, revertErr);
+        //   }
+        // }
 
         // Check if all committee members submitted
         const checkAllStatusQuery = `
@@ -365,6 +381,69 @@ const updateCommitteeStatus = async (cart_ids, committee_member_id, committee_st
   callback(null, { success: !hasError, message: finalMessage });
 };
 
+const getHistory = (tracking_ids, status, callback) => {
+  try {
+    const placeholders = tracking_ids.map(() => '?').join(',');
+
+    const sql = `
+      SELECT 
+        c.id AS cart_id,
+        c.tracking_id,
+        csa.transfer,
+        tas.created_at AS Technicaladmindate,
+        tas.Approval_date AS TechnicaladminApproval_date,
+        csa.committee_status,
+        csa.comments AS committee_comment,
+        cm.CommitteeMemberName,
+        cm.committeetype,
+        csa.Approval_date AS committee_approval_date,
+        csa.created_at AS committee_created_at,
+        sd.study_copy,
+        sd.irb_file,
+        sd.nbc_file
+      FROM cart c
+      LEFT JOIN technicaladminsampleapproval tas
+        ON tas.cart_id = c.id
+      LEFT JOIN committeesampleapproval csa
+        ON csa.cart_id = c.id
+      LEFT JOIN committee_member cm
+        ON cm.user_account_id = csa.committee_member_id
+      LEFT JOIN sampledocuments sd
+        ON sd.cart_id = c.id
+      WHERE c.tracking_id IN (${placeholders})
+        AND c.order_status = ?
+      ORDER BY c.id, c.tracking_id, csa.transfer, csa.created_at
+    `;
+
+    mysqlConnection.query(sql, [...tracking_ids, status], (err, results) => {
+      if (err) return callback(err, null);
+
+      // Group by cart_id and transfer_id
+      const grouped = [];
+      let currentGroup = [];
+      let lastCartId = null;
+      let lastTransferId = null;
+
+      results.forEach(row => {
+        if (row.cart_id !== lastCartId || row.transfer_id !== lastTransferId) {
+          if (currentGroup.length > 0) grouped.push(currentGroup);
+          currentGroup = [];
+        }
+        currentGroup.push(row);
+        lastCartId = row.cart_id;
+        lastTransferId = row.transfer_id;
+      });
+
+      if (currentGroup.length > 0) grouped.push(currentGroup);
+
+      callback(null, grouped);
+    });
+
+  } catch (err) {
+    console.error("Error fetching history:", err);
+    callback(err, null);
+  }
+};
 
 
 
@@ -464,5 +543,6 @@ const revertSampleQuantity = (cartId) => {
 module.exports = {
   createcommitteesampleapprovalTable,
   insertCommitteeApproval,
-  updateCommitteeStatus
+  updateCommitteeStatus,
+  getHistory
 };

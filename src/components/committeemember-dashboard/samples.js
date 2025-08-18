@@ -214,6 +214,7 @@ const SampleArea = () => {
 
       notifySuccess(`${actionType} successful for all samples.`);
       setShowModal(false);
+      setShowGroupedModal(false)
       setComment("");
 
       // ✅ Refetch updated data

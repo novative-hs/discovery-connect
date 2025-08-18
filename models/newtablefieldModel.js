@@ -1,30 +1,37 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
   {
-    table:"technicaladminsampleapproval",
-    columnsToAdd:[
-      
+    table: "technicaladminsampleapproval",
+    columnsToAdd: [
+
       {
         column: "Comments",
         type: "VARCHAR(500)",
         nullable: true,
       },
       {
-        column:"Approval_date",
-        type:"TIMESTAMP",
+        column: "Approval_date",
+        type: "TIMESTAMP",
         nullable: true,
-      }
+      },
+
     ]
   },
   {
-    table:"committeesampleapproval",
-    columnsToAdd:[
-      
+    table: "committeesampleapproval",
+    columnsToAdd: [
+
       {
-        column:"Approval_date",
-        type:"TIMESTAMP",
+        column: "Approval_date",
+        type: "TIMESTAMP",
         nullable: true,
-      }
+      },
+      {
+        column: "transfer",
+        type: "INT",
+        nullable: false,   // since it will always default to 0
+        default: 0
+      },
     ]
   },
 
