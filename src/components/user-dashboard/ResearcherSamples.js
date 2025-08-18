@@ -100,18 +100,19 @@ const SampleArea = () => {
           payment_type: sample.payment_method,
           payment_status: sample.payment_status,
           samples: [],
-          totalpayment: 0, // 🔧 Initialize total per group
+          totalpayment: 0,
         };
       }
       grouped[key].samples.push(sample);
 
       const price = parseFloat(sample.totalpayment);
       if (!isNaN(price)) {
-        grouped[key].totalpayment += price; // 🔧 Add price to this group's total
+        grouped[key].totalpayment += price;
       }
     });
 
-    return Object.values(grouped);
+    // ✅ Sort by created_at ASC (oldest order first)
+    return Object.values(grouped).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   };
 
 
@@ -127,9 +128,8 @@ const SampleArea = () => {
 
 
   useEffect(() => {
-    const pages = Math.max(1, Math.ceil(samples.length / itemsPerPage));
+    const pages = Math.max(1, Math.ceil(orders.length / itemsPerPage));
     setTotalPages(pages);
-
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
@@ -290,7 +290,7 @@ const SampleArea = () => {
                   <th>Test Result</th>
                   <th>Price</th>
                   <th>Quantity</th>
-                  
+
                 </tr>
               </thead>
               <tbody>

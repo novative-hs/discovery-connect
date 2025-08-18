@@ -118,8 +118,8 @@ const OrderPage = () => {
       setOrders(groupedOrders);
       setAllOrders(groupedOrders);
       setAllOrdersRaw(groupedOrders);
-      setTotalPages(Math.ceil(totalCount / pageSize));
-
+      setTotalPages(Math.ceil(groupedOrders.length / pageSize));
+      
       return groupedOrders;
     } catch (err) {
       console.error("Fetch orders error:", err);
@@ -813,7 +813,7 @@ const OrderPage = () => {
                   : transferGroup.items;
 
                 const firstHistory = histories[0];
-                console.log("history", histories)
+                
                 return (
                   <div key={idx} className="mb-4">
                     {/* Transfer Header */}

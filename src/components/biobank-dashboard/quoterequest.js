@@ -12,7 +12,8 @@ const QuoteRequestTable = () => {
   const [groupCurrency, setGroupCurrency] = useState("");
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [isReadOnly, setIsReadOnly] = useState(false);
-const [currencyError, setCurrencyError] = useState(""); 
+
+const [currencyError, setCurrencyError] = useState("");
   // Fetch currency options
   useEffect(() => {
     const fetchCurrencies = async () => {
@@ -87,23 +88,38 @@ const [currencyError, setCurrencyError] = useState("");
   };
 
   // Submit all samples in selected quote
-  const handleSubmitAll = async () => {
-    if (!selectedQuote || selectedQuote.length === 0 || !groupCurrency) return;
- if (!groupCurrency) {
+ const handleSubmitAll = async () => {
+    if (!selectedQuote || selectedQuote.length === 0) return;
+
+    // Validate currency selection
+    if (!groupCurrency) {
       setCurrencyError("Please select a currency");
       return;
     }
-    for (const sample of selectedQuote) {
-      const sampleId = sample.sample_id;
-      await submitSamplePrice(sampleId, groupCurrency);
-    }
 
-    alert("All prices updated successfully!");
-    setShowCartModal(false);
-    setSelectedQuote(null);
-    setPriceInputs({});
-    setGroupCurrency("");
+    try {
+      for (const sample of selectedQuote) {
+        const sampleId = sample.sample_id;
+        const price = priceInputs[sampleId];
+
+        // Skip if no price entered for this sample
+        if (!price) continue;
+
+        await submitSamplePrice(sampleId, groupCurrency);
+      }
+
+      alert("All prices updated successfully!");
+      setShowCartModal(false);
+      setSelectedQuote(null);
+      setPriceInputs({});
+      setGroupCurrency("");
+      setCurrencyError(""); // Clear error on success
+    } catch (error) {
+      console.error("Error submitting prices:", error);
+      alert("Failed to update prices. Please try again.");
+    }
   };
+
 
   return (
     <div className="container-fluid">
@@ -205,7 +221,7 @@ const [currencyError, setCurrencyError] = useState("");
               </div>
             )}
             {currencyError && (
-              <div className="invalid-feedback d-block" style={{ fontSize: "0.9rem", marginLeft: "600px" }}>
+              <div className="invalid-feedback d-block fs-5" style={{ marginLeft: "550px" }}>
                 {currencyError}
               </div>
             )}

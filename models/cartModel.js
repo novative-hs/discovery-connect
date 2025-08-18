@@ -196,13 +196,11 @@ const createCart = (data, callback) => {
   const tracking_id = generateTrackingId();
   let created_at = 0;
   // Validate required fields
+  
   if (
     !researcher_id ||
     !cart_items ||
-    !payment_id ||
-    !study_copy ||
-    !reporting_mechanism ||
-    !irb_file
+    !payment_id 
   ) {
     return callback(
       new Error(

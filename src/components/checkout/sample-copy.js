@@ -81,10 +81,10 @@ const handleInvoice=()=>{
     </div>
   );
   const handleNext = () => {
-    if (!studyCopy || !irbFile || !reportingMechanism) {
-      notifyError("Please upload all required fields before proceeding.");
-      return;
-    }
+    // if (!studyCopy || !irbFile || !reportingMechanism) {
+    //   notifyError("Please upload all required fields before proceeding.");
+    //   return;
+    // }
     // Call onComplete to open modal in parent component
     onComplete();
   };
@@ -98,9 +98,9 @@ const handleInvoice=()=>{
           <div className="col-12 mb-3">
             <p className="text-muted h8">
               Upload Copy of the Study
-              <strong>
+              {/* <strong>
                 <span className="text-danger">*</span>
-              </strong>
+              </strong> */}
             </p>
             {renderFileUpload(studyFileRef, setStudyCopy, "studyCopy", studyCopy)}
           </div>
@@ -109,7 +109,7 @@ const handleInvoice=()=>{
           <div className="col-12 mb-3">
             <p className="text-muted h8">
               Institutional Review Board (IRB) Approval
-              <span className="text-danger">*</span>
+              {/* <span className="text-danger">*</span> */}
             </p>
             {renderFileUpload(irbFileRef, setIrbFile, "irbFile", irbFile)}
           </div>
@@ -118,9 +118,9 @@ const handleInvoice=()=>{
           <div className="col-12 mb-3">
             <p className="text-muted h8">
               NBC Approval Foreign Collaboration
-              <strong>
+              {/* <strong>
                 <span className="text-danger">(optional)</span>
-              </strong>
+              </strong> */}
             </p>
             {renderFileUpload(nbcFileRef, setNbcFile, "nbcFile", nbcFile)}
           </div>

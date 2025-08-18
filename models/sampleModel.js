@@ -355,7 +355,7 @@ const getResearcherSamples = (userId, callback) => {
 
     GROUP BY s.id, sm.id, cs.id, bb.id, c.id, d.id, country.id, ra.technical_admin_status
 
-    ORDER BY s.id DESC;
+    ORDER BY s.created_at DESC;
   `;
 
   mysqlConnection.query(query, [userId], (err, results) => {
