@@ -1915,7 +1915,7 @@ const BioBankSampleArea = () => {
                                 <div className="form-group col-md-4">
                                   <label>
                                     Location (IDs){" "}
-                                    <span className="text-danger">*</span>
+                                    <span className="text-danger"></span>
                                   </label>
                                   <InputMask
                                     mask="999-999-999"
@@ -1934,7 +1934,7 @@ const BioBankSampleArea = () => {
                                           height: "45px",
                                           fontSize: "14px",
                                           backgroundColor: !formData.locationids
-                                            ? "#fdecea"
+                                            ? "#fff"
                                             : "#fff",
                                         }}
                                         required
@@ -2234,7 +2234,7 @@ const BioBankSampleArea = () => {
                                         height: "45px",
                                         fontSize: "14px",
                                         backgroundColor: !formData.logo
-                                          ? "#fdecea"
+                                          ? "#fff"
                                           : "#fff",
                                       }}
                                     />

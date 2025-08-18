@@ -970,7 +970,7 @@ const SampleArea = () => {
     setLogoPreview(null)
   };
 
- const handleUpdate = async (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
