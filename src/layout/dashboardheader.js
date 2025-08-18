@@ -226,12 +226,12 @@ const Header = ({ setActiveTab, activeTab }) => {
 
             : userType == "committeemember"
               ? [{ label: "Review Pending", tab: "samples" },
-              { label: "Review Done List", tab: "reviewdone" }
+              { label: "Review Done", tab: "reviewdone" }
               ]
               : userType == "technicaladmin"
                 ? [
-                  { label: "Review Pending List", tab: "order" },
-                  { label: "Review Done List", tab: "orderrejected" },
+                  { label: "Review Pending", tab: "order" },
+                  { label: "Review Done", tab: "orderrejected" },
                 ]
                 : userType == "csr"
                   ? [

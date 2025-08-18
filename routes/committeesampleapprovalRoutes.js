@@ -4,6 +4,6 @@ const committesampleapprovalController = require("../controller/committeesamplea
 
 router.post('/transfertocommittee', committesampleapprovalController.createCommitteeSample); 
 router.put("/bulk-committee-approval", committesampleapprovalController.updateCommitteeStatus);
-
+router.get("/getHistory",committesampleapprovalController.getHistory)
 
 module.exports = router;

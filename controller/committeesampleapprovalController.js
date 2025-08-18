@@ -9,12 +9,12 @@ const createCommitteeSample = async (req, res) => {
 
   try {
     committeesampleapproval.insertCommitteeApproval(cartId, senderId, committeeType, (err, result) => {
-  if (err) {
-    console.error("Error processing committee samples:", err);
-    return res.status(500).json({ error: err.message || "Failed to process committee samples" });
-  }
-  return res.status(201).json({ message: result.message || "All cart items processed successfully." });
-});
+      if (err) {
+        console.error("Error processing committee samples:", err);
+        return res.status(500).json({ error: err.message || "Failed to process committee samples" });
+      }
+      return res.status(201).json({ message: result.message || "All cart items processed successfully." });
+    });
 
   } catch (err) {
     console.error("Error processing committee samples:", err);
@@ -51,9 +51,27 @@ const updateCommitteeStatus = (req, res) => {
   );
 };
 
+const getHistory = (req, res) => {
+  const { trackingIds, status } = req.query;
+
+  const idsArray = trackingIds ? trackingIds.split(',') : [];
+
+  committeesampleapproval.getHistory(idsArray, status, (err, data) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Error getting committee approval history",
+        error: err.message
+      });
+    }
+    return res.status(200).json({ results:data });
+  });
+};
+
 
 
 module.exports = {
   createCommitteeSample,
-  updateCommitteeStatus
+  updateCommitteeStatus,
+  getHistory
 }

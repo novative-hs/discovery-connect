@@ -73,10 +73,7 @@ const SampleArea = () => {
   const [testsystemNames, setTestSystemNames] = useState([]);
   const [testsystemmanufacturerNames, setTestSystemManufacturerNames] = useState([]);
   const [AnalyteNames, setAnalyteNames] = useState([]);
-  const analyteOptions = AnalyteNames.map((item) => ({
-    value: item.name,
-    label: item.name,
-  }));
+
   const [showAdditionalFields, setShowAdditionalFields] = React.useState(false);
   const [logoPreview, setLogoPreview] = useState(null);
   const [samplePdfPreview, setSamplePdfPreview] = useState(null);
@@ -112,6 +109,17 @@ const SampleArea = () => {
     { value: "Pooled", text: "Pooled" },
 
   ];
+  const [analyteOptions, setAnalyteOptions] = useState([]);
+
+  useEffect(() => {
+    if (AnalyteNames && Array.isArray(AnalyteNames)) {
+      const options = AnalyteNames.map((item) => ({
+        value: item.name,
+        label: item.name,
+      }));
+      setAnalyteOptions(options);
+    }
+  }, [AnalyteNames]);
 
   const openModal = (sample) => {
     setSelectedSample(sample);
@@ -393,33 +401,38 @@ const SampleArea = () => {
     }
   }, [totalPages]);
   const handleFilterChange = (field, value) => {
-    const trimmed = value.trim?.() || value;
+  const trimmed = value.trim?.() || value;
 
-    if (field === "date_to" && trimmed && !dateFrom) {
-      notifyError("Please select 'Date From' first.");
-      return;
-    }
+  // Use updated value, not stale state
+  const effectiveDateFrom = field === "date_from" ? trimmed : dateFrom;
+  const effectiveDateTo = field === "date_to" ? trimmed : dateTo;
 
-    const updatedFilters = {
-      ...filters,
-      [field]: trimmed,
-    };
+  if (field === "date_to" && trimmed && !effectiveDateFrom) {
+    notifyError("Please select 'Date From' first.");
+    return;
+  }
 
-    if (trimmed === "") {
-      delete updatedFilters[field];
-    }
-
-    setFilters(updatedFilters);
-
-    // ✅ Only apply fetch if both dates are selected, or if it's not a date field
-    if (
-      (field === "date_from" && value && dateTo) ||
-      (field === "date_to" && value && dateFrom) ||
-      (field !== "date_from" && field !== "date_to")
-    ) {
-      fetchSamples(currentPage, itemsPerPage, updatedFilters);
-    }
+  const updatedFilters = {
+    ...filters,
+    [field]: trimmed,
   };
+
+  if (trimmed === "") {
+    delete updatedFilters[field];
+  }
+
+  setFilters(updatedFilters);
+
+  // ✅ Only apply fetch if both dates are selected, or if it's not a date field
+  if (
+    (field === "date_from" && value && effectiveDateTo) ||
+    (field === "date_to" && value && effectiveDateFrom) ||
+    (field !== "date_from" && field !== "date_to")
+  ) {
+    fetchSamples(currentPage, itemsPerPage, updatedFilters);
+  }
+};
+
 
 
 
@@ -970,7 +983,7 @@ const SampleArea = () => {
     setLogoPreview(null)
   };
 
- const handleUpdate = async (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -1229,7 +1242,8 @@ const SampleArea = () => {
                 onChange={(e) => {
                   const value = e.target.value;
                   setDateFrom(value);
-                  handleFilterChange("date_from", value); // Apply immediately
+                  handleFilterChange("date_from", value);
+
                   if (dateTo) {
                     handleFilterChange("date_to", dateTo); // Re-apply if already selected
                   }

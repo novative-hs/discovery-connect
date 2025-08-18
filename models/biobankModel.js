@@ -86,14 +86,14 @@ const getBiobankSamples = (
         paramsOwn.push(likeValue);
         break;
 
-     case "gender":
-    baseWhereShared += ` AND LOWER(sample.gender) = ?`;
-    baseWhereOwn += ` AND LOWER(sample.gender) = ?`;
-    paramsShared.push(value.toLowerCase());
-    paramsOwn.push(value.toLowerCase());
-    break;
+      case "gender":
+        baseWhereShared += ` AND LOWER(sample.gender) = ?`;
+        baseWhereOwn += ` AND LOWER(sample.gender) = ?`;
+        paramsShared.push(value.toLowerCase());
+        paramsOwn.push(value.toLowerCase());
+        break;
 
-    break;
+        break;
 
       case "date_from":
         baseWhereShared += ` AND sample.created_at >= ?`;
@@ -124,6 +124,8 @@ const getBiobankSamples = (
         paramsShared.push(value.toLowerCase());
         baseWhereOwn += ` AND LOWER(sample.sample_visibility) = ?`;
         paramsOwn.push(value.toLowerCase());
+        break;   // <-- missing earlier
+
       default:
         console.warn("⚠️ Unknown filter field:", field);
         break;

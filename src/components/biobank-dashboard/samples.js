@@ -363,27 +363,26 @@ const BioBankSampleArea = () => {
 
   const handleFilterChange = (field, value) => {
     const trimmed = value.trim?.() || value;
-    setCurrentPage(0);
 
     if (field === "price") {
       setPriceFilter(value);
       setSearchField("");
       setSearchValue("");
-      fetchSamples(1, itemsPerPage, { priceFilter: value });
+    fetchSamples(currentPage, itemsPerPage, { priceFilter: value });
 
     } else if (field === "visibility") {
       setVisibility(value);
       setSearchField("");
       setSearchValue("");
       setPriceFilter("");
-      fetchSamples(1, itemsPerPage, { visibility: value });
+       fetchSamples(currentPage+1, itemsPerPage, { visibility: value });
 
     } else if (field === "date_from" || field === "date_to") {
       if (field === "date_from") setDateFrom(trimmed);
       if (field === "date_to") setDateTo(trimmed);
 
       // ✅ Send both dates together to the API
-      fetchSamples(1, itemsPerPage, {
+      fetchSamples(currentPage, itemsPerPage, {
         date_from: field === "date_from" ? trimmed : dateFrom,
         date_to: field === "date_to" ? trimmed : dateTo
       });
@@ -392,7 +391,7 @@ const BioBankSampleArea = () => {
       setSearchField(field);
       setSearchValue(value);
       setPriceFilter("");
-      fetchSamples(1, itemsPerPage, { searchField: field, searchValue: value });
+      fetchSamples(currentPage, itemsPerPage, { searchField: field, searchValue: value });
     }
   };
 
@@ -957,7 +956,7 @@ const BioBankSampleArea = () => {
       setSelectedSamples([]);
 
       // Refresh sample list - consider a more optimized refresh if possible
-      fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
+      fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
 
     } catch (error) {
       console.error("Update error:", error);

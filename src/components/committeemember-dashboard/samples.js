@@ -214,6 +214,7 @@ const SampleArea = () => {
 
       notifySuccess(`${actionType} successful for all samples.`);
       setShowModal(false);
+      setShowGroupedModal(false)
       setComment("");
 
       // ✅ Refetch updated data
@@ -225,7 +226,7 @@ const SampleArea = () => {
       );
 
       const updatedDocuments = updatedDocRes.data.results || [];
-      const updatedOrders = (orderRes.data.results || []).filter(order =>
+      const updatedOrders = (updatedOrderRes.data.results || []).filter(order =>
         order.committee_status === "Pending" // Filter for Pending status
       );
 
