@@ -70,6 +70,7 @@ const OrderPage = () => {
 
 
   useEffect(() => {
+    localStorage.removeItem("transferredOrders")
     fetchOrders(currentPage, ordersPerPage);
   }, [currentPage]);
   useEffect(() => {
@@ -590,14 +591,16 @@ const OrderPage = () => {
 
 
                           {/* Transfer */}
-                          {!transferredOrders.includes(selectedOrder.order_id) && (
-                            <button
-                              className="btn btn-outline-primary btn-sm"
-                              onClick={() => handleToggleTransferOptions(selectedOrder.order_id)}
-                            >
-                              Transfer
-                            </button>
-                          )}
+                          {!(selectedOrder?.scientific_committee_status === "Approved" &&
+                            selectedOrder?.ethical_committee_status === "Approved") && (
+                              <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => handleToggleTransferOptions(selectedOrder.order_id)}
+                              >
+                                Transfer
+                              </button>
+                            )}
+
 
                         </>
                       )}
