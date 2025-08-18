@@ -368,14 +368,14 @@ const BioBankSampleArea = () => {
       setPriceFilter(value);
       setSearchField("");
       setSearchValue("");
-    fetchSamples(currentPage, itemsPerPage, { priceFilter: value });
+      fetchSamples(currentPage, itemsPerPage, { priceFilter: value });
 
     } else if (field === "visibility") {
       setVisibility(value);
       setSearchField("");
       setSearchValue("");
       setPriceFilter("");
-       fetchSamples(currentPage+1, itemsPerPage, { visibility: value });
+      fetchSamples(currentPage + 1, itemsPerPage, { visibility: value });
 
     } else if (field === "date_from" || field === "date_to") {
       if (field === "date_from") setDateFrom(trimmed);
@@ -1973,6 +1973,104 @@ const BioBankSampleArea = () => {
                                 </div>
                                 <div className="form-group col-md-4">
                                   <label>
+                                    Sample Type Matrix{" "}
+                                    <span className="text-danger">*</span>
+                                  </label>
+                                  <select
+                                    className="form-control"
+                                    name="SampleTypeMatrix"
+                                    value={formData.SampleTypeMatrix}
+                                    onChange={handleInputChange}
+                                    required
+                                    style={{
+                                      height: "45px",
+                                      fontSize: "14px",
+                                      backgroundColor: !formData.SampleTypeMatrix
+                                        ? "#fdecea"
+                                        : "#fff",
+                                    }}
+                                  >
+                                    <option value="" hidden></option>
+                                    {sampletypematrixNames.map((name, index) => (
+                                      <option key={index} value={name}>
+                                        {name}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="form-group col-md-6">
+                                  <label>
+                                    Volume <span className="text-danger">*</span>
+                                  </label>
+                                  <div className="d-flex">
+                                    <input
+                                      type="number"
+                                      className="form-control me-2"
+                                      name="volume"
+                                      value={formData.volume}
+                                      onChange={(e) => {
+                                        const value = parseFloat(e.target.value);
+                                        if (
+                                          e.target.value === "" ||
+                                          (value * 10) % 5 === 0
+                                        ) {
+                                          handleInputChange(e);
+                                        }
+                                      }}
+                                      step="0.5"
+                                      min="0.5"
+                                      max={
+                                        unitMaxValues[formData.VolumeUnit] ||
+                                        undefined
+                                      }
+                                      required
+                                      style={{
+                                        height: "45px",
+                                        fontSize: "14px",
+                                        backgroundColor: !formData.volume
+                                          ? "#fdecea"
+                                          : "#fff",
+                                      }}
+                                    />
+                                    <select
+                                      className="form-control"
+                                      name="VolumeUnit"
+                                      value={formData.VolumeUnit}
+                                      onChange={handleInputChange}
+                                      required
+                                      style={{
+                                        height: "45px",
+                                        fontSize: "14px",
+                                        backgroundColor: !formData.VolumeUnit
+                                          ? "#fdecea"
+                                          : "#fff",
+                                      }}
+                                    >
+                                      <option value="" hidden></option>
+                                      {volumeunitNames.map((name, index) => (
+                                        <option key={index} value={name}>
+                                          {name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  {/* Validation message*/}
+                                  {formData.volume &&
+                                    formData.VolumeUnit &&
+                                    parseFloat(formData.volume) >
+                                    (unitMaxValues[formData.VolumeUnit] ||
+                                      Infinity) && (
+                                      <small className="text-danger mt-1">
+                                        Value must be less than or equal to{" "}
+                                        {unitMaxValues[
+                                          formData.VolumeUnit
+                                        ].toLocaleString()}
+                                        .
+                                      </small>
+                                    )}
+                                </div>
+                                <div className="form-group col-md-6">
+                                  <label>
                                     Test Result & Unit <span className="text-danger">*</span>
                                   </label>
                                   <div
@@ -2064,6 +2162,7 @@ const BioBankSampleArea = () => {
                                         value={formData.TestResultUnit}
                                         onChange={handleInputChange}
                                         required
+                                        disabled={!!formData.TestResultUnit} // ✅ Disable if unit is auto-set
                                         style={{
                                           height: "40px",
                                           fontSize: "14px",
@@ -2083,106 +2182,8 @@ const BioBankSampleArea = () => {
                                         ))}
                                       </select>
                                     )}
-                                  </div>
-                                </div>
 
-                                <div className="form-group col-md-6">
-                                  <label>
-                                    Volume <span className="text-danger">*</span>
-                                  </label>
-                                  <div className="d-flex">
-                                    <input
-                                      type="number"
-                                      className="form-control me-2"
-                                      name="volume"
-                                      value={formData.volume}
-                                      onChange={(e) => {
-                                        const value = parseFloat(e.target.value);
-                                        if (
-                                          e.target.value === "" ||
-                                          (value * 10) % 5 === 0
-                                        ) {
-                                          handleInputChange(e);
-                                        }
-                                      }}
-                                      step="0.5"
-                                      min="0.5"
-                                      max={
-                                        unitMaxValues[formData.VolumeUnit] ||
-                                        undefined
-                                      }
-                                      required
-                                      style={{
-                                        height: "45px",
-                                        fontSize: "14px",
-                                        backgroundColor: !formData.volume
-                                          ? "#fdecea"
-                                          : "#fff",
-                                      }}
-                                    />
-                                    <select
-                                      className="form-control"
-                                      name="VolumeUnit"
-                                      value={formData.VolumeUnit}
-                                      onChange={handleInputChange}
-                                      required
-                                      style={{
-                                        height: "45px",
-                                        fontSize: "14px",
-                                        backgroundColor: !formData.VolumeUnit
-                                          ? "#fdecea"
-                                          : "#fff",
-                                      }}
-                                    >
-                                      <option value="" hidden></option>
-                                      {volumeunitNames.map((name, index) => (
-                                        <option key={index} value={name}>
-                                          {name}
-                                        </option>
-                                      ))}
-                                    </select>
                                   </div>
-                                  {/* Validation message*/}
-                                  {formData.volume &&
-                                    formData.VolumeUnit &&
-                                    parseFloat(formData.volume) >
-                                    (unitMaxValues[formData.VolumeUnit] ||
-                                      Infinity) && (
-                                      <small className="text-danger mt-1">
-                                        Value must be less than or equal to{" "}
-                                        {unitMaxValues[
-                                          formData.VolumeUnit
-                                        ].toLocaleString()}
-                                        .
-                                      </small>
-                                    )}
-                                </div>
-                                <div className="form-group col-md-6">
-                                  <label>
-                                    Sample Type Matrix{" "}
-                                    <span className="text-danger">*</span>
-                                  </label>
-                                  <select
-                                    className="form-control"
-                                    name="SampleTypeMatrix"
-                                    value={formData.SampleTypeMatrix}
-                                    onChange={handleInputChange}
-                                    required
-                                    style={{
-                                      height: "45px",
-                                      fontSize: "14px",
-                                      backgroundColor: !formData.SampleTypeMatrix
-                                        ? "#fdecea"
-                                        : "#fff",
-                                    }}
-                                  >
-                                    <option value="" hidden></option>
-                                    {sampletypematrixNames.map((name, index) => (
-                                      <option key={index} value={name}>
-                                        {name}
-                                      </option>
-                                    ))}
-                                  </select>
                                 </div>
                               </div>
                               <div className="row">
