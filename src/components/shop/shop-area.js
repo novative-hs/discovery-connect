@@ -102,7 +102,6 @@ const aggregatedProducts = useMemo(() => {
 
   return Array.from(analyteMap.values()).map((item) => ({
     ...item,
-    total_remaining: item.total_stock - item.total_allocated,
   }));
 }, [filteredProducts]);
 

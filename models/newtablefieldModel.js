@@ -1,6 +1,20 @@
 const mysqlConnection = require("../config/db");
 const tablesAndColumns = [
   {
+    table: "payment",
+    columnsToAdd: [
+
+      {
+        column: "bank_id",
+        type: "INT",
+        nullable: true,
+        references: { table: "bank", column: "id" },
+      },
+    ]
+  },
+
+
+  {
     table: "technicaladminsampleapproval",
     columnsToAdd: [
 
@@ -108,18 +122,25 @@ const tablesAndColumns = [
         nullable: true,
       },
     ]
+  },
+  {
+    table: "registrationadmin_history",
+    columnsToAdd: [
+      {
+        column: "Analyte_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "analyte", column: "id" },
+      },
+      {
+        column: "bank_id",
+        type: "INT",
+        nullable: true, // Change to true
+        references: { table: "bank", column: "id" },
+      }
+
+    ]
   }
-  // {
-  //   table: "registrationadmin_history",
-  //   columnsToDelete: ["diagnosistestparameter_id"],
-  //   columnsToAdd: [
-  //     {
-  //       column: "Analyte_id",
-  //       type: "INT",
-  //       nullable: true, // Change to true
-  //       references: { table: "analyte", column: "id" },
-  //     }]
-  // }
 
 
   // {

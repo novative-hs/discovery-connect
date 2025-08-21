@@ -6,7 +6,7 @@ const createSampleApprovalTable = () => {
   id INT AUTO_INCREMENT PRIMARY KEY, 
   cart_id INT NOT NULL, 
   technical_admin_id INT NOT NULL,
-  Comments VARCAR(500), 
+  Comments VARCHAR(500), 
   technical_admin_status ENUM('Pending', 'Accepted', 'Rejected') NOT NULL DEFAULT 'Pending',
     Approval_date TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

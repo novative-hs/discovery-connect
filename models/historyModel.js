@@ -13,6 +13,7 @@ const registrationadmin_history = () => {
       city_id INT,
       country_id INT,
       district_id INT,
+      bank_id INT,
       sample_id VARCHAR(36),
       csr_id  INT,
       infectiousdiseasetesting_id  INT,
@@ -175,7 +176,7 @@ const create_samplehistoryTable = () => {
     comments TEXT, 
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     updated_name VARCHAR(255),
-    action_type ENUM('add', 'update') DEFAULT 'add';
+    action_type ENUM('add', 'update') DEFAULT 'add',
     FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
     FOREIGN KEY (user_account_id) REFERENCES user_account(id) ON DELETE SET NULL
   )`;

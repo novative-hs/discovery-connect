@@ -128,9 +128,7 @@ const handleInvoice=()=>{
           <div className="col-12 mb-3">
             <p className="text-muted h8">
               Any Additional Mechanism
-              <strong>
-                <span className="text-danger">*</span>
-              </strong>
+            
             </p>
             <textarea
               value={reportingMechanism}

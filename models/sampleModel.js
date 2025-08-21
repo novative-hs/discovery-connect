@@ -92,24 +92,25 @@ const createPoolSampleTable = () => {
 };
 const createPriceRequest = () => {
   const createrequesttable = `
-  CREATE TABLE quote_requests (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  researcher_id INT,
-  sample_id VARCHAR(36),
-    quantity FLOAT,
-  status ENUM('pending', 'priced') DEFAULT 'pending',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-`
+    CREATE TABLE IF NOT EXISTS quote_requests (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      researcher_id INT,
+      sample_id VARCHAR(36),
+      quantity FLOAT,
+      status ENUM('pending', 'priced') DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+
   mysqlConnection.query(createrequesttable, (err, results) => {
     if (err) {
       console.error("❌ Error creating request table:", err);
     } else {
-      console.log("✅ Request table created or already exists");
+      console.log("✅ Request table ready (created if it did not exist)");
     }
   });
+};
 
-}
 
 // Function to get all samples with 'In Stock' status
 const getSamples = (user_account_id, page, pageSize, filters, callback) => {
@@ -328,9 +329,8 @@ const getResearcherSamples = (userId, callback) => {
       p.payment_status AS payment_status,
       s.quantity AS orderquantity,
       ra.technical_admin_status,
-
       sm.masterID,
-
+      b.name AS BankName,
       CASE
           WHEN COUNT(ca.committee_status) = 0 THEN NULL
           WHEN SUM(CASE WHEN ca.committee_status = 'refused' THEN 1 ELSE 0 END) > 0 THEN 'rejected'
@@ -348,6 +348,7 @@ const getResearcherSamples = (userId, callback) => {
     LEFT JOIN district d ON cs.district = d.id
     LEFT JOIN country ON sm.CountryOfCollection = country.id
     JOIN payment p ON s.payment_id = p.id
+    JOIN bank b ON p.bank_id=b.id
     LEFT JOIN technicaladminsampleapproval ra ON s.id = ra.cart_id
     LEFT JOIN committeesampleapproval ca ON s.id = ca.cart_id
 
@@ -501,7 +502,7 @@ const getAllSampleinIndex = (analyte, limit, offset, filters, callback) => {
 };
 
 const getAllSampleinDiscover = (filters, callback) => {
-  let baseWhere = `s.quantity > 0 AND s.sample_visibility = "Public" AND s.status = "In Stock"`;
+  let baseWhere = `(s.quantity > 0 OR s.quantity_allocated>0) AND s.sample_visibility = "Public" AND s.status = "In Stock"`;
   let queryParams = [];
 
   const {
@@ -724,35 +725,26 @@ const getAllCSSamples = (limit, offset, callback) => {
 
 
 const updateReservedSample = (sampleId, status, callback) => {
+  status = Number(status);  // force convert to number
+
   const updateQuery = "UPDATE sample SET reserved = ? WHERE id = ?";
 
   mysqlConnection.query(updateQuery, [status, sampleId], (err, result) => {
     if (err) return callback(err);
 
-    // If status is 0, check quote_request status before deleting
-    if (status === 0) {
-      const checkStatusQuery = "SELECT status FROM quote_requests WHERE sample_id = ?";
-      mysqlConnection.query(checkStatusQuery, [sampleId], (checkErr, rows) => {
-        if (checkErr) return callback(checkErr);
-
-        // If no record or status is not 'priced', delete
-        if (rows.length === 0 || rows[0].status !== 'priced') {
-          const deleteQuery = "DELETE FROM quote_requests WHERE sample_id = ?";
-          mysqlConnection.query(deleteQuery, [sampleId], (deleteErr, deleteResult) => {
-            if (deleteErr) return callback(deleteErr);
-            return callback(null, { updateResult: result, deleteResult });
-          });
-        } else {
-          // Status is 'priced', do not delete
-          return callback(null, { updateResult: result, message: "Not deleted due to 'priced' status" });
-        }
+    if (status === 0) {  // now it will work
+      const deleteQuery = "DELETE FROM quote_requests WHERE sample_id = ?";
+      mysqlConnection.query(deleteQuery, [sampleId], (deleteErr, deleteResult) => {
+        if (deleteErr) return callback(deleteErr);
+        return callback(null, { updateResult: result, deleteResult });
       });
     } else {
-      // Reserved is not 0, just return update result
       return callback(null, { updateResult: result });
     }
   });
 };
+
+
 
 
 

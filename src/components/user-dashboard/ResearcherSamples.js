@@ -12,6 +12,7 @@ const SampleArea = () => {
     { label: "Order ID", key: "tracking_id" },
     { label: "Order Date", key: "created_at" },
     { label: "Total Payment", key: "price" },
+    { label: "Bank Name", key: "name" },
     { label: "Payment Type", key: "payment_method" },
     { label: "Payment Status", key: "payment_status" },
     { label: "Total Items", key: "total" },
@@ -99,6 +100,7 @@ const SampleArea = () => {
           order_status: sample.order_status,
           payment_type: sample.payment_method,
           payment_status: sample.payment_status,
+          BankName:sample.BankName,
           samples: [],
           totalpayment: 0,
         };
@@ -235,9 +237,16 @@ const SampleArea = () => {
                       }).replace(/ /g, '-')}</td>
 
                       <td className="text-end">
-                        {order.samples[0]?.SamplePriceCurrency || "Rs"} {order.totalpayment.toLocaleString()}
+                        {{
+                          PKR: "Rs",
+                          USD: "$",
+                          INR: "₹",
+                        }[order.samples[0].SamplePriceCurrency] || order.samples.SamplePriceCurrency} {order.totalpayment.toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}
                       </td>
-
+                      <td>{order.BankName|| "---"}</td>
                       <td>{order.payment_type || "----"}</td>
                       <td>{order.payment_status}</td>
                       <td>{order.samples.length}</td>

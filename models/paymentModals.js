@@ -54,11 +54,12 @@ const insertPaymentDetails = (data, callback) => {
 
     // If no existing payment found, proceed to insert the new payment details
     const insertQuery = `
-      INSERT INTO payment (cardholder_name, card_number, card_expiry, card_cvc, payment_type, payment_status)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO payment (cardholder_name, bank_id,card_number, card_expiry, card_cvc, payment_type, payment_status)
+      VALUES (?, ?, ?, ?, ?, ?,?)
     `;
     const values = [
       data.cardholder_name,
+      data.bankname,
       data.card_number,
       formattedExpiry,  // Fixed date format
       data.card_cvc,

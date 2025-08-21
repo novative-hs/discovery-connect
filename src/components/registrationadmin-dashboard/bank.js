@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit, faTrash, faHistory } from "@fortawesome/free-solid-svg-icons";
 import Pagination from "@ui/Pagination";
 import * as XLSX from "xlsx";
-const CityArea = () => {
+const BankArea = () => {
   const id = sessionStorage.getItem("userID");
 
   const [showAddModal, setShowAddModal] = useState(false);
@@ -13,48 +13,48 @@ const CityArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedcitynameId, setSelectedcitynameId] = useState(null); // Store ID of City to delete
+  const [selectedbanknameId, setSelectedbanknameId] = useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
-    cityname: "",
+    bankname: "",
     added_by: id,
   });
-  const [editcityname, setEditcityname] = useState(null); // State for selected City to edit
-  const [cityname, setcityname] = useState([]); // Store all cities
-  const [filteredCityname, setFilteredCityname] = useState([]); // Store filtered cities
+  const [editbankname, setEditbankname] = useState(null); // State for selected City to edit
+  const [bankname, setbankname] = useState([]); // Store all cities
+  const [filteredBankname, setFilteredBankname] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
   // Calculate total pages dynamically
 
   const [successMessage, setSuccessMessage] = useState("");
-  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
-  // Fetch City from backend when component loads
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/bank`;
+  // Fetch bank from backend when component loads
   useEffect(() => {
-    const fetchcityname = async () => {
+    const fetchbankname = async () => {
       try {
-        const response = await axios.get(`${url}/city/get-city`);
-        setcityname(response.data);
-        setFilteredCityname(response.data); // Initialize filtered list
+        const response = await axios.get(`${url}/get-bank`);
+        setbankname(response.data);
+        setFilteredBankname(response.data); // Initialize filtered list
       } catch (error) {
-        console.error("Error fetching City:", error);
+        console.error("Error fetching bank:", error);
       }
     };
-    fetchcityname(); // Call the function when the component mounts
+    fetchbankname(); // Call the function when the component mounts
   }, [url]);
 
   useEffect(() => {
     const pages = Math.max(
       1,
-      Math.ceil(filteredCityname.length / itemsPerPage)
+      Math.ceil(filteredBankname.length / itemsPerPage)
     );
     setTotalPages(pages);
 
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredCityname, currentPage]);
+  }, [filteredBankname, currentPage]);
 
-  const currentData = filteredCityname.slice(
+  const currentData = filteredBankname.slice(
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
@@ -67,21 +67,21 @@ const CityArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = cityname;
+      filtered = bankname;
     } else {
-      filtered = cityname.filter((city) => {
+      filtered = bankname.filter((bank) => {
         if (field === "added_by") {
           return "registration admin".includes(value.toLowerCase());
         }
 
-        return city[field]
+        return bank[field]
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase());
       });
     }
 
-    setFilteredCityname(filtered);
+    setFilteredBankname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     setCurrentPage(0);
   };
@@ -112,63 +112,74 @@ const CityArea = () => {
     });
   };
   const resetFormData = () => {
-    setFormData({ cityname: "", added_by: id });
+    setFormData({ bankname: "", added_by: id });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${url}/city/post-city`, formData);
-      const response = await axios.get(`${url}/city/get-city`);
-      setFilteredCityname(response.data);
-      setcityname(response.data);
-      setSuccessMessage("City added successfully.");
+      await axios.post(`${url}/create-bank`, formData);
+      const response = await axios.get(`${url}/get-bank`);
+      setFilteredBankname(response.data);
+      setbankname(response.data);
+      setSuccessMessage("Bank added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
       setShowAddModal(false);
     } catch (error) {
-      console.error("Error adding City", error);
+      console.error("Error adding Bank", error);
     }
   };
 
-  const handleEditClick = (cityname) => {
-    setSelectedcitynameId(cityname.id);
-    setEditcityname(cityname);
+  const handleEditClick = (bankname) => {
+    setSelectedbanknameId(bankname.id);
+    setEditbankname(bankname);
     setFormData({
-      cityname: cityname.name,
+      bankname: bankname.name,
       added_by: id,
     });
     setShowEditModal(true);
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(`${url}/city/put-city/${selectedcitynameId}`, formData);
-      const response = await axios.get(`${url}/city/get-city`);
-      setFilteredCityname(response.data);
-      setcityname(response.data);
-      setSuccessMessage("City updated successfully.");
-      setTimeout(() => setSuccessMessage(""), 3000);
-      resetFormData();
-      setShowEditModal(false);
-    } catch (error) {
-      console.error(`Error updating City: ${selectedcitynameId}`, error);
-    }
-  };
+ const handleUpdate = async (e) => {
+  e.preventDefault();
+  try {
+    await axios.put(`${url}/update-bank/${selectedbanknameId}`, formData);
+console.log(bankname)
+    // ✅ update arrays using the correct key from DB
+    setbankname(prev =>
+      prev.map(b =>
+        b.id === selectedbanknameId ? { ...b, ...formData } : b
+      )
+    );
+    setFilteredBankname(prev =>
+      prev.map(b =>
+        b.id === selectedbanknameId ? { ...b, ...formData } : b
+      )
+    );
+
+    setSuccessMessage("Bank updated successfully.");
+    setTimeout(() => setSuccessMessage(""), 3000);
+    resetFormData();
+    setShowEditModal(false);
+  } catch (error) {
+    console.error(`Error updating bank: ${selectedbanknameId}`, error);
+  }
+};
+
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${url}/city/delete-city/${selectedcitynameId}`);
-      const response = await axios.get(`${url}/city/get-city`);
-      setFilteredCityname(response.data);
-      setcityname(response.data);
-      setSuccessMessage("City deleted successfully.");
+      await axios.delete(`${url}/delete-bank/${selectedbanknameId}`);
+      const response = await axios.get(`${url}/get-bank`);
+      setFilteredBankname(response.data);
+      setbankname(response.data);
+      setSuccessMessage("bank deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
-      setSelectedcitynameId(null);
+      setSelectedbanknameId(null);
     } catch (error) {
-      console.error(`Error deleting City: ${selectedcitynameId}`, error);
+      console.error(`Error deleting bank: ${selectedbanknameId}`, error);
     }
   };
 
@@ -203,19 +214,19 @@ const CityArea = () => {
       const payload = data.map((row) => ({ name: row.Name, added_by: id }));
       
       try {
-        await axios.post(`${url}/city/post-city`, { bulkData: payload });
-        const response = await axios.get(`${url}/city/get-city`);
-        setFilteredCityname(response.data);
-        setcityname(response.data);
+        await axios.post(`${url}/create-bank`, { bulkData: payload });
+        const response = await axios.get(`${url}/get-bank`);
+        setFilteredBankname(response.data);
+        setbankname(response.data);
         setSuccessMessage("Successfully added")
       } catch (error) {
-        console.error("Error uploading City", error);
+        console.error("Error uploading bank", error);
       }
     };
     reader.readAsBinaryString(file);
   };
   const handleExportToExcel = () => {
-    const dataToExport = filteredCityname.map((item) => ({
+    const dataToExport = filteredBankname.map((item) => ({
       Name: item.name ?? "", // Fallback to empty string
       "Added By": "Registration Admin",
       "Created At": item.created_at ? formatDate(item.created_at) : "",
@@ -234,9 +245,9 @@ const CityArea = () => {
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "City");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "bank");
 
-    XLSX.writeFile(workbook, "City_List.xlsx");
+    XLSX.writeFile(workbook, "Bank_List.xlsx");
   };
   if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
@@ -256,7 +267,7 @@ const CityArea = () => {
 
             {/* Button Container */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold ">City List</h5>
+              <h5 className="m-0 fw-bold ">Bank List</h5>
               <div className="d-flex flex-wrap gap-3 align-items-center">
                 {/* Add City Button */}
                 <button
@@ -274,10 +285,10 @@ const CityArea = () => {
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add City
+                  <i className="fas fa-plus"></i> Add Bank
                 </button>
 
-                {/* Upload City List Button */}
+                {/* Upload bank List Button */}
                 <label
                   style={{
                     backgroundColor: "#f1f1f1", // soft gray
@@ -294,7 +305,7 @@ const CityArea = () => {
                     marginBottom: 0,
                   }}
                 >
-                  <i className="fas fa-upload"></i> Upload City List
+                  <i className="fas fa-upload"></i> Upload Bank List
                   <input
                     type="file"
                     accept=".xlsx, .xls"
@@ -332,10 +343,11 @@ const CityArea = () => {
                   {[
                     //{ label: "ID", placeholder: "Search ID", field: "id" },
                     {
-                      label: "City Name",
-                      placeholder: "Search City Name",
+                      label: "Bank Name",
+                      placeholder: "Search bank Name",
                       field: "name",
                     },
+                   
                     {
                       label: "Added By",
                       placeholder: "Search Added by",
@@ -369,39 +381,37 @@ const CityArea = () => {
               </thead>
               <tbody>
                 {currentData.length > 0 ? (
-                  currentData.map((cityname) => (
-                    <tr key={cityname.id}>
-                      {/* <td>{cityname.id}</td> */}
-                      <td>{cityname.name}</td>
-                      {/* <td>{cityname.added_by}</td> */}
+                  currentData.map((bankname) => (
+                    <tr key={bankname.id}>
+                      <td>{bankname.name}</td>
                       <td>Registration Admin</td>
-                      <td>{formatDate(cityname.created_at)}</td>
-                      <td>{formatDate(cityname.updated_at)}</td>
+                      <td>{formatDate(bankname.created_at)}</td>
+                      <td>{formatDate(bankname.updated_at)}</td>
                       <td>
                         <div className="d-flex justify-content-center gap-3">
                           <button
                             className="btn btn-success btn-sm"
-                            onClick={() => handleEditClick(cityname)}
-                            title="Edit City"
+                            onClick={() => handleEditClick(bankname)}
+                            title="Edit Bank"
                           >
                             <FontAwesomeIcon icon={faEdit} size="xs" />
                           </button>
                           <button
                             className="btn btn-danger btn-sm"
                             onClick={() => {
-                              setSelectedcitynameId(cityname.id);
+                              setSelectedbanknameId(bankname.id);
                               setShowDeleteModal(true);
                             }}
-                            title="Delete City"
+                            title="Delete Bank"
                           >
                             <FontAwesomeIcon icon={faTrash} size="xs" />
                           </button>
                           <button
                             className="btn btn-info btn-sm"
                             onClick={() =>
-                              handleShowHistory("city", cityname.id)
+                              handleShowHistory("bank", bankname.id)
                             }
-                            title="History City"
+                            title="History bank"
                           >
                             <FontAwesomeIcon icon={faHistory} size="xs" />
                           </button>
@@ -412,7 +422,7 @@ const CityArea = () => {
                 ) : (
                   <tr>
                     <td colSpan="6" className="text-center">
-                      No City Available
+                      No Bank Available
                     </td>
                   </tr>
                 )}
@@ -451,7 +461,7 @@ const CityArea = () => {
                   <div className="modal-content">
                     <div className="modal-header">
                       <h5 className="modal-title">
-                        {showAddModal ? "Add City" : "Edit City"}
+                        {showAddModal ? "Add Bank" : "Edit Bank"}
                       </h5>
                       <button
                         type="button"
@@ -460,7 +470,7 @@ const CityArea = () => {
                           setShowAddModal(false);
                           setShowEditModal(false);
                           setFormData({
-                            cityname: "",
+                            bankname: "",
                             added_by: id,
                           });
                         }}
@@ -482,21 +492,22 @@ const CityArea = () => {
                       <div className="modal-body">
                         {/* Form Fields */}
                         <div className="form-group">
-                          <label>City Name</label>
+                          <label>Bank Name</label>
                           <input
                             type="text"
                             className="form-control"
-                            name="cityname"
-                            value={formData.cityname}
+                            name="bankname"
+                            value={formData.bankname}
                             onChange={handleInputChange}
                             required
                           />
                         </div>
                       </div>
+                      
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update City"}
+                          {showAddModal ? "Save" : "Update Bank"}
                         </button>
                       </div>
                     </form>
@@ -692,4 +703,4 @@ const CityArea = () => {
   );
 };
 
-export default CityArea;
+export default BankArea;

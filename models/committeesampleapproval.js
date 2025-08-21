@@ -156,38 +156,40 @@ const insertCommitteeApproval = (cartIds, senderId, committeeType, callback) => 
 
             let emailFailures = [];
 
-            for (const [key, trackingIds] of emailMap.entries()) {
-              const [email, researcherName] = key.split("|");
+            // Assuming emailMap has only one entry
+            const [[key, trackingIds]] = emailMap.entries();
 
-              const subject = "Your Sample Submission is Under Review";
+            const [email, researcherName] = key.split("|");
 
-              const text = `
- <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px;">
-      <h2 style="color: #2c3e50;">Sample Request Under Review</h2>
+            const subject = "Your Sample Submission is Under Review";
 
-      <p>Dear <strong>${researcherName}</strong>,</p>
+            const text = `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px;">
+                    <h2 style="color: #2c3e50;">Sample Request Under Review</h2>
 
-      <p>We are writing to inform you that the following sample request(s) you submitted are now <strong>under review</strong> by the committee:</p>
+                    <p>Dear <strong>${researcherName}</strong>,</p>
 
-      <ul style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
-        Tracking ID(s): ${trackingIds.join(', ')}
-      </ul>
+                    <p>We are writing to inform you that the following sample request(s) you submitted are now <strong>under review</strong> by the committee:</p>
 
-      <p>You can log in to your dashboard for further updates and to track the status of each request.</p>
+                    <ul style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
+                      Tracking ID(s): ${trackingIds.join(", ")}
+                    </ul>
 
-      <p style="margin-top: 30px;">Thank you for using <strong>Discovery Connect</strong>.</p>
+                    <p>You can log in to your dashboard for further updates and to track the status of each request.</p>
 
-      <p style="color: #7f8c8d;">Best regards,<br/>Discovery Connect Team</p>
-    </div>
-    `.trim();
+                    <p style="margin-top: 30px;">Thank you for using <strong>Discovery Connect</strong>.</p>
 
-              try {
-                await sendEmail(email, subject, text);
-              } catch (err) {
-                console.error("Failed to send email to", email, ":", err);
-                emailFailures.push(email);
-              }
+                    <p style="color: #7f8c8d;">Best regards,<br/>Discovery Connect Team</p>
+                  </div>
+            `.trim();
+
+            try {
+              await sendEmail(email, subject, text);
+            } catch (err) {
+              console.error("Failed to send email to", email, ":", err);
+              emailFailures.push(email);
             }
+
 
             const finalMsg =
               notice +
@@ -444,101 +446,6 @@ const getHistory = (tracking_ids, status, callback) => {
     callback(err, null);
   }
 };
-
-
-
-
-const revertSampleQuantity = (cartId) => {
-  const cartQuery = `SELECT sample_id, quantity FROM cart WHERE id = ?`;
-
-  mysqlConnection.query(cartQuery, [cartId], (cartErr, cartResults) => {
-    if (cartErr) {
-      console.error("❌ Error fetching cart item:", cartErr);
-      return;
-    }
-
-    if (cartResults.length === 0) {
-      console.warn("❌ Cart item not found for rejection.");
-      return;
-    }
-
-    const cartItem = cartResults[0];
-    const qty = Number(cartItem.quantity) || 0;
-    const sampleId = cartItem.sample_id;
-
-    const sampleQuery = `SELECT quantity, quantity_allocated FROM sample WHERE id = ?`;
-    mysqlConnection.query(sampleQuery, [sampleId], (sampleErr, sampleResults) => {
-      if (sampleErr) {
-        console.error("❌ Error fetching sample:", sampleErr);
-        return;
-      }
-
-      if (sampleResults.length === 0) {
-        console.warn("❌ Sample not found.");
-        return;
-      }
-
-      const sample = sampleResults[0];
-      const shouldRevert = sample.quantity_allocated >= qty;
-
-      if (!shouldRevert) {
-        console.warn("⚠️ Not enough allocated stock to revert. Skipping.");
-        return;
-      }
-
-      const updateQuery = `
-        UPDATE sample
-        SET quantity = quantity + ?,
-            quantity_allocated = quantity_allocated - ?
-        WHERE id = ?`;
-
-      mysqlConnection.query(updateQuery, [qty, qty, sampleId], (updateErr, updateResults) => {
-        if (updateErr) {
-          console.error("❌ Error updating sample quantity:", updateErr);
-        } else {
-          console.log("✅ Sample quantity successfully reverted.");
-        }
-      });
-    });
-  });
-};
-
-
-// Helper function to fetch email and send notification
-// const sendUserEmail = (id, committee_status, comments, callback) => {
-//   const getEmailQuery = `
-//     SELECT ua.email 
-//     FROM user_account ua
-//     JOIN cart c ON ua.id = c.user_id
-//     WHERE c.id = ?
-//   `;
-
-//   mysqlConnection.query(getEmailQuery, [id], (emailErr, emailResults) => {
-//     if (emailErr) {
-//       console.error("Error fetching user email:", emailErr);
-//       return callback(emailErr, null);
-//     }
-
-//     if (emailResults.length > 0) {
-//       const userEmail = emailResults[0].email;
-//       const subject = `Committee Status Update`;
-//       const text = `Dear User, your sample request for cart ID ${id} has been updated by a committee member.\n\nStatus: ${committee_status}\nComments: ${comments}\n\nPlease check your dashboard for details.`;
-
-//       sendEmail(userEmail, subject, text)
-//         .then(() => {
-
-//           callback(null, { message: "Committee status updated successfully!" });
-//         })
-//         .catch((emailError) => {
-//           console.error("Failed to send email:", emailError);
-//           callback(emailError, null);
-//         });
-//     } else {
-
-//       callback(null, { message: "Committee status updated successfully!" });
-//     }
-//   });
-// };
 
 module.exports = {
   createcommitteesampleapprovalTable,

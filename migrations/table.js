@@ -24,12 +24,12 @@ const contactusModel = require("../models/contactusModel");
 const committeesampleapprovalModel = require("../models/committeesampleapproval")
 const collectionsitestaffModel = require("../models/collectionsitestaffModel")
 const sampleReturnModel = require("../models/sampleReturnModel")
-
+const bankModel = require("../models/bankModel")
 
 // Function to initialize all tables
 function Database() {
-sampleModel.createPriceRequest()
-sampleModel.createPoolSampleTable();
+  sampleModel.createPriceRequest()
+  sampleModel.createPoolSampleTable();
   cityModel.createCityTable();
   historyModel.registrationadmin_history();
   countryModel.createCountryTable();
@@ -65,11 +65,12 @@ sampleModel.createPoolSampleTable();
   samplefieldsModel.createConcurrentMedicalConditionsTable();
   historyModel.registrationadmin_history();
   historyModel.create_historyTable();
- // historyModel.create_samplehistoryTable();
+  historyModel.create_samplehistoryTable();
   sampleReturnModel.createSampleReturnTable();
   contactusModel.createContactUsTable();
   samplefieldsModel.create_AnalyteTable();
   samplefieldsModel.create_infectiousdiseaseTable()
+  bankModel.createBankTable();
   newtablefieldModel.createOrUpdateTables();
 }
 Database();

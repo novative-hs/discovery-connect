@@ -276,12 +276,10 @@ const AnalyteArea = () => {
       const form = new FormData();
       form.append("name", formData.name);
       form.append("added_by", formData.added_by);
-      form.append("searchParams", JSON.stringify(searchParams)); // Include search params
 
       if (formData.testresultunit_id) {
         form.append("testresultunit_id", formData.testresultunit_id);
       }
-
       if (formData.image instanceof File) {
         form.append("image", formData.image);
       }
@@ -290,25 +288,10 @@ const AnalyteArea = () => {
         `${url}/samplefields/put-samplefields/analyte/${selectedAnalyteId}`,
         form,
         {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
 
-      // Use the filtered results from the response if available
-      const updatedResults = response.data.filteredResults || response.data;
-
-      setFilteredAnalytename(updatedResults);
-      setAnalytename(prev => {
-        // Update the main list while maintaining other entries
-        const updated = [...prev];
-        const index = updated.findIndex(item => item.id === selectedAnalyteId);
-        if (index !== -1) {
-          updated[index] = response.data.updatedSample;
-        }
-        return updated;
-      });
 
       setShowEditModal(false);
       setSuccessMessage("Analyte updated successfully.");
@@ -320,11 +303,12 @@ const AnalyteArea = () => {
         testresultunit_id: "",
         image: "",
       });
-      setLogoPreview(false);
+      setLogoPreview(null);
     } catch (error) {
       console.error(`Error updating Analyte with ID ${selectedAnalyteId}:`, error);
     }
   };
+
 
 
 
@@ -932,13 +916,7 @@ const AnalyteArea = () => {
                     >
                       {historyData && historyData.length > 0 ? (
                         historyData.map((log, index) => {
-                          const {
-                            created_name,
-                            updated_name,
-                            added_by,
-                            created_at,
-                            updated_at,
-                          } = log;
+                          const { created_name, updated_name, created_at, updated_at } = log;
 
                           return (
                             <div
@@ -950,26 +928,25 @@ const AnalyteArea = () => {
                                 marginBottom: "10px",
                               }}
                             >
-                              {/* Message for City Addition */}
-                              <div
-                                style={{
-                                  padding: "10px 15px",
-                                  borderRadius: "15px",
-                                  backgroundColor: "#ffffff",
-                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                  maxWidth: "75%",
-                                  fontSize: "14px",
-                                  textAlign: "left",
-                                }}
-                              >
-                                <b>Analyte:</b> {created_name}{" "}
-                                was <b>added</b> by Registration Admin at{" "}
-                                {moment(created_at).format(
-                                  "DD MMM YYYY, h:mm A"
-                                )}
-                              </div>
+                              {/* Show "Added" message only for first record */}
+                              {index === 0 && (
+                                <div
+                                  style={{
+                                    padding: "10px 15px",
+                                    borderRadius: "15px",
+                                    backgroundColor: "#ffffff",
+                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                    maxWidth: "75%",
+                                    fontSize: "14px",
+                                    textAlign: "left",
+                                  }}
+                                >
+                                  <b>Analyte:</b> {created_name} was <b>added</b> by Registration Admin at{" "}
+                                  {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                </div>
+                              )}
 
-                              {/* Message for City Update (Only if it exists) */}
+                              {/* Show update if exists */}
                               {updated_name && updated_at && (
                                 <div
                                   style={{
@@ -980,15 +957,11 @@ const AnalyteArea = () => {
                                     maxWidth: "75%",
                                     fontSize: "14px",
                                     textAlign: "left",
-                                    marginTop: "5px", // Spacing between messages
+                                    marginTop: "5px",
                                   }}
                                 >
-                                  <b>Analyte:</b>{" "}
-                                  {updated_name} was <b>updated</b> by
-                                  Registration Admin at{" "}
-                                  {moment(updated_at).format(
-                                    "DD MMM YYYY, h:mm A"
-                                  )}
+                                  <b>Analyte:</b> {updated_name} was <b>updated</b> by Registration Admin at{" "}
+                                  {moment(updated_at).format("DD MMM YYYY, h:mm A")}
                                 </div>
                               )}
                             </div>
@@ -997,6 +970,7 @@ const AnalyteArea = () => {
                       ) : (
                         <p className="text-left">No history available.</p>
                       )}
+
                     </div>
                   </div>
                 </div>

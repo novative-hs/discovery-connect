@@ -677,7 +677,7 @@ const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, ca
   const offset = (page - 1) * pageSize;
 
   const params = [id];
-  let whereClause = `WHERE ca.committee_member_id = ?`;
+  let whereClause = `WHERE ca.committee_member_id = ? AND committee_status="Pending"`;
 
   if (searchField && searchValue) {
     let dbField = searchField;
@@ -769,7 +769,6 @@ const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, ca
             ...sample,
             locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-')
           }));
-
           callback(null, {
             results: updatedResults,
             totalCount: countResults[0].totalCount,

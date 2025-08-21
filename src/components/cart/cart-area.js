@@ -44,10 +44,15 @@ const CartArea = () => {
   const quoteSentKey = `quoteSent_${userID}_${cartHash}`;
   const [quoteAlreadySent, setQuoteAlreadySent] = useState(false);
 
-  useEffect(() => {
-    const stored = sessionStorage.getItem(quoteSentKey) === "true";
-    setQuoteAlreadySent(stored);
-  }, [quoteSentKey]);
+ useEffect(() => {
+  // Recalculate cart hash on every cart change
+  const newCartHash = getCartHash(unpricedItems);
+  const newQuoteSentKey = `quoteSent_${userID}_${newCartHash}`;
+  const stored = sessionStorage.getItem(newQuoteSentKey) === "true";
+
+  setQuoteAlreadySent(stored);
+}, [cart_products, userID]);
+
 
 
   // ⏱ Refresh prices every 30s
@@ -162,9 +167,20 @@ const CartArea = () => {
     router.push("/dashboardheader?tab=Checkout");
   };
 
-  const handleRemoveProduct = (item) => {
-    dispatch(remove_product(item));
-  };
+ const handleRemoveProduct = (item) => {
+  dispatch(remove_product(item));
+
+  // Remove ALL quoteSent keys for this user (old + new)
+  Object.keys(sessionStorage).forEach((key) => {
+    if (key.startsWith(`quoteSent_${userID}_`)) {
+      sessionStorage.removeItem(key);
+    }
+  });
+
+  setQuoteAlreadySent(false);
+};
+
+
 
   return (
     <section className="cart-area py-5" style={{ backgroundColor: "#f4f8fb", minHeight: "100vh" }}>
@@ -244,7 +260,7 @@ const CartArea = () => {
                             <td>
                               {item.price && item.price > 0 ? (
                                 <span>
-                                  {currencySymbols[item.SamplePriceCurrency] || item.SamplePriceCurrency || "Rs"}:{" "}
+                                  {currencySymbols[item.SamplePriceCurrency] || item.SamplePriceCurrency || "Rs"}
                                   {Number(item.price).toLocaleString("en-PK", {
                                     minimumFractionDigits: 2,
                                   })}
@@ -292,7 +308,7 @@ const CartArea = () => {
                         <span>
                           {subtotal && subtotal > 0 ? (
                             <>
-                              {displayCurrency}:{" "}
+                              {displayCurrency}
                               {subtotal.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
                             </>
                           ) : (
@@ -333,7 +349,7 @@ const CartArea = () => {
                     <span>
                       {subtotal && subtotal > 0 ? (
                         <>
-                          {displayCurrency}:{" "}
+                          {displayCurrency}
                           {subtotal.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
                         </>
                       ) : (
