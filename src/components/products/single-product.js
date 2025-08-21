@@ -5,8 +5,8 @@ import Modal from "react-bootstrap/Modal";
 import FilterProductArea from "@components/user-dashboard/filter-samples";
 
 const SingleProduct = ({ product, selectedFilters }) => {
-
-  const { analyteImage,imageUrl,total_remaining, Analyte, total_allocated, total_quantity } = product || {};
+  
+  const { analyteImage, Analyte, total_allocated, total_stock } = product || {};
   const dispatch = useDispatch();
   const [showModal, setShowModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -19,20 +19,19 @@ const SingleProduct = ({ product, selectedFilters }) => {
   return (
     <>
       <div
-        className={`product-card-hover border rounded-3 shadow bg-white d-flex flex-column p-3 h-100 ${total_quantity - total_allocated <= 0 ? "border-danger disabled-card" : "border-secondary"
+        className={`product-card-hover border rounded-3 shadow bg-white d-flex flex-column p-3 h-100 ${total_stock === 0 ? "border-danger disabled-card" : "border-secondary"
           }`}
         onClick={() =>
-          // total_quantity - total_allocated > 0 ? 
-          handleViewDetails(product) 
-          // : null
+          total_stock > 0 ? handleViewDetails(product) : null
         }
-        role="button"
+        role={total_stock > 0 ? "button" : "presentation"}
         title={
-          total_quantity - total_allocated > 0
+          total_stock > 0
             ? "Click to show sample detail"
-            : "Not available shortly"
+            : "Not available (Out of Stock)"
         }
       >
+
 
         {/* Product Image */}
         <div className="product__thumb mb-3 rounded overflow-hidden border border-black">
@@ -49,15 +48,15 @@ const SingleProduct = ({ product, selectedFilters }) => {
 
         {/* Analyte Name */}
         <h6 className="fw-bold text-dark mb-2 min-height-40">{Analyte}</h6>
-        {/* {total_quantity - total_allocated <= 0 && (
+        {total_stock == 0 && (
           <div className="badge bg-danger text-white w-fit-content px-2 py-1 rounded small">
             Not Available Shortly
           </div>
-        )} */}
+        )}
 
         {/* Stock & Allocation Info */}
         <div className="text-muted small mb-1">
-          Stock: <strong>{total_remaining}</strong>
+          Stock: <strong>{total_stock}</strong>
         </div>
         <div className="text-muted small mb-3">
           Allocated: <strong>{total_allocated ?? 0}</strong>

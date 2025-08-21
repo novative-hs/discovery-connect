@@ -2,11 +2,11 @@ const mysqlConnection = require("../config/db");
 const mysqlPool = require("../config/db");
 
 // Function to create the city table
-const createCityTable = () => {
-  const createCityTable = `
-    CREATE TABLE IF NOT EXISTS city (
+const createBankTable = () => {
+  const createBankTable = `
+    CREATE TABLE IF NOT EXISTS bank (
       id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(255) NOT NULL UNIQUE,
+      name VARCHAR(255) NULL,
       added_by INT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       status ENUM('active', 'inactive') DEFAULT 'active',
@@ -15,20 +15,20 @@ const createCityTable = () => {
     )`;
 
 
-  mysqlConnection.query(createCityTable, (err, results) => {
+  mysqlConnection.query(createBankTable, (err, results) => {
     if (err) {
-      console.error("Error creating City table: ", err);
+      console.error("Error creating Bank table: ", err);
     }
     else {
-      console.log("City table created Successfully");
+      console.log("Bank table created Successfully");
     }
   });
 };
 
 
-// Function to get all City members
-const getAllCities = (callback) => {
-  const query = 'SELECT * FROM city WHERE status = "active" ORDER BY name ASC';
+// Function to get all bank members
+const getAllBank = (callback) => {
+  const query = 'SELECT * FROM bank WHERE status = "active" ORDER BY name ASC';
   mysqlConnection.query(query, (err, results) => {
     if (err) {
       callback(err, null);
@@ -38,11 +38,10 @@ const getAllCities = (callback) => {
   });
 };
 
-// Function to create City
-const createCity = (data, callback) => {
+// Function to create bank
+const createBank = (data, callback) => {
+  const { bulkData, bankname, added_by } = data || {};
 
-  const { bulkData, cityname, added_by } = data || {};
-  console.log(data)
   mysqlPool.getConnection((err, connection) => {
     if (err) return callback(err, null);
 
@@ -56,12 +55,12 @@ const createCity = (data, callback) => {
         const uniqueData = Array.from(new Set(bulkData.map(JSON.stringify))).map(JSON.parse);
         const values = uniqueData.map(({ name, added_by }) => [name, added_by]);
 
-        const cityQuery = `
-          INSERT IGNORE INTO city (name, added_by)
+        const bankQuery = `
+          INSERT IGNORE INTO bank (name, added_by)
           VALUES ?;
         `;
 
-        connection.query(cityQuery, [values], (err, cityResult) => {
+        connection.query(bankQuery, [values], (err, bankResult) => {
           if (err) {
             return connection.rollback(() => {
               connection.release();
@@ -69,12 +68,11 @@ const createCity = (data, callback) => {
             });
           }
 
-          // Retrieve all inserted city IDs
-          const fetchCityIdsQuery = `
-            SELECT id, name FROM city WHERE name IN (?);
+          const fetchBankIdsQuery = `
+            SELECT id, name FROM bank WHERE name IN (?);
           `;
 
-          connection.query(fetchCityIdsQuery, [uniqueData.map(({ name }) => name)], (err, cities) => {
+          connection.query(fetchBankIdsQuery, [uniqueData.map(({ name }) => name)], (err, banks) => {
             if (err) {
               return connection.rollback(() => {
                 connection.release();
@@ -82,10 +80,10 @@ const createCity = (data, callback) => {
               });
             }
 
-            const historyValues = cities.map(({ id, name }) => [name, added_by, id, "active"]);
+            const historyValues = banks.map(({ id, name }) => [name, added_by, id, "active"]);
 
             const historyQuery = `
-              INSERT INTO registrationadmin_history (created_name, added_by, city_id, status)
+              INSERT INTO registrationadmin_history (created_name, added_by, bank_id, status)
               VALUES ?;
             `;
 
@@ -106,18 +104,19 @@ const createCity = (data, callback) => {
                 }
 
                 connection.release();
-                callback(null, { cityResult, historyResult });
+                callback(null, { bankResult, historyResult });
               });
             });
           });
         });
-      } else if (cityname && added_by) {
-        const cityQuery = `
-          INSERT IGNORE INTO city (name, added_by)
+
+      } else if (bankname && added_by) {
+        const bankQuery = `
+          INSERT IGNORE INTO bank (name, added_by)
           VALUES (?, ?);
         `;
 
-        connection.query(cityQuery, [cityname, added_by], (err, cityResult) => {
+        connection.query(bankQuery, [bankname, added_by], (err, bankResult) => {
           if (err) {
             return connection.rollback(() => {
               connection.release();
@@ -125,26 +124,26 @@ const createCity = (data, callback) => {
             });
           }
 
-          const fetchCityIdQuery = `
-            SELECT id FROM city WHERE name = ?;
+          const fetchBankIdQuery = `
+            SELECT id FROM bank WHERE name = ?;
           `;
 
-          connection.query(fetchCityIdQuery, [cityname], (err, cityRows) => {
-            if (err || cityRows.length === 0) {
+          connection.query(fetchBankIdQuery, [bankname], (err, bankRows) => {
+            if (err || bankRows.length === 0) {
               return connection.rollback(() => {
                 connection.release();
-                callback(new Error("Failed to retrieve city ID"), null);
+                callback(new Error("Failed to retrieve bank ID"), null);
               });
             }
 
-            const cityId = cityRows[0].id;
+            const bankId = bankRows[0].id;
 
             const historyQuery = `
-              INSERT INTO registrationadmin_history (created_name, added_by, city_id, status)
+              INSERT INTO registrationadmin_history (created_name, added_by, bank_id, status)
               VALUES (?, ?, ?, ?);
             `;
 
-            connection.query(historyQuery, [cityname, added_by, cityId, "active"], (err, historyResult) => {
+            connection.query(historyQuery, [bankname, added_by, bankId, "active"], (err, historyResult) => {
               if (err) {
                 return connection.rollback(() => {
                   connection.release();
@@ -161,7 +160,7 @@ const createCity = (data, callback) => {
                 }
 
                 connection.release();
-                callback(null, { cityResult, historyResult });
+                callback(null, { bankResult, historyResult });
               });
             });
           });
@@ -175,11 +174,9 @@ const createCity = (data, callback) => {
 };
 
 
-
-
 // Function to update City
-const updateCity = (id, data, callback) => {
-  const { cityname, added_by } = data;
+const updateBank = (id, data, callback) => {
+  const { bankname, added_by } = data;
   mysqlPool.getConnection((err, connection) => { // Use connection from pool
     if (err) {
       return callback(err, null);
@@ -189,7 +186,7 @@ const updateCity = (id, data, callback) => {
         connection.release();
         return callback(err, null);
       }
-      const fetchCityQuery = `SELECT name FROM city WHERE id = ?`;
+      const fetchCityQuery = `SELECT name FROM bank WHERE id = ?`;
       mysqlConnection.query(fetchCityQuery, [id], (err, results) => {
         if (err) {
           return connection.rollback(() => {
@@ -200,16 +197,16 @@ const updateCity = (id, data, callback) => {
         if (results.length === 0) {
           return connection.rollback(() => {
             connection.release();
-            callback(new Error("City not found"), null);
+            callback(new Error("Bank not found"), null);
           });
         }
-        const oldCityName = results[0].name;
+        const oldBankName = results[0].name;
         const updateCityQuery = `
-        UPDATE city
-        SET name = ?, added_by = ?
+        UPDATE bank
+        SET name = ?,added_by = ?
         WHERE id = ?
       `;
-        connection.query(updateCityQuery, [cityname, added_by, id], (err, result) => {
+        connection.query(updateCityQuery, [bankname, added_by, id], (err, result) => {
           if (err) {
             return connection.rollback(() => {
               connection.release();
@@ -219,9 +216,9 @@ const updateCity = (id, data, callback) => {
           const updateHistoryQuery = `
           UPDATE registrationadmin_history
           SET created_name = ?, updated_name = ?, added_by = ?, updated_at = CURRENT_TIMESTAMP
-          WHERE city_id = ?
+          WHERE bank_id = ?
         `;
-          connection.query(updateHistoryQuery, [oldCityName, cityname, added_by, id], (err, historyResult) => {
+          connection.query(updateHistoryQuery, [oldBankName, bankname, added_by, id], (err, historyResult) => {
             if (err) {
               return connection.rollback(() => {
                 connection.release();
@@ -245,8 +242,8 @@ const updateCity = (id, data, callback) => {
   });
 };
 
-// Function to delete City
-const deleteCity = (id, callback) => {
+// Function to delete Bank
+const deleteBank = (id, callback) => {
   mysqlPool.getConnection((err, connection) => {
     if (err) {
       return callback(err, null);
@@ -257,7 +254,7 @@ const deleteCity = (id, callback) => {
         return callback(err, null);
       }
       // Step 1: Update the city status to 'inactive'
-      const updateCityStatusQuery = `UPDATE city SET status = 'inactive' WHERE id = ?`;
+      const updateCityStatusQuery = `UPDATE bank SET status = 'inactive' WHERE id = ?`;
       connection.query(updateCityStatusQuery, [id], (err, result) => {
         if (err) {
           return connection.rollback(() => {
@@ -269,7 +266,7 @@ const deleteCity = (id, callback) => {
         const updateHistoryStatusQuery = `
         UPDATE registrationadmin_history
         SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
-        WHERE city_id = ?
+        WHERE bank_id = ?
       `;
         connection.query(updateHistoryStatusQuery, [id], (err, historyResult) => {
           if (err) {
@@ -293,68 +290,11 @@ const deleteCity = (id, callback) => {
   });
 };
 
-const getCount = (callback) => {
-  // Queries to get the record count for each table
-  const queries = {
-    totalCities: 'SELECT COUNT(*) AS count FROM city',
-    totalDistricts: 'SELECT COUNT(*) AS count FROM district',
-    totalCountries: 'SELECT COUNT(*) AS count FROM country',
-    totalResearchers: 'SELECT COUNT(*) AS count FROM researcher',
-    totalOrganizations: 'SELECT COUNT(*) AS count FROM organization',
-    totalCommitteeMembers: 'SELECT COUNT(*) AS count FROM committee_member',
-    totalCollectionSites: 'SELECT COUNT(*) AS count FROM collectionsite',
-
-    // ✅ Use consistent alias AS count here
-    totalOrders: `SELECT COUNT(*) AS count FROM cart c WHERE c.order_status != 'Rejected'`,
-    totalOrdersRejected: `SELECT COUNT(*) AS count FROM cart c WHERE c.order_status = 'Rejected'`,
-
-    totalCSR: 'SELECT COUNT(*) AS count FROM csr'
-  };
-
-  let results = {};
-
-  // Function to execute queries sequentially
-  const executeQuery = (key, query) => {
-    return new Promise((resolve, reject) => {
-      mysqlConnection.query(query, (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          // ✅ Always use the 'count' field since all queries now return it
-          if (result && result[0]) {
-            results[key] = result[0].count || 0;
-          } else {
-            results[key] = 0;
-          }
-
-          resolve();
-        }
-      });
-    });
-  };
-
-  // Run all queries concurrently
-  Promise.all(Object.entries(queries).map(([key, query]) => executeQuery(key, query)))
-    .then(() => {
-
-      callback(null, results); // Return the counts when all queries have completed
-    })
-    .catch((err) => {
-      console.error("Error fetching counts:", err);
-      callback(err, null); // If any error occurs, pass the error to the callback
-    });
-};
-
-
-
-
-
-
 module.exports = {
-  createCityTable,
-  getAllCities,
-  updateCity,
-  createCity,
-  deleteCity,
-  getCount,
+  createBankTable,
+  getAllBank,
+  updateBank,
+  createBank,
+  deleteBank,
+
 };

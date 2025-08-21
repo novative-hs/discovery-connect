@@ -28,6 +28,7 @@ import TestSystemManufacturerArea from "./test-system-manufacturer";
 import Analyte from "./Analyte";
 import InfectiousdiseaseArea from "./infectiousdiseasetesting";
 import ContactUS from "./contactus";
+import BankArea from "./bank";
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
   const router = useRouter();
@@ -61,6 +62,8 @@ const DashboardArea = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case "bank":
+        return <BankArea />;
       case "country":
         return <Country />;
       case "city":

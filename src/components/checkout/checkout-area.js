@@ -7,12 +7,14 @@ import "bootstrap/dist/css/bootstrap.min.css";
 const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...others }) => {
   const id = sessionStorage.getItem("userID");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
   const [sampleCopyData, setSampleCopyData] = useState({
     studyCopy: null,
     reportingMechanism: "",
     irbFile: null,
     nbcFile: null,
   });
+  
 
   useEffect(() => {
     if (isModalOpen) {
@@ -22,17 +24,17 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
       document.body.classList.remove("modal-open");
       document.body.style.overflow = "";
     }
-  
+
     return () => {
       document.body.classList.remove("modal-open");
       document.body.style.overflow = "";
     };
   }, [isModalOpen]);
-  
+
 
   if (id === null) {
     return <div>Loading...</div>;
-  } 
+  }
 
   return (
     <section className="checkout-area pb-85">
@@ -65,7 +67,7 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
         style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
       >
         <div className="modal-dialog modal-dialog-scrollable modal-lg" role="document"
-        style={{ maxWidth: "800px", width: "90%" }}>
+          style={{ maxWidth: "800px", width: "90%" }}>
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">Payment Detail</h5>
@@ -81,7 +83,7 @@ const CheckoutArea = ({ handleSubmit, validateDocuments, submitHandler, ...other
           </div>
         </div>
       </div>
-      
+
     </section>
   );
 };

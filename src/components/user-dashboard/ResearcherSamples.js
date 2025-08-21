@@ -12,6 +12,7 @@ const SampleArea = () => {
     { label: "Order ID", key: "tracking_id" },
     { label: "Order Date", key: "created_at" },
     { label: "Total Payment", key: "price" },
+    { label: "Bank Name", key: "name" },
     { label: "Payment Type", key: "payment_method" },
     { label: "Payment Status", key: "payment_status" },
     { label: "Total Items", key: "total" },
@@ -99,19 +100,21 @@ const SampleArea = () => {
           order_status: sample.order_status,
           payment_type: sample.payment_method,
           payment_status: sample.payment_status,
+          BankName:sample.BankName,
           samples: [],
-          totalpayment: 0, // 🔧 Initialize total per group
+          totalpayment: 0,
         };
       }
       grouped[key].samples.push(sample);
 
       const price = parseFloat(sample.totalpayment);
       if (!isNaN(price)) {
-        grouped[key].totalpayment += price; // 🔧 Add price to this group's total
+        grouped[key].totalpayment += price;
       }
     });
 
-    return Object.values(grouped);
+    // ✅ Sort by created_at ASC (oldest order first)
+    return Object.values(grouped).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   };
 
 
@@ -127,9 +130,8 @@ const SampleArea = () => {
 
 
   useEffect(() => {
-    const pages = Math.max(1, Math.ceil(samples.length / itemsPerPage));
+    const pages = Math.max(1, Math.ceil(orders.length / itemsPerPage));
     setTotalPages(pages);
-
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
@@ -235,9 +237,16 @@ const SampleArea = () => {
                       }).replace(/ /g, '-')}</td>
 
                       <td className="text-end">
-                        {order.samples[0]?.SamplePriceCurrency || "Rs"} {order.totalpayment.toLocaleString()}
+                        {{
+                          PKR: "Rs",
+                          USD: "$",
+                          INR: "₹",
+                        }[order.samples[0].SamplePriceCurrency] || order.samples.SamplePriceCurrency} {order.totalpayment.toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}
                       </td>
-
+                      <td>{order.BankName|| "---"}</td>
                       <td>{order.payment_type || "----"}</td>
                       <td>{order.payment_status}</td>
                       <td>{order.samples.length}</td>

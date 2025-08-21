@@ -13,6 +13,7 @@ const registrationadmin_history = () => {
       city_id INT,
       country_id INT,
       district_id INT,
+      bank_id INT,
       sample_id VARCHAR(36),
       csr_id  INT,
       infectiousdiseasetesting_id  INT,

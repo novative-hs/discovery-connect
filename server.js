@@ -33,6 +33,7 @@ const collectionSiteRoutes = require("./routes/collectionsiteRoutes");
 const organizationRoutes = require("./routes/organizationRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const cityRoutes = require("./routes/cityRoutes");
+const bankRoutes = require("./routes/bankRoutes");
 const DistrictRoutes = require("./routes/districtRoutes");
 const CountryRoutes = require("./routes/countryRoutes");
 const registrationRoutes = require("./routes/registrationRoutes");
@@ -55,6 +56,7 @@ app.use('/api', historyRoutes);
 app.use("/api/user", registrationRoutes);
 app.use("/api/district", DistrictRoutes);
 app.use("/api/city", cityRoutes);
+app.use("/api/bank",bankRoutes)
 app.use("/api/country", CountryRoutes);
 app.use("/api", productRoutes);
 app.use("/wishlist", wishlistRoutes);

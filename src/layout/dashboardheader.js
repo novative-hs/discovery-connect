@@ -170,6 +170,7 @@ const Header = ({ setActiveTab, activeTab }) => {
           { label: "Cities", tab: "city" },
           { label: "Countries", tab: "country" },
           { label: "Districts", tab: "district" },
+          { label: "Bank", tab: "bank" },
           { label: "Contact us List", tab: "contactus" },
           { label: "Researcher's List", tab: "researcher" },
           { label: "Organization's List", tab: "organization" },

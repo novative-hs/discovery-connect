@@ -120,7 +120,7 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
             <p className="text-muted h8">
               Any Additional Mechanism
               <strong>
-                <span className="text-danger">(optional)</span>
+                <span className="text-danger">*</span>
               </strong>
             </p>
             <textarea

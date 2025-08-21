@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button, Form, Table } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDownload
@@ -18,6 +18,7 @@ const OrderPage = () => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showModal, setShowModal] = useState(false);
+   const [showDocuments, setShowDocument] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -49,11 +50,53 @@ const OrderPage = () => {
 
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const [viewedDocuments, setViewedDocuments] = useState({
-    study_copy: false,
-    irb_file: false,
-    nbc_file: false,
-  });
+  const [documents, setDocuments] = useState([
+    { name: "study_copy", file: null, wrong: false, },
+    { name: "irb_file", file: null, wrong: false, },
+    { name: "nbc_file", file: null, wrong: false, },
+  ]);
+  const [show, setShow] = useState(false);
+
+
+  const handleFileChange = (index, file) => {
+    const updatedDocs = [...documents];
+    updatedDocs[index].file = file;
+    setDocuments(updatedDocs);
+  };
+  const handleCheckboxChange = (index) => {
+    const updatedDocs = [...documents];
+    updatedDocs[index].wrong = !updatedDocs[index].wrong;
+    setDocuments(updatedDocs);
+  };
+
+  const handleSubmit = async () => {
+    const formData = new FormData();
+    formData.append("cartId", cartId);
+
+    documents.forEach((doc, index) => {
+      if (doc.file) {
+        formData.append(`documents[${index}][file]`, doc.file);
+        formData.append(`documents[${index}][name]`, doc.name);
+        formData.append(`documents[${index}][wrong]`, doc.wrong);
+      }
+    });
+
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/upload-documents`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+      alert("Documents uploaded successfully!");
+      setShow(false);
+    } catch (err) {
+      console.error(err);
+      alert("Error uploading documents");
+    }
+  };
+
   const handleCloseModal = () => {
     setSelectedOrderId(null);
     setShowModal(false);
@@ -70,6 +113,7 @@ const OrderPage = () => {
 
 
   useEffect(() => {
+    localStorage.removeItem("transferredOrders")
     fetchOrders(currentPage, ordersPerPage);
   }, [currentPage]);
   useEffect(() => {
@@ -117,7 +161,7 @@ const OrderPage = () => {
       setOrders(groupedOrders);
       setAllOrders(groupedOrders);
       setAllOrdersRaw(groupedOrders);
-      setTotalPages(Math.ceil(totalCount / pageSize));
+      setTotalPages(Math.ceil(groupedOrders.length / pageSize));
 
       return groupedOrders;
     } catch (err) {
@@ -128,7 +172,25 @@ const OrderPage = () => {
       setLoading(false);
     }
   };
+  const handleViewDocument = (fileBuffer, fileName, sampleId) => {
+    if (!fileBuffer) {
+      alert("No document available.");
+      return;
+    }
 
+    // Convert buffer to Blob
+    const blob = new Blob([new Uint8Array(fileBuffer.data)], {
+      type: "application/pdf",
+    });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+
+    // Track viewed status
+    setDocuments((prev) => ({
+      ...prev,
+      [sampleId]: { ...(prev[sampleId] || {}), [fileName]: true },
+    }));
+  };
 
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
@@ -284,6 +346,16 @@ const OrderPage = () => {
       .map(([transfer, items]) => ({ transfer, items }));
   };
 
+  // Utility: Remove duplicates by key
+  const uniqueByKey = (arr, keyFn) => {
+    const seen = new Set();
+    return arr.filter(item => {
+      const key = keyFn(item);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
 
   const handleHistory = async (orderGroup) => {
     const trackingIds = orderGroup.analytes.map(a => a.tracking_id);
@@ -297,8 +369,11 @@ const OrderPage = () => {
       // API se nested array aa raha hai → flatten kar do
       const rawHistory = response.data.results.flat();
 
+      // 🔹 Remove duplicate committee records
+      const dedupedHistory = uniqueByKey(rawHistory, (h) => `${h.committeetype}_${h.CommitteeMemberName}_${h.committee_status}_${h.committee_approval_date}`);
+
       // group by transfer
-      const groupedHistory = groupHistoryByTransfer(rawHistory);
+      const groupedHistory = groupHistoryByTransfer(dedupedHistory);
 
       setSelectedHistory(groupedHistory);
       setShowHistoryModal(true);
@@ -309,6 +384,27 @@ const OrderPage = () => {
     }
   };
 
+
+  const formatDT = (date) =>
+    date
+      ? new Date(date).toLocaleString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        hour12: true,
+      })
+      : "---";
+
+
+  const openPdfFromBuffer = (buf) => {
+    if (!buf?.data) return;
+    const byteArray = new Uint8Array(buf.data);
+    const blob = new Blob([byteArray], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
 
   useEffect(() => {
     if (showSampleModal || showTransferModal || showCommentsModal) {
@@ -355,9 +451,15 @@ const OrderPage = () => {
                       field: "organization_name",
                     },
                     {
-                      label: "Review status",
+                      label: "Scientific",
                       field: "committee_status",
                     },
+                    {
+                      label: "Ethical",
+                      field: "committee_status",
+                    },
+                    { label: "View Documents", key: "study_copy" },
+                 
 
 
                   ].map(({ label, field }, index) => (
@@ -417,14 +519,26 @@ const OrderPage = () => {
                       <td>
                         <div>
                           <span className="fw-bold">
-                            Scientific: {orderGroup.scientific_committee_status || "---"}
+                            {orderGroup.scientific_committee_status || "---"}
                           </span>
                         </div>
+                      </td>
+                      <td>
                         <div>
                           <span className="fw-bold">
-                            Ethical: {orderGroup.ethical_committee_status || "---"}
+                            {orderGroup.ethical_committee_status || "---"}
                           </span>
                         </div>
+                      </td>
+                      <td>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          className="fw-semibold shadow-sm"
+                          onClick={() => setShowDocument(true)}
+                        >
+                          View Documents
+                        </Button>
                       </td>
                       <td>
                         <div className="d-flex gap-2 justify-content-center">
@@ -532,6 +646,52 @@ const OrderPage = () => {
                       </Button>
 
 
+                      <Modal show={show} onHide={() => setShow(false)} size="lg">
+                        <Modal.Header closeButton>
+                          <Modal.Title>Upload Required Documents</Modal.Title>
+                        </Modal.Header>
+                        <Modal.Body>
+                          <Table bordered hover>
+                            <thead>
+                              <tr>
+                                <th>Document</th>
+                                <th>Upload</th>
+                                <th>Wrong?</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {documents.map((doc, index) => (
+                                <tr key={index}>
+                                  <td>{doc.name}</td>
+                                  <td>
+                                    <Form.Control
+                                      type="file"
+                                      onChange={(e) =>
+                                        handleFileChange(index, e.target.files[0])
+                                      }
+                                    />
+                                  </td>
+                                  <td className="text-center">
+                                    <Form.Check
+                                      type="checkbox"
+                                      checked={doc.wrong}
+                                      onChange={() => handleCheckboxChange(index)}
+                                    />
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </Table>
+                        </Modal.Body>
+                        <Modal.Footer>
+                          <Button variant="secondary" onClick={() => setShow(false)}>
+                            Cancel
+                          </Button>
+                          <Button variant="success" onClick={handleSubmit}>
+                            Submit
+                          </Button>
+                        </Modal.Footer>
+                      </Modal>
                       {/* Accept */}
                       {selectedOrder.technical_admin_status === 'Pending' && (
                         <>
@@ -590,14 +750,16 @@ const OrderPage = () => {
 
 
                           {/* Transfer */}
-                          {!transferredOrders.includes(selectedOrder.order_id) && (
-                            <button
-                              className="btn btn-outline-primary btn-sm"
-                              onClick={() => handleToggleTransferOptions(selectedOrder.order_id)}
-                            >
-                              Transfer
-                            </button>
-                          )}
+                          {!(selectedOrder?.scientific_committee_status === "Approved" &&
+                            selectedOrder?.ethical_committee_status === "Approved") && (
+                              <button
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => handleToggleTransferOptions(selectedOrder.order_id)}
+                              >
+                                Transfer
+                              </button>
+                            )}
+
 
                         </>
                       )}
@@ -777,20 +939,17 @@ const OrderPage = () => {
 
 
           {/* History */}
-          <Modal
-            show={showHistoryModal}
+          <Modal show={showHistoryModal}
             onHide={() => setShowHistoryModal(false)}
             centered
             size="lg"
             scrollable
           >
-
             <Modal.Header closeButton>
-              <Modal.Title className="fw-bold text-primary">
-                📝 Technical Admin Review History
-              </Modal.Title>
+              <Modal.Title className="fw-bold text-primary">Review History</Modal.Title>
             </Modal.Header>
-            <Modal.Body style={{ background: "#f0f2f8" }}>
+
+            <Modal.Body>
               {selectedHistory.map((transferGroup, idx) => {
                 const histories = Array.isArray(transferGroup.items[0])
                   ? transferGroup.items[0]
@@ -799,146 +958,84 @@ const OrderPage = () => {
                 const firstHistory = histories[0];
 
                 return (
-                  <div key={idx} className="mb-4">
-                    {/* Transfer Header */}
-                    <div className="text-center mb-4">
-                      <div
-                        className="d-inline-block px-4 py-3 rounded-4 shadow-sm"
-                        style={{
-                          background: "linear-gradient(135deg, #007bff, #00c6ff)",
-                          color: "white",
-                          fontWeight: "600",
-                          fontSize: "1.1rem",
-                          letterSpacing: "0.5px",
-                          boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
-                        }}
-                      >
-                        🚀 Transfer <span style={{ fontWeight: "700" }}>{transferGroup.transfer}</span>
+                  <div key={idx} className="mb-4 p-3 rounded shadow-sm bg-white">
+                    {/* Transfer to Committee Member Date */}
+                    <div className="mb-3">
+                      <h6 className="fw-bold text-dark mb-1">📩 Transfer to Committee Member Date</h6>
+                      <span className="badge bg-info text-white px-3 py-2">
+                        {formatDT(firstHistory?.committee_created_at)}
+                      </span>
+                    </div>
+
+                    {/* Committee Member Status */}
+                    <div className="mb-3">
+                      <h6 className="fw-bold text-dark mb-2">👥 Committee Member Status</h6>
+                      <div className="list-group">
+                        {histories.map((history, i) => (
+                          <div
+                            key={i}
+                            className="list-group-item d-flex flex-column align-items-start mb-2 rounded shadow-sm border"
+                          >
+                            <div className="fw-bold">
+                              {history.committeetype} - {history.CommitteeMemberName}
+                            </div>
+                            <div>
+                              Status:{" "}
+                              <span className="text-primary">
+                                {history.committee_status || "---"}
+                              </span>
+                            </div>
+                            <small className="text-muted">
+                              Approval: {formatDT(history.committee_approval_date)}
+                            </small>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
+                    {/* Documents */}
+                    <div className="mb-3">
+                      <h6 className="fw-bold text-dark mb-2">📂 Documents</h6>
+                      {["study_copy", "irb_file", "nbc_file"].map((docKey) =>
+                        firstHistory?.[docKey] ? (
+                          <button
+                            key={docKey}
+                            className="btn btn-outline-primary btn-sm me-2 mb-1"
+                            onClick={() => openPdfFromBuffer(firstHistory[docKey])}
+                          >
+                            Download {docKey.toUpperCase()}
+                          </button>
+                        ) : (
+                          <span
+                            key={docKey}
+                            className="text-muted me-2 mb-1 d-inline-block"
+                          >
+                            {docKey.toUpperCase()} Not Attached
+                          </span>
+                        )
+                      )}
+                    </div>
 
-                    {/* Card Bubble */}
-                    <div className="p-4 rounded-4 shadow bg-white">
-
-                      {/* Admin Reference Date */}
-                      <div className="mb-3">
-                        <h6 className="fw-bold text-dark mb-1">📌 Technical Admin Reference Order Date</h6>
-                        <span className="badge bg-light text-dark px-3 py-2">
-                          {firstHistory?.Technicaladmindate
-                            ? new Date(firstHistory.Technicaladmindate).toLocaleString("en-GB", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "numeric",
-                              minute: "numeric",
-                              hour12: true,
-                            })
-                            : "---"}
-                        </span>
-                      </div>
-
-                      {/* Transfer to Committee */}
-                      <div className="mb-3">
-                        <h6 className="fw-bold text-dark mb-1">📩 Transfer to Committee Member Date</h6>
-                        <span className="badge bg-info text-white px-3 py-2">
-                          {firstHistory?.committee_created_at
-                            ? new Date(firstHistory.committee_created_at).toLocaleString("en-GB", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "numeric",
-                              minute: "numeric",
-                              hour12: true,
-                            })
-                            : "---"}
-                        </span>
-                      </div>
-
-                      {/* Committee Member Status */}
-                      <div className="mb-3">
-                        <h6 className="fw-bold text-dark mb-2">👥 Committee Member Status</h6>
-                        <div className="list-group">
-                          {histories.map((history, i) => (
-                            <div
-                              key={i}
-                              className="list-group-item d-flex flex-column align-items-start mb-2 rounded shadow-sm border"
-                            >
-                              <div className="fw-bold">
-                                {history.committeetype} - {history.CommitteeMemberName}
-                              </div>
-                              <div>
-                                Status: <span className="text-primary">{history.committee_status || "---"}</span>
-                              </div>
-                              <small className="text-muted">
-                                Approval:{" "}
-                                {history.committee_approval_date
-                                  ? new Date(history.committee_approval_date).toLocaleString("en-GB", {
-                                    day: "numeric",
-                                    month: "short",
-                                    year: "numeric",
-                                    hour: "numeric",
-                                    minute: "numeric",
-                                    hour12: true,
-                                  })
-                                  : "---"}
-                              </small>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="mb-3">
-                        <h6 className="fw-bold text-dark mb-2">📂 Documents</h6>
-                        {["study_copy", "irb_file", "nbc_file"].map((docKey) =>
-                          firstHistory?.[docKey] ? (
-                            <button
-                              key={docKey}
-                              className="btn btn-outline-primary btn-sm me-2 mb-1"
-                              onClick={() => {
-                                // Convert Node.js Buffer -> Uint8Array
-                                const byteArray = new Uint8Array(firstHistory[docKey].data);
-                                const blob = new Blob([byteArray], { type: "application/pdf" });
-                                const url = URL.createObjectURL(blob);
-                                window.open(url, "_blank");
-                              }}
-                            >
-                              Download {docKey.toUpperCase()}
-                            </button>
-                          ) : (
-                            <span
-                              key={docKey}
-                              className="text-muted me-2 mb-1 d-inline-block"
-                            >
-                              {docKey.toUpperCase()} Not Attached
-                            </span>
-                          )
-                        )}
-                      </div>
-
-
-                      {/* Technical Admin Approval */}
-                      <div>
-                        <h6 className="fw-bold text-dark mb-1">✅ Technical Admin Approval Date</h6>
-                        <span className="badge bg-success text-white px-3 py-2">
-                          {firstHistory?.TechnicaladminApproval_date
-                            ? new Date(firstHistory.TechnicaladminApproval_date).toLocaleString("en-GB", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "numeric",
-                              minute: "numeric",
-                              hour12: true,
-                            })
-                            : "---"}
-                        </span>
-                      </div>
+                    {/* Technical Admin Approval */}
+                    <div>
+                      <h6 className="fw-bold text-dark mb-1">✅ Technical Admin Approval Date</h6>
+                      <span className="badge bg-success text-white px-3 py-2">
+                        {formatDT(firstHistory?.TechnicaladminApproval_date)}
+                      </span>
                     </div>
                   </div>
                 );
               })}
             </Modal.Body>
+
+            <Modal.Footer>
+              <Button variant="secondary" onClick={() => setShowHistoryModal(false)}>
+                Close
+              </Button>
+            </Modal.Footer>
           </Modal>
+
+
 
 
 

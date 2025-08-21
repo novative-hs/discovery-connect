@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { notifyError, notifySuccess } from "@utils/toast";
@@ -8,17 +8,34 @@ import master from "@assets/img/slider/13/mastercard.png";
 const PaymentCardElement = ({ handleSubmit }) => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [bankname, setbankname] = useState()
+
+
   const [formData, setFormData] = useState({
     cardholderName: "",
     cardNumber: "",
     expirationDate: "",
     cvc: "",
     paymentType: "Credit",
+    bankname: "",
   });
 
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [isLoading, setIsLoading] = useState(false);
+  const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
+  useEffect(() => {
+    fetchBank();
 
+  }, []);
+
+  const fetchBank = async () => {
+    try {
+      const response = await axios.get(`${url}/bank/get-bank`);
+      setbankname(response.data);
+    } catch (err) {
+      console.error("Error fetching bank:", err);
+    }
+  };
   const validateFields = () => {
     let newErrors = {};
 
@@ -90,12 +107,13 @@ const PaymentCardElement = ({ handleSubmit }) => {
       card_cvc: formData.cvc,
       payment_type: formData.paymentType,
       payment_status: "Paid",
+      bankname: formData.bankname,
     };
 
     try {
       setIsLoading(true); // Start loading
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/payment/createPayment`,
+        `${url}/payment/createPayment`,
         paymentData
       );
 
@@ -137,20 +155,45 @@ const PaymentCardElement = ({ handleSubmit }) => {
               </div>
 
               {/* Card Number */}
-              <div className="mb-3">
-                <label className="form-label fw-semibold">Card Number</label>
-                <input
-                  id="cardNumber"
-                  placeholder="378282246310005"
-                  className="form-control"
-                  type="text"
-                  value={formData.cardNumber}
-                  onChange={handleInputChange}
-                />
-                {errors.cardNumber && (
-                  <small className="text-danger">{errors.cardNumber}</small>
-                )}
+              {/* Bank + Card Number in one row */}
+              <div className="row mb-3">
+                {/* Bank Dropdown */}
+                <div className="col-md-4">
+                  <label className="form-label fw-semibold">Select Bank</label>
+                  <select
+                    id="bankname"
+                    className="form-select"
+                    value={formData.bankname}
+                    onChange={(e) =>
+                      setFormData({ ...formData, bankname: e.target.value })
+                    }
+                  >
+                    <option value="">-- Select Bank --</option>
+                    {bankname?.map((bank) => (
+                      <option key={bank.id} value={bank.id}>
+                        {bank.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Card Number */}
+                <div className="col-md-8">
+                  <label className="form-label fw-semibold">Card Number</label>
+                  <input
+                    id="cardNumber"
+                    placeholder="378282246310005"
+                    className="form-control"
+                    type="text"
+                    value={formData.cardNumber}
+                    onChange={handleInputChange}
+                  />
+                  {errors.cardNumber && (
+                    <small className="text-danger">{errors.cardNumber}</small>
+                  )}
+                </div>
               </div>
+
 
               {/* Expiration and CVC */}
               <div className="row mb-3">

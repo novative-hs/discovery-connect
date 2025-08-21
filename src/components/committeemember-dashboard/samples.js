@@ -81,6 +81,7 @@ const SampleArea = () => {
         axios.get(orderUrl),
         axios.get(docUrl),
       ]);
+  
       const orders = (orderRes.data.results || []).filter(order =>
         order.committee_status === "Pending" // Filter for Pending status
       );

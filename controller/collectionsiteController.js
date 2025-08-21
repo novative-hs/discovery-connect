@@ -140,11 +140,6 @@ const updateCollectionSiteDetail = (req, res) => {
   const { id } = req.params;
   const { CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, cityid, districtid, countryid } = req.body;
   const file = req.file;
-
-  // if (!file) {
-  //   return res.status(400).json({ error: 'No file uploaded' });
-  // }
-
   // Use the file buffer for the logo
   const updateData = {
     CollectionSiteName,
