@@ -196,15 +196,15 @@ const createCart = (data, callback) => {
   const tracking_id = generateTrackingId();
   let created_at = 0;
   // Validate required fields
-  
- if (
+
+  if (
     !researcher_id ||
     !cart_items ||
     !payment_id ||
     !study_copy ||
     !reporting_mechanism ||
     !irb_file
-  ){
+  ) {
     return callback(
       new Error(
         "Missing required fields (Payment ID, Study Copy, Reporting Mechanism, and IRB File are required)"
@@ -363,6 +363,63 @@ const createCart = (data, callback) => {
       })
   });
 };
+const updateDocument = (newCartData, callback) => {
+  if (!newCartData.tracking_id) {
+    return callback(new Error("Tracking ID is required"), null);
+  }
+
+  const getCartIdQuery = "SELECT id FROM cart WHERE tracking_id = ?";
+  mysqlConnection.query(getCartIdQuery, [newCartData.tracking_id], (err, results) => {
+    if (err) {
+      console.error("Error fetching cart ID:", err);
+      return callback(new Error("Database error fetching cart ID"), null);
+    }
+
+    if (results.length === 0) {
+      return callback(new Error("Cart not found for given tracking ID"), null);
+    }
+
+    const cartId = results[0].id;
+    let updates = [];
+    let values = [];
+
+    if (newCartData.study_copy) {
+      updates.push("study_copy = ?");
+      values.push(newCartData.study_copy);
+    }
+    if (newCartData.irb_file) {
+      updates.push("irb_file = ?");
+      values.push(newCartData.irb_file);
+    }
+    if (newCartData.nbc_file) {
+      updates.push("nbc_file = ?");
+      values.push(newCartData.nbc_file);
+    }
+
+    if (updates.length === 0) {
+      return callback(new Error("No documents provided for update"), null);
+    }
+
+    values.push(cartId);
+
+    const sql = `
+      UPDATE sampledocuments 
+      SET ${updates.join(", ")}
+      WHERE cart_id = ?
+    `;
+
+    mysqlConnection.query(sql, values, (updateErr, result) => {
+      if (updateErr) {
+        console.error("Error updating documents:", updateErr);
+        return callback(new Error("Database error while updating documents"), null);
+      }
+      callback(null, { affectedRows: result.affectedRows, tracking_id: newCartData.tracking_id });
+    });
+  });
+};
+
+
+
 
 const getAllCart = (id, callback, res) => {
   const sqlQuery = `
@@ -559,6 +616,9 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
     c.tracking_id,
     c.user_id, 
     u.email AS user_email,
+    sd.study_copy,
+    sd.irb_file,
+    sd.nbc_file,
     r.ResearcherName AS researcher_name,
     r.phoneNumber AS phoneNumber, 
     org.OrganizationName AS organization_name,
@@ -625,6 +685,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
   LEFT JOIN collectionsitestaff css ON s.user_account_id = css.user_account_id
   LEFT JOIN collectionsite cs ON css.collectionsite_id = cs.id
   LEFT JOIN technicaladminsampleapproval ra ON c.id = ra.cart_id
+  LEFT JOIN sampledocuments sd ON c.id = sd.cart_id
   ${whereClause}
   ORDER BY c.created_at DESC
   LIMIT ? OFFSET ?
@@ -1216,5 +1277,6 @@ module.exports = {
   getAllOrderByOrderPacking,
   updateTechnicalAdminStatus,
   updateCartStatus,
-  updateCartStatusbyCSR
+  updateCartStatusbyCSR,
+  updateDocument
 };

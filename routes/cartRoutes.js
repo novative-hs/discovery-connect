@@ -18,6 +18,12 @@ router.post('/cart', upload.fields([
   { name: "nbc_file", maxCount: 1 }
 ]), cartController.createCart);
 
+router.put('/cart/updatedocument/:id',upload.fields([
+    { name: "study_copy", maxCount: 1 },
+  { name: "irb_file", maxCount: 1 },
+  { name: "nbc_file", maxCount: 1 }
+]), cartController.updateDocument);
+
 router.get('/cart/:id', cartController.getAllCart); // Get all cart items for a user
 router.get('/cart/getCount/:id', cartController.getCartCount); // Get count of cart items for a user
 router.put('/cart/update/:id', cartController.updateCard); // Update quantity of a product in the cart

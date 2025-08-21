@@ -18,7 +18,7 @@ const OrderPage = () => {
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showModal, setShowModal] = useState(false);
-   const [showDocuments, setShowDocument] = useState(false);
+  const [showDocuments, setShowDocument] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -27,6 +27,15 @@ const OrderPage = () => {
   const [selectedApprovalType, setSelectedApprovalType] = useState("");
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [selectedComments, setSelectedComments] = useState("");
+  const [changeMode, setChangeMode] = useState(false); // toggle for checkbox
+  const [updatedDocs, setUpdatedDocs] = useState([]); // track files to update
+  const [selectedDocs, setSelectedDocs] = useState({
+    study_copy: false,
+    irb_file: false,
+    nbc_file: false,
+  });
+  const [trackinID, setTrackingID] = useState(null);
+
   const ordersPerPage = 10;
   const [transferLoading, setTransferLoading] = useState(false);
   const [transferredOrders, setTransferredOrders] = useState(() => {
@@ -50,11 +59,11 @@ const OrderPage = () => {
 
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const [documents, setDocuments] = useState([
-    { name: "study_copy", file: null, wrong: false, },
-    { name: "irb_file", file: null, wrong: false, },
-    { name: "nbc_file", file: null, wrong: false, },
-  ]);
+  const [documents, setDocuments] = useState({
+    study_copy: false,
+    irb_file: false,
+    nbc_file: false,
+  });
   const [show, setShow] = useState(false);
 
 
@@ -166,13 +175,12 @@ const OrderPage = () => {
       return groupedOrders;
     } catch (err) {
       console.error("Fetch orders error:", err);
-      notifyError("Failed to fetch orders");
       return [];
     } finally {
       setLoading(false);
     }
   };
-  const handleViewDocument = (fileBuffer, fileName, sampleId) => {
+  const handleViewDocuments = (fileBuffer, fileName, sampleId) => {
     if (!fileBuffer) {
       alert("No document available.");
       return;
@@ -399,12 +407,56 @@ const OrderPage = () => {
 
 
   const openPdfFromBuffer = (buf) => {
-    if (!buf?.data) return;
+    if (!buf?.data) {
+      notifyError("No document available.");
+      return;
+    }
     const byteArray = new Uint8Array(buf.data);
     const blob = new Blob([byteArray], { type: "application/pdf" });
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
   };
+
+  const handleUpdateDocuments = async () => {
+    const formData = new FormData();
+    Object.entries(updatedDocs).forEach(([key, doc]) => {
+      if (doc?.file) {
+        formData.append(key, doc.file); // Append file with its key (e.g., study_copy)
+      }
+    });
+
+    try {
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/updatedocument/${trackinID}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      notifySuccess("Documents updated successfully!");
+      setShowDocument(false);
+      setChangeMode(false);
+      setUpdatedDocs({});
+      setSelectedDocs({
+        study_copy: false,
+        irb_file: false,
+        nbc_file: false,
+      });
+    } catch (error) {
+      console.error("Error updating documents:", error);
+      notifyError("Failed to update documents.");
+    }
+  };
+
+
+  const handleCloseDocument = () => {
+    setShowDocument(false);
+    setSelectedDocs({
+      study_copy: false,
+      irb_file: false,
+      nbc_file: false,
+    });
+    setUpdatedDocs({});
+  };
+
 
   useEffect(() => {
     if (showSampleModal || showTransferModal || showCommentsModal) {
@@ -459,7 +511,7 @@ const OrderPage = () => {
                       field: "committee_status",
                     },
                     { label: "View Documents", key: "study_copy" },
-                 
+
 
 
                   ].map(({ label, field }, index) => (
@@ -535,10 +587,20 @@ const OrderPage = () => {
                           variant="primary"
                           size="sm"
                           className="fw-semibold shadow-sm"
-                          onClick={() => setShowDocument(true)}
+
+                          onClick={() => {
+                            setDocuments({
+                              study_copy: { file: orderGroup.study_copy },
+                              irb_file: { file: orderGroup.irb_file },
+                              nbc_file: { file: orderGroup.nbc_file },
+                            })
+                            setTrackingID(orderGroup.tracking_id)
+                            setShowDocument(true);
+                          }}
                         >
                           View Documents
                         </Button>
+
                       </td>
                       <td>
                         <div className="d-flex gap-2 justify-content-center">
@@ -645,53 +707,6 @@ const OrderPage = () => {
                         💬 Review Comments
                       </Button>
 
-
-                      <Modal show={show} onHide={() => setShow(false)} size="lg">
-                        <Modal.Header closeButton>
-                          <Modal.Title>Upload Required Documents</Modal.Title>
-                        </Modal.Header>
-                        <Modal.Body>
-                          <Table bordered hover>
-                            <thead>
-                              <tr>
-                                <th>Document</th>
-                                <th>Upload</th>
-                                <th>Wrong?</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {documents.map((doc, index) => (
-                                <tr key={index}>
-                                  <td>{doc.name}</td>
-                                  <td>
-                                    <Form.Control
-                                      type="file"
-                                      onChange={(e) =>
-                                        handleFileChange(index, e.target.files[0])
-                                      }
-                                    />
-                                  </td>
-                                  <td className="text-center">
-                                    <Form.Check
-                                      type="checkbox"
-                                      checked={doc.wrong}
-                                      onChange={() => handleCheckboxChange(index)}
-                                    />
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </Table>
-                        </Modal.Body>
-                        <Modal.Footer>
-                          <Button variant="secondary" onClick={() => setShow(false)}>
-                            Cancel
-                          </Button>
-                          <Button variant="success" onClick={handleSubmit}>
-                            Submit
-                          </Button>
-                        </Modal.Footer>
-                      </Modal>
                       {/* Accept */}
                       {selectedOrder.technical_admin_status === 'Pending' && (
                         <>
@@ -818,6 +833,82 @@ const OrderPage = () => {
               </Modal.Body>
             </Modal>
           )}
+
+          <Modal show={showDocuments} onHide={handleCloseDocument} size="lg" centered>
+            <Modal.Header closeButton className="bg-light border-bottom">
+              <Modal.Title className="fw-bold text-dark">Sample Documents</Modal.Title>
+
+            </Modal.Header>
+
+            <Modal.Body className="p-4">
+              <div className="d-flex gap-3 mb-3">
+                {Object.keys(selectedDocs).map((docKey) => (
+                  <Form.Check
+                    key={docKey}
+                    type="checkbox"
+                    label={<span className="fw-semibold text-primary">{docKey.replace("_", " ")}</span>}
+                    checked={selectedDocs[docKey]}
+                    onChange={() =>
+                      setSelectedDocs((prev) => ({
+                        ...prev,
+                        [docKey]: !prev[docKey],
+                      }))
+                    }
+                  />
+                ))}
+              </div>
+
+              {Object.entries(documents).map(([key, value], index) => (
+                <div
+                  key={index}
+                  className="d-flex justify-content-between align-items-center border rounded p-3 mb-3 shadow-sm"
+                  style={{ backgroundColor: "#f9f9f9" }}
+                >
+                  <span className="fw-semibold text-capitalize">{key.replace("_", " ")}</span>
+                  {selectedDocs[key] ? (
+                    <Form.Control
+                      type="file"
+                      size="sm"
+                      className="w-50"
+                      accept="application/pdf"   // Restrict to PDF
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file && file.type !== "application/pdf") {
+                          alert("Only PDF files are allowed!");
+                          e.target.value = ""; // Clear invalid file
+                          return;
+                        }
+                        const newDocs = { ...updatedDocs };
+                        newDocs[key] = { name: key, file };
+                        setUpdatedDocs(newDocs);
+                      }}
+                    />
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline-primary"
+                      className="px-3 fw-semibold"
+                      onClick={() => openPdfFromBuffer(value.file)}
+                      disabled={!value.file}
+                    >
+                      View
+                    </Button>
+                  )}
+
+                </div>
+              ))}
+            </Modal.Body>
+
+            <Modal.Footer className="bg-light border-top">
+
+              {Object.values(selectedDocs).some((val) => val) && (
+                <Button variant="success" onClick={handleUpdateDocuments} className="px-4 fw-semibold">
+                  Submit
+                </Button>
+              )}
+
+            </Modal.Footer>
+          </Modal>
 
 
 
@@ -1284,7 +1375,7 @@ const OrderPage = () => {
 
         </div>
       </div>
-    </section>
+    </section >
   );
 };
 

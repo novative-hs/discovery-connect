@@ -93,6 +93,33 @@ const createCart = (req, res) => {
   });
 };
 
+const updateDocument = (req, res) => {
+  const { id } = req.params; // tracking_id from URL
+
+  const study_copy = req.files?.["study_copy"] ? req.files["study_copy"][0].buffer : null;
+  const irb_file = req.files?.["irb_file"] ? req.files["irb_file"][0].buffer : null;
+  const nbc_file = req.files?.["nbc_file"] ? req.files["nbc_file"][0].buffer : null;
+
+  const newCartData = {
+    tracking_id: id,
+    study_copy,
+    irb_file,
+    nbc_file,
+  };
+
+  cartModel.updateDocument(newCartData, (err, result) => {
+    if (err) {
+      console.error("Error updating cart:", err);
+      return res.status(400).json({ error: err.message || "Error updating cart" });
+    }
+
+    return res.status(200).json({
+      message: "Documents updated successfully",
+      tracking_id: result.tracking_id,
+      updatedRows: result.affectedRows,
+    });
+  });
+};
 
 
 const updateCard = (req, res) => {
@@ -372,5 +399,6 @@ module.exports = {
   getAllOrderByOrderPacking,
   updateTechnicalAdminStatus,
   updateCartStatus,
-  updateCartStatusbyCSR
+  updateCartStatusbyCSR,
+  updateDocument,
 };
