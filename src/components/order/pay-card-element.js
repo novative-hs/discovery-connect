@@ -90,10 +90,10 @@ const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
     e.preventDefault();
     if (loading) return; // 🔒 Prevent double-click
     setLoading(true);
-    // if (!validateDocuments()) {
-    //   setLoading(false);
-    //   return;
-    // }
+    if (!validateDocuments()) {
+      setLoading(false);
+      return;
+    }
 
     if (!validateFields()) {
       setLoading(false);

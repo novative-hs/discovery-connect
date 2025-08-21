@@ -197,11 +197,14 @@ const createCart = (data, callback) => {
   let created_at = 0;
   // Validate required fields
   
-  if (
+ if (
     !researcher_id ||
     !cart_items ||
-    !payment_id 
-  ) {
+    !payment_id ||
+    !study_copy ||
+    !reporting_mechanism ||
+    !irb_file
+  ){
     return callback(
       new Error(
         "Missing required fields (Payment ID, Study Copy, Reporting Mechanism, and IRB File are required)"
@@ -677,7 +680,7 @@ const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, ca
   const offset = (page - 1) * pageSize;
 
   const params = [id];
-  let whereClause = `WHERE ca.committee_member_id = ? AND committee_status="Pending"`;
+  let whereClause = `WHERE ca.committee_member_id = ?`;
 
   if (searchField && searchValue) {
     let dbField = searchField;

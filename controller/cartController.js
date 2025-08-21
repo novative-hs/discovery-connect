@@ -60,7 +60,7 @@ const createCart = (req, res) => {
   }
 
   // Check required fields
-  if (!researcher_id || !payment_id) {
+   if (!researcher_id || !payment_id || !reporting_mechanism) {
     return res.status(400).json({
       error: "Missing required fields (Researcher ID, Payment ID, and Reporting Mechanism are required)"
     });

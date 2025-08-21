@@ -31,22 +31,22 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
     0
   );
 
-  // const validateDocuments = () => {
-  //   let missingFields = [];
-  //   if (!sampleCopyData.studyCopy) missingFields.push("Study Copy");
-  //   if (!sampleCopyData.reportingMechanism)
-  //     missingFields.push("Reporting Mechanism");
-  //   if (!sampleCopyData.irbFile) missingFields.push("IRB File");
+  const validateDocuments = () => {
+    let missingFields = [];
+    if (!sampleCopyData.studyCopy) missingFields.push("Study Copy");
+    if (!sampleCopyData.reportingMechanism)
+      missingFields.push("Reporting Mechanism");
+    if (!sampleCopyData.irbFile) missingFields.push("IRB File");
 
-  //   if (missingFields.length > 0) {
-  //     notifyError(`Please upload the following: ${missingFields.join(", ")}`);
-  //     return false;
-  //   }
-  //   return true;
-  // };
+    if (missingFields.length > 0) {
+      notifyError(`Please upload the following: ${missingFields.join(", ")}`);
+      return false;
+    }
+    return true;
+  };
 
 const handleSubmit = async (paymentId) => {
-  // if (!validateDocuments()) return false;
+  if (!validateDocuments()) return false;
 
   const userID = sessionStorage.getItem("userID");
 
@@ -209,7 +209,7 @@ sessionStorage.setItem("created_at",created_at)
                 cart_products={cart_products}
                 isCheckoutSubmit={isCheckoutSubmit}
                 handleSubmit={handleSubmit}
-                // validateDocuments={validateDocuments}
+                validateDocuments={validateDocuments}
               />
             </div>
           </div>
