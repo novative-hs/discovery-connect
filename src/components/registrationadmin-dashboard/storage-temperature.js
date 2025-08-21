@@ -18,20 +18,18 @@ const StorageTemperatureArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedstoragetemperaturenameId, setSelectedStoragetemperaturenameId] = useState(null); // Store ID of City to delete
+  const [selectedstoragetemperaturenameId, setSelectedStoragetemperaturenameId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editStoragetemperaturename, setEditStoragetemperaturename] = useState(null); // State for selected City to edit
-  const [storagetemperaturename, setStoragetemperaturename] = useState([]); // State to hold fetched City
+  const [editStoragetemperaturename, setEditStoragetemperaturename] = useState(null);
+  const [storagetemperaturename, setStoragetemperaturename] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredStoragetemperaturename, setFilteredStoragetemperaturename] = useState([]); // Store filtered cities
+  const [filteredStoragetemperaturename, setFilteredStoragetemperaturename] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // ✅ FETCH DATA ON LOAD
@@ -41,8 +39,8 @@ const StorageTemperatureArea = () => {
         const response = await axios.get(
           `${url}/samplefields/get-samplefields/storagetemperature`
         );
-        setFilteredStoragetemperaturename(response.data); // Initialize filtered list
-        setStoragetemperaturename(response.data); // Store fetched City in state
+        setFilteredStoragetemperaturename(response.data);
+        setStoragetemperaturename(response.data);
       } catch (error) {
         console.error("Error fetching Storage Temperature:", error);
       }
@@ -51,18 +49,14 @@ const StorageTemperatureArea = () => {
   }, [url]);
 
   // ✅ UPDATE PAGINATION TOTAL PAGES
-
-
   useEffect(() => {
     const pages = Math.max(1, Math.ceil(filteredStoragetemperaturename.length / itemsPerPage));
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      setCurrentPage(0);
     }
   }, [filteredStoragetemperaturename, currentPage]);
-
-
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -71,7 +65,10 @@ const StorageTemperatureArea = () => {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const currentData = filteredStoragetemperaturename.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
+  const currentData = filteredStoragetemperaturename.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
@@ -117,6 +114,7 @@ const StorageTemperatureArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // For creation, we need to refetch to get the complete object with all fields
       await axios.post(`${url}/samplefields/post-samplefields/storagetemperature`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/storagetemperature`);
       setFilteredStoragetemperaturename(response.data);
@@ -133,10 +131,38 @@ const StorageTemperatureArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${url}/samplefields/put-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/storagetemperature`);
-      setFilteredStoragetemperaturename(response.data);
-      setStoragetemperaturename(response.data);
+      // First get the current item to preserve all fields
+      const currentItem = storagetemperaturename.find(item => item.id === selectedstoragetemperaturenameId);
+
+      await axios.put(
+        `${url}/samplefields/put-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`,
+        formData
+      );
+
+      // Update the item while preserving all existing fields
+      const updatedItem = {
+        ...currentItem,
+        name: formData.name,
+        // Preserve all other fields including timestamps
+        updated_at: new Date().toISOString() // Update the timestamp
+      };
+
+      // Update both lists without refetching
+      setStoragetemperaturename(prev =>
+        prev.map(item =>
+          item.id === selectedstoragetemperaturenameId
+            ? updatedItem
+            : item
+        )
+      );
+      setFilteredStoragetemperaturename(prev =>
+        prev.map(item =>
+          item.id === selectedstoragetemperaturenameId
+            ? updatedItem
+            : item
+        )
+      );
+
       setSuccessMessage("storage temperature name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -148,10 +174,18 @@ const StorageTemperatureArea = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${url}/samplefields/delete-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/storagetemperature`);
-      setFilteredStoragetemperaturename(response.data);
-      setStoragetemperaturename(response.data);
+      await axios.delete(
+        `${url}/samplefields/delete-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`
+      );
+
+      // Update both lists without refetching
+      setStoragetemperaturename(prev =>
+        prev.filter(item => item.id !== selectedstoragetemperaturenameId)
+      );
+      setFilteredStoragetemperaturename(prev =>
+        prev.filter(item => item.id !== selectedstoragetemperaturenameId)
+      );
+
       setSuccessMessage("Storage temperature name deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
@@ -160,17 +194,14 @@ const StorageTemperatureArea = () => {
       console.error(`Error deleting storage temperature: ${selectedstoragetemperaturenameId}`, error);
     }
   };
+
   const handleEditClick = (storagetemperaturename) => {
-
-
     setSelectedStoragetemperaturenameId(storagetemperaturename.id);
     setEditStoragetemperaturename(storagetemperaturename);
-
     setFormData({
       name: storagetemperaturename.name,
       added_by: id,
     });
-
     setShowEditModal(true);
   };
   const handleFileUpload = async (e) => {

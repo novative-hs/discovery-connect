@@ -277,7 +277,7 @@ const AnalyteArea = () => {
       const form = new FormData();
       form.append("name", formData.name);
       form.append("added_by", formData.added_by);
-      form.append("searchParams", JSON.stringify(searchParams)); // Include search params
+      form.append("searchParams", JSON.stringify(searchParams));
 
       if (formData.testresultunit_id) {
         form.append("testresultunit_id", formData.testresultunit_id);
@@ -297,19 +297,30 @@ const AnalyteArea = () => {
         }
       );
 
-      // Use the filtered results from the response if available
-      const updatedResults = response.data.filteredResults || response.data;
+      // Get the current item before update to preserve all fields
+      const currentItem = Analytename.find(item => item.id === selectedAnalyteId);
 
-      setFilteredAnalytename(updatedResults);
-      setAnalytename(prev => {
-        // Update the main list while maintaining other entries
-        const updated = [...prev];
-        const index = updated.findIndex(item => item.id === selectedAnalyteId);
-        if (index !== -1) {
-          updated[index] = response.data.updatedSample;
-        }
-        return updated;
-      });
+      // Create updated item with all preserved fields
+      const updatedItem = {
+        ...currentItem,
+        name: formData.name,
+        testresultunit_id: formData.testresultunit_id,
+        // Preserve other fields like status, created_at, etc.
+        updated_at: new Date().toISOString()
+      };
+
+      // Update both state arrays
+      setAnalytename(prev =>
+        prev.map(item =>
+          item.id === selectedAnalyteId ? updatedItem : item
+        )
+      );
+
+      setFilteredAnalytename(prev =>
+        prev.map(item =>
+          item.id === selectedAnalyteId ? updatedItem : item
+        )
+      );
 
       setShowEditModal(false);
       setSuccessMessage("Analyte updated successfully.");
@@ -321,12 +332,11 @@ const AnalyteArea = () => {
         testresultunit_id: "",
         image: "",
       });
-      setLogoPreview(false);
+      setLogoPreview(null);
     } catch (error) {
       console.error(`Error updating Analyte with ID ${selectedAnalyteId}:`, error);
     }
   };
-
 
 
   const handleDelete = async () => {

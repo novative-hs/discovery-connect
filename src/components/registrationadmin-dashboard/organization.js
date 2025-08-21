@@ -48,6 +48,14 @@ const OrganizationArea = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
+  const [currentFilters, setCurrentFilters] = useState({
+    OrganizationName: '',
+    phoneNumber: '',
+    HECPMDCRegistrationNo: '',
+    type: '',
+    created_at: '',
+    status: ''
+  });
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(organizations.length / itemsPerPage);
@@ -96,7 +104,7 @@ const OrganizationArea = () => {
     }
 
     try {
-      const response = await axios.post(
+      await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/createorg`,
         newformData,
         {
@@ -105,6 +113,47 @@ const OrganizationArea = () => {
           },
         }
       );
+      // Fetch fresh data
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
+      );
+
+      // Ensure we have an array
+      const freshData = Array.isArray(response.data) ? response.data : [];
+
+      // Update main data
+      setAllOrganizations(freshData);
+
+      // Start with all data or empty array if undefined
+      let filtered = [...freshData];
+
+      // Apply search term filters only if we have filters and data
+      if (filtered.length > 0 && currentFilters) {
+        Object.entries(currentFilters).forEach(([field, value]) => {
+          if (value && value.trim() !== "") {
+            filtered = filtered.filter((organization) => {
+              const fieldValue = organization[field]?.toString().toLowerCase();
+              const searchValue = value.toLowerCase();
+
+              if (field === "status") {
+                return fieldValue === searchValue;
+              }
+              return fieldValue?.includes(searchValue);
+            });
+          }
+        });
+      }
+
+      // Apply status filter if active
+      if (statusFilter && filtered.length > 0) {
+        filtered = filtered.filter(organization =>
+          organization.status?.toLowerCase() === statusFilter.toLowerCase()
+        );
+      }
+
+      setOrganizations(filtered);
+      setFilteredOrganizations(filtered);
+
 
       notifySuccess("Organization Registered Successfully");
       fetchOrganizations(); // refresh list
@@ -179,6 +228,11 @@ const OrganizationArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
+    // Update filter state
+    setCurrentFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
     setSearchTerm(value);
 
     if (!value) {
@@ -314,9 +368,8 @@ const OrganizationArea = () => {
       newformData.append("logo", formData.logo);
     }
 
-
     try {
-      const response = await axios.put(
+      await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/update/${selectedOrganizationId}`,
         newformData,
         {
@@ -326,9 +379,48 @@ const OrganizationArea = () => {
         }
       );
 
+      // Fetch fresh data
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
+      );
+
+      // Ensure we have an array
+      const freshData = Array.isArray(response.data) ? response.data : [];
+
+      // Update main data
+      setAllOrganizations(freshData);
+
+      // Apply all active filters
+      let filtered = [...freshData];
+
+      // 1. Apply search filters from currentFilters
+      Object.entries(currentFilters).forEach(([field, value]) => {
+        if (value && value.trim() !== "") {
+          filtered = filtered.filter((org) => {
+            const fieldValue = org[field]?.toString().toLowerCase();
+            const searchValue = value.toLowerCase();
+
+            if (field === "status") {
+              return fieldValue === searchValue;
+            }
+            return fieldValue?.includes(searchValue);
+          });
+        }
+      });
+
+      // 2. Apply status filter if active (this should override any status filter in currentFilters)
+      if (statusFilter) {
+        filtered = filtered.filter(org =>
+          org.status?.toLowerCase() === statusFilter.toLowerCase()
+        );
+      }
+
+      // Update both states
+      setOrganizations(filtered);
+      setFilteredOrganizations(filtered);
+
       notifySuccess("Organization Updated Successfully");
       setShowEditModal(false);
-      fetchOrganizations();
       resetFormData();
     } catch (error) {
       const errorMessage =

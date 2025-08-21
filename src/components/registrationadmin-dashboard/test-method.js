@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -18,21 +19,18 @@ const TestMethodArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedTestMethodnameId, setSelectedTestMethodnameId] =
-    useState(null); // Store ID of Plasma to delete
+  const [selectedTestMethodnameId, setSelectedTestMethodnameId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editTestMethodname, setEditTestMethodname] = useState(null); // State for selected TestMethod to edit
-  const [testmethodname, setTestMethodname] = useState([]); // State to hold fetched City
+  const [editTestMethodname, setEditTestMethodname] = useState(null);
+  const [testmethodname, setTestMethodname] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [filteredTestMethodname, setFilteredTestMethodname] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // ✅ FETCH DATA ON LOAD
@@ -43,7 +41,7 @@ const TestMethodArea = () => {
           `${url}/samplefields/get-samplefields/testmethod`
         );
         setFilteredTestMethodname(response.data);
-        setTestMethodname(response.data); // Store fetched TestMethod in state
+        setTestMethodname(response.data);
       } catch (error) {
         console.error("Error fetching TestMethod :", error);
       }
@@ -52,8 +50,6 @@ const TestMethodArea = () => {
   }, [url]);
 
   // ✅ UPDATE PAGINATION TOTAL PAGES
-
-
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -62,7 +58,7 @@ const TestMethodArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      setCurrentPage(0);
     }
   }, [filteredTestMethodname, currentPage]);
 
@@ -73,7 +69,10 @@ const TestMethodArea = () => {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const currentData = filteredTestMethodname.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
+  const currentData = filteredTestMethodname.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
@@ -119,6 +118,7 @@ const TestMethodArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // For creation, we need to refetch to get the complete object with all fields
       await axios.post(`${url}/samplefields/post-samplefields/testmethod`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/testmethod`);
       setFilteredTestMethodname(response.data);
@@ -135,10 +135,38 @@ const TestMethodArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${url}/samplefields/put-samplefields/testmethod/${selectedTestMethodnameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/testmethod`);
-      setFilteredTestMethodname(response.data);
-      setTestMethodname(response.data);
+      // First get the current item to preserve all fields
+      const currentItem = testmethodname.find(item => item.id === selectedTestMethodnameId);
+
+      await axios.put(
+        `${url}/samplefields/put-samplefields/testmethod/${selectedTestMethodnameId}`,
+        formData
+      );
+
+      // Update the item while preserving all existing fields
+      const updatedItem = {
+        ...currentItem,
+        name: formData.name,
+        // Preserve all other fields including timestamps
+        updated_at: new Date().toISOString() // Update the timestamp
+      };
+
+      // Update both lists without refetching
+      setTestMethodname(prev =>
+        prev.map(item =>
+          item.id === selectedTestMethodnameId
+            ? updatedItem
+            : item
+        )
+      );
+      setFilteredTestMethodname(prev =>
+        prev.map(item =>
+          item.id === selectedTestMethodnameId
+            ? updatedItem
+            : item
+        )
+      );
+
       setSuccessMessage("Test Method name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -150,10 +178,18 @@ const TestMethodArea = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${url}/samplefields/delete-samplefields/testmethod/${selectedTestMethodnameId}`);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/testmethod`);
-      setFilteredTestMethodname(response.data);
-      setTestMethodname(response.data);
+      await axios.delete(
+        `${url}/samplefields/delete-samplefields/testmethod/${selectedTestMethodnameId}`
+      );
+
+      // Update both lists without refetching
+      setTestMethodname(prev =>
+        prev.filter(item => item.id !== selectedTestMethodnameId)
+      );
+      setFilteredTestMethodname(prev =>
+        prev.filter(item => item.id !== selectedTestMethodnameId)
+      );
+
       setSuccessMessage("Test Method name deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
@@ -162,6 +198,7 @@ const TestMethodArea = () => {
       console.error(`Error deleting Test Method: ${selectedTestMethodnameId}`, error);
     }
   };
+
   const handleEditClick = (testmethodname) => {
     setSelectedTestMethodnameId(testmethodname.id);
     setEditTestMethodname(testmethodname);

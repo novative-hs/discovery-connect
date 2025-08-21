@@ -11,31 +11,26 @@ import {
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
+
 const ContainerTypeArea = () => {
   const id = sessionStorage.getItem("userID");
-
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedContainerTypenameId, setSelectedContainerTypenameId] =
-    useState(null); // Store ID of ContainerType to delete
+  const [selectedContainerTypenameId, setSelectedContainerTypenameId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editContainerTypename, setEditContainerTypename] = useState(null); // State for selected City to edit
-  const [containertypename, setContainerTypename] = useState([]); // State to hold fetched City
+  const [editContainerTypename, setEditContainerTypename] = useState(null);
+  const [containertypename, setContainerTypename] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredContainertypename, setFilteredContainertypename] = useState([]); // Store filtered cities
+  const [filteredContainertypename, setFilteredContainertypename] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-
-  // Calculate total pages
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // Fetch ContainerType from backend when component loads
@@ -45,13 +40,13 @@ const ContainerTypeArea = () => {
         const response = await axios.get(
           `${url}/samplefields/get-samplefields/containertype`
         );
-        setFilteredContainertypename(response.data); // Initialize filtered list
-        setContainerTypename(response.data); // Store fetched ContainerType in state
+        setFilteredContainertypename(response.data);
+        setContainerTypename(response.data);
       } catch (error) {
         console.error("Error fetching Container Type :", error);
       }
     };
-    fetchContainerTypename(); // Call the function when the component mounts
+    fetchContainerTypename();
   }, [url]);
 
   useEffect(() => {
@@ -62,7 +57,7 @@ const ContainerTypeArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      setCurrentPage(0);
     }
   }, [filteredContainertypename, currentPage]);
 
@@ -79,7 +74,7 @@ const ContainerTypeArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = containertypename; // Show all if filter is empty
+      filtered = containertypename;
     } else {
       filtered = containertypename.filter((containertype) => {
         if (field === "added_by") {
@@ -89,13 +84,12 @@ const ContainerTypeArea = () => {
           ?.toString()
           .toLowerCase()
           .includes(value.toLowerCase())
-      }
-      );
+      });
     }
 
     setFilteredContainertypename(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
   const fetchHistory = async (filterType, id) => {
@@ -110,7 +104,6 @@ const ContainerTypeArea = () => {
     }
   };
 
-  // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
@@ -124,9 +117,14 @@ const ContainerTypeArea = () => {
     }));
   };
 
+  const resetFormData = () => {
+    setFormData({ name: "", added_by: id });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // For creation, we need to refetch to get the complete object with all fields
       await axios.post(`${url}/samplefields/post-samplefields/containertype`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/containertype`);
       setFilteredContainertypename(response.data);
@@ -139,13 +137,42 @@ const ContainerTypeArea = () => {
       console.error("Error adding Container Type", error);
     }
   };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${url}/samplefields/put-samplefields/containertype/${selectedContainerTypenameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/containertype`);
-      setFilteredContainertypename(response.data);
-      setContainerTypename(response.data);
+      // First get the current item to preserve all fields
+      const currentItem = containertypename.find(item => item.id === selectedContainerTypenameId);
+
+      await axios.put(
+        `${url}/samplefields/put-samplefields/containertype/${selectedContainerTypenameId}`,
+        formData
+      );
+
+      // Update the item while preserving all existing fields
+      const updatedItem = {
+        ...currentItem,
+        name: formData.name,
+        // Preserve all other fields including timestamps
+        updated_at: new Date().toISOString() // Update the timestamp
+      };
+
+      // Update both lists without refetching
+      setContainerTypename(prev =>
+        prev.map(item =>
+          item.id === selectedContainerTypenameId
+            ? updatedItem
+            : item
+        )
+      );
+      setFilteredContainertypename(prev =>
+        prev.map(item =>
+          item.id === selectedContainerTypenameId
+            ? updatedItem
+            : item
+        )
+      );
+
       setSuccessMessage("Container Type updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -157,10 +184,18 @@ const ContainerTypeArea = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${url}/samplefields/delete-samplefields/containertype/${selectedContainerTypenameId}`);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/containertype`);
-      setFilteredContainertypename(response.data);
-      setContainerTypename(response.data);
+      await axios.delete(
+        `${url}/samplefields/delete-samplefields/containertype/${selectedContainerTypenameId}`
+      );
+
+      // Update both lists without refetching
+      setContainerTypename(prev =>
+        prev.filter(item => item.id !== selectedContainerTypenameId)
+      );
+      setFilteredContainertypename(prev =>
+        prev.filter(item => item.id !== selectedContainerTypenameId)
+      );
+
       setSuccessMessage("Container Type deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
@@ -185,7 +220,6 @@ const ContainerTypeArea = () => {
     });
     setShowEditModal(true);
   };
-
 
 
   const formatDate = (date) => {
@@ -224,12 +258,12 @@ const ContainerTypeArea = () => {
     reader.readAsBinaryString(file);
   };
 
-  const resetFormData = () => {
-    setFormData({
-      name: "",
-      added_by: id,
-    });
-  };
+  // const resetFormData = () => {
+  //   setFormData({
+  //     name: "",
+  //     added_by: id,
+  //   });
+  // };
 
   const handleExportToExcel = () => {
     const dataToExport = filteredContainertypename.map((item) => ({

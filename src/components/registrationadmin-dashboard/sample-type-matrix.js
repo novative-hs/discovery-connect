@@ -13,28 +13,23 @@ import moment from "moment";
 
 const SampleTypeMatrixArea = () => {
   const id = sessionStorage.getItem("userID");
-
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedSampleTypeMatrixnameId, setSelectedSampleTypeMatrixnameId] =
-    useState(null); // Store ID of Plasma to delete
+  const [selectedSampleTypeMatrixnameId, setSelectedSampleTypeMatrixnameId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editSampleTypeMatrixname, setEditSampleTypeMatrixname] = useState(null); // State for selected City to edit
-  const [sampletypematrixname, setSampleTypeMatrixname] = useState([]); // State to hold fetched City
+  const [editSampleTypeMatrixname, setEditSampleTypeMatrixname] = useState(null);
+  const [sampletypematrixname, setSampleTypeMatrixname] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredSampletypematrixname, setFilteredSampletypematrixname] =
-    useState([]);
+  const [filteredSampletypematrixname, setFilteredSampletypematrixname] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // ✅ FETCH DATA ON LOAD
@@ -44,8 +39,8 @@ const SampleTypeMatrixArea = () => {
         const response = await axios.get(
           `${url}/samplefields/get-samplefields/sampletypematrix`
         );
-        setFilteredSampletypematrixname(response.data); // Initialize filtered list
-        setSampleTypeMatrixname(response.data); // Store fetched SampleTypeMatrix in state
+        setFilteredSampletypematrixname(response.data);
+        setSampleTypeMatrixname(response.data);
       } catch (error) {
         console.error("Error fetching Sample Type Matrix :", error);
       }
@@ -62,7 +57,7 @@ const SampleTypeMatrixArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      setCurrentPage(0);
     }
   }, [filteredSampletypematrixname, currentPage]);
 
@@ -73,7 +68,10 @@ const SampleTypeMatrixArea = () => {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const currentData = filteredSampletypematrixname.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
+  const currentData = filteredSampletypematrixname.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
@@ -119,6 +117,7 @@ const SampleTypeMatrixArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // For creation, we need to refetch to get the complete object with all fields
       await axios.post(`${url}/samplefields/post-samplefields/sampletypematrix`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/sampletypematrix`);
       setFilteredSampletypematrixname(response.data);
@@ -135,10 +134,38 @@ const SampleTypeMatrixArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/sampletypematrix`);
-      setFilteredSampletypematrixname(response.data);
-      setSampleTypeMatrixname(response.data);
+      // First get the current item to preserve all fields
+      const currentItem = sampletypematrixname.find(item => item.id === selectedSampleTypeMatrixnameId);
+
+      await axios.put(
+        `${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`,
+        formData
+      );
+
+      // Update the item while preserving all existing fields
+      const updatedItem = {
+        ...currentItem,
+        name: formData.name,
+        // Preserve all other fields including timestamps
+        updated_at: new Date().toISOString() // Update the timestamp
+      };
+
+      // Update both lists without refetching
+      setSampleTypeMatrixname(prev =>
+        prev.map(item =>
+          item.id === selectedSampleTypeMatrixnameId
+            ? updatedItem
+            : item
+        )
+      );
+      setFilteredSampletypematrixname(prev =>
+        prev.map(item =>
+          item.id === selectedSampleTypeMatrixnameId
+            ? updatedItem
+            : item
+        )
+      );
+
       setSuccessMessage("Sample type matrix updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -150,23 +177,26 @@ const SampleTypeMatrixArea = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${url}/samplefields/delete-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/sampletypematrix`);
-      setFilteredSampletypematrixname(response.data);
-      setSampleTypeMatrixname(response.data);
+      await axios.delete(
+        `${url}/samplefields/delete-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`
+      );
+
+      // Update both lists without refetching
+      setSampleTypeMatrixname(prev =>
+        prev.filter(item => item.id !== selectedSampleTypeMatrixnameId)
+      );
+      setFilteredSampletypematrixname(prev =>
+        prev.filter(item => item.id !== selectedSampleTypeMatrixnameId)
+      );
+
       setSuccessMessage("Sample Type Matrix deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
-      setSelectedTestSystemnameId(null);
+      setSelectedSampleTypeMatrixnameId(null);
     } catch (error) {
       console.error(`Error deleting sample type matrix: ${selectedSampleTypeMatrixnameId}`, error);
     }
   };
-
-
-
-
-
 
   const handleEditClick = (sampletypematrix) => {
     setSelectedSampleTypeMatrixnameId(sampletypematrix.id);

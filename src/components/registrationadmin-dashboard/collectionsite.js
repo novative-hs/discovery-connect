@@ -310,16 +310,19 @@ const CollectionSiteArea = () => {
     newformData.append("CollectionSiteType", formData.CollectionSiteType);
     newformData.append("phoneNumber", formData.phoneNumber);
     newformData.append("fullAddress", formData.fullAddress);
-    newformData.append("cityid", formData.city);
-    newformData.append("districtid", formData.district);
-    newformData.append("countryid", formData.country);
-    newformData.append("status", "inactive");
+    newformData.append("city", formData.city);
+    newformData.append("district", formData.district);
+    newformData.append("country", formData.country);
+    newformData.append("status", formData.status);
 
     if (formData.logo) {
       newformData.append("logo", formData.logo);
     }
 
-    // Debugging: log the FormData
+    // Debug: Log FormData contents
+    for (let [key, value] of newformData.entries()) {
+      console.log(key, value);
+    }
 
 
     try {
@@ -1140,7 +1143,7 @@ const CollectionSiteArea = () => {
               </div>
             </>
           )}
-          
+
         </div>
       </div>
       <Modal

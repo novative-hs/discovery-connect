@@ -298,7 +298,24 @@ const CollectionSiteStaffArea = () => {
       );
 
       notifySuccess("Collection Site Staff Updated Successfully");
-      fetchCollectionsiteStaff();
+      // Instead of refetching all data, update the specific item in the current filtered list
+      setFilteredCollectionsitesstaff(prev =>
+        prev.map(item =>
+          item.id === selectedCollectionsiteStaffId
+            ? { ...item, ...formData }
+            : item
+        )
+      );
+
+      // Also update the main collections list
+      setCollectionsitesstaff(prev =>
+        prev.map(item =>
+          item.id === selectedCollectionsiteStaffId
+            ? { ...item, ...formData }
+            : item
+        )
+      );
+      // fetchCollectionsiteStaff();
       setSelectedCollectionSiteStaffId("");
       setEditCollectionsiteStaff("");
       setShowEditModal(false);
@@ -324,8 +341,24 @@ const CollectionSiteStaffArea = () => {
       // Send status update request to backend
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/edit/${id}`,
-        { data: { status: option } },
+        { status: option },
         { headers: { "Content-Type": "application/json" } }
+      );
+      // Update both filtered and main lists
+      setFilteredCollectionsitesstaff(prev =>
+        prev.map(item =>
+          item.id === id
+            ? { ...item, status: option }
+            : item
+        )
+      );
+
+      setCollectionsitesstaff(prev =>
+        prev.map(item =>
+          item.id === id
+            ? { ...item, status: option }
+            : item
+        )
       );
 
       // Assuming the response is successful, set success message and hide the dropdown
@@ -334,8 +367,8 @@ const CollectionSiteStaffArea = () => {
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
 
-      // Refresh the collectionsite list
-      fetchCollectionsiteStaff();
+      // // Refresh the collectionsite list
+      // fetchCollectionsiteStaff();
 
       // Close the dropdown after status change
       setStatusOptionsVisibility((prev) => ({

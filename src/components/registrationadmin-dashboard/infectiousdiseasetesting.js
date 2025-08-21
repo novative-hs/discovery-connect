@@ -18,28 +18,27 @@ const VolumeUnitArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
-  const [selectedinfectiousdiseasenameId, setSelectedinfectiousdiseasenameId] = useState(null); // Store ID of City to delete
+  const [selectedinfectiousdiseasenameId, setSelectedinfectiousdiseasenameId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editinfectiousdiseasename, setEditinfectiousdiseasename] = useState(null); // State for selected City to edit
-  const [infectiousdiseasename, setinfectiousdiseasename] = useState([]); // Store all cities
-  const [filteredinfectiousdiseasename, setFilteredinfectiousdiseasename] = useState([]); // Store filtered cities
+  const [editinfectiousdiseasename, setEditinfectiousdiseasename] = useState(null);
+  const [infectiousdiseasename, setinfectiousdiseasename] = useState([]);
+  const [filteredinfectiousdiseasename, setFilteredinfectiousdiseasename] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
-  // Calculate total pages dynamically
-
   const [successMessage, setSuccessMessage] = useState("");
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
+
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
     const fetchinfectiousdiseasename = async () => {
       try {
         const response = await axios.get(`${url}/samplefields/get-samplefields/infectiousdiseasetesting`);
         setinfectiousdiseasename(response.data);
-        setFilteredinfectiousdiseasename(response.data); // Initialize filtered list
+        setFilteredinfectiousdiseasename(response.data);
       } catch (error) {
         console.error("Error fetching infectious disease:", error);
       }
@@ -49,7 +48,6 @@ const VolumeUnitArea = () => {
   }, [url]);
 
   // ✅ UPDATE PAGINATION TOTAL PAGES
-
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -58,10 +56,9 @@ const VolumeUnitArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      setCurrentPage(0);
     }
   }, [filteredinfectiousdiseasename, currentPage]);
-
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -84,37 +81,30 @@ const VolumeUnitArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = infectiousdiseasename; // Show all if filter is empty
+      filtered = infectiousdiseasename;
     } else {
       filtered = infectiousdiseasename.filter((infectiousdisease) => {
         if (field === "added_by") {
           return "registration admin".includes(value.toLowerCase());
         }
         return infectiousdisease[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      }
-      );
+      });
     }
 
     setFilteredinfectiousdiseasename(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
-
-
   const handleEditClick = (infectiousdiseasename) => {
-
     setSelectedinfectiousdiseasenameId(infectiousdiseasename.id);
     setEditinfectiousdiseasename(infectiousdiseasename);
-
     setFormData({
       name: infectiousdiseasename.name,
       added_by: id,
     });
-
     setShowEditModal(true);
   };
-
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -145,6 +135,7 @@ const VolumeUnitArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // For creation, we need to refetch to get the complete object with all fields
       await axios.post(
         `${url}/samplefields/post-samplefields/infectiousdiseasetesting`,
         formData
@@ -166,15 +157,38 @@ const VolumeUnitArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
+      // First get the current item to preserve all fields
+      const currentItem = infectiousdiseasename.find(item => item.id === selectedinfectiousdiseasenameId);
+
       await axios.put(
         `${url}/samplefields/put-samplefields/infectiousdiseasetesting/${selectedinfectiousdiseasenameId}`,
         formData
       );
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/infectiousdiseasetesting`
+
+      // Update the item while preserving all existing fields
+      const updatedItem = {
+        ...currentItem,
+        name: formData.name,
+        // Preserve all other fields including timestamps
+        updated_at: new Date().toISOString() // Update the timestamp
+      };
+
+      // Update both lists without refetching
+      setinfectiousdiseasename(prev =>
+        prev.map(item =>
+          item.id === selectedinfectiousdiseasenameId
+            ? updatedItem
+            : item
+        )
       );
-      setFilteredinfectiousdiseasename(response.data);
-      setinfectiousdiseasename(response.data);
+      setFilteredinfectiousdiseasename(prev =>
+        prev.map(item =>
+          item.id === selectedinfectiousdiseasenameId
+            ? updatedItem
+            : item
+        )
+      );
+
       setSuccessMessage("Infectious Disease Name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -192,11 +206,15 @@ const VolumeUnitArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/infectiousdiseasetesting/${selectedinfectiousdiseasenameId}`,
       );
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/infectiousdiseasetesting`
+
+      // Update both lists without refetching
+      setinfectiousdiseasename(prev =>
+        prev.filter(item => item.id !== selectedinfectiousdiseasenameId)
       );
-      setFilteredinfectiousdiseasename(response.data);
-      setinfectiousdiseasename(response.data);
+      setFilteredinfectiousdiseasename(prev =>
+        prev.filter(item => item.id !== selectedinfectiousdiseasenameId)
+      );
+
       setSuccessMessage("Infectious Disease Name deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
@@ -208,7 +226,6 @@ const VolumeUnitArea = () => {
       );
     }
   };
-
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;

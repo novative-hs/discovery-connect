@@ -14,7 +14,6 @@ import moment from "moment";
 const TestSystemArea = () => {
   const id = sessionStorage.getItem("userID");
 
-  // ✅ HOOKS MUST ALWAYS BE CALLED FIRST
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -22,6 +21,12 @@ const TestSystemArea = () => {
   const [historyData, setHistoryData] = useState();
   const [selectedTestSystemnameId, setSelectedTestSystemnameId] = useState(null);
   const [formData, setFormData] = useState({ name: "", added_by: id });
+  const [filters, setFilters] = useState({
+    name: "",
+    added_by: "",
+    created_at: "",
+    updated_at: ""
+  });
   const [editTestSystemname, setEditTestSystemname] = useState(null);
   const [testsystemname, setTestSystemname] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
@@ -52,7 +57,7 @@ const TestSystemArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0);
     }
-  }, [filteredTestSystemname, currentPage]); // ✅ added currentPage to dependencies
+  }, [filteredTestSystemname, currentPage]);
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -68,13 +73,23 @@ const TestSystemArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    const filtered = value.trim()
-      ? testsystemname.filter((testsystem) =>
-        field === "added_by"
-          ? "registration admin".includes(value.toLowerCase())
-          : testsystem[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      )
-      : testsystemname;
+    // Update filters state
+    const newFilters = { ...filters, [field]: value };
+    setFilters(newFilters);
+
+    // Apply all active filters
+    const filtered = testsystemname.filter((testsystem) => {
+      return Object.entries(newFilters).every(([filterField, filterValue]) => {
+        if (!filterValue.trim()) return true;
+
+        if (filterField === "added_by") {
+          return "registration admin".includes(filterValue.toLowerCase());
+        }
+
+        return testsystem[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
+      });
+    });
+
     setFilteredTestSystemname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     setCurrentPage(0);
@@ -107,10 +122,27 @@ const TestSystemArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${url}/samplefields/post-samplefields/testsystem`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/testsystem`);
-      setFilteredTestSystemname(response.data);
-      setTestSystemname(response.data);
+      const response = await axios.post(`${url}/samplefields/post-samplefields/testsystem`, formData);
+      const newItem = response.data;
+
+      // Add new item to both datasets
+      const updatedTestSystemname = [...testsystemname, newItem];
+      setTestSystemname(updatedTestSystemname);
+
+      // Apply current filters to the updated dataset
+      const filtered = updatedTestSystemname.filter((testsystem) => {
+        return Object.entries(filters).every(([filterField, filterValue]) => {
+          if (!filterValue.trim()) return true;
+
+          if (filterField === "added_by") {
+            return "registration admin".includes(filterValue.toLowerCase());
+          }
+
+          return testsystem[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
+        });
+      });
+
+      setFilteredTestSystemname(filtered);
       setSuccessMessage("Test System added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -124,9 +156,30 @@ const TestSystemArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/samplefields/put-samplefields/testsystem/${selectedTestSystemnameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/testsystem`);
-      setFilteredTestSystemname(response.data);
-      setTestSystemname(response.data);
+
+      // Instead of using response.data, manually update the item with the form data
+      const updatedTestSystemname = testsystemname.map(item =>
+        item.id === selectedTestSystemnameId
+          ? { ...item, name: formData.name, updated_at: new Date().toISOString() }
+          : item
+      );
+
+      setTestSystemname(updatedTestSystemname);
+
+      // Apply current filters to the updated dataset
+      const filtered = updatedTestSystemname.filter((testsystem) => {
+        return Object.entries(filters).every(([filterField, filterValue]) => {
+          if (!filterValue.trim()) return true;
+
+          if (filterField === "added_by") {
+            return "registration admin".includes(filterValue.toLowerCase());
+          }
+
+          return testsystem[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
+        });
+      });
+
+      setFilteredTestSystemname(filtered);
       setSuccessMessage("Test System updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -139,9 +192,25 @@ const TestSystemArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`${url}/samplefields/delete-samplefields/testsystem/${selectedTestSystemnameId}`);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/testsystem`);
-      setFilteredTestSystemname(response.data);
-      setTestSystemname(response.data);
+
+      // Remove item from both datasets
+      const updatedTestSystemname = testsystemname.filter(item => item.id !== selectedTestSystemnameId);
+      setTestSystemname(updatedTestSystemname);
+
+      // Apply current filters to the updated dataset
+      const filtered = updatedTestSystemname.filter((testsystem) => {
+        return Object.entries(filters).every(([filterField, filterValue]) => {
+          if (!filterValue.trim()) return true;
+
+          if (filterField === "added_by") {
+            return "registration admin".includes(filterValue.toLowerCase());
+          }
+
+          return testsystem[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
+        });
+      });
+
+      setFilteredTestSystemname(filtered);
       setSuccessMessage("Test System deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);

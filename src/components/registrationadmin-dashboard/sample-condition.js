@@ -14,29 +14,23 @@ import moment from "moment";
 const SampleConditionArea = () => {
   const id = sessionStorage.getItem("userID");
 
-
-
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-
-  const [selectedSampleConditionnameId, setSelectedSampleConditionnameId] =
-    useState(null); // Store ID of City to delete
+  const [selectedSampleConditionnameId, setSelectedSampleConditionnameId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editSampleConditionname, setEditSampleConditionname] = useState(null); // State for selected City to edit
-  const [sampleconditionname, setSampleConditionname] = useState([]); // State to hold fetched City
+  const [editSampleConditionname, setEditSampleConditionname] = useState(null);
+  const [sampleconditionname, setSampleConditionname] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredSampleconditionname, setFilteredSampleconditionname] = useState([]); // Store filtered cities
+  const [filteredSampleconditionname, setFilteredSampleconditionname] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // ✅ FETCH DATA ON LOAD
@@ -46,8 +40,8 @@ const SampleConditionArea = () => {
         const response = await axios.get(
           `${url}/samplefields/get-samplefields/samplecondition`
         );
-        setFilteredSampleconditionname(response.data); // Initialize filtered list
-        setSampleConditionname(response.data); // Store fetched City in state
+        setFilteredSampleconditionname(response.data);
+        setSampleConditionname(response.data);
       } catch (error) {
         console.error("Error fetching Sample Condition", error);
       }
@@ -65,10 +59,9 @@ const SampleConditionArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      setCurrentPage(0);
     }
   }, [filteredSampleconditionname, currentPage]);
-
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -77,7 +70,10 @@ const SampleConditionArea = () => {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const currentData = filteredSampleconditionname.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
+  const currentData = filteredSampleconditionname.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
@@ -106,7 +102,6 @@ const SampleConditionArea = () => {
     setCurrentPage(0);
   };
 
-
   const fetchHistory = async (filterType, id) => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`);
@@ -134,6 +129,7 @@ const SampleConditionArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // For creation, we need to refetch to get the complete object with all fields
       await axios.post(`${url}/samplefields/post-samplefields/samplecondition`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/samplecondition`);
       setFilteredSampleconditionname(response.data);
@@ -150,10 +146,35 @@ const SampleConditionArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
+      // First get the current item to preserve all fields
+      const currentItem = sampleconditionname.find(item => item.id === selectedSampleConditionnameId);
+
       await axios.put(`${url}/samplefields/put-samplefields/samplecondition/${selectedSampleConditionnameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/samplecondition`);
-      setFilteredSampleconditionname(response.data);
-      setSampleConditionname(response.data);
+
+      // Update the item while preserving all existing fields
+      const updatedItem = {
+        ...currentItem,
+        name: formData.name,
+        // Preserve all other fields including timestamps
+        updated_at: new Date().toISOString() // Update the timestamp
+      };
+
+      // Update both lists without refetching
+      setSampleConditionname(prev =>
+        prev.map(item =>
+          item.id === selectedSampleConditionnameId
+            ? updatedItem
+            : item
+        )
+      );
+      setFilteredSampleconditionname(prev =>
+        prev.map(item =>
+          item.id === selectedSampleConditionnameId
+            ? updatedItem
+            : item
+        )
+      );
+
       setSuccessMessage("Sample Condition Name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -166,9 +187,15 @@ const SampleConditionArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`${url}/samplefields/delete-samplefields/samplecondition/${selectedSampleConditionnameId}`);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/samplecondition`);
-      setFilteredSampleconditionname(response.data);
-      setSampleConditionname(response.data);
+
+      // Update both lists without refetching
+      setSampleConditionname(prev =>
+        prev.filter(item => item.id !== selectedSampleConditionnameId)
+      );
+      setFilteredSampleconditionname(prev =>
+        prev.filter(item => item.id !== selectedSampleConditionnameId)
+      );
+
       setSuccessMessage("Sample Condition Name deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
@@ -179,20 +206,14 @@ const SampleConditionArea = () => {
   };
 
   const handleEditClick = (sampleconditionname) => {
-
-
     setSelectedSampleConditionnameId(sampleconditionname.id);
     setEditSampleConditionname(sampleconditionname);
-
     setFormData({
       name: sampleconditionname.name,
       added_by: id,
     });
-
     setShowEditModal(true);
   };
-
-
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;

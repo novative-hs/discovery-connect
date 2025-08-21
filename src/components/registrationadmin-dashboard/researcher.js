@@ -36,6 +36,14 @@ const ResearcherArea = () => {
     status: "",
     // logo: ""
   });
+  const [currentFilters, setCurrentFilters] = useState({
+    ResearcherName: '',
+    email: '',
+    phoneNumber: '',
+    OrganizationName: '',
+    created_at: '',
+    status: ''
+  });
 
   useEffect(() => {
     fetchResearchers();
@@ -54,6 +62,10 @@ const ResearcherArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
+    setCurrentFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
     setSearchTerm(value);
 
     if (!value) {
@@ -127,27 +139,51 @@ const ResearcherArea = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.put(
+      await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researchers/edit/${selectedResearcherId}`,
         formData
       );
 
-      const newResponse = await axios.get(
+      // Fetch fresh data
+      const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/get`
       );
-      setResearchers(newResponse.data);
+
+      // Ensure we have an array
+      const freshData = Array.isArray(response.data) ? response.data : [];
+
+      // Update main data
+      setAllResearchers(freshData);
+
+      // Start with all data or empty array if undefined
+      let filtered = [...freshData];
+
+      // Apply search term filters only if we have filters and data
+      if (filtered.length > 0 && currentFilters) {
+        Object.entries(currentFilters).forEach(([field, value]) => {
+          if (value && value.trim() !== "") {
+            filtered = filtered.filter((researcher) =>
+              researcher[field]?.toString().toLowerCase().includes(value.toLowerCase())
+            );
+          }
+        });
+      }
+
+      // Apply status filter if active
+      if (statusFilter && filtered.length > 0) {
+        filtered = filtered.filter(researcher =>
+          researcher.status?.toLowerCase() === statusFilter.toLowerCase()
+        );
+      }
+
+      setResearchers(filtered);
+      setFilteredResearchers(filtered);
 
       setShowEditModal(false);
       setSuccessMessage("Researcher updated successfully.");
-
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
-      console.error(
-        `Error updating researcher with ID ${selectedResearcherId}:`,
-        error
-      );
+      console.error(`Error updating researcher with ID ${selectedResearcherId}:`, error);
     }
   };
   const fetchHistory = async (filterType, id) => {

@@ -25,6 +25,12 @@ const TestResultUnitArea = () => {
     name: "",
     added_by: id,
   });
+  const [filters, setFilters] = useState({
+    name: "",
+    added_by: "",
+    created_at: "",
+    updated_at: ""
+  });
   const [editTestResultUnitname, setEditTestResultUnitname] = useState(null); // State for selected TestMethod to edit
   const [testResultUnitname, setTestResultUnitname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
@@ -79,13 +85,23 @@ const TestResultUnitArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    const filtered = value.trim()
-      ? testResultUnitname.filter((testresultunit) =>
-        field === "added_by"
-          ? "registration admin".includes(value.toLowerCase())
-          : testresultunit[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      )
-      : testResultUnitname;
+    // Update filters state
+    const newFilters = { ...filters, [field]: value };
+    setFilters(newFilters);
+
+    // Apply all active filters
+    const filtered = testResultUnitname.filter((testresultunit) => {
+      return Object.entries(newFilters).every(([filterField, filterValue]) => {
+        if (!filterValue.trim()) return true;
+
+        if (filterField === "added_by") {
+          return "registration admin".includes(filterValue.toLowerCase());
+        }
+
+        return testresultunit[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
+      });
+    });
+
     setFilteredTestResultunitname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     setCurrentPage(0);
@@ -118,10 +134,27 @@ const TestResultUnitArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${url}/samplefields/post-samplefields/testresultunit`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/testresultunit`);
-      setFilteredTestResultunitname(response.data);
-      setTestResultUnitname(response.data);
+      const response = await axios.post(`${url}/samplefields/post-samplefields/testresultunit`, formData);
+      const newItem = response.data; // Assuming API returns the created item
+
+      // Add new item to both datasets
+      const updatedTestResultUnitname = [...testResultUnitname, newItem];
+      setTestResultUnitname(updatedTestResultUnitname);
+
+      // Apply current filters to the updated dataset
+      const filtered = updatedTestResultUnitname.filter((testresultunit) => {
+        return Object.entries(filters).every(([filterField, filterValue]) => {
+          if (!filterValue.trim()) return true;
+
+          if (filterField === "added_by") {
+            return "registration admin".includes(filterValue.toLowerCase());
+          }
+
+          return testresultunit[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
+        });
+      });
+
+      setFilteredTestResultunitname(filtered);
       setSuccessMessage("Test Result Unit added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -135,9 +168,30 @@ const TestResultUnitArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/samplefields/put-samplefields/testresultunit/${selectedTestResultUnitnameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/testresultunit`);
-      setFilteredTestResultunitname(response.data);
-      setTestResultUnitname(response.data);
+
+      // Instead of using response.data, manually update the item with the form data
+      const updatedTestResultUnitname = testResultUnitname.map(item =>
+        item.id === selectedTestResultUnitnameId
+          ? { ...item, name: formData.name, updated_at: new Date().toISOString() }
+          : item
+      );
+
+      setTestResultUnitname(updatedTestResultUnitname);
+
+      // Apply current filters to the updated dataset
+      const filtered = updatedTestResultUnitname.filter((testresultunit) => {
+        return Object.entries(filters).every(([filterField, filterValue]) => {
+          if (!filterValue.trim()) return true;
+
+          if (filterField === "added_by") {
+            return "registration admin".includes(filterValue.toLowerCase());
+          }
+
+          return testresultunit[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
+        });
+      });
+
+      setFilteredTestResultunitname(filtered);
       setSuccessMessage("Test Result Unit updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -150,9 +204,25 @@ const TestResultUnitArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`${url}/samplefields/delete-samplefields/testresultunit/${selectedTestResultUnitnameId}`);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/testresultunit`);
-      setFilteredTestResultunitname(response.data);
-      setTestResultUnitname(response.data);
+
+      // Remove item from both datasets
+      const updatedTestResultUnitname = testResultUnitname.filter(item => item.id !== selectedTestResultUnitnameId);
+      setTestResultUnitname(updatedTestResultUnitname);
+
+      // Apply current filters to the updated dataset
+      const filtered = updatedTestResultUnitname.filter((testresultunit) => {
+        return Object.entries(filters).every(([filterField, filterValue]) => {
+          if (!filterValue.trim()) return true;
+
+          if (filterField === "added_by") {
+            return "registration admin".includes(filterValue.toLowerCase());
+          }
+
+          return testresultunit[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
+        });
+      });
+
+      setFilteredTestResultunitname(filtered);
       setSuccessMessage("Test Result Unit deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);

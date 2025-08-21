@@ -18,23 +18,18 @@ const SamplePriceCurrencyArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedSamplePriceCurrencynameId, setSelectedSamplePriceCurrencynameId] =
-    useState(null); // Store ID of Plasma to delete
+  const [selectedSamplePriceCurrencynameId, setSelectedSamplePriceCurrencynameId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editSamplePriceCurrencyname, setEditSamplePriceCurrencyname] =
-    useState(null); // State for selected City to edit
-  const [samplepricecurrencyname, setSamplePriceCurrencyname] = useState([]); // State to hold fetched City
+  const [editSamplePriceCurrencyname, setEditSamplePriceCurrencyname] = useState(null);
+  const [samplepricecurrencyname, setSamplePriceCurrencyname] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredSamplepricecurrencyname, setFilteredSamplepricecurrencyname] =
-    useState([]);
+  const [filteredSamplepricecurrencyname, setFilteredSamplepricecurrencyname] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // ✅ FETCH DATA ON LOAD
@@ -44,8 +39,8 @@ const SamplePriceCurrencyArea = () => {
         const response = await axios.get(
           `${url}/samplefields/get-samplefields/samplepricecurrency`
         );
-        setFilteredSamplepricecurrencyname(response.data); // Initialize filtered list
-        setSamplePriceCurrencyname(response.data); // Store fetched SamplePriceCurrency in state
+        setFilteredSamplepricecurrencyname(response.data);
+        setSamplePriceCurrencyname(response.data);
       } catch (error) {
         console.error("Error fetching Sample Price Currency:", error);
       }
@@ -61,7 +56,7 @@ const SamplePriceCurrencyArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      setCurrentPage(0);
     }
   }, [filteredSamplepricecurrencyname, currentPage]);
 
@@ -72,7 +67,10 @@ const SamplePriceCurrencyArea = () => {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const currentData = filteredSamplepricecurrencyname.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
+  const currentData = filteredSamplepricecurrencyname.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
@@ -118,6 +116,7 @@ const SamplePriceCurrencyArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // For creation, we need to refetch to get the complete object with all fields
       await axios.post(`${url}/samplefields/post-samplefields/samplepricecurrency`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/samplepricecurrency`);
       setFilteredSamplepricecurrencyname(response.data);
@@ -134,10 +133,38 @@ const SamplePriceCurrencyArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${url}/samplefields/put-samplefields/samplepricecurrency/${selectedSamplePriceCurrencynameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/samplepricecurrency`);
-      setFilteredSamplepricecurrencyname(response.data);
-      setSamplePriceCurrencyname(response.data);
+      // First get the current item to preserve all fields
+      const currentItem = samplepricecurrencyname.find(item => item.id === selectedSamplePriceCurrencynameId);
+
+      await axios.put(
+        `${url}/samplefields/put-samplefields/samplepricecurrency/${selectedSamplePriceCurrencynameId}`,
+        formData
+      );
+
+      // Update the item while preserving all existing fields
+      const updatedItem = {
+        ...currentItem,
+        name: formData.name,
+        // Preserve all other fields including timestamps
+        updated_at: new Date().toISOString() // Update the timestamp
+      };
+
+      // Update both lists without refetching
+      setSamplePriceCurrencyname(prev =>
+        prev.map(item =>
+          item.id === selectedSamplePriceCurrencynameId
+            ? updatedItem
+            : item
+        )
+      );
+      setFilteredSamplepricecurrencyname(prev =>
+        prev.map(item =>
+          item.id === selectedSamplePriceCurrencynameId
+            ? updatedItem
+            : item
+        )
+      );
+
       setSuccessMessage("Sample Price Currency updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -149,10 +176,18 @@ const SamplePriceCurrencyArea = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${url}/samplefields/delete-samplefields/samplepricecurrency/${selectedSamplePriceCurrencynameId}`);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/samplepricecurrency`);
-      setFilteredSamplepricecurrencyname(response.data);
-      setSamplePriceCurrencyname(response.data);
+      await axios.delete(
+        `${url}/samplefields/delete-samplefields/samplepricecurrency/${selectedSamplePriceCurrencynameId}`
+      );
+
+      // Update both lists without refetching
+      setSamplePriceCurrencyname(prev =>
+        prev.filter(item => item.id !== selectedSamplePriceCurrencynameId)
+      );
+      setFilteredSamplepricecurrencyname(prev =>
+        prev.filter(item => item.id !== selectedSamplePriceCurrencynameId)
+      );
+
       setSuccessMessage("Sample Price Currency deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
@@ -169,7 +204,6 @@ const SamplePriceCurrencyArea = () => {
       name: samplepricecurrency.name,
       added_by: id,
     });
-
     setShowEditModal(true);
   };
   const handleFileUpload = async (e) => {

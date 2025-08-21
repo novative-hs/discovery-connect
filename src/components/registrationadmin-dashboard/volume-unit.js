@@ -13,28 +13,25 @@ import moment from "moment";
 
 const VolumeUnitArea = () => {
   const id = sessionStorage.getItem("userID");
-
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedvolumeunitnameId, setSelectedvolumeunitnameId] =
-    useState(null); // Store ID of City to delete
+  const [selectedvolumeunitnameId, setSelectedvolumeunitnameId] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editvolumeunitname, setEditvolumeunitname] = useState(null); // State for selected City to edit
-  const [volumeunitname, setvolumeunitname] = useState([]); // State to hold fetched City
+  const [editvolumeunitname, setEditvolumeunitname] = useState(null);
+  const [volumeunitname, setvolumeunitname] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredVolumeunitname, setFilteredVolumeunitname] = useState([]); // Store filtered cities
+  const [filteredVolumeunitname, setFilteredVolumeunitname] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
+
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
     const fetchVolumeunitname = async () => {
@@ -42,8 +39,8 @@ const VolumeUnitArea = () => {
         const response = await axios.get(
           `${url}/samplefields/get-samplefields/volumeunit`
         );
-        setFilteredVolumeunitname(response.data); // Initialize filtered list
-        setvolumeunitname(response.data); // Store fetched City in state
+        setFilteredVolumeunitname(response.data);
+        setvolumeunitname(response.data);
       } catch (error) {
         console.error("Error fetching Volume Unit:", error);
       }
@@ -53,7 +50,6 @@ const VolumeUnitArea = () => {
   }, [url]);
 
   // ✅ UPDATE PAGINATION TOTAL PAGES
-
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -62,7 +58,7 @@ const VolumeUnitArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      setCurrentPage(0);
     }
   }, [filteredVolumeunitname, currentPage]);
 
@@ -87,7 +83,7 @@ const VolumeUnitArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = volumeunitname; // Show all if filter is empty
+      filtered = volumeunitname;
     } else {
       filtered = volumeunitname.filter((volumeunit) =>
         volumeunit[field]
@@ -98,21 +94,20 @@ const VolumeUnitArea = () => {
     }
 
     setFilteredVolumeunitname(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
-    setCurrentPage(0); // Reset to first page after filtering
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
 
   const handleEditClick = (volumeunitname) => {
     setSelectedvolumeunitnameId(volumeunitname.id);
     setEditvolumeunitname(volumeunitname);
-
     setFormData({
       name: volumeunitname.name,
       added_by: id,
     });
-
     setShowEditModal(true);
   };
+
   const fetchHistory = async (filterType, id) => {
     try {
       const response = await fetch(
@@ -142,6 +137,7 @@ const VolumeUnitArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      // For creation, we need to refetch to get the complete object with all fields
       await axios.post(
         `${url}/samplefields/post-samplefields/volumeunit`,
         formData
@@ -163,15 +159,38 @@ const VolumeUnitArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
+      // First get the current item to preserve all fields
+      const currentItem = volumeunitname.find(item => item.id === selectedvolumeunitnameId);
+
       await axios.put(
         `${url}/samplefields/put-samplefields/volumeunit/${selectedvolumeunitnameId}`,
         formData
       );
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/volumeunit`
+
+      // Update the item while preserving all existing fields
+      const updatedItem = {
+        ...currentItem,
+        name: formData.name,
+        // Preserve all other fields including timestamps
+        updated_at: new Date().toISOString() // Update the timestamp
+      };
+
+      // Update both lists without refetching
+      setvolumeunitname(prev =>
+        prev.map(item =>
+          item.id === selectedvolumeunitnameId
+            ? updatedItem
+            : item
+        )
       );
-      setFilteredVolumeunitname(response.data);
-      setvolumeunitname(response.data);
+      setFilteredVolumeunitname(prev =>
+        prev.map(item =>
+          item.id === selectedvolumeunitnameId
+            ? updatedItem
+            : item
+        )
+      );
+
       setSuccessMessage("Volume Unit Name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -189,11 +208,15 @@ const VolumeUnitArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/volumeunit/${selectedvolumeunitnameId}`
       );
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/volumeunit`
+
+      // Update both lists without refetching
+      setvolumeunitname(prev =>
+        prev.filter(item => item.id !== selectedvolumeunitnameId)
       );
-      setFilteredVolumeunitname(response.data);
-      setvolumeunitname(response.data);
+      setFilteredVolumeunitname(prev =>
+        prev.filter(item => item.id !== selectedvolumeunitnameId)
+      );
+
       setSuccessMessage("Volume Unit Name deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);

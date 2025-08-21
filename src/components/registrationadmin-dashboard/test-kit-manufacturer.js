@@ -16,29 +16,32 @@ const TestKitManufacturerArea = () => {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [
     selectedTestKitManufacturernameId,
     setSelectedTestKitManufacturernameId,
-  ] = useState(null); // Store ID of Plasma to delete
+  ] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
+  const [filters, setFilters] = useState({
+    name: "",
+    added_by: "",
+    created_at: "",
+    updated_at: ""
+  });
   const [editTestKitManufacturername, setEditTestKitManufacturername] =
-    useState(null); // State for selected City to edit
-  const [testKitManufacturername, setTestKitManufacturername] = useState([]); // State to hold fetched City
+    useState(null);
+  const [testKitManufacturername, setTestKitManufacturername] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [filteredTestkitmanufacturername, setFilteredTestkitmanufacturername] =
-    useState([]); // Store filtered cities
+    useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
-  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
-  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // ✅ FETCH DATA ON LOAD
@@ -48,8 +51,8 @@ const TestKitManufacturerArea = () => {
         const response = await axios.get(
           `${url}/samplefields/get-samplefields/testkitmanufacturer`
         );
-        setFilteredTestkitmanufacturername(response.data); // Initialize filtered list
-        setTestKitManufacturername(response.data); // Store fetched TestMethod in state
+        setFilteredTestkitmanufacturername(response.data);
+        setTestKitManufacturername(response.data);
       } catch (error) {
         console.error("Error fetching Test KitManufacturer :", error);
       }
@@ -59,13 +62,12 @@ const TestKitManufacturerArea = () => {
   }, [url]);
 
   // ✅ UPDATE PAGINATION TOTAL PAGES
-
   useEffect(() => {
     const pages = Math.max(1, Math.ceil(filteredTestkitmanufacturername.length / itemsPerPage));
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+      setCurrentPage(0);
     }
   }, [filteredTestkitmanufacturername, currentPage]);
 
@@ -87,16 +89,23 @@ const TestKitManufacturerArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    const filtered = value.trim()
-      ? testKitManufacturername.filter((testKitManufacturer) =>
-        field === "added_by"
-          ? "registration admin".includes(value.toLowerCase())
-          : testKitManufacturer[field]
-            ?.toString()
-            .toLowerCase()
-            .includes(value.toLowerCase())
-      )
-      : testKitManufacturername;
+    // Update filters state
+    const newFilters = { ...filters, [field]: value };
+    setFilters(newFilters);
+
+    // Apply all active filters
+    const filtered = testKitManufacturername.filter((testKitManufacturer) => {
+      return Object.entries(newFilters).every(([filterField, filterValue]) => {
+        if (!filterValue.trim()) return true;
+
+        if (filterField === "added_by") {
+          return "registration admin".includes(filterValue.toLowerCase());
+        }
+
+        return testKitManufacturer[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
+      });
+    });
+
     setFilteredTestkitmanufacturername(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     setCurrentPage(0);
@@ -131,15 +140,30 @@ const TestKitManufacturerArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(
+      const response = await axios.post(
         `${url}/samplefields/post-samplefields/testkitmanufacturer`,
         formData
       );
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testkitmanufacturer`
-      );
-      setFilteredTestkitmanufacturername(response.data);
-      setTestKitManufacturername(response.data);
+      const newItem = response.data;
+
+      // Add new item to both datasets
+      const updatedTestKitManufacturername = [...testKitManufacturername, newItem];
+      setTestKitManufacturername(updatedTestKitManufacturername);
+
+      // Apply current filters to the updated dataset
+      const filtered = updatedTestKitManufacturername.filter((testKitManufacturer) => {
+        return Object.entries(filters).every(([filterField, filterValue]) => {
+          if (!filterValue.trim()) return true;
+
+          if (filterField === "added_by") {
+            return "registration admin".includes(filterValue.toLowerCase());
+          }
+
+          return testKitManufacturer[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
+        });
+      });
+
+      setFilteredTestkitmanufacturername(filtered);
       setSuccessMessage("Test Kit Manufacturer name added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -156,18 +180,37 @@ const TestKitManufacturerArea = () => {
         `${url}/samplefields/put-samplefields/testkitmanufacturer/${selectedTestKitManufacturernameId}`,
         formData
       );
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testkitmanufacturer`
+
+      // Instead of using response.data, manually update the item with the form data
+      const updatedTestKitManufacturername = testKitManufacturername.map(item =>
+        item.id === selectedTestKitManufacturernameId
+          ? { ...item, name: formData.name, updated_at: new Date().toISOString() }
+          : item
       );
-      setFilteredTestkitmanufacturername(response.data);
-      setFilteredTestkitmanufacturername(response.data);
-      setSuccessMessage("Test Kit Manufactuere name updated successfully.");
+
+      setTestKitManufacturername(updatedTestKitManufacturername);
+
+      // Apply current filters to the updated dataset
+      const filtered = updatedTestKitManufacturername.filter((testKitManufacturer) => {
+        return Object.entries(filters).every(([filterField, filterValue]) => {
+          if (!filterValue.trim()) return true;
+
+          if (filterField === "added_by") {
+            return "registration admin".includes(filterValue.toLowerCase());
+          }
+
+          return testKitManufacturer[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
+        });
+      });
+
+      setFilteredTestkitmanufacturername(filtered);
+      setSuccessMessage("Test Kit Manufacturer name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
       setShowEditModal(false);
     } catch (error) {
       console.error(
-        `Error updating Test kit Maufacturer: ${selectedTestKitManufacturernameId}`,
+        `Error updating Test kit Manufacturer: ${selectedTestKitManufacturernameId}`,
         error
       );
     }
@@ -178,15 +221,29 @@ const TestKitManufacturerArea = () => {
       await axios.delete(
         `${url}/samplefields/delete-samplefields/testkitmanufacturer/${selectedTestKitManufacturernameId}`
       );
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testkitmanufacturer`
-      );
-      setFilteredTestSystemname(response.data);
-      setTestSystemname(response.data);
+
+      // Remove item from both datasets
+      const updatedTestKitManufacturername = testKitManufacturername.filter(item => item.id !== selectedTestKitManufacturernameId);
+      setTestKitManufacturername(updatedTestKitManufacturername);
+
+      // Apply current filters to the updated dataset
+      const filtered = updatedTestKitManufacturername.filter((testKitManufacturer) => {
+        return Object.entries(filters).every(([filterField, filterValue]) => {
+          if (!filterValue.trim()) return true;
+
+          if (filterField === "added_by") {
+            return "registration admin".includes(filterValue.toLowerCase());
+          }
+
+          return testKitManufacturer[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
+        });
+      });
+
+      setFilteredTestkitmanufacturername(filtered);
       setSuccessMessage("Test kit Manufacturer deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
-      selectedTestKitManufacturernameId(null);
+      setSelectedTestKitManufacturernameId(null);
     } catch (error) {
       console.error(
         `Error deleting Test Kit Manufacturer: ${selectedTestKitManufacturernameId}`,
@@ -194,7 +251,6 @@ const TestKitManufacturerArea = () => {
       );
     }
   };
-
 
   const handleEditClick = (testkitmanufacturername) => {
     setSelectedTestKitManufacturernameId(testkitmanufacturername.id);
@@ -205,7 +261,6 @@ const TestKitManufacturerArea = () => {
     });
     setShowEditModal(true);
   };
-
 
 
   const handleFileUpload = async (e) => {

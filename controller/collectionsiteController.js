@@ -17,8 +17,8 @@ const getAllCollectionSites = (req, res) => {
 };
 
 const getAllCollectioninCollectionStaff = (req, res) => {
-  const {id}=req.params;
-  collectionsiteModel.getAllCollectioninCollectionStaff(id,(err, results) => {
+  const { id } = req.params;
+  collectionsiteModel.getAllCollectioninCollectionStaff(id, (err, results) => {
     if (err) {
       console.error('Error fetching collection sites:', err);
       return res.status(500).json({ error: 'An error occurred' });
@@ -141,9 +141,9 @@ const updateCollectionSiteDetail = (req, res) => {
   const { CollectionSiteName, CollectionSiteType, phoneNumber, fullAddress, cityid, districtid, countryid } = req.body;
   const file = req.file;
 
-  if (!file) {
-    return res.status(400).json({ error: 'No file uploaded' });
-  }
+  // if (!file) {
+  //   return res.status(400).json({ error: 'No file uploaded' });
+  // }
 
   // Use the file buffer for the logo
   const updateData = {
@@ -154,7 +154,7 @@ const updateCollectionSiteDetail = (req, res) => {
     cityid,
     districtid,
     countryid,
-    logo: file.buffer,  // Save the binary data (Buffer) of the file
+    logo: file ? file.buffer : null,  // Save the binary data (Buffer) of the file
   };
 
   collectionsiteModel.updateCollectionSiteDetail(id, updateData, (err, result) => {

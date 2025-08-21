@@ -3,6 +3,7 @@ import { Modal } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
+import Pagination from "@ui/Pagination";
 
 const QuoteRequestTable = () => {
   const [currencyError, setCurrencyError] = useState("");
@@ -13,6 +14,12 @@ const QuoteRequestTable = () => {
   const [groupCurrency, setGroupCurrency] = useState("");
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [isReadOnly, setIsReadOnly] = useState(false);
+
+  // Filter and pagination states
+  const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'priced', 'pending'
+  const [currentPage, setCurrentPage] = useState(0); // ReactPaginate uses zero-based index
+  const [itemsPerPage] = useState(10);
+
   // Fetch currency options
   useEffect(() => {
     const fetchCurrencies = async () => {
@@ -37,8 +44,12 @@ const QuoteRequestTable = () => {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getPriceCount`
         );
-
-        setSamples(response.data);
+        // Add a unique request_id to each sample if not present
+        const dataWithRequestId = response.data.map((sample, index) => ({
+          ...sample,
+          request_id: sample.request_id || `req_${Date.now()}_${index}` // Unique request ID
+        }));
+        setSamples(dataWithRequestId);
       } catch (error) {
         console.error("Error fetching quote requests:", error);
       }
@@ -49,23 +60,44 @@ const QuoteRequestTable = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  // Group samples by researcher
-  const groupedByResearcherStatus = {};
-
-  // Separate researcher requests into 2 types: priced and unpriced
-  samples.forEach((sample) => {
-    const researcher = sample.ResearcherName;
-    const statusKey = sample.status === 'priced' ? 'priced' : 'pending';
-    const key = `${researcher}_${statusKey}`;
-
-    if (!groupedByResearcherStatus[key]) {
-      groupedByResearcherStatus[key] = [];
+  // Group samples by unique request (each request is completely separate)
+  const requests = samples.reduce((acc, sample) => {
+    const existingRequest = acc.find(r => r.request_id === sample.request_id);
+    if (existingRequest) {
+      existingRequest.samples.push(sample);
+    } else {
+      acc.push({
+        request_id: sample.request_id,
+        ResearcherName: sample.ResearcherName,
+        OrganizationName: sample.OrganizationName,
+        city_name: sample.city_name,
+        district_name: sample.district_name,
+        country_name: sample.country_name,
+        samples: [sample],
+        status: sample.status
+      });
     }
+    return acc;
+  }, []);
 
-    groupedByResearcherStatus[key].push(sample);
+  // Filter requests by status
+  const filteredRequests = requests.filter(request => {
+    const allPriced = request.samples.every(s => s.status === "priced");
+    if (statusFilter === "all") return true;
+    if (statusFilter === "priced") return allPriced;
+    if (statusFilter === "pending") return !allPriced;
+    return true;
   });
 
+  // Pagination logic
+  const pageCount = Math.ceil(filteredRequests.length / itemsPerPage);
+  const offset = currentPage * itemsPerPage;
+  const currentRequests = filteredRequests.slice(offset, offset + itemsPerPage);
 
+  // Handle page click for ReactPaginate
+  const handlePageClick = (selectedItem) => {
+    setCurrentPage(selectedItem.selected);
+  };
 
   // Submit price for one sample
   const submitSamplePrice = async (sampleId, currency) => {
@@ -107,7 +139,28 @@ const QuoteRequestTable = () => {
 
   return (
     <div className="container-fluid">
-      <h3 className="mb-3">Quote Requests by Researcher</h3>
+      <h3 className="mb-3">Quote Requests</h3>
+
+      {/* Filter Controls */}
+      <div className="row mb-3">
+        <div className="col-md-3">
+          <label htmlFor="statusFilter" className="form-label">Filter by Status:</label>
+          <select
+            id="statusFilter"
+            className="form-select"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(0); // Reset to first page when filter changes
+            }}
+          >
+            <option value="all">All Requests</option>
+            <option value="priced">Priced</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+      </div>
+
       <table className="table table-bordered table-hover">
         <thead className="table-dark text-white">
           <tr>
@@ -116,38 +169,31 @@ const QuoteRequestTable = () => {
             <th>City</th>
             <th>District</th>
             <th>Country</th>
-            <th>Quote Request</th>
+            <th>Status</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          {Object.entries(groupedByResearcherStatus).map(([key, samples]) => {
-            const {
-              ResearcherName,
-              OrganizationName,
-              city_name,
-              district_name,
-              country_name,
-            } = samples[0];
-
-            const allPriced = samples.every((s) => s.status === "priced");
+          {currentRequests.map((request) => {
+            const allPriced = request.samples.every(s => s.status === "priced");
 
             return (
-              <tr key={key}>
-                <td>{ResearcherName}</td>
-                <td>{OrganizationName}</td>
-                <td>{city_name}</td>
-                <td>{district_name}</td>
-                <td>{country_name}</td>
+              <tr key={request.request_id}>
+                <td>{request.ResearcherName}</td>
+                <td>{request.OrganizationName}</td>
+                <td>{request.city_name}</td>
+                <td>{request.district_name}</td>
+                <td>{request.country_name}</td>
+                <td>{allPriced ? "Priced" : "Pending"}</td>
                 <td>
                   {allPriced ? (
                     <button
                       className="btn btn-sm btn-secondary"
                       onClick={() => {
-
-                        setSelectedQuote(samples);
+                        setSelectedQuote(request.samples);
                         setShowCartModal(true);
                         setIsReadOnly(true);
-                        setGroupCurrency(samples[0]?.SamplePriceCurrency || "");
+                        setGroupCurrency(request.samples[0]?.SamplePriceCurrency || "");
                       }}
                     >
                       View Details
@@ -156,7 +202,7 @@ const QuoteRequestTable = () => {
                     <button
                       className="btn btn-sm btn-primary"
                       onClick={() => {
-                        setSelectedQuote(samples);
+                        setSelectedQuote(request.samples);
                         setShowCartModal(true);
                         setIsReadOnly(false);
                         setGroupCurrency("");
@@ -170,9 +216,20 @@ const QuoteRequestTable = () => {
               </tr>
             );
           })}
-
         </tbody>
       </table>
+
+      {/* Records count */}
+      <div className="text-muted mt-2">
+        Showing {offset + 1} to {Math.min(offset + itemsPerPage, filteredRequests.length)} of {filteredRequests.length} records
+      </div>
+
+      {/* Custom Pagination */}
+      <Pagination
+        handlePageClick={handlePageClick}
+        pageCount={pageCount}
+        focusPage={currentPage}
+      />
 
       {/* Modal */}
       {showCartModal && selectedQuote && (
@@ -210,12 +267,15 @@ const QuoteRequestTable = () => {
                 {currencyError}
               </div>
             )}
-            <div className="d-flex justify-content-end align-items-center gap-2">
-              <label className="mb-0 fs-5 fw-bold">Currency:</label>
-              <span className="mb-0 fs-5 fw-bold">{groupCurrency || "Not Selected"}</span>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <strong>Request ID:</strong> {selectedQuote[0].request_id}
+              </div>
+              <div>
+                <strong>Currency:</strong> {groupCurrency || "Not Selected"}
+              </div>
             </div>
             <table className="table table-bordered">
-
               <thead>
                 <tr>
                   <th>Sample ID</th>
@@ -260,16 +320,11 @@ const QuoteRequestTable = () => {
                         />
                       )}
                     </td>
-
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            {/* Global Currency Selector */}
-
-
-            {/* Submit Button */}
             {!isReadOnly && (
               <div className="text-end">
                 <button className="btn btn-success" onClick={handleSubmitAll}>

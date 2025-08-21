@@ -290,7 +290,7 @@ const SampleArea = () => {
                   <th>Test Result</th>
                   <th>Price</th>
                   <th>Quantity</th>
-                  
+
                 </tr>
               </thead>
               <tbody>
@@ -315,18 +315,16 @@ const SampleArea = () => {
         <Modal.Footer className="d-flex justify-content-end">
           <Button
             variant="primary"
-            onClick={() =>
-              router.push({
-                pathname: "/order-confirmation",
-                query: {
-                  id: selectedSample.tracking_id,
-                  created_at: selectedSample.created_at,
-                  orderStatus: selectedSample.samples[0]?.order_status || "Placed",
-                  technical_admin_status: selectedSample.samples[0]?.technical_admin_status,
-                  committee_status: selectedSample.samples[0]?.committee_status,
-                },
-              })
-            }
+            onClick={() => {
+              // Store all order details in localStorage
+              localStorage.setItem("tracking_id", selectedSample.tracking_id);
+              localStorage.setItem("created_at", selectedSample.created_at);
+              localStorage.setItem("order_status", selectedSample.samples[0]?.order_status || "Placed");
+              localStorage.setItem("technical_admin_status", selectedSample.samples[0]?.technical_admin_status || "Pending");
+              localStorage.setItem("committee_status", selectedSample.samples[0]?.committee_status || "Pending");
+
+              router.push("/order-confirmation");
+            }}
           >
             Track Order
           </Button>
