@@ -28,7 +28,7 @@ const BankArea = () => {
 
   const [successMessage, setSuccessMessage] = useState("");
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/bank`;
-  // Fetch bank from backend when component loads
+  // Fetch City from backend when component loads
   useEffect(() => {
     const fetchbankname = async () => {
       try {
@@ -36,11 +36,12 @@ const BankArea = () => {
         setbankname(response.data);
         setFilteredBankname(response.data); // Initialize filtered list
       } catch (error) {
-        console.error("Error fetching bank:", error);
+        console.error("Error fetching City:", error);
       }
     };
     fetchbankname(); // Call the function when the component mounts
   }, [url]);
+
 
   useEffect(() => {
     const pages = Math.max(
@@ -141,31 +142,31 @@ const BankArea = () => {
     setShowEditModal(true);
   };
 
- const handleUpdate = async (e) => {
-  e.preventDefault();
-  try {
-    await axios.put(`${url}/update-bank/${selectedbanknameId}`, formData);
-console.log(bankname)
-    // ✅ update arrays using the correct key from DB
-    setbankname(prev =>
-      prev.map(b =>
-        b.id === selectedbanknameId ? { ...b, ...formData } : b
-      )
-    );
-    setFilteredBankname(prev =>
-      prev.map(b =>
-        b.id === selectedbanknameId ? { ...b, ...formData } : b
-      )
-    );
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${url}/update-bank/${selectedbanknameId}`, formData);
+      
+      // ✅ update arrays using the correct key from DB
+      setbankname(prev =>
+        prev.map(b =>
+          b.id === selectedbanknameId ? { ...b, ...formData } : b
+        )
+      );
+      setFilteredBankname(prev =>
+        prev.map(b =>
+          b.id === selectedbanknameId ? { ...b, ...formData } : b
+        )
+      );
 
-    setSuccessMessage("Bank updated successfully.");
-    setTimeout(() => setSuccessMessage(""), 3000);
-    resetFormData();
-    setShowEditModal(false);
-  } catch (error) {
-    console.error(`Error updating bank: ${selectedbanknameId}`, error);
-  }
-};
+      setSuccessMessage("Bank updated successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setShowEditModal(false);
+    } catch (error) {
+      console.error(`Error updating bank: ${selectedbanknameId}`, error);
+    }
+  };
 
 
   const handleDelete = async () => {
@@ -212,7 +213,7 @@ console.log(bankname)
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
       const payload = data.map((row) => ({ name: row.Name, added_by: id }));
-      
+
       try {
         await axios.post(`${url}/create-bank`, { bulkData: payload });
         const response = await axios.get(`${url}/get-bank`);
@@ -347,7 +348,7 @@ console.log(bankname)
                       placeholder: "Search bank Name",
                       field: "name",
                     },
-                   
+
                     {
                       label: "Added By",
                       placeholder: "Search Added by",
@@ -503,7 +504,7 @@ console.log(bankname)
                           />
                         </div>
                       </div>
-                      
+
 
                       <div className="modal-footer">
                         <button type="submit" className="btn btn-primary">

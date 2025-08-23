@@ -266,11 +266,11 @@ const createCart = (data, callback) => {
               if (err) return reject(err);
 
               const insertDocumentsQuery = `
-                INSERT INTO sampledocuments (cart_id, study_copy, reporting_mechanism, irb_file, nbc_file)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO sampledocuments (cart_id, study_copy, reporting_mechanism, irb_file, nbc_file,added_by,role)
+                VALUES (?, ?, ?, ?, ?,?,?)
               `;
 
-              const documentValues = [cartId, study_copy, reporting_mechanism, irb_file, nbc_file || null];
+              const documentValues = [cartId, study_copy, reporting_mechanism, irb_file, nbc_file || null, researcher_id, "Researcher"];
 
               mysqlConnection.query(insertDocumentsQuery, documentValues, (err) => {
                 if (err) return reject(err);
@@ -364,6 +364,69 @@ const createCart = (data, callback) => {
   });
 };
 
+const updateDocument = (newCartData, callback) => {
+  if (!newCartData.tracking_id) {
+    return callback(new Error("Tracking ID is required"), null);
+  }
+
+  const getCartIdQuery = "SELECT id FROM cart WHERE tracking_id = ?";
+  mysqlConnection.query(getCartIdQuery, [newCartData.tracking_id], (err, results) => {
+    if (err) {
+      console.error("Error fetching cart ID:", err);
+      return callback(new Error("Database error fetching cart ID"), null);
+    }
+
+    if (results.length === 0) {
+      return callback(new Error("Cart not found for given tracking ID"), null);
+    }
+
+    // Loop over all cart IDs
+    let insertedIds = [];
+    let processed = 0;
+
+    results.forEach((row) => {
+      const sql = `
+        INSERT INTO sampledocuments
+        (cart_id, study_copy, irb_file, nbc_file, added_by, role, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+      `;
+
+      mysqlConnection.query(
+        sql,
+        [
+          row.id,
+          newCartData.study_copy || null,
+          newCartData.irb_file || null,
+          newCartData.nbc_file || null,
+          newCartData.added_by || null,
+          "TechnicalAdmin"
+        ],
+        (insertErr, result) => {
+          processed++;
+          if (insertErr) {
+            console.error("Error inserting updated documents for cart:", row.id, insertErr);
+          } else {
+            insertedIds.push(result.insertId);
+          }
+
+          // Callback after all inserts
+          if (processed === results.length) {
+            callback(null, {
+              insertedIds,
+              tracking_id: newCartData.tracking_id,
+            });
+          }
+        }
+      );
+    });
+  });
+};
+
+
+
+
+
+
 const getAllCart = (id, callback, res) => {
   const sqlQuery = `
   SELECT 
@@ -388,6 +451,20 @@ const getAllCart = (id, callback, res) => {
     }
   });
 };
+
+const getSampleDocument = (id, callback) => {
+  const sql = `
+    SELECT sd.study_copy, sd.irb_file, sd.nbc_file, sd.role, c.tracking_id, 
+           sd.created_at, sd.updated_at
+    FROM cart c
+    JOIN sampledocuments sd ON c.id = sd.cart_id
+    WHERE c.tracking_id = ?
+    ORDER BY sd.created_at ASC
+  `;
+  mysqlConnection.query(sql, [id], callback);
+};
+
+
 
 const getCartCount = (id, callback, res) => {
   const sqlQuery = `
@@ -626,6 +703,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
   LEFT JOIN collectionsitestaff css ON s.user_account_id = css.user_account_id
   LEFT JOIN collectionsite cs ON css.collectionsite_id = cs.id
   LEFT JOIN technicaladminsampleapproval ra ON c.id = ra.cart_id
+  
   ${whereClause}
   ORDER BY c.created_at DESC
   LIMIT ? OFFSET ?
@@ -795,7 +873,6 @@ const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, ca
     }
   });
 };
-
 const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback) => {
   const offset = (page - 1) * pageSize;
 
@@ -805,12 +882,7 @@ const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback)
   // Filter by search field
   if (searchField && searchValue) {
     let dbField = searchField;
-
-    // Map fields to DB fields
-    if (searchField === "cart_id") {
-      dbField = "c.id";
-    }
-
+    if (searchField === "cart_id") dbField = "c.id";
     whereClause += ` AND ${dbField} LIKE ?`;
     params.push(`%${searchValue}%`);
   }
@@ -823,17 +895,40 @@ const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback)
 
   const sqlQuery = `
     SELECT 
-      c.id AS cart_id, 
-      sd.study_copy,
-      sd.reporting_mechanism,
-      sd.irb_file,
-      sd.nbc_file
-    FROM sampledocuments sd
-    JOIN cart c ON sd.cart_id = c.id
+      c.id AS cart_id,
+      -- Latest study_copy
+      (SELECT sd2.study_copy 
+       FROM sampledocuments sd2 
+       WHERE sd2.cart_id = c.id AND sd2.study_copy IS NOT NULL
+       ORDER BY COALESCE(sd2.updated_at, sd2.created_at) DESC
+       LIMIT 1) AS study_copy,
+
+      -- Latest irb_file
+      (SELECT sd2.irb_file 
+       FROM sampledocuments sd2 
+       WHERE sd2.cart_id = c.id AND sd2.irb_file IS NOT NULL
+       ORDER BY COALESCE(sd2.updated_at, sd2.created_at) DESC
+       LIMIT 1) AS irb_file,
+
+      -- Latest nbc_file
+      (SELECT sd2.nbc_file 
+       FROM sampledocuments sd2 
+       WHERE sd2.cart_id = c.id AND sd2.nbc_file IS NOT NULL
+       ORDER BY COALESCE(sd2.updated_at, sd2.created_at) DESC
+       LIMIT 1) AS nbc_file,
+
+      -- You can also get reporting_mechanism if needed similarly
+      (SELECT sd2.reporting_mechanism 
+       FROM sampledocuments sd2 
+       WHERE sd2.cart_id = c.id AND sd2.reporting_mechanism IS NOT NULL
+       ORDER BY COALESCE(sd2.updated_at, sd2.created_at) DESC
+       LIMIT 1) AS reporting_mechanism
+
+    FROM cart c
     JOIN committeesampleapproval csa ON c.id = csa.cart_id
     ${whereClause}
     ORDER BY c.created_at ASC
-    LIMIT ? OFFSET ?
+    LIMIT ? OFFSET ?  
   `;
 
   const queryParams = [...params, pageSize, offset];
@@ -847,6 +942,8 @@ const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback)
     }
   });
 };
+
+
 
 const getAllOrderByOrderPacking = (csrUserId, staffAction, callback) => {
   let sqlQuery = `
@@ -1229,5 +1326,7 @@ module.exports = {
   getAllOrderByOrderPacking,
   updateTechnicalAdminStatus,
   updateCartStatus,
-  updateCartStatusbyCSR
+  updateCartStatusbyCSR,
+  updateDocument,
+  getSampleDocument
 };

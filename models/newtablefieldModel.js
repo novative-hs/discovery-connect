@@ -12,6 +12,29 @@ const tablesAndColumns = [
       },
     ]
   },
+    {
+    table: "sampledocuments",
+    columnsToAdd: [
+
+      {
+        column: "added_by",
+        type: "INT",
+        nullable: true,
+        references: { table: "user_account", column: "id" },
+      },
+        {
+        column: "updated_at",
+        type: "TIMESTAMP",
+        nullable: true,
+      },
+       {
+        column: "role",
+        type: "VARCHAR(50)",
+        nullable: true,
+      },
+       
+    ]
+  },
 
 
   {
