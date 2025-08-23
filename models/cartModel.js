@@ -196,15 +196,15 @@ const createCart = (data, callback) => {
   const tracking_id = generateTrackingId();
   let created_at = 0;
   // Validate required fields
-  
- if (
+
+  if (
     !researcher_id ||
     !cart_items ||
     !payment_id ||
     !study_copy ||
     !reporting_mechanism ||
     !irb_file
-  ){
+  ) {
     return callback(
       new Error(
         "Missing required fields (Payment ID, Study Copy, Reporting Mechanism, and IRB File are required)"
@@ -533,6 +533,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
     ethical_committee_status: baseCommitteeStatus('Ethical'),
     order_status: 'c.order_status', // ✅ ADD THIS
     technical_admin_status: 'ra.technical_admin_status',
+    created_at: 'c.created_at',
   };
 
 
@@ -580,7 +581,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
     c.quantity,  
     c.totalpayment, 
     c.order_status,
-    c.created_at,
+    c.created_at AS orderdate,
     IFNULL(ra.technical_admin_status, NULL) AS technical_admin_status,
     ra.created_at AS Technicaladmindate,
     ra.Approval_date AS TechnicaladminApproval_date,
@@ -655,8 +656,20 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
           console.error("Error fetching cart data:", err);
           callback(err, null);
         } else {
+          console.log("SQL Results:", results[0]);
 
+          // Format dates for display
           results.forEach(order => {
+            if (order.created_at && order.created_at !== '---') {
+              // order.created_at = formatDate(order.created_at);
+            }
+
+            // Handle empty status values
+            order.technicaladmin_status = order.technicaladmin_status || '---';
+            order.ethical_committee_status = order.ethical_committee_status || '---';
+            order.scientific_committee_status = order.scientific_committee_status || '---';
+            order.final_committee_status = order.final_committee_status || '---';
+
             if (order.order_status !== 'Dispatched' && order.order_status !== 'Shipped') {
               updateCartStatusToCompleted(order.order_id, (updateErr) => {
                 if (updateErr) {

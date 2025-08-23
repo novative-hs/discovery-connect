@@ -203,6 +203,7 @@ const ResearcherArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/orderhistory/${id}`
       );
       const data = await response.json();
+      console.log("Order History API Response:", data);
       setOrderHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -234,19 +235,22 @@ const ResearcherArea = () => {
     }
   }, [showDeleteModal, showEditModal, showHistoryModal]);
   const formatDate = (date) => {
+    if (!date) return "---";
+
+    // MySQL datetime ko ISO me convert (space ko 'T' se replace)
+    const isoDate = date.replace(" ", "T");
+
     const options = {
       year: "2-digit",
       month: "short",
       day: "2-digit",
-      // hour: "2-digit",
-      // minute: "2-digit",
-      // hour12: true,
-      // timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
     };
 
-    const formatted = new Date(date).toLocaleString("en-GB", options);
+    const formatted = new Date(isoDate).toLocaleString("en-GB", options);
 
-    const [datePart, timePart] = formatted.split(", ");
+    if (formatted === "Invalid Date") return date; // fallback
+
+    const [datePart] = formatted.split(", ");
     const [day, month, year] = datePart.split(" ");
 
     const formattedMonth =
@@ -254,6 +258,7 @@ const ResearcherArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
+
   const handleExportToExcel = () => {
 
     const dataToExport = filteredResearchers.map((item) => ({
@@ -873,6 +878,7 @@ const ResearcherArea = () => {
                                 <th>Price</th>
                                 <th>Quantity</th>
                                 <th>Total</th>
+                                <th>Order Date</th>
                                 <th>Order Status</th>
                                 <th>Technical Admin Status</th>
                                 <th>Scientific CommitteeMember Status</th>
@@ -880,19 +886,25 @@ const ResearcherArea = () => {
                               </tr>
                             </thead>
                             <tbody>
-                              {orderhistoryData.map((order, index) => (
-                                <tr key={index}>
-                                  <td>{order.Analyte}</td>
-                                  <td>{order.price}</td>
-                                  <td>{order.quantity}</td>
-                                  <td>{order.totalpayment}</td>
-                                  <td>{order.order_status}</td>
-                                  <td>{order.technicaladmin_status}</td>
-                                  <td>{order.scientific_committee_status}</td>
-                                  <td>{order.ethical_committee_status}</td>
-                                </tr>
-                              ))}
+                              {orderhistoryData.map((order, index) => {
+                                console.log("Order object:", order);
+
+                                return (
+                                  <tr key={index}>
+                                    <td>{order.Analyte || "---"}</td>
+                                    <td>{order.price || "---"}</td>
+                                    <td>{order.quantity || "---"}</td>
+                                    <td>{order.totalpayment || "---"}</td>
+                                    <td>{formatDate(order.orderdate || "---")}</td>
+                                    <td>{order.order_status || "---"}</td>
+                                    <td>{order.technicaladmin_status || "---"}</td>
+                                    <td>{order.scientific_committee_status || "---"}</td>
+                                    <td>{order.ethical_committee_status || "---"}</td>
+                                  </tr>
+                                );
+                              })}
                             </tbody>
+
                           </table>
                         </div>
                       </>

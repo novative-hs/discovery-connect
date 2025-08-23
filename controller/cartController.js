@@ -9,7 +9,7 @@ const createCartTable = (req, res) => {
 // Controller to get all cart members
 const getAllCart = (req, res) => {
   const { id } = req.params;
- cartModel.getAllCart(id,(err, results) => {
+  cartModel.getAllCart(id, (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching cart list" });
     }
@@ -19,7 +19,7 @@ const getAllCart = (req, res) => {
 
 const getCartCount = (req, res) => {
   const { id } = req.params;
- cartModel.getCartCount(id,(err, results) => {
+  cartModel.getCartCount(id, (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching cart list" });
     }
@@ -60,7 +60,7 @@ const createCart = (req, res) => {
   }
 
   // Check required fields
-   if (!researcher_id || !payment_id || !reporting_mechanism) {
+  if (!researcher_id || !payment_id || !reporting_mechanism) {
     return res.status(400).json({
       error: "Missing required fields (Researcher ID, Payment ID, and Reporting Mechanism are required)"
     });
@@ -83,12 +83,12 @@ const createCart = (req, res) => {
       console.error("Error creating cart:", err);
       return res.status(400).json({ error: err.message || "Error creating Cart" });
     }
-    
-   return res.status(201).json({
-  message: "Cart created successfully",
-  tracking_id: result.tracking_id,
-  created_at:result.created_at
-});
+
+    return res.status(201).json({
+      message: "Cart created successfully",
+      tracking_id: result.tracking_id,
+      created_at: result.created_at
+    });
 
   });
 };
@@ -134,22 +134,54 @@ const getAllOrder = (req, res) => {
   const searchValue = req.query.searchValue || null;
   const status = req.query.status || null;
 
-  cartModel.getAllOrder(page, limit, searchField, searchValue, status,(err, result) => {
+  cartModel.getAllOrder(page, limit, searchField, searchValue, status, (err, result) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching cart list" });
     }
-    const { results: data, totalCount} = result;
+    // Make sure we have the right structure
+    const data = result.results || result;
+    const totalCount = result.totalCount || (Array.isArray(result) ? result.length : 0);
+
+    // Format dates for the response if not already formatted in the model
+    const formattedData = data.map(order => {
+      return {
+        ...order,
+        // Ensure created_at is properly formatted
+        created_at: order.created_at ? formatDate(order.created_at) : '---',
+        // Ensure all status fields have fallback values
+        technicaladmin_status: order.technicaladmin_status || '---',
+        ethical_committee_status: order.ethical_committee_status || '---',
+        scientific_committee_status: order.scientific_committee_status || '---',
+        final_committee_status: order.final_committee_status || '---'
+      };
+    });
 
     res.status(200).json({
-      data,
+      data: formattedData,
       totalPages: Math.ceil(totalCount / limit),
       currentPage: page,
       pageSize: limit,
       totalCount,
     });
-    
   });
 };
+
+// Add this formatDate function to your controller
+function formatDate(dateString) {
+  if (!dateString || dateString === '---') return '---';
+
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return '---';
+  }
+}
 
 const getAllOrderByCommittee = (req, res) => {
   const { id } = req.params; // committee_member_id
@@ -181,7 +213,7 @@ const getAllDocuments = (req, res) => {
   const pageSize = parseInt(req.query.pageSize) || 10;
   const { searchField, searchValue } = req.query;
 
-  cartModel.getAllDocuments(page, pageSize, searchField, searchValue,id, (err, data) => {
+  cartModel.getAllDocuments(page, pageSize, searchField, searchValue, id, (err, data) => {
     if (err) {
       console.error('Controller Error:', err);
       return res.status(500).json({ error: 'Internal Server Error' });
@@ -286,7 +318,7 @@ const updateCartStatusToShipping = (cartId, callback) => {
                 return callback(null, updateResults);
               }
 
-              const { email: researcherEmail, tracking_id,created_at: cartCreatedAt } = emailResults[0];
+              const { email: researcherEmail, tracking_id, created_at: cartCreatedAt } = emailResults[0];
               const subject = "Sample Request Status Update";
               const message = `Dear Researcher,\n\nYour sample request is now being processed for <b>Dispatched</b>.\n\nDetails:\nCart ID: ${tracking_id} (Created At: ${cartCreatedAt})\n\nBest regards,\nYour Team`;
 
@@ -335,8 +367,8 @@ const updateCartStatusbyCSR = (req, res) => {
       console.error("Error updating cart_status status:", err);
       return res.status(500).json({ error: "Error in updating cart_status" });
     }
-    
-    res.status(200).json({ message: result }); 
+
+    res.status(200).json({ message: result });
   });
 };
 

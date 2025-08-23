@@ -13,6 +13,9 @@ const QuoteRequestTable = () => {
   const [priceInputs, setPriceInputs] = useState({});
   const [groupCurrency, setGroupCurrency] = useState("");
   const [currencyOptions, setCurrencyOptions] = useState([]);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isReadOnly, setIsReadOnly] = useState(false);
 
   // Fetch currency options
