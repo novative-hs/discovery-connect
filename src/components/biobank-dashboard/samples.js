@@ -98,8 +98,9 @@ const BioBankSampleArea = () => {
   const [PoolSampleHistoryModal, setPoolSampleHistoryModal] = useState(false);
   const [searchField, setSearchField] = useState(null);
   const [searchValue, setSearchValue] = useState(null);
+  const today = new Date().toISOString().split("T")[0]; // e.g. "2025-08-18"
   const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateTo, setDateTo] = useState(today);
   const [analyte, setAnalyte] = useState("");
   const [gender, setGender] = useState("");
   const [collectionSite, setCollectionSite] = useState("");
@@ -110,6 +111,7 @@ const BioBankSampleArea = () => {
     Gender: '',
     CollectionSiteName: '',
     price: '',
+    date_to: today
   });
 
   const tableHeaders = [
@@ -361,7 +363,8 @@ const BioBankSampleArea = () => {
     setCurrentPage(selectedPage); // This will trigger the data change based on selected page
   };
 
-  const handleFilterChange = (field, value) => {
+
+   const handleFilterChange = (field, value) => {
     const trimmed = value.trim?.() || value;
 
     if (field === "price") {
@@ -394,6 +397,7 @@ const BioBankSampleArea = () => {
       fetchSamples(currentPage, itemsPerPage, { searchField: field, searchValue: value });
     }
   };
+
 
 
 
@@ -1289,13 +1293,11 @@ const BioBankSampleArea = () => {
                   style={{ width: "200px", height: "42px" }}
                   value={dateFrom}
                   min="2025-05-01"
+                  max={today}
                   onChange={(e) => {
                     const value = e.target.value;
                     setDateFrom(value);
                     handleFilterChange("date_from", value);
-                    if (dateTo) {
-                      handleFilterChange("date_to", dateTo);
-                    }
                   }}
                 />
               </div>
@@ -1308,8 +1310,8 @@ const BioBankSampleArea = () => {
                   className="form-control border rounded-3"
                   style={{ width: "200px", height: "42px" }}
                   value={dateTo}
-                  min={dateFrom || "2025-05-01"} // Optional: prevent selecting before "From" date
-                  max={new Date().toISOString().split("T")[0]} // max = today
+                  min="2025-05-01"
+                  max={today}
                   onChange={(e) => {
                     const value = e.target.value;
                     setDateTo(value);
@@ -1317,6 +1319,8 @@ const BioBankSampleArea = () => {
                   }}
                 />
               </div>
+
+
             </div>
 
 
@@ -1333,7 +1337,7 @@ const BioBankSampleArea = () => {
                     setVisibility("");
                     setPriceFilter("");
                     setDateFrom("");
-                    setDateTo("");
+                    setDateTo(today);
                     fetchSamples(1, itemsPerPage, {});
                   }}
                 >

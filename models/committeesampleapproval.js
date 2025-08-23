@@ -129,6 +129,7 @@ const insertCommitteeApproval = (cartIds, senderId, committeeType, callback) => 
             return callback(updateErr, null);
           }
 
+          // After insert and cart status update
           const getEmailQuery = `
             SELECT DISTINCT ua.email, r.researcherName, c.tracking_id
             FROM user_account ua
@@ -138,58 +139,41 @@ const insertCommitteeApproval = (cartIds, senderId, committeeType, callback) => 
           `;
 
           mysqlConnection.query(getEmailQuery, [cartIds], async (emailErr, emailResults) => {
-            if (emailErr) {
-              console.error("Error fetching user emails:", emailErr);
-              return callback(emailErr, null);
-            }
+            if (emailErr) return callback(emailErr, null);
 
-            // Group by email and researcherName
-            const emailMap = new Map();
-
+            // Group tracking IDs per researcher
+            const emailMap = {};
             emailResults.forEach(({ email, researcherName, tracking_id }) => {
-              const key = `${email}|${researcherName}`;
-              if (!emailMap.has(key)) {
-                emailMap.set(key, []);
-              }
-              emailMap.get(key).push(tracking_id);
+              if (!emailMap[email]) emailMap[email] = { researcherName, trackingIds: [] };
+              emailMap[email].trackingIds.push(tracking_id);
             });
 
-            let emailFailures = [];
+            const emailFailures = [];
 
-            // Assuming emailMap has only one entry
-            const [[key, trackingIds]] = emailMap.entries();
+            // Send email once per researcher
+            for (const [email, { researcherName, trackingIds }] of Object.entries(emailMap)) {
+              const subject = "Your Sample Submission is Under Review";
+              const text = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px;">
+        <h2 style="color: #2c3e50;">Sample Request Under Review</h2>
+        <p>Dear <strong>${researcherName}</strong>,</p>
+        <p>The following sample request(s) you submitted are now <strong>under review</strong> by the committee:</p>
+        <ul style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
+          Tracking ID(s): ${trackingIds.join(", ")}
+        </ul>
+        <p>You can log in to your dashboard for further updates.</p>
+        <p style="margin-top: 30px;">Thank you for using <strong>Discovery Connect</strong>.</p>
+        <p style="color: #7f8c8d;">Best regards,<br/>Discovery Connect Team</p>
+      </div>
+    `.trim();
 
-            const [email, researcherName] = key.split("|");
-
-            const subject = "Your Sample Submission is Under Review";
-
-            const text = `
-                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px;">
-                    <h2 style="color: #2c3e50;">Sample Request Under Review</h2>
-
-                    <p>Dear <strong>${researcherName}</strong>,</p>
-
-                    <p>We are writing to inform you that the following sample request(s) you submitted are now <strong>under review</strong> by the committee:</p>
-
-                    <ul style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
-                      Tracking ID(s): ${trackingIds.join(", ")}
-                    </ul>
-
-                    <p>You can log in to your dashboard for further updates and to track the status of each request.</p>
-
-                    <p style="margin-top: 30px;">Thank you for using <strong>Discovery Connect</strong>.</p>
-
-                    <p style="color: #7f8c8d;">Best regards,<br/>Discovery Connect Team</p>
-                  </div>
-            `.trim();
-
-            try {
-              await sendEmail(email, subject, text);
-            } catch (err) {
-              console.error("Failed to send email to", email, ":", err);
-              emailFailures.push(email);
+              try {
+                await sendEmail(email, subject, text);
+              } catch (err) {
+                console.error("Failed to send email to", email, err);
+                emailFailures.push(email);
+              }
             }
-
 
             const finalMsg =
               notice +
@@ -200,6 +184,7 @@ const insertCommitteeApproval = (cartIds, senderId, committeeType, callback) => 
 
             return callback(null, { message: finalMsg });
           });
+
         });
       });
     });
@@ -386,7 +371,7 @@ const updateCommitteeStatus = async (cart_ids, committee_member_id, committee_st
 const getHistory = (tracking_ids, status, callback) => {
   try {
     const placeholders = tracking_ids.map(() => '?').join(',');
-    
+
     const orderStatusCondition = status === 'Pending'
       ? 'c.order_status = ?'
       : "c.order_status != 'Pending'";

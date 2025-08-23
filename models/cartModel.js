@@ -1059,20 +1059,23 @@ const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comme
     // Step 5: Send one email per tracking_id
     const entries = Object.entries(trackingMap);
     if (entries.length > 0) {
-      const [trackingId, data, status] = entries[0];  // Take only the first tracking ID
+      const [trackingId, data, order_status] = entries[0];  // Take only the first tracking ID
 
       const emailMessage = `
     <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px; text-align: center;">
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: left;">
         <h2 style="color: #2c3e50; text-align: center;">Dear Researcher,</h2>
         <p style="font-size: 16px;">${fullMessage}</p>
-        <p><strong>Order Status:</strong> ${status}</p>
+        <p><strong>Order Date:</strong> ${data.carts?.[0]?.detail?.created_at
+          ? new Date(data.carts[0].detail.created_at).toLocaleString()
+          : "N/A"
+        }</p>
+        <p><strong>Order Status:</strong> ${order_status}</p>
         <p style="font-size: 16px;">Here are the details of your cart(s) for tracking ID: <strong>${trackingId}</strong></p>
         <ul style="list-style: none; padding: 0;">
           ${data.carts.map(detail => `
             <li style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 10px;">
-              <p><strong>Cart ID:</strong> ${detail.Analyte}</p>
-              <p><strong>Created At:</strong> ${new Date(detail.created_at).toLocaleString()}</p>
+              <p><strong>Analyte:</strong> ${detail.Analyte}</p>
             </li>
           `).join('')}
         </ul>
@@ -1183,11 +1186,9 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
 
       const emailMessage = `
         <div style="font-family: Arial, sans-serif;">
-          Dear Researcher,<br/>
+          
           ${message}
           <br/><br/>
-        
-          <br/>Best regards,<br/>Discovery connect Team
         </div>
       `;
 
