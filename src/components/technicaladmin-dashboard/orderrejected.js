@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button, Form, Table } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDownload
@@ -9,15 +9,18 @@ import {
 import { notifyError, notifySuccess } from "@utils/toast";
 
 const OrderPage = () => {
+  const id = sessionStorage.getItem("userID");
   const [orders, setOrders] = useState([]); // Filtered orders
   const [allOrders, setAllOrders] = useState([]); // Original full orders list
   const [currentPage, setCurrentPage] = useState(1);
   const [showSampleModal, setSampleShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showDocuments, setShowDocument] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
@@ -26,6 +29,16 @@ const OrderPage = () => {
   const [selectedApprovalType, setSelectedApprovalType] = useState("");
   const [showCommentsModal, setShowCommentsModal] = useState(false);
   const [selectedComments, setSelectedComments] = useState("");
+  const [changeMode, setChangeMode] = useState(false); // toggle for checkbox
+  const [updatedDocs, setUpdatedDocs] = useState([]); // track files to update
+  const [selectedDocs, setSelectedDocs] = useState({
+    study_copy: false,
+    irb_file: false,
+    nbc_file: false,
+  });
+  const [trackingID, setTrackingID] = useState(null);
+
+
   const ordersPerPage = 10;
   const [transferLoading, setTransferLoading] = useState(false);
   const [transferredOrders, setTransferredOrders] = useState(() => {
@@ -49,15 +62,13 @@ const OrderPage = () => {
 
   const indexOfLastOrder = currentPage * ordersPerPage;
   const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
-  const [viewedDocuments, setViewedDocuments] = useState({
+  const [documents, setDocuments] = useState({
     study_copy: false,
     irb_file: false,
     nbc_file: false,
   });
-  const handleCloseModal = () => {
-    setSelectedOrderId(null);
-    setShowModal(false);
-  };
+  const [show, setShow] = useState(false);
+  const [documentloading, setDocumentLoading] = useState(false);
 
   useEffect(() => {
     const storedUserID = sessionStorage.getItem("userID");
@@ -68,10 +79,69 @@ const OrderPage = () => {
   }, []);
   // Helper function to parse statuses
 
-
   useEffect(() => {
+    localStorage.removeItem("transferredOrders")
     fetchOrders(currentPage, ordersPerPage);
   }, [currentPage]);
+
+  const fetchDocuments = async (tracking_id) => {
+    setDocumentLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getsampledocuments/${tracking_id}`
+      );
+
+      if (response.data.success) {
+        const rows = response.data.documents || [];
+        console.log(rows)
+        // Group by document type and pick the latest version
+        const latestByType = {};
+        rows.forEach(row => {
+          ["study_copy", "irb_file", "nbc_file"].forEach(docType => {
+            if (row[docType]) {
+              const current = latestByType[docType];
+              const currentDate = current ? new Date(current.updated_at || current.created_at) : null;
+              const newDate = new Date(row.updated_at || row.created_at);
+
+              if (!current || newDate > currentDate) {
+                latestByType[docType] = row;
+              }
+            }
+          });
+        });
+
+
+        const docsToShow = {};
+        Object.keys(latestByType).forEach(key => {
+          docsToShow[key] = latestByType[key][key];
+        });
+        setTrackingID(tracking_id)
+        setDocuments(docsToShow);
+
+        // Initialize selectedDocs
+        const initialSelected = {};
+        Object.keys(docsToShow).forEach((key) => {
+          initialSelected[key] = false;
+        });
+        setSelectedDocs(initialSelected);
+        setShowDocument(true);
+      } else {
+        notifyError(response.data.message || "Failed to fetch documents.");
+      }
+    } catch (err) {
+      console.error("Error fetching documents:", err);
+      notifyError("Error fetching documents");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setSelectedOrderId(null);
+    setShowModal(false);
+  };
+
+
   useEffect(() => {
     if (!searchField || !searchValue) {
       setOrders(allOrdersRaw);
@@ -117,12 +187,11 @@ const OrderPage = () => {
       setOrders(groupedOrders);
       setAllOrders(groupedOrders);
       setAllOrdersRaw(groupedOrders);
-      setTotalPages(Math.ceil(totalCount / pageSize));
+      setTotalPages(Math.ceil(groupedOrders.length / pageSize));
 
       return groupedOrders;
     } catch (err) {
       console.error("Fetch orders error:", err);
-      notifyError("Failed to fetch orders");
       return [];
     } finally {
       setLoading(false);
@@ -168,31 +237,108 @@ const OrderPage = () => {
       .map(([transfer, items]) => ({ transfer, items }));
   };
 
+  // Utility: Remove duplicates by key
+  const uniqueByKey = (arr, keyFn) => {
+    const seen = new Set();
+    return arr.filter(item => {
+      const key = keyFn(item);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
 
   const handleHistory = async (orderGroup) => {
     const trackingIds = orderGroup.analytes.map(a => a.tracking_id);
-
+    setShowHistoryModal(true);
+    setLoadingHistory(true);
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/getHistory`,
-        { params: { trackingIds: trackingIds.join(','), status: 'Pending' } }
+        { params: { trackingIds: trackingIds.join(','), status: 'Dispatched' } }
       );
 
       // API se nested array aa raha hai → flatten kar do
       const rawHistory = response.data.results.flat();
 
+      // 🔹 Remove duplicate committee records
+      const dedupedHistory = uniqueByKey(rawHistory, (h) => `${h.committeetype}_${h.CommitteeMemberName}_${h.committee_status}_${h.committee_approval_date}`);
+
       // group by transfer
-      const groupedHistory = groupHistoryByTransfer(rawHistory);
+      const groupedHistory = groupHistoryByTransfer(dedupedHistory);
 
       setSelectedHistory(groupedHistory);
-      setShowHistoryModal(true);
-
+      setLoadingHistory(false)
     } catch (error) {
       console.error(error);
       setShowHistoryModal(false);
     }
   };
 
+  const formatDT = (date) =>
+    date
+      ? new Date(date).toLocaleString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "2-digit",   // <- 2-digit year
+        hour: "numeric", minute: "2-digit", second: "2-digit",
+        hour12: true,
+      }).replace("AM", "am").replace("PM", "pm")
+      : "";
+
+
+  const openPdfFromBase64 = (fileData) => {
+    if (!fileData) {
+      notifyError("No document available.");
+      return;
+    }
+
+    let base64 = "";
+
+    // Handle Buffer-like object
+    if (fileData.type === "Buffer" && Array.isArray(fileData.data)) {
+      const chunkSize = 0x8000; // 32k chunks
+      let result = "";
+      for (let i = 0; i < fileData.data.length; i += chunkSize) {
+        const chunk = fileData.data.slice(i, i + chunkSize);
+        result += String.fromCharCode(...chunk);
+      }
+      base64 = btoa(result);
+    }
+    // Handle string (already base64)
+    else if (typeof fileData === "string") {
+      base64 = fileData;
+    } else {
+      notifyError("Invalid file format.");
+      return;
+    }
+
+    try {
+      const binaryString = atob(base64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (err) {
+      console.error(err);
+      notifyError("Failed to open PDF. Invalid Base64 data.");
+    }
+  };
+
+
+  const getOrdinal = (n) => {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  };
+
+  // Convert transferNo to review label
+  const getReviewLabel = (transferNo) => `${getOrdinal(Number(transferNo))} Review`;
 
   useEffect(() => {
     if (showSampleModal || showTransferModal || showCommentsModal) {
@@ -217,7 +363,7 @@ const OrderPage = () => {
 
         <div className="row justify-content-center">
           <h4 className="tp-8 fw-bold text-success text-center pb-2">
-            Review Done
+            Review Pending
           </h4>
 
           {/* Table */}
@@ -239,10 +385,13 @@ const OrderPage = () => {
                       field: "organization_name",
                     },
                     {
-                      label: "Review status",
+                      label: "Scientific",
                       field: "committee_status",
                     },
-
+                    {
+                      label: "Ethical",
+                      field: "committee_status",
+                    },
 
                   ].map(({ label, field }, index) => (
                     <th
@@ -301,15 +450,18 @@ const OrderPage = () => {
                       <td>
                         <div>
                           <span className="fw-bold">
-                            Scientific: {orderGroup.scientific_committee_status || "---"}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="fw-bold">
-                            Ethical: {orderGroup.ethical_committee_status || "---"}
+                            {orderGroup.scientific_committee_status || "---"}
                           </span>
                         </div>
                       </td>
+                      <td>
+                        <div>
+                          <span className="fw-bold">
+                            {orderGroup.ethical_committee_status || "---"}
+                          </span>
+                        </div>
+                      </td>
+
                       <td>
                         <div className="d-flex gap-2 justify-content-center">
                           <span
@@ -416,74 +568,7 @@ const OrderPage = () => {
                       </Button>
 
                       {/* Accept */}
-                      {selectedOrder.technical_admin_status === 'Pending' && (
-                        <>
-                          <Button
-                            variant={
-                              selectedOrder.analytes?.some(
-                                item =>
-                                  (item.scientific_committee_status === "Approved" || item.scientific_committee_status === "Not Sent" || item.scientific_committee_status === "Refused") &&
-                                  (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent")
-                              )
-                                ? "outline-success"
-                                : "secondary"
-                            }
-                            size="sm"
-                            onClick={() => {
-                              setActionType("Accepted");
-                              setShowModal(true);
-                            }}
-                            disabled={
-                              !selectedOrder.analytes?.some(
-                                item =>
-                                  (item.scientific_committee_status === "Approved" || item.scientific_committee_status === "Not Sent" || item.scientific_committee_status === "Refused") &&
-                                  (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent" || item.ethical_committee_status === "Refused")
-                              )
-                            }
-                          >
-                            ✅ Accept
-                          </Button>
 
-                          {selectedOrder.analytes?.length > 0 &&
-                            selectedOrder.analytes.every(item => {
-                              const sciStatus = (item.scientific_committee_status || "").trim().toLowerCase();
-                              const ethStatus = (item.ethical_committee_status || "").trim().toLowerCase();
-
-                              // Scientific must be approved or refused
-                              const sciDone = ["approved", "refused", "not sent"].includes(sciStatus);
-
-                              // Ethical must be approved/refused OR not sent
-                              const ethDone = ["approved", "refused", "not sent"].includes(ethStatus);
-
-                              return sciDone && ethDone;
-                            }) && (
-                              <Button
-                                variant="outline-danger"
-                                size="sm"
-                                onClick={() => {
-                                  setActionType("Rejected");
-                                  setSelectedOrderId(selectedOrder.order_id || selectedOrder.analytes?.[0]?.order_id);
-                                  setShowModal(true);
-                                }}
-                              >
-                                ❌ Reject
-                              </Button>
-                            )}
-
-
-
-                          {/* Transfer */}
-                          {!transferredOrders.includes(selectedOrder.order_id) && (
-                            <button
-                              className="btn btn-outline-primary btn-sm"
-                              onClick={() => handleToggleTransferOptions(selectedOrder.order_id)}
-                            >
-                              Transfer
-                            </button>
-                          )}
-
-                        </>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -539,6 +624,7 @@ const OrderPage = () => {
               </Modal.Body>
             </Modal>
           )}
+
 
 
 
@@ -666,236 +752,198 @@ const OrderPage = () => {
             size="lg"
             scrollable
           >
-
             <Modal.Header closeButton>
-              <Modal.Title className="fw-bold text-primary">
-                📝 Technical Admin Review History
-              </Modal.Title>
+              <Modal.Title className="fw-bold text-primary">Review History</Modal.Title>
             </Modal.Header>
-            <Modal.Body style={{ background: "#f0f2f8" }}>
-              {selectedHistory.map((transferGroup, idx) => {
-                const histories = Array.isArray(transferGroup.items[0])
-                  ? transferGroup.items[0]
-                  : transferGroup.items;
 
-                const firstHistory = histories[0];
-
-                return (
-                  <div key={idx} className="mb-4">
-                    {/* Transfer Header */}
-                    <div className="text-center mb-4">
-                      <div
-                        className="d-inline-block px-4 py-3 rounded-4 shadow-sm"
-                        style={{
-                          background: "linear-gradient(135deg, #007bff, #00c6ff)",
-                          color: "white",
-                          fontWeight: "600",
-                          fontSize: "1.1rem",
-                          letterSpacing: "0.5px",
-                          boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
-                        }}
-                      >
-                        🚀 Transfer <span style={{ fontWeight: "700" }}>{transferGroup.transfer}</span>
-                      </div>
-                    </div>
+            <Modal.Body
+              style={{
+                maxHeight: '60vh',
+                overflowY: 'auto',
+                padding: '1rem'
+              }}
+            >
+              {loadingHistory ? (
+                <div className="text-center py-4">
+                  <span className="spinner-border text-primary" role="status"></span>
+                  <p className="mt-2">Loading history...</p>
+                </div>
+              ) : (
+                <>
 
 
-                    {/* Card Bubble */}
-                    <div className="p-4 rounded-4 shadow bg-white">
+                  {selectedHistory.length > 0 && selectedHistory.some(h => Array.isArray(h.items) && h.items.length > 0) ? (
 
-                      {/* Admin Reference Date */}
-                      <div className="mb-3">
-                        <h6 className="fw-bold text-dark mb-1">📌 Technical Admin Reference Order Date</h6>
-                        <span className="badge bg-light text-dark px-3 py-2">
-                          {firstHistory?.Technicaladmindate
-                            ? new Date(firstHistory.Technicaladmindate).toLocaleString("en-GB", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "numeric",
-                              minute: "numeric",
-                              hour12: true,
-                            })
-                            : "---"}
-                        </span>
-                      </div>
+                    // Flatten all items from all selectedHistory entries
+                    Object.entries(
+                      selectedHistory
+                        .flatMap(h => h.items || [])
+                        .reduce((acc, item) => {
+                          const key = item.transfer ?? 'no-transfer'; // use actual transfer number
+                          if (!acc[key]) acc[key] = [];
+                          acc[key].push(item);
+                          return acc;
+                        }, {})
+                    ).map(([transferNo, histories], idx) => {
+                      const firstHistory = histories[0];
+                      // Get all transfer numbers and find the last one
+                      const transferNumbers = Object.keys(
+                        selectedHistory.flatMap(h => h.items || []).reduce((acc, item) => {
+                          const key = item.transfer ?? 'no-transfer';
+                          if (!acc[key]) acc[key] = [];
+                          acc[key].push(item);
+                          return acc;
+                        }, {})
+                      );
+                      const lastTransferNo = transferNumbers[transferNumbers.length - 1];
 
-                      {/* Transfer to Committee */}
-                      <div className="mb-3">
-                        <h6 className="fw-bold text-dark mb-1">📩 Transfer to Committee Member Date</h6>
-                        <span className="badge bg-info text-white px-3 py-2">
-                          {firstHistory?.committee_created_at
-                            ? new Date(firstHistory.committee_created_at).toLocaleString("en-GB", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "numeric",
-                              minute: "numeric",
-                              hour12: true,
-                            })
-                            : "---"}
-                        </span>
-                      </div>
+                      return (
+                        <div
+                          key={idx}
+                          className="mb-3 p-2 rounded shadow-sm"
+                          style={{
+                            backgroundColor: "#f5f5f5", // light grey background
+                            minHeight: "auto",          // allows height to shrink based on content
+                            maxWidth: "90%",            // optional: limits width for chat look
+                            lineHeight: "1.4",          // tighter spacing
+                          }}
+                        >
+                          <h5 className="fw-bold text-primary mb-2 text-center fs-4">
+                            {getReviewLabel(transferNo)}
+                          </h5>
 
-                      {/* Committee Member Status */}
-                      <div className="mb-3">
-                        <h6 className="fw-bold text-dark mb-2">👥 Committee Member Status</h6>
-                        <div className="list-group">
-                          {histories.map((history, i) => (
-                            <div
-                              key={i}
-                              className="list-group-item d-flex flex-column align-items-start mb-2 rounded shadow-sm border"
-                            >
-                              <div className="fw-bold">
-                                {history.committeetype} - {history.CommitteeMemberName}
-                              </div>
-                              <div>
-                                Status: <span className="text-primary">{history.committee_status || "---"}</span>
-                              </div>
-                              <small className="text-muted">
-                                Approval:{" "}
-                                {history.committee_approval_date
-                                  ? new Date(history.committee_approval_date).toLocaleString("en-GB", {
-                                    day: "numeric",
-                                    month: "short",
-                                    year: "numeric",
-                                    hour: "numeric",
-                                    minute: "numeric",
-                                    hour12: true,
-                                  })
-                                  : "---"}
-                              </small>
+                          {/* Technical Admin */}
+                          {firstHistory?.Technicaladmindate && (
+                            <div className="mb-3">
+                              <h6 className="fw-bold text-dark mb-1">
+                                {formatDT(firstHistory.Technicaladmindate)} case Referred by Technical Admin
+                              </h6>
                             </div>
-                          ))}
+                          )}
+
+                          {/* Committee Referrals */}
+                          {histories.some(h => h.committee_created_at) && (
+                            <>
+                              <div className="mb-3">
+                                {histories.some(h => h.committee_created_at && h.committeetype) ? (
+                                  histories.map((history, i) => {
+                                    if (!history.committee_created_at || !history.committeetype) return null;
+
+                                    const committeeLabel =
+                                      history.committeetype === "Scientific"
+                                        ? "Scientific Committee Member"
+                                        : history.committeetype === "Ethical"
+                                          ? "Ethical Committee Member"
+                                          : `${history.committeetype} Committee Member`;
+
+                                    return (
+                                      <h6 key={i} className="fw-bold text-dark mb-1">
+                                        {formatDT(history.committee_created_at)} case Referred by {committeeLabel}: {history.CommitteeMemberName}
+                                      </h6>
+                                    );
+                                  })
+                                ) : (
+                                  <span className="text-muted">No Committee Referrals</span>
+                                )}
+                              </div>
+
+                              {/* Committee Member Status */}
+                              <div className="mb-3">
+                                <h6 className="fw-bold text-dark mb-2">👥 Committee Member Status</h6>
+                                {histories.map((history, i) => (
+                                  history.committee_created_at ? (
+                                    <div key={i} className="list-group-item d-flex flex-column align-items-start mb-2 rounded shadow-sm border">
+                                      <div className="fw-bold">
+                                        {history.committee_approval_date
+                                          ? `${formatDT(history.committee_approval_date)} ${history.committee_status} by ${history.committeetype} - ${history.CommitteeMemberName}`
+                                          : `Referred to ${history.committeetype} - ${history.CommitteeMemberName}`}
+                                      </div>
+
+                                    </div>
+                                  ) : null
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          {/* Uploaded Documents */}
+                          <div className="mb-3">
+                            <h6 className="fw-bold text-dark mb-2">📂 Uploaded Documents</h6>
+                            {histories.flatMap(h => h.documents || []).length > 0 ? (
+                              <div className="table-responsive">
+                                <table className="table table-sm table-bordered">
+                                  <thead className="table-light">
+                                    <tr>
+                                      <th>Uploaded Date</th>
+                                      <th>Role</th>
+                                      <th>Action</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {(() => {
+                                      const allDocs = histories.flatMap(h => h.documents || []);
+
+                                      const uniqueDocsMap = {};
+                                      allDocs.forEach(doc => {
+                                        const key = `${doc.uploaded_by_role}-${doc.added_by}`;
+                                        if (!uniqueDocsMap[key]) uniqueDocsMap[key] = doc;
+                                      });
+
+                                      return Object.values(uniqueDocsMap).map((doc, docIdx) => (
+                                        <tr key={docIdx}>
+                                          <td>
+                                            {doc.created_at
+                                              ? formatDT(doc.created_at)
+                                              : doc.updated_at
+                                                ? formatDT(doc.updated_at)
+                                                : "---"}
+                                          </td>
+                                          <td>{doc.uploaded_by_role || "Unknown"}</td>
+                                          <td>
+                                            {["study_copy", "irb_file", "nbc_file"].map(
+                                              docKey =>
+                                                doc[docKey] && (
+                                                  <button
+                                                    key={docKey}
+                                                    className="btn btn-outline-primary btn-sm me-2 mb-1"
+                                                    onClick={() => openPdfFromBase64(doc[docKey])}
+                                                  >
+                                                    Download {docKey.replace("_", " ").toUpperCase()}
+                                                  </button>
+                                                )
+                                            )}
+                                          </td>
+                                        </tr>
+                                      ));
+                                    })()}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <span className="text-muted">No Documents Attached</span>
+                            )}
+                          </div>
+
+                          {/* Technical Admin Approval */}
+                          {/* Technical Admin Approval */}
+                          {transferNo == lastTransferNo && firstHistory?.TechnicaladminApproval_date && (
+                            <div>
+                              <h6 className="fw-bold text-dark mb-1">
+                                {formatDT(firstHistory.TechnicaladminApproval_date)} Approved by Technical Admin
+                              </h6>
+                            </div>
+                          )}
+
+
                         </div>
-                      </div>
-
-                      <div className="mb-3">
-                        <h6 className="fw-bold text-dark mb-2">📂 Documents</h6>
-                        {["study_copy", "irb_file", "nbc_file"].map((docKey) =>
-                          firstHistory?.[docKey] ? (
-                            <button
-                              key={docKey}
-                              className="btn btn-outline-primary btn-sm me-2 mb-1"
-                              onClick={() => {
-                                // Convert Node.js Buffer -> Uint8Array
-                                const byteArray = new Uint8Array(firstHistory[docKey].data);
-                                const blob = new Blob([byteArray], { type: "application/pdf" });
-                                const url = URL.createObjectURL(blob);
-                                window.open(url, "_blank");
-                              }}
-                            >
-                              Download {docKey.toUpperCase()}
-                            </button>
-                          ) : (
-                            <span
-                              key={docKey}
-                              className="text-muted me-2 mb-1 d-inline-block"
-                            >
-                              {docKey.toUpperCase()} Not Attached
-                            </span>
-                          )
-                        )}
-                      </div>
-
-
-                      {/* Technical Admin Approval */}
-                      <div>
-                        <h6 className="fw-bold text-dark mb-1">✅ Technical Admin Approval Date</h6>
-                        <span className="badge bg-success text-white px-3 py-2">
-                          {firstHistory?.TechnicaladminApproval_date
-                            ? new Date(firstHistory.TechnicaladminApproval_date).toLocaleString("en-GB", {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                              hour: "numeric",
-                              minute: "numeric",
-                              hour12: true,
-                            })
-                            : "---"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                      );
+                    })
+                  ) : (
+                    <div className="text-muted">⚠ No history available</div>
+                  )}
+                </>
+              )}
             </Modal.Body>
-          </Modal>
-
-
-
-
-
-          {/* Admin Approval Modal */}
-          {showModal && (
-            <Modal show={showModal} onHide={handleCloseModal}>
-              <Modal.Header closeButton>
-                <Modal.Title>Confirm Action</Modal.Title>
-              </Modal.Header>
-
-              <Modal.Body>
-                <p>
-                  Are you sure you want to <strong>{actionType}</strong> items?
-                </p>
-
-                {actionType === "Rejected" && (
-                  <Form.Group controlId="rejectionComment">
-                    <Form.Label>Reason for Rejection</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={3}
-                      placeholder="Enter your comment here..."
-                      value={comment}
-                      onChange={(e) => setComment(e.target.value)}
-                    />
-                  </Form.Group>
-                )}
-              </Modal.Body>
-
-              <Modal.Footer>
-
-                <Button
-                  variant={actionType === "Accepted" ? "success" : "danger"}
-                  onClick={() => handleAdminStatus(actionType)}
-                  disabled={loading}
-                >
-                  {loading ? "Processing..." : `Confirm ${actionType}`}
-                </Button>
-              </Modal.Footer>
-            </Modal>
-          )}
-
-          {/* Transfer  */}
-          <Modal
-            show={showTransferModal}
-            onHide={() => setShowTransferModal(false)}
-            centered
-            backdrop="static"
-          >
-            <Modal.Header closeButton>
-              <Modal.Title>Send Approval</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <p>Select approval type:</p>
-              <Form.Select
-                value={selectedApprovalType}
-                onChange={(e) => setSelectedApprovalType(e.target.value)}
-              >
-                <option value="">Select an option</option>
-                <option value="scientific">Scientific Approval</option>
-                <option value="ethical">Ethical Approval</option>
-                <option value="both">Both Approvals</option>
-              </Form.Select>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button
-                variant="primary"
-                onClick={() => handleCommitteeApproval(selectedApprovalType)}
-                disabled={!selectedApprovalType || transferLoading}
-              >
-                {transferLoading ? "Processing..." : "Save"}
-              </Button>
-            </Modal.Footer>
           </Modal>
 
           {/* Sample details Modal */}
@@ -1070,7 +1118,7 @@ const OrderPage = () => {
 
         </div>
       </div>
-    </section>
+    </section >
   );
 };
 

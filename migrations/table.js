@@ -71,6 +71,6 @@ function Database() {
   samplefieldsModel.create_AnalyteTable();
   samplefieldsModel.create_infectiousdiseaseTable()
   bankModel.createBankTable();
-  newtablefieldModel.createOrUpdateTables();
+ newtablefieldModel.createOrUpdateTables();
 }
 Database();

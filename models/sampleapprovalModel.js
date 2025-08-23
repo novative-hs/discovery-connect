@@ -34,8 +34,12 @@ CREATE TABLE IF NOT EXISTS sampledocuments(
   reporting_mechanism TEXT,  
   irb_file LONGBLOB,  
   nbc_file LONGBLOB NULL, 
+  role VARCHAR(50),
+  added_by INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
-  FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE CASCADE
+  updated_at TIMESTAMP,
+  FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE CASCADE,
+  FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE
 );
 `;
 

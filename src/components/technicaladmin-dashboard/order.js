@@ -9,12 +9,14 @@ import {
 import { notifyError, notifySuccess } from "@utils/toast";
 
 const OrderPage = () => {
+  const id = sessionStorage.getItem("userID");
   const [orders, setOrders] = useState([]); // Filtered orders
   const [allOrders, setAllOrders] = useState([]); // Original full orders list
   const [currentPage, setCurrentPage] = useState(1);
   const [showSampleModal, setSampleShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -34,7 +36,8 @@ const OrderPage = () => {
     irb_file: false,
     nbc_file: false,
   });
-  const [trackinID, setTrackingID] = useState(null);
+  const [trackingID, setTrackingID] = useState(null);
+
 
   const ordersPerPage = 10;
   const [transferLoading, setTransferLoading] = useState(false);
@@ -65,53 +68,9 @@ const OrderPage = () => {
     nbc_file: false,
   });
   const [show, setShow] = useState(false);
+  const [documentloading, setDocumentLoading] = useState(false);
 
-
-  const handleFileChange = (index, file) => {
-    const updatedDocs = [...documents];
-    updatedDocs[index].file = file;
-    setDocuments(updatedDocs);
-  };
-  const handleCheckboxChange = (index) => {
-    const updatedDocs = [...documents];
-    updatedDocs[index].wrong = !updatedDocs[index].wrong;
-    setDocuments(updatedDocs);
-  };
-
-  const handleSubmit = async () => {
-    const formData = new FormData();
-    formData.append("cartId", cartId);
-
-    documents.forEach((doc, index) => {
-      if (doc.file) {
-        formData.append(`documents[${index}][file]`, doc.file);
-        formData.append(`documents[${index}][name]`, doc.name);
-        formData.append(`documents[${index}][wrong]`, doc.wrong);
-      }
-    });
-
-    try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/upload-documents`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
-      );
-      alert("Documents uploaded successfully!");
-      setShow(false);
-    } catch (err) {
-      console.error(err);
-      alert("Error uploading documents");
-    }
-  };
-
-  const handleCloseModal = () => {
-    setSelectedOrderId(null);
-    setShowModal(false);
-  };
-
-  useEffect(() => {
+    useEffect(() => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
@@ -120,11 +79,69 @@ const OrderPage = () => {
   }, []);
   // Helper function to parse statuses
 
-
   useEffect(() => {
     localStorage.removeItem("transferredOrders")
     fetchOrders(currentPage, ordersPerPage);
   }, [currentPage]);
+
+  const fetchDocuments = async (tracking_id) => {
+    setDocumentLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getsampledocuments/${tracking_id}`
+      );
+
+      if (response.data.success) {
+        const rows = response.data.documents || [];
+        console.log(rows)
+        // Group by document type and pick the latest version
+        const latestByType = {};
+        rows.forEach(row => {
+          ["study_copy", "irb_file", "nbc_file"].forEach(docType => {
+            if (row[docType]) {
+              const current = latestByType[docType];
+              const currentDate = current ? new Date(current.updated_at || current.created_at) : null;
+              const newDate = new Date(row.updated_at || row.created_at);
+
+              if (!current || newDate > currentDate) {
+                latestByType[docType] = row;
+              }
+            }
+          });
+        });
+
+
+        const docsToShow = {};
+        Object.keys(latestByType).forEach(key => {
+          docsToShow[key] = latestByType[key][key];
+        });
+        setTrackingID(tracking_id)
+        setDocuments(docsToShow);
+
+        // Initialize selectedDocs
+        const initialSelected = {};
+        Object.keys(docsToShow).forEach((key) => {
+          initialSelected[key] = false;
+        });
+        setSelectedDocs(initialSelected);
+        setShowDocument(true);
+      } else {
+        notifyError(response.data.message || "Failed to fetch documents.");
+      }
+    } catch (err) {
+      console.error("Error fetching documents:", err);
+      notifyError("Error fetching documents");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setSelectedOrderId(null);
+    setShowModal(false);
+  };
+
+
   useEffect(() => {
     if (!searchField || !searchValue) {
       setOrders(allOrdersRaw);
@@ -180,25 +197,7 @@ const OrderPage = () => {
       setLoading(false);
     }
   };
-  const handleViewDocuments = (fileBuffer, fileName, sampleId) => {
-    if (!fileBuffer) {
-      alert("No document available.");
-      return;
-    }
 
-    // Convert buffer to Blob
-    const blob = new Blob([new Uint8Array(fileBuffer.data)], {
-      type: "application/pdf",
-    });
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-
-    // Track viewed status
-    setDocuments((prev) => ({
-      ...prev,
-      [sampleId]: { ...(prev[sampleId] || {}), [fileName]: true },
-    }));
-  };
 
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
@@ -269,8 +268,6 @@ const OrderPage = () => {
     }
   };
 
-
-
   const handleToggleTransferOptions = (orderId) => {
     setSelectedOrderId(orderId);
     setShowTransferModal(true);
@@ -289,11 +286,12 @@ const OrderPage = () => {
 
     const analyteIdsToTransfer = [
       ...new Set(
-        selectedOrder?.analytes
-          ?.filter(item => !item.sender_id)
-          ?.map(item => item.order_id)
+        (selectedOrder?.analytes || [])
+          .filter(item => !item.sender_id)
+          .map(item => String(item.order_id)) // ensure uniform type
       )
     ];
+
 
     try {
       const response = await axios.post(
@@ -333,13 +331,6 @@ const OrderPage = () => {
     }
   };
 
-  const getBase64FromBuffer = (buffer) => {
-    if (!buffer) return null;
-
-    let arr = buffer.data ? buffer.data : buffer;
-    let blob = new Blob([new Uint8Array(arr)], { type: "application/pdf" });
-    return URL.createObjectURL(blob);
-  };
 
   const groupHistoryByTransfer = (historyData) => {
     const grouped = historyData.reduce((acc, item) => {
@@ -367,7 +358,8 @@ const OrderPage = () => {
 
   const handleHistory = async (orderGroup) => {
     const trackingIds = orderGroup.analytes.map(a => a.tracking_id);
-
+    setShowHistoryModal(true);
+    setLoadingHistory(true);
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/getHistory`,
@@ -384,26 +376,23 @@ const OrderPage = () => {
       const groupedHistory = groupHistoryByTransfer(dedupedHistory);
 
       setSelectedHistory(groupedHistory);
-      setShowHistoryModal(true);
-
+      setLoadingHistory(false)
     } catch (error) {
       console.error(error);
       setShowHistoryModal(false);
     }
   };
 
-
   const formatDT = (date) =>
     date
       ? new Date(date).toLocaleString("en-GB", {
         day: "numeric",
         month: "short",
-        year: "numeric",
-        hour: "numeric",
-        minute: "numeric",
+        year: "2-digit",   // <- 2-digit year
+        hour: "numeric", minute: "2-digit", second: "2-digit",
         hour12: true,
-      })
-      : "---";
+      }).replace("AM", "am").replace("PM", "pm")
+      : "";
 
 
   const openPdfFromBuffer = (buf) => {
@@ -416,9 +405,52 @@ const OrderPage = () => {
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
   };
+  const openPdfFromBase64 = (fileData) => {
+    if (!fileData) {
+      notifyError("No document available.");
+      return;
+    }
+
+    let base64 = "";
+
+    // Handle Buffer-like object
+    if (fileData.type === "Buffer" && Array.isArray(fileData.data)) {
+      const chunkSize = 0x8000; // 32k chunks
+      let result = "";
+      for (let i = 0; i < fileData.data.length; i += chunkSize) {
+        const chunk = fileData.data.slice(i, i + chunkSize);
+        result += String.fromCharCode(...chunk);
+      }
+      base64 = btoa(result);
+    }
+    // Handle string (already base64)
+    else if (typeof fileData === "string") {
+      base64 = fileData;
+    } else {
+      notifyError("Invalid file format.");
+      return;
+    }
+
+    try {
+      const binaryString = atob(base64);
+      const len = binaryString.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    } catch (err) {
+      console.error(err);
+      notifyError("Failed to open PDF. Invalid Base64 data.");
+    }
+  };
 
   const handleUpdateDocuments = async () => {
     const formData = new FormData();
+    formData.append("added_by", id);
     Object.entries(updatedDocs).forEach(([key, doc]) => {
       if (doc?.file) {
         formData.append(key, doc.file); // Append file with its key (e.g., study_copy)
@@ -427,7 +459,7 @@ const OrderPage = () => {
 
     try {
       await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/updatedocument/${trackinID}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/updatedocument/${trackingID}`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -446,7 +478,6 @@ const OrderPage = () => {
     }
   };
 
-
   const handleCloseDocument = () => {
     setShowDocument(false);
     setSelectedDocs({
@@ -455,9 +486,18 @@ const OrderPage = () => {
       nbc_file: false,
     });
     setUpdatedDocs({});
+    setDocuments({});
   };
 
+  const getOrdinal = (n) => {
+    const s = ["th", "st", "nd", "rd"];
+    const v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  };
 
+  // Convert transferNo to review label
+  const getReviewLabel = (transferNo) => `${getOrdinal(Number(transferNo))} Review`;
+  
   useEffect(() => {
     if (showSampleModal || showTransferModal || showCommentsModal) {
       // Prevent background scroll when modal is open
@@ -588,15 +628,7 @@ const OrderPage = () => {
                           size="sm"
                           className="fw-semibold shadow-sm"
 
-                          onClick={() => {
-                            setDocuments({
-                              study_copy: { file: orderGroup.study_copy },
-                              irb_file: { file: orderGroup.irb_file },
-                              nbc_file: { file: orderGroup.nbc_file },
-                            })
-                            setTrackingID(orderGroup.tracking_id)
-                            setShowDocument(true);
-                          }}
+                          onClick={() => fetchDocuments(orderGroup.tracking_id)}
                         >
                           View Documents
                         </Button>
@@ -833,7 +865,7 @@ const OrderPage = () => {
               </Modal.Body>
             </Modal>
           )}
-
+          {/* Change Document */}
           <Modal show={showDocuments} onHide={handleCloseDocument} size="lg" centered>
             <Modal.Header closeButton className="bg-light border-bottom">
               <Modal.Title className="fw-bold text-dark">Sample Documents</Modal.Title>
@@ -859,28 +891,22 @@ const OrderPage = () => {
               </div>
 
               {Object.entries(documents).map(([key, value], index) => (
-                <div
-                  key={index}
-                  className="d-flex justify-content-between align-items-center border rounded p-3 mb-3 shadow-sm"
-                  style={{ backgroundColor: "#f9f9f9" }}
-                >
+                <div key={index} className="d-flex justify-content-between align-items-center border rounded p-3 mb-3 shadow-sm">
                   <span className="fw-semibold text-capitalize">{key.replace("_", " ")}</span>
                   {selectedDocs[key] ? (
                     <Form.Control
                       type="file"
                       size="sm"
                       className="w-50"
-                      accept="application/pdf"   // Restrict to PDF
+                      accept="application/pdf"
                       onChange={(e) => {
                         const file = e.target.files[0];
                         if (file && file.type !== "application/pdf") {
                           alert("Only PDF files are allowed!");
-                          e.target.value = ""; // Clear invalid file
+                          e.target.value = "";
                           return;
                         }
-                        const newDocs = { ...updatedDocs };
-                        newDocs[key] = { name: key, file };
-                        setUpdatedDocs(newDocs);
+                        setUpdatedDocs((prev) => ({ ...prev, [key]: { name: key, file } }));
                       }}
                     />
                   ) : (
@@ -888,15 +914,15 @@ const OrderPage = () => {
                       size="sm"
                       variant="outline-primary"
                       className="px-3 fw-semibold"
-                      onClick={() => openPdfFromBuffer(value.file)}
-                      disabled={!value.file}
+                      onClick={() => openPdfFromBuffer(value)}
+                      disabled={!value}
                     >
                       View
                     </Button>
                   )}
-
                 </div>
               ))}
+
             </Modal.Body>
 
             <Modal.Footer className="bg-light border-top">
@@ -1029,7 +1055,8 @@ const OrderPage = () => {
 
 
           {/* History */}
-          <Modal show={showHistoryModal}
+          <Modal
+            show={showHistoryModal}
             onHide={() => setShowHistoryModal(false)}
             centered
             size="lg"
@@ -1039,96 +1066,183 @@ const OrderPage = () => {
               <Modal.Title className="fw-bold text-primary">Review History</Modal.Title>
             </Modal.Header>
 
-            <Modal.Body>
-              {selectedHistory.map((transferGroup, idx) => {
-                const histories = Array.isArray(transferGroup.items[0])
-                  ? transferGroup.items[0]
-                  : transferGroup.items;
+            <Modal.Body
+              style={{
+                maxHeight: '60vh', 
+                overflowY: 'auto', 
+                padding: '1rem'
+              }}
+            >
+              {loadingHistory ? (
+                <div className="text-center py-4">
+                  <span className="spinner-border text-primary" role="status"></span>
+                  <p className="mt-2">Loading history...</p>
+                </div>
+              ) : (
+                <>
 
-                const firstHistory = histories[0];
 
-                return (
-                  <div key={idx} className="mb-4 p-3 rounded shadow-sm bg-white">
-                    {/* Transfer to Committee Member Date */}
-                    <div className="mb-3">
-                      <h6 className="fw-bold text-dark mb-1">📩 Transfer to Committee Member Date</h6>
-                      <span className="badge bg-info text-white px-3 py-2">
-                        {formatDT(firstHistory?.committee_created_at)}
-                      </span>
-                    </div>
+                  {selectedHistory.length > 0 && selectedHistory.some(h => Array.isArray(h.items) && h.items.length > 0) ? (
 
-                    {/* Committee Member Status */}
-                    <div className="mb-3">
-                      <h6 className="fw-bold text-dark mb-2">👥 Committee Member Status</h6>
-                      <div className="list-group">
-                        {histories.map((history, i) => (
-                          <div
-                            key={i}
-                            className="list-group-item d-flex flex-column align-items-start mb-2 rounded shadow-sm border"
-                          >
-                            <div className="fw-bold">
-                              {history.committeetype} - {history.CommitteeMemberName}
+                    // Flatten all items from all selectedHistory entries
+                    Object.entries(
+                      selectedHistory
+                        .flatMap(h => h.items || [])
+                        .reduce((acc, item) => {
+                          const key = item.transfer ?? 'no-transfer'; // use actual transfer number
+                          if (!acc[key]) acc[key] = [];
+                          acc[key].push(item);
+                          return acc;
+                        }, {})
+                    ).map(([transferNo, histories], idx) => {
+                      const firstHistory = histories[0];
+
+                      return (
+                        <div
+                          key={idx}
+                          className="mb-3 p-2 rounded shadow-sm"
+                          style={{
+                            backgroundColor: "#f5f5f5", // light grey background
+                            minHeight: "auto",          // allows height to shrink based on content
+                            maxWidth: "90%",            // optional: limits width for chat look
+                            lineHeight: "1.4",          // tighter spacing
+                          }}
+                        >
+                          <h5 className="fw-bold text-primary mb-2 text-center fs-4">
+                            {getReviewLabel(transferNo)}
+                          </h5>
+
+                          {/* Technical Admin */}
+                          {firstHistory?.Technicaladmindate && (
+                            <div className="mb-3">
+                              <h6 className="fw-bold text-dark mb-1">
+                                {formatDT(firstHistory.Technicaladmindate)} case Referred by Technical Admin
+                              </h6>
                             </div>
-                            <div>
-                              Status:{" "}
-                              <span className="text-primary">
-                                {history.committee_status || "---"}
-                              </span>
-                            </div>
-                            <small className="text-muted">
-                              Approval: {formatDT(history.committee_approval_date)}
-                            </small>
+                          )}
+
+                          {/* Committee Referrals */}
+                          {histories.some(h => h.committee_created_at) && (
+                            <>
+                              <div className="mb-3">
+                                {histories.some(h => h.committee_created_at && h.committeetype) ? (
+                                  histories.map((history, i) => {
+                                    if (!history.committee_created_at || !history.committeetype) return null;
+
+                                    const committeeLabel =
+                                      history.committeetype === "Scientific"
+                                        ? "Scientific Committee Member"
+                                        : history.committeetype === "Ethical"
+                                          ? "Ethical Committee Member"
+                                          : `${history.committeetype} Committee Member`;
+
+                                    return (
+                                      <h6 key={i} className="fw-bold text-dark mb-1">
+                                        {formatDT(history.committee_created_at)} case Referred by {committeeLabel}: {history.CommitteeMemberName}
+                                      </h6>
+                                    );
+                                  })
+                                ) : (
+                                  <span className="text-muted">No Committee Referrals</span>
+                                )}
+                              </div>
+
+                              {/* Committee Member Status */}
+                              <div className="mb-3">
+                                <h6 className="fw-bold text-dark mb-2">👥 Committee Member Status</h6>
+                                {histories.map((history, i) => (
+                                  history.committee_created_at ? (
+                                    <div key={i} className="list-group-item d-flex flex-column align-items-start mb-2 rounded shadow-sm border">
+                                      <div className="fw-bold">
+                                        {history.committee_approval_date
+                                          ? `${formatDT(history.committee_approval_date)} ${history.committee_status} by ${history.committeetype} - ${history.CommitteeMemberName}`
+                                          : `Referred to ${history.committeetype} - ${history.CommitteeMemberName}`}
+                                      </div>
+
+                                    </div>
+                                  ) : null
+                                ))}
+                              </div>
+                            </>
+                          )}
+
+                          {/* Uploaded Documents */}
+                          <div className="mb-3">
+                            <h6 className="fw-bold text-dark mb-2">📂 Uploaded Documents</h6>
+                            {histories.flatMap(h => h.documents || []).length > 0 ? (
+                              <div className="table-responsive">
+                                <table className="table table-sm table-bordered">
+                                  <thead className="table-light">
+                                    <tr>
+                                      <th>Uploaded Date</th>
+                                      <th>Role</th>
+                                      <th>Action</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {(() => {
+                                      const allDocs = histories.flatMap(h => h.documents || []);
+
+                                      const uniqueDocsMap = {};
+                                      allDocs.forEach(doc => {
+                                        const key = `${doc.uploaded_by_role}-${doc.added_by}`;
+                                        if (!uniqueDocsMap[key]) uniqueDocsMap[key] = doc;
+                                      });
+
+                                      return Object.values(uniqueDocsMap).map((doc, docIdx) => (
+                                        <tr key={docIdx}>
+                                          <td>
+                                            {doc.created_at
+                                              ? formatDT(doc.created_at)
+                                              : doc.updated_at
+                                                ? formatDT(doc.updated_at)
+                                                : "---"}
+                                          </td>
+                                          <td>{doc.uploaded_by_role || "Unknown"}</td>
+                                          <td>
+                                            {["study_copy", "irb_file", "nbc_file"].map(
+                                              docKey =>
+                                                doc[docKey] && (
+                                                  <button
+                                                    key={docKey}
+                                                    className="btn btn-outline-primary btn-sm me-2 mb-1"
+                                                    onClick={() => openPdfFromBase64(doc[docKey])}
+                                                  >
+                                                    Download {docKey.replace("_", " ").toUpperCase()}
+                                                  </button>
+                                                )
+                                            )}
+                                          </td>
+                                        </tr>
+                                      ));
+                                    })()}
+                                  </tbody>
+                                </table>
+                              </div>
+                            ) : (
+                              <span className="text-muted">No Documents Attached</span>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    </div>
 
-                    {/* Documents */}
-                    <div className="mb-3">
-                      <h6 className="fw-bold text-dark mb-2">📂 Documents</h6>
-                      {["study_copy", "irb_file", "nbc_file"].map((docKey) =>
-                        firstHistory?.[docKey] ? (
-                          <button
-                            key={docKey}
-                            className="btn btn-outline-primary btn-sm me-2 mb-1"
-                            onClick={() => openPdfFromBuffer(firstHistory[docKey])}
-                          >
-                            Download {docKey.toUpperCase()}
-                          </button>
-                        ) : (
-                          <span
-                            key={docKey}
-                            className="text-muted me-2 mb-1 d-inline-block"
-                          >
-                            {docKey.toUpperCase()} Not Attached
-                          </span>
-                        )
-                      )}
-                    </div>
+                          {/* Technical Admin Approval */}
+                          {firstHistory?.TechnicaladminApproval_date && (
+                            <div>
+                              <h6 className="fw-bold text-dark mb-1">
+                                {formatDT(firstHistory.TechnicaladminApproval_date)} Approved by Technical Admin
+                              </h6>
+                            </div>
+                          )}
 
-                    {/* Technical Admin Approval */}
-                    <div>
-                      <h6 className="fw-bold text-dark mb-1">✅ Technical Admin Approval Date</h6>
-                      <span className="badge bg-success text-white px-3 py-2">
-                        {formatDT(firstHistory?.TechnicaladminApproval_date)}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-muted">⚠ No history available</div>
+                  )}
+                </>
+              )}
             </Modal.Body>
-
-            <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowHistoryModal(false)}>
-                Close
-              </Button>
-            </Modal.Footer>
           </Modal>
-
-
-
-
-
 
 
           {/* Admin Approval Modal */}
@@ -1195,7 +1309,11 @@ const OrderPage = () => {
             <Modal.Footer>
               <Button
                 variant="primary"
-                onClick={() => handleCommitteeApproval(selectedApprovalType)}
+
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleCommitteeApproval(selectedApprovalType)
+                }}
                 disabled={!selectedApprovalType || transferLoading}
               >
                 {transferLoading ? "Processing..." : "Save"}

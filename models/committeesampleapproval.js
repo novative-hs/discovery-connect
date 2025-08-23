@@ -386,7 +386,10 @@ const updateCommitteeStatus = async (cart_ids, committee_member_id, committee_st
 const getHistory = (tracking_ids, status, callback) => {
   try {
     const placeholders = tracking_ids.map(() => '?').join(',');
-
+    
+    const orderStatusCondition = status === 'Pending'
+      ? 'c.order_status = ?'
+      : "c.order_status != 'Pending'";
     const sql = `
       SELECT 
         c.id AS cart_id,
@@ -399,46 +402,31 @@ const getHistory = (tracking_ids, status, callback) => {
         cm.CommitteeMemberName,
         cm.committeetype,
         csa.Approval_date AS committee_approval_date,
-        csa.created_at AS committee_created_at,
-        sd.study_copy,
-        sd.irb_file,
-        sd.nbc_file
+        csa.created_at AS committee_created_at
       FROM cart c
-      LEFT JOIN technicaladminsampleapproval tas
-        ON tas.cart_id = c.id
-      LEFT JOIN committeesampleapproval csa
-        ON csa.cart_id = c.id
-      LEFT JOIN committee_member cm
-        ON cm.user_account_id = csa.committee_member_id
-      LEFT JOIN sampledocuments sd
-        ON sd.cart_id = c.id
+      LEFT JOIN technicaladminsampleapproval tas ON tas.cart_id = c.id
+      LEFT JOIN committeesampleapproval csa ON csa.cart_id = c.id
+      LEFT JOIN committee_member cm ON cm.user_account_id = csa.committee_member_id
       WHERE c.tracking_id IN (${placeholders})
-        AND c.order_status = ?
-      ORDER BY c.id, c.tracking_id, csa.transfer, csa.created_at
+           AND ${orderStatusCondition}
+      ORDER BY c.id, csa.transfer, csa.created_at
     `;
 
-    mysqlConnection.query(sql, [...tracking_ids, status], (err, results) => {
+    mysqlConnection.query(sql, [...tracking_ids, status], (err, historyResults) => {
       if (err) return callback(err, null);
 
-      // Group by cart_id and transfer_id
-      const grouped = [];
-      let currentGroup = [];
-      let lastCartId = null;
-      let lastTransferId = null;
+      // After fetching history, fetch documents separately
+      getDocumentsByTrackingIds(tracking_ids, (docErr, documentResults) => {
+        if (docErr) return callback(docErr, null);
 
-      results.forEach(row => {
-        if (row.cart_id !== lastCartId || row.transfer_id !== lastTransferId) {
-          if (currentGroup.length > 0) grouped.push(currentGroup);
-          currentGroup = [];
-        }
-        currentGroup.push(row);
-        lastCartId = row.cart_id;
-        lastTransferId = row.transfer_id;
+        // Merge documents into history results
+        const mergedResults = historyResults.map(item => ({
+          ...item,
+          documents: documentResults.filter(doc => doc.cart_id === item.cart_id)
+        }));
+
+        callback(null, mergedResults);
       });
-
-      if (currentGroup.length > 0) grouped.push(currentGroup);
-
-      callback(null, grouped);
     });
 
   } catch (err) {
@@ -446,6 +434,38 @@ const getHistory = (tracking_ids, status, callback) => {
     callback(err, null);
   }
 };
+
+const getDocumentsByTrackingIds = (tracking_ids, callback) => {
+  try {
+    const placeholders = tracking_ids.map(() => '?').join(',');
+
+    const sql = `
+      SELECT 
+        MIN(sd.cart_id) AS cart_id,        -- pick one cart_id
+        c.tracking_id,
+        sd.added_by,
+        sd.role AS uploaded_by_role,
+        MAX(sd.study_copy) AS study_copy,
+        MAX(sd.irb_file) AS irb_file,
+        MAX(sd.nbc_file) AS nbc_file,
+        MIN(sd.created_at) AS created_at,
+        MAX(sd.updated_at) AS updated_at
+      FROM sampledocuments sd
+      JOIN cart c ON c.id = sd.cart_id
+      WHERE c.tracking_id IN (${placeholders})
+      GROUP BY c.tracking_id, sd.added_by, sd.role
+      ORDER BY created_at;
+    `;
+
+    mysqlConnection.query(sql, tracking_ids, callback);
+  } catch (err) {
+    console.error("Error fetching documents:", err);
+    callback(err, null);
+  }
+};
+
+
+
 
 module.exports = {
   createcommitteesampleapprovalTable,

@@ -81,7 +81,7 @@ const SampleArea = () => {
         axios.get(orderUrl),
         axios.get(docUrl),
       ]);
-  
+
       const orders = (orderRes.data.results || []).filter(order =>
         order.committee_status === "Pending" // Filter for Pending status
       );
@@ -100,9 +100,17 @@ const SampleArea = () => {
         ...order,
         ...(docMap[order.cart_id] || {}),
       }));
+      const uniqueSamples = merged.filter(
+        (value, index, self) =>
+          index === self.findIndex(
+            (s) =>
+              s.cart_id === value.cart_id &&
+              s.Analyte === value.Analyte // ensure unique analyte
+          )
+      );
 
-      setSamples(merged);
-      setFilteredSamplename(merged);
+      setSamples(uniqueSamples);
+      setFilteredSamplename(uniqueSamples);
       setTotalPages(Math.ceil(totalCount / pageSize));
     } catch (error) {
       console.error("Error fetching data:", error);
