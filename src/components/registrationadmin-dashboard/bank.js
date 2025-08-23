@@ -146,7 +146,7 @@ const BankArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/update-bank/${selectedbanknameId}`, formData);
-      console.log(bankname)
+      
       // ✅ update arrays using the correct key from DB
       setbankname(prev =>
         prev.map(b =>

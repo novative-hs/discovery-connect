@@ -11,7 +11,7 @@ import Modal from "react-bootstrap/Modal";
 import FilterProductArea from "@components/user-dashboard/filter-samples";
 
 const SingleListProduct = ({ product, selectedFilters }) => {
-  console.log(product)
+  
   const { analyteImage,imageUrl, Analyte, total_allocated, total_stock } = product || {};
   const dispatch = useDispatch();
   const router = useRouter();

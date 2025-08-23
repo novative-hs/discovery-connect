@@ -93,7 +93,7 @@ const OrderPage = () => {
 
       if (response.data.success) {
         const rows = response.data.documents || [];
-        console.log(rows)
+        
         // Group by document type and pick the latest version
         const latestByType = {};
         rows.forEach(row => {
