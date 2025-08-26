@@ -27,169 +27,113 @@ const createcommitteesampleapprovalTable = () => {
     }
   });
 };
-const insertCommitteeApproval = (cartIds, senderId, committeeType, callback) => {
-  // Validate input
-  if (!Array.isArray(cartIds) || cartIds.length === 0) {
-    return callback(new Error("No cart IDs provided"), null);
-  }
-
-  let getCommitteeMembersQuery = "";
-
-  if (committeeType === "scientific") {
-    getCommitteeMembersQuery = "SELECT user_account_id, status, committeetype FROM committee_member WHERE committeetype = 'Scientific'";
-  } else if (committeeType === "ethical") {
-    getCommitteeMembersQuery = "SELECT user_account_id, status, committeetype FROM committee_member WHERE committeetype = 'Ethical'";
-  } else if (committeeType === "both") {
-    getCommitteeMembersQuery = "SELECT user_account_id, status, committeetype FROM committee_member WHERE committeetype IN ('Scientific', 'Ethical')";
-  } else {
-    return callback(new Error("Invalid committee type"), null);
-  }
-
-  mysqlConnection.query(getCommitteeMembersQuery, (err, committeeMembers) => {
-    if (err) {
-      console.error("Error fetching committee members:", err);
-      return callback(err, null);
+const insertCommitteeApproval = async (cartIds, senderId, committeeType, callback) => {
+  try {
+    if (!Array.isArray(cartIds) || cartIds.length === 0) {
+      return callback(new Error("No cart IDs provided"), null);
     }
 
-    if (committeeMembers.length === 0) {
-      const msg = committeeType === "both" ?
-        "No scientific or ethical committee members found." :
-        `No ${committeeType} committee members found.`;
-      return callback(null, { message: msg });
+    const connection = mysqlConnection.promise();
+
+    // 1. Fetch committee members (only active ones)
+    let memberQuery = "";
+    if (committeeType === "scientific") {
+      memberQuery = "SELECT user_account_id, committeetype FROM committee_member WHERE committeetype = 'Scientific' AND status != 'inactive'";
+    } else if (committeeType === "ethical") {
+      memberQuery = "SELECT user_account_id, committeetype FROM committee_member WHERE committeetype = 'Ethical' AND status != 'inactive'";
+    } else if (committeeType === "both") {
+      memberQuery = "SELECT user_account_id, committeetype FROM committee_member WHERE committeetype IN ('Scientific', 'Ethical') AND status != 'inactive'";
+    } else {
+      return callback(new Error("Invalid committee type"), null);
     }
 
-    const activeMembers = committeeMembers.filter(member => member.status !== 'inactive');
-
-    if (activeMembers.length === 0) {
-      const types = [...new Set(committeeMembers.map(m => m.committeetype))];
-      const allInactiveMessage = types.length === 2 ?
-        "All scientific and ethical committee members are inactive." :
-        `All ${types[0]} committee members are inactive.`;
-      return callback(null, { message: allInactiveMessage });
+    const [committeeMembers] = await connection.query(memberQuery);
+    if (!committeeMembers.length) {
+      return callback(null, { message: "No active committee members found." });
     }
 
-    // Inform which committees were missing or inactive
-    let notice = "";
-    if (committeeType === "both") {
-      const foundTypes = new Set(activeMembers.map(m => m.committeetype));
-      if (!foundTypes.has("Scientific") && foundTypes.has("Ethical")) {
-        notice = "Only Ethical Committee Members were found. ";
-      } else if (!foundTypes.has("Ethical") && foundTypes.has("Scientific")) {
-        notice = "Only Scientific Committee Members were found. ";
-      }
-    }
+    // 2. Fetch max transfer IDs for all carts in one go
+    const [transferResults] = await connection.query(
+      `SELECT cart_id, COALESCE(MAX(transfer),0) AS maxTransferId 
+       FROM committeesampleapproval 
+       WHERE cart_id IN (?) 
+       GROUP BY cart_id`,
+      [cartIds]
+    );
 
-    // Step 1: Get transfer id for each cart
-    const transferQuery = `
-      SELECT cart_id, COALESCE(MAX(transfer), 0) AS maxTransferId
-      FROM committeesampleapproval
-      WHERE cart_id IN (?)
-      GROUP BY cart_id
-    `;
+    const transferMap = {};
+    transferResults.forEach(row => {
+      transferMap[row.cart_id] = row.maxTransferId;
+    });
 
-    mysqlConnection.query(transferQuery, [cartIds], (transferErr, transferResults) => {
-      if (transferErr) {
-        console.error("Error fetching transfer ids:", transferErr);
-        return callback(transferErr, null);
-      }
-
-      const transferMap = {};
-      transferResults.forEach(row => {
-        transferMap[row.cart_id] = row.maxTransferId;
-      });
-
-      const values = [];
-      cartIds.forEach(cartId => {
-        const newTransferId = (transferMap[cartId] || 0) + 1; // increment by 1
-        activeMembers.forEach(member => {
-          values.push([cartId, senderId, member.user_account_id, "Pending", newTransferId]);
-        });
-      });
-
-      const insertQuery = `
-        INSERT INTO committeesampleapproval (cart_id, sender_id, committee_member_id, committee_status, transfer)
-        VALUES ?
-      `;
-
-      mysqlConnection.query(insertQuery, [values], (insertErr, insertResult) => {
-        if (insertErr) {
-          console.error("Error inserting committee approval records:", insertErr);
-          return callback(insertErr, null);
-        }
-
-        const updateCartStatusQuery = `
-          UPDATE cart
-          SET order_status = 'Pending'
-          WHERE id IN (?)
-        `;
-
-        mysqlConnection.query(updateCartStatusQuery, [cartIds], (updateErr) => {
-          if (updateErr) {
-            console.error("Error updating cart status:", updateErr);
-            return callback(updateErr, null);
-          }
-
-          // After insert and cart status update
-          const getEmailQuery = `
-            SELECT DISTINCT ua.email, r.researcherName, c.tracking_id
-            FROM user_account ua
-            JOIN cart c ON ua.id = c.user_id
-            JOIN researcher r ON ua.id = r.user_account_id
-            WHERE c.id IN (?)
-          `;
-
-          mysqlConnection.query(getEmailQuery, [cartIds], async (emailErr, emailResults) => {
-            if (emailErr) return callback(emailErr, null);
-
-            // Group tracking IDs per researcher
-            const emailMap = {};
-            emailResults.forEach(({ email, researcherName, tracking_id }) => {
-              if (!emailMap[email]) emailMap[email] = { researcherName, trackingIds: [] };
-              emailMap[email].trackingIds.push(tracking_id);
-            });
-
-            const emailFailures = [];
-
-            // Send email once per researcher
-            for (const [email, { researcherName, trackingIds }] of Object.entries(emailMap)) {
-              const subject = "Your Sample Submission is Under Review";
-              const text = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px;">
-        <h2 style="color: #2c3e50;">Sample Request Under Review</h2>
-        <p>Dear <strong>${researcherName}</strong>,</p>
-        <p>The following sample request(s) you submitted are now <strong>under review</strong> by the committee:</p>
-        <ul style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
-          Tracking ID(s): ${trackingIds.join(", ")}
-        </ul>
-        <p>You can log in to your dashboard for further updates.</p>
-        <p style="margin-top: 30px;">Thank you for using <strong>Discovery Connect</strong>.</p>
-        <p style="color: #7f8c8d;">Best regards,<br/>Discovery Connect Team</p>
-      </div>
-    `.trim();
-
-              try {
-                await sendEmail(email, subject, text);
-              } catch (err) {
-                console.error("Failed to send email to", email, err);
-                emailFailures.push(email);
-              }
-            }
-
-            const finalMsg =
-              notice +
-              "Committee status updated" +
-              (emailFailures.length > 0
-                ? `, but email failed to send to: ${emailFailures.join(", ")}.`
-                : " and emails sent successfully!");
-
-            return callback(null, { message: finalMsg });
-          });
-
-        });
+    // 3. Prepare batch insert
+    const insertValues = [];
+    cartIds.forEach(cartId => {
+      const newTransferId = (transferMap[cartId] || 0) + 1;
+      committeeMembers.forEach(member => {
+        insertValues.push([cartId, senderId, member.user_account_id, "Pending", newTransferId]);
       });
     });
-  });
+
+    await connection.query(
+      `INSERT INTO committeesampleapproval 
+       (cart_id, sender_id, committee_member_id, committee_status, transfer) VALUES ?`,
+      [insertValues]
+    );
+
+    // 4. Update cart status in one query
+    await connection.query(
+      `UPDATE cart SET order_status = 'Pending' WHERE id IN (?)`,
+      [cartIds]
+    );
+
+    // 5. Fetch researcher emails & tracking IDs
+    const [emailResults] = await connection.query(
+      `SELECT DISTINCT ua.email, r.researcherName, c.tracking_id
+       FROM user_account ua
+       JOIN cart c ON ua.id = c.user_id
+       JOIN researcher r ON ua.id = r.user_account_id
+       WHERE c.id IN (?)`,
+      [cartIds]
+    );
+
+    // 6. Send emails asynchronously (doesn't block response)
+    const emailMap = {};
+    emailResults.forEach(({ email, researcherName, tracking_id }) => {
+      if (!emailMap[email]) emailMap[email] = { researcherName, trackingIds: [] };
+      emailMap[email].trackingIds.push(tracking_id);
+    });
+
+    Object.entries(emailMap).forEach(([email, { researcherName, trackingIds }]) => {
+      setImmediate(async () => {
+        try {
+          await sendEmail(email, "Your Sample Submission is Under Review", `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px;">
+              <h2 style="color: #2c3e50;">Sample Request Under Review</h2>
+              <p>Dear <strong>${researcherName}</strong>,</p>
+              <p>The following sample request(s) you submitted are now <strong>under review</strong> by the committee:</p>
+              <ul style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
+                Tracking ID(s): ${trackingIds.join(", ")}
+              </ul>
+              <p>You can log in to your dashboard for further updates.</p>
+              <p style="margin-top: 30px;">Thank you for using <strong>Discovery Connect</strong>.</p>
+              <p style="color: #7f8c8d;">Best regards,<br/>Discovery Connect Team</p>
+            </div>
+          `);
+        } catch (err) {
+          console.error(`Email failed for ${email}:`, err);
+        }
+      });
+    });
+
+    callback(null, { message: "Transfer to the Committee Member Successfully" });
+
+  } catch (err) {
+    console.error("Error:", err);
+    callback(err, null);
+  }
 };
+
 
 const updateCommitteeStatus = async (cart_ids, committee_member_id, committee_status, comments, callback) => {
 

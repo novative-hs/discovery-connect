@@ -1010,7 +1010,7 @@ const createSample = (data, callback) => {
               const newStatus = data.alreadypooled === "Pooled" ? "AddtoPool" : "Pooled";
 
               const updateStatusQuery = `
-      UPDATE sample SET status = ?, sample_visibility = 'Non-Public'
+      UPDATE sample SET status = ?, sample_visibility = 'Non-Public',reserverd=0
       WHERE id IN (?)
     `;
 

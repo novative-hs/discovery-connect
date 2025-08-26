@@ -30,6 +30,7 @@ const bankModel = require("../models/bankModel")
 function Database() {
   sampleModel.createPriceRequest()
   sampleModel.createPoolSampleTable();
+   cartModel.createCartTable();
   cityModel.createCityTable();
   historyModel.registrationadmin_history();
   countryModel.createCountryTable();
@@ -45,7 +46,6 @@ function Database() {
   sampledispatchModel.createSampleDispatchTable();
   samplereceiveModel.createSampleReceiveTable();
   sampleModel.createSampleTable();
-  cartModel.createCartTable();
   paymentModel.createPaymentTable();
   sample_approvalModel.createSampleApprovalTable();
   sample_approvalModel.createSampleDocumentTable();
