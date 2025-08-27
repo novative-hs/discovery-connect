@@ -3138,6 +3138,9 @@ const BioBankSampleArea = () => {
                                               ...prev,
                                               finalConcentration: e.target.value,
                                             }));
+                                            if(mode!=="Pooled"){
+                                             setMode(e.target.value)
+                                            }
                                           }}
                                           required
                                         />

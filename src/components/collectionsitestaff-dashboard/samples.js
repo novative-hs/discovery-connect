@@ -584,7 +584,7 @@ const SampleArea = () => {
   };
 
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return; // 🛑 Prevent double submission
 
@@ -2926,7 +2926,7 @@ const SampleArea = () => {
                     <div className="modal-body">
                       {/* Parallel Columns - 5 columns */}
                       <div className="row">
-                        {poolMode && (
+                       
                           <>
                             {/* Only show selected fields in pool mode */}
                             <div className="col-md-12">
@@ -3035,6 +3035,7 @@ const SampleArea = () => {
                                               ...prev,
                                               finalConcentration: e.target.value,
                                             }));
+                                            setMode(e.target.value)
                                           }}
                                           required
                                         />
@@ -3212,7 +3213,7 @@ const SampleArea = () => {
                               </div>
                             </div>
                           </>
-                        )}
+                      
                       </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-between align-items-center">
