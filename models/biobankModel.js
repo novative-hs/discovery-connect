@@ -39,7 +39,7 @@ const getBiobankSamples = (
 
   const paramsShared = [];
   const paramsOwn = [];
-
+  
   // const likeValue = `%${filters?.toLowerCase()}%`;
 
   // Price filter
@@ -72,15 +72,26 @@ const getBiobankSamples = (
         paramsOwn.push(likeValue);
         break;
 
-      
 
 
       case "gender":
-        baseWhereShared += ` AND LOWER(sample.gender) = ?`;
-        baseWhereOwn += ` AND LOWER(sample.gender) = ?`;
-        paramsShared.push(value.toLowerCase());
-        paramsOwn.push(value.toLowerCase());
+        if (!isNaN(value)) {
+          // If value is a number, treat as age
+          baseWhereShared += ` AND sample.age = ?`;
+          baseWhereOwn += ` AND sample.age = ?`;
+          paramsShared.push(Number(value));
+          paramsOwn.push(Number(value));
+        } else {
+          // Otherwise treat as gender
+          baseWhereShared += ` AND LOWER(sample.gender) = ?`;
+          baseWhereOwn += ` AND LOWER(sample.gender) = ?`;
+          paramsShared.push(value.toLowerCase());
+          paramsOwn.push(value.toLowerCase());
+        }
         break;
+
+
+
 
       case "date_from":
         baseWhereShared += ` AND sample.created_at >= ?`;
@@ -124,23 +135,29 @@ const getBiobankSamples = (
     const field = filters.searchField;
     const value = filters.searchValue;
     const likeValue = `%${value.toLowerCase()}%`;
-
-    if (field === "visibility") {
+    if (field === "locationids") {
+      baseWhereShared += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
+      baseWhereOwn += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
+      paramsShared.push(likeValue, likeValue, likeValue);
+      paramsOwn.push(likeValue, likeValue, likeValue);
+      
+    }
+    else if (field === "visibility") {
       baseWhereShared += ` AND LOWER(sample.sample_visibility) = ?`;
       paramsShared.push(value.toLowerCase());
       baseWhereOwn += ` AND LOWER(sample.sample_visibility) = ?`;
       paramsOwn.push(value.toLowerCase());
     }
-else if (field === "price") {
-    baseWhereShared += `
+    else if (field === "price") {
+      baseWhereShared += `
       AND LOWER(CONCAT_WS(' ', CAST(sample.price AS CHAR), sample.SamplePriceCurrency)) = ?`;
-    baseWhereOwn += `
+      baseWhereOwn += `
       AND LOWER(CONCAT_WS(' ', CAST(sample.price AS CHAR), sample.SamplePriceCurrency)) = ?`;
 
-    const likeValue = `%${String(value).toLowerCase()}%`;
-    paramsShared.push(likeValue);
-    paramsOwn.push(likeValue);
-}
+      const likeValue = `%${String(value).toLowerCase()}%`;
+      paramsShared.push(likeValue);
+      paramsOwn.push(likeValue);
+    }
 
 
     else if (field === "volume") {
@@ -160,12 +177,29 @@ else if (field === "price") {
     }
 
     else if (field === "gender") {
-      baseWhereShared += ` AND LOWER(sample.gender) LIKE ?`;
-      paramsShared.push(`${value.toLowerCase()}%`);
+      if (!isNaN(value)) {
+        // Value is a number → treat as age
+        baseWhereShared += ` AND sample.age = ?`;
+        baseWhereOwn += ` AND sample.age = ?`;
+        paramsShared.push(Number(value));
+        paramsOwn.push(Number(value));
+      } else {
+        // Value is a string → treat as gender
+        baseWhereShared += ` AND LOWER(sample.gender) = ?`;
+        baseWhereOwn += ` AND LOWER(sample.gender) = ?`;
+        paramsShared.push(value.toLowerCase());
+        paramsOwn.push(value.toLowerCase());
 
-      baseWhereOwn += ` AND LOWER(sample.gender) LIKE ?`;
-      paramsOwn.push(`${value.toLowerCase()}%`);
+        // If filters.age is also provided, combine with AND
+        if (filters.age) {
+          baseWhereShared += ` AND sample.age = ?`;
+          baseWhereOwn += ` AND sample.age = ?`;
+          paramsShared.push(Number(filters.age));
+          paramsOwn.push(Number(filters.age));
+        }
+      }
     }
+
     else if (field === "TestResult") {
       baseWhereShared += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
       baseWhereOwn += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
