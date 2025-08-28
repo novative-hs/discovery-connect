@@ -49,19 +49,16 @@ const handleSubmit = async (paymentId) => {
   if (!validateDocuments()) return false;
 
   const userID = sessionStorage.getItem("userID");
-
   const formData = new FormData();
+
   formData.append("researcher_id", userID);
   formData.append("payment_id", paymentId);
 
- 
-
-  // 2. Append cart items (excluding sampleIds)
   formData.append(
     "cart_items",
     JSON.stringify(
       cart_products.map((item) => ({
-        sample_id:item.id,
+        sample_id: item.id,
         price: Number(item.price),
         samplequantity: Number(item.orderQuantity),
         volume: item.Volume,
@@ -71,116 +68,50 @@ const handleSubmit = async (paymentId) => {
     )
   );
 
-  // 3. Add files and metadata
   formData.append("study_copy", sampleCopyData.studyCopy);
   formData.append("reporting_mechanism", sampleCopyData.reportingMechanism);
   formData.append("irb_file", sampleCopyData.irbFile);
   if (sampleCopyData.nbcFile) {
     formData.append("nbc_file", sampleCopyData.nbcFile);
   }
-try {
-  const response = await axios.post(
-    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
-    formData,
-    {
-      headers: { "Content-Type": "multipart/form-data" },
-    }
-  );
 
-  const result = response.data;
-  const trackingId = result.tracking_id;
-  const created_at=result.created_at;
+  // Redirect immediately to show progress page
+  router.push("/order-processing");
 
-  sessionStorage.setItem("tracking_id", trackingId); // ✅ store tracking ID
-sessionStorage.setItem("created_at",created_at)
-  dispatch(clear_cart());
-  notifySuccess("Order placed successfully!");
+  // Then process API request in background
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
 
-  setTimeout(() => {
-    router.push({
-      pathname: "/order-confirmation",
-      query: { id: trackingId,created_at }, // ✅ optional: pass it to confirmation page
-    });
-  }, 1000);
+    const { tracking_id, created_at } = response.data;
+    sessionStorage.setItem("tracking_id", tracking_id);
+    sessionStorage.setItem("created_at", created_at);
 
-  return true;
-} catch (error) {
-  console.error("Error placing order:", error);
-  notifyError(
-    error.response?.data?.error || "Failed to place order. Please try again."
-  );
-  return false;
-}
+    dispatch(clear_cart());
+    notifySuccess("Order placed successfully!");
 
+    // Redirect to confirmation page
+    setTimeout(() => {
+      router.push({
+        pathname: "/order-confirmation",
+        query: { id: tracking_id, created_at },
+      });
+    }, 500);
+  } catch (error) {
+    console.error("Error placing order:", error);
+    notifyError(error.response?.data?.error || "Failed to place order.");
+  }
 };
+
 
 
 
   return (
     <div className="container py-4" style={{ maxWidth: "750px" }}>
-      {/* View Order Button */}
-      {/* <div className="d-flex justify-content-center mb-4">
-        <button
-          className="btn text-white"
-          onClick={() => setShowOrderDetails(!showOrderDetails)}
-          style={{ fontSize: "16px", padding: "8px 20px", backgroundColor: "#0a1d4e", }}
-        >
-          {showOrderDetails ? "Hide Order Details" : "View Your Order"}
-        </button>
-      </div> */}
-
-      {/* Order Table */}
-      {/* {showOrderDetails && (
-        <div className="table-responsive mb-4">
-          <table className="table table-striped table-bordered align-middle">
-            <thead className="table-dark text-center">
-              <tr>
-                <th>Analyte</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cart_products?.length > 0 ? (
-                cart_products.map((item, i) => (
-                  <tr key={i}>
-                    <td>{item.Analyte || "----"}</td>
-                    <td>{(item.price || 0).toFixed(2)}</td>
-                    <td>{item.orderQuantity || 0}</td>
-                    <td>
-                      {((item.orderQuantity || 0) * (item.price || 0)).toFixed(
-                        2
-                      )}{" "}
-                      {item.SamplePriceCurrency || "----"}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="4" className="text-center text-muted">
-                    Your cart is empty.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-            <tfoot>
-              <tr>
-                <th colSpan="3" className="text-end text-dark">
-                  Subtotal:
-                </th>
-                <td className="fw-bold text-primary">
-                  {subtotal.toFixed(2)}{" "}
-                  {cart_products.length > 0
-                    ? cart_products[0].SamplePriceCurrency || "----"
-                    : "----"}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      )} */}
-
+      
       {/* Payment Accordion */}
       <div className="accordion" id="paymentAccordion">
         <div className="accordion-item">

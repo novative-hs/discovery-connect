@@ -15,19 +15,17 @@ const BillingDetails = () => {
           const data = await response.json();
 
           if (response.ok && data.length > 0) {
-         const minimalData = {
-  name: data[0].ResearcherName,
-  email:data[0].useraccount_email,
-  OrganizationName:data[0].OrganizationName,
-  phone: data[0].phoneNumber,
-  address: data[0].fullAddress,
-  city: data[0].cityname,
-  country: data[0].countryname
-};
-
-sessionStorage.setItem("userdetail", JSON.stringify(minimalData));
-setUserData(minimalData);
-setUserData(data[0]);
+            const user = {
+              name: data[0].ResearcherName || "-",
+              email: data[0].useraccount_email || "-",
+              organization: data[0].OrganizationName || "-",
+              phone: data[0].phoneNumber || "-",
+              address: data[0].fullAddress || "-",
+              city: data[0].cityname || "-",
+              country: data[0].countryname || "-",
+            };
+            sessionStorage.setItem("userdetail", JSON.stringify(user));
+            setUserData(user);
           } else {
             console.error("Failed to fetch user data");
           }
@@ -44,19 +42,19 @@ setUserData(data[0]);
     }
   }, [id]);
 
-  if (loading) return <div className="text-center">Loading...</div>;
-  if (!userData) return <div className="text-danger text-center">No user data found.</div>;
+  if (loading) return <div className="text-center mt-5">Loading...</div>;
+  if (!userData) return <div className="text-danger text-center mt-5">No user data found.</div>;
 
   return (
-    <div className="container mt-5" style={{ maxWidth: "500px" }}>
-      <div className="card shadow-sm border-0 p-4">
-       
-        <div style={{ lineHeight: "1.8" }}>
-          <div className="fw-bold text-uppercase fs-5">{userData?.ResearcherName || "-"}</div>
-          <div className="fw-bold text-muted mt-2">Address</div>
-          <div>{userData?.fullAddress || "-"}</div>
-          <div>{userData?.cityname || "-"}, {userData?.countryname || "-"}</div>
-        </div>
+    <div className="container mt-5" style={{ maxWidth: "700px" }}>
+      <div className="card shadow-lg border-0 rounded-4 p-4">
+        
+        <p className="fs-5" style={{ lineHeight: "1.8", textAlign: "justify" }}>
+          {userData.name}, associated with {userData.organization}, 
+          can be contacted via email at <strong>{userData.email}</strong> or by phone at <strong>{userData.phone}</strong>. 
+          Their billing address is <strong>{userData.address}</strong>, 
+          located in <strong>{userData.city}</strong>, <strong>{userData.country}</strong>.
+        </p>
       </div>
     </div>
   );

@@ -316,9 +316,11 @@ const getHistory = (tracking_ids, status, callback) => {
   try {
     const placeholders = tracking_ids.map(() => '?').join(',');
 
-    const orderStatusCondition = status === 'Pending'
-      ? 'c.order_status = ?'
-      : "c.order_status != 'Pending'";
+    const orderStatusCondition =
+      status === 'Pending'
+        ? 'c.order_status = ?'
+        : "c.order_status != 'Pending'";
+
     const sql = `
       SELECT 
         c.id AS cart_id,
@@ -331,67 +333,83 @@ const getHistory = (tracking_ids, status, callback) => {
         cm.CommitteeMemberName,
         cm.committeetype,
         csa.Approval_date AS committee_approval_date,
-        csa.created_at AS committee_created_at
+        csa.created_at AS committee_created_at,
+        sd.added_by,
+        sd.role AS uploaded_by_role,
+        sd.study_copy,
+        sd.irb_file,
+        sd.nbc_file,
+        sd.created_at AS doc_created_at,
+        sd.updated_at AS doc_updated_at
       FROM cart c
       LEFT JOIN technicaladminsampleapproval tas ON tas.cart_id = c.id
       LEFT JOIN committeesampleapproval csa ON csa.cart_id = c.id
       LEFT JOIN committee_member cm ON cm.user_account_id = csa.committee_member_id
+      LEFT JOIN sampledocuments sd ON sd.cart_id = c.id
       WHERE c.tracking_id IN (${placeholders})
-           AND ${orderStatusCondition}
+        AND ${orderStatusCondition}
       ORDER BY c.id, csa.transfer, csa.created_at
     `;
 
-    mysqlConnection.query(sql, [...tracking_ids, status], (err, historyResults) => {
+    mysqlConnection.query(sql, [...tracking_ids, status], (err, results) => {
       if (err) return callback(err, null);
 
-      // After fetching history, fetch documents separately
-      getDocumentsByTrackingIds(tracking_ids, (docErr, documentResults) => {
-        if (docErr) return callback(docErr, null);
+      // Group documents per cart_id
+      const grouped = results.reduce((acc, row) => {
+        let existing = acc.find(r => r.cart_id === row.cart_id);
+        if (!existing) {
+          existing = { ...row, documents: [] };
+          acc.push(existing);
+        }
+        existing.documents.push({
+          added_by: row.added_by,
+          uploaded_by_role: row.uploaded_by_role,
+          study_copy: row.study_copy,
+          irb_file: row.irb_file,
+          nbc_file: row.nbc_file,
+          created_at: row.doc_created_at,
+          updated_at: row.doc_updated_at
+        });
+        return acc;
+      }, []);
 
-        // Merge documents into history results
-        const mergedResults = historyResults.map(item => ({
-          ...item,
-          documents: documentResults.filter(doc => doc.cart_id === item.cart_id)
-        }));
-
-        callback(null, mergedResults);
-      });
+      callback(null, grouped);
     });
-
   } catch (err) {
     console.error("Error fetching history:", err);
     callback(err, null);
   }
 };
 
-const getDocumentsByTrackingIds = (tracking_ids, callback) => {
-  try {
-    const placeholders = tracking_ids.map(() => '?').join(',');
 
-    const sql = `
-      SELECT 
-        MIN(sd.cart_id) AS cart_id,        -- pick one cart_id
-        c.tracking_id,
-        sd.added_by,
-        sd.role AS uploaded_by_role,
-        MAX(sd.study_copy) AS study_copy,
-        MAX(sd.irb_file) AS irb_file,
-        MAX(sd.nbc_file) AS nbc_file,
-        MIN(sd.created_at) AS created_at,
-        MAX(sd.updated_at) AS updated_at
-      FROM sampledocuments sd
-      JOIN cart c ON c.id = sd.cart_id
-      WHERE c.tracking_id IN (${placeholders})
-      GROUP BY c.tracking_id, sd.added_by, sd.role
-      ORDER BY created_at;
-    `;
+// const getDocumentsByTrackingIds = (tracking_ids, callback) => {
+//   try {
+//     const placeholders = tracking_ids.map(() => '?').join(',');
 
-    mysqlConnection.query(sql, tracking_ids, callback);
-  } catch (err) {
-    console.error("Error fetching documents:", err);
-    callback(err, null);
-  }
-};
+//     const sql = `
+//       SELECT 
+//         MIN(sd.cart_id) AS cart_id,        -- pick one cart_id
+//         c.tracking_id,
+//         sd.added_by,
+//         sd.role AS uploaded_by_role,
+//         MAX(sd.study_copy) AS study_copy,
+//         MAX(sd.irb_file) AS irb_file,
+//         MAX(sd.nbc_file) AS nbc_file,
+//         MIN(sd.created_at) AS created_at,
+//         MAX(sd.updated_at) AS updated_at
+//       FROM sampledocuments sd
+//       JOIN cart c ON c.id = sd.cart_id
+//       WHERE c.tracking_id IN (${placeholders})
+//       GROUP BY c.tracking_id, sd.added_by, sd.role
+//       ORDER BY created_at;
+//     `;
+
+//     mysqlConnection.query(sql, tracking_ids, callback);
+//   } catch (err) {
+//     console.error("Error fetching documents:", err);
+//     callback(err, null);
+//   }
+// };
 
 
 

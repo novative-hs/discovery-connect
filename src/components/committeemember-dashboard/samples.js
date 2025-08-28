@@ -143,24 +143,12 @@ const SampleArea = () => {
   };
 
   // HANDLER TO OPEN DOCUMENT AND TRACK VIEWED STATUS GLOBALLY
-  const handleViewDocument = (fileBuffer, fileName, sampleId) => {
-    if (!fileBuffer) {
-      alert("No document available.");
-      return;
-    }
+ const handleViewDocument = useCallback((fileBuffer, fileName) => {
+  if (!fileBuffer) return alert("No document available.");
+  const blobUrl = URL.createObjectURL(new Blob([new Uint8Array(fileBuffer.data)], { type: "application/pdf" }));
+  window.open(blobUrl, "_blank");
+}, []);
 
-    const blob = new Blob([new Uint8Array(fileBuffer.data)], {
-      type: "application/pdf",
-    });
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
-
-    // ✅ Mark globally viewed
-    setViewedDocuments((prev) => ({
-      ...prev,
-      [fileName]: true,
-    }));
-  };
 
   // ✅ GLOBAL CHECK FOR DOCUMENTS VIEWED (not per sample)
   const allDocumentsViewed = () => {

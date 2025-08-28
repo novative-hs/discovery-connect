@@ -1,34 +1,56 @@
 import React, { useState, useRef } from "react";
-import { notifyError, notifySuccess } from "@utils/toast";
+import { PDFDocument } from "pdf-lib";
+import { notifyError } from "@utils/toast";
 import { useRouter } from "next/router";
+
 const SampleCopy = ({ setSampleCopyData, onComplete }) => {
   const [studyCopy, setStudyCopy] = useState(null);
-  const [reportingMechanism, setReportingMechanism] = useState("")
+  const [reportingMechanism, setReportingMechanism] = useState("");
   const [irbFile, setIrbFile] = useState(null);
   const [nbcFile, setNbcFile] = useState(null);
-const router = useRouter();
+  const router = useRouter();
   const studyFileRef = useRef(null);
   const irbFileRef = useRef(null);
   const nbcFileRef = useRef(null);
 
-const handleInvoice=()=>{
-   
-      router.push("/dashboardheader?tab=invoice-area");
-    
-}
+  const handleInvoice = () => {
+    router.push("/dashboardheader?tab=invoice-area");
+  };
 
-  const handleFileChange = (e, setter, field) => {
+  // PDF Compression Function
+  const compressPDF = async (file) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+
+      // Clear metadata to reduce size slightly
+      pdfDoc.setTitle("");
+      pdfDoc.setAuthor("");
+      pdfDoc.setSubject("");
+      pdfDoc.setKeywords([]);
+
+      const compressedBytes = await pdfDoc.save({ useObjectStreams: true });
+      return new File([compressedBytes], file.name, { type: "application/pdf" });
+    } catch (error) {
+      console.error("Compression failed, using original file:", error);
+      return file;
+    }
+  };
+
+  // Handle File Upload with Compression
+  const handleFileChange = async (e, setter, field) => {
     const file = e.target.files[0];
+    if (!file) return;
 
-    if (!file) return; // No file selected
     if (file.type !== "application/pdf") {
       notifyError("Only PDF format is allowed.");
       setter(null);
       return;
     }
 
-    setter(file);
-    updateParent(field, file);
+    const compressedFile = await compressPDF(file);
+    setter(compressedFile);
+    updateParent(field, compressedFile);
   };
 
   const handleFormSubmit = (e) => {
@@ -37,7 +59,6 @@ const handleInvoice=()=>{
       notifyError("Please upload all required documents in PDF format.");
       return;
     }
-   
   };
 
   const updateParent = (field, value) => {
@@ -53,12 +74,12 @@ const handleInvoice=()=>{
         type="button"
         className="tp-btn"
         style={{
-          backgroundColor: "#0a1d4e", // Dark Navy Blue
-          color: "white", // White text
+          backgroundColor: "#0a1d4e",
+          color: "white",
           border: "none",
           padding: "8px 16px",
           borderRadius: "4px",
-          cursor: "pointer"
+          cursor: "pointer",
         }}
         onClick={() => fileRef.current.click()}
       >
@@ -73,19 +94,24 @@ const handleInvoice=()=>{
       />
       {file && (
         <p className="mt-2">
-          <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer" className="text-primary underline-link">
-            {file.name}
+          <a
+            href={URL.createObjectURL(file)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline-link"
+          >
+            {file.name} ({(file.size / 1024).toFixed(1)} KB)
           </a>
         </p>
       )}
     </div>
   );
+
   const handleNext = () => {
     if (!studyCopy || !irbFile || !reportingMechanism) {
       notifyError("Please upload all required fields before proceeding.");
       return;
     }
-    // Call onComplete to open modal in parent component
     onComplete();
   };
 
@@ -93,8 +119,8 @@ const handleInvoice=()=>{
     <div className="your-order mb-30">
       <h3>Upload Documents</h3>
       <form onSubmit={handleFormSubmit}>
-        {/* Study Copy */}
         <div className="row">
+          {/* Study Copy */}
           <div className="col-12 mb-3">
             <p className="text-muted h8">
               Upload Copy of the Study
@@ -124,11 +150,12 @@ const handleInvoice=()=>{
             </p>
             {renderFileUpload(nbcFileRef, setNbcFile, "nbcFile", nbcFile)}
           </div>
+
           {/* Reporting Mechanism */}
           <div className="col-12 mb-3">
             <p className="text-muted h8">
               Any Additional Mechanism
-             <strong>
+              <strong>
                 <span className="text-danger">*</span>
               </strong>
             </p>
@@ -143,20 +170,13 @@ const handleInvoice=()=>{
         </div>
       </form>
       <div className="d-flex justify-content-end mt-3">
- <button
-  type="button"
-  className="tp-btn me-2"
-  onClick={() => handleInvoice()}
->
-  View Invoice
-</button>
-
-  <button type="button" className="tp-btn" onClick={handleNext}>
-    Make Payment
-  </button>
-</div>
-
-      
+        <button type="button" className="tp-btn me-2" onClick={handleInvoice}>
+          View Invoice
+        </button>
+        <button type="button" className="tp-btn" onClick={handleNext}>
+          Make Payment
+        </button>
+      </div>
     </div>
   );
 };
