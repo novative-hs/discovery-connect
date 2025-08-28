@@ -33,46 +33,35 @@ const HeroBanner = () => {
 
   useEffect(() => {
     if (videoRef.current) {
-      videoRef.current.load(); // reload video when index changes
+      videoRef.current.load();
       videoRef.current.play();
-
-      // ✅ Set video speed
-      videoRef.current.playbackRate = 1.5; // You can adjust this value (e.g., 2 for 2x speed)
+      videoRef.current.playbackRate = 1.5;
     }
   }, [videoIndex]);
 
   return (
     <div className="container-fluid p-0">
       <div className="position-relative d-flex flex-column justify-content-center align-items-start min-vh-100 px-5 py-5">
-        {/* ✅ Background Video */}
+        
+        {/* Background Video */}
         <video
           ref={videoRef}
           autoPlay
           muted
           playsInline
           loop={false}
-          preload="none"  // ← Add this
+          preload="none"
           className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover z-0"
         >
-
           <source src={videoSources[videoIndex]} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
 
-        {/* ✅ Dark Overlay */}
-        <div
-          className="position-absolute top-0 start-0 w-100 h-100"
-          style={{
-            background: "rgba(57, 55, 55, 0.5)",
-            zIndex: 1,
-          }}
-        />
+        {/* Dark Overlay */}
+        <div className="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50 z-1"></div>
 
-        {/* ✅ Foreground Text */}
-        <div
-          className="position-relative"
-          style={{ maxWidth: "700px", zIndex: 2, marginTop: "150px" }}
-        >
+        {/* Foreground Text */}
+        <div className="position-relative z-2 mt-5 pt-5" style={{ maxWidth: "700px" }}>
           <h4 className="fw-bold mb-4 display-5 text-light" data-aos="fade-right">
             Advancing Research with Quality Biospecimens
           </h4>
@@ -82,8 +71,8 @@ const HeroBanner = () => {
           <Link
             href="/register"
             className="btn btn-lg text-white p-3"
-            data-aos="fade-up"
             style={{ backgroundColor: "#003366" }}
+            data-aos="fade-up"
           >
             Register Yourself Now
           </Link>
