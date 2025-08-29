@@ -180,7 +180,7 @@ const SampleArea = () => {
 
   return (
     <div className="container py-3">
-      <h4 className="text-center text-success">Review Pending List</h4>
+      <h4 className="text-center text-success">Review Done</h4>
 
       {/* Table */}
       <div className="table-responsive" style={{ overflowX: "auto" }}>

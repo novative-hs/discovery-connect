@@ -76,7 +76,7 @@ const handleSubmit = async (paymentId) => {
   }
 
   // Redirect immediately to show progress page
-  router.push("/order-processing");
+  router.push("/order-confirmation");
 
   // Then process API request in background
   try {
