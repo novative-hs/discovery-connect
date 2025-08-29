@@ -100,7 +100,7 @@ const SampleArea = () => {
           order_status: sample.order_status,
           payment_type: sample.payment_method,
           payment_status: sample.payment_status,
-          BankName:sample.BankName,
+          BankName: sample.BankName,
           samples: [],
           totalpayment: 0,
         };
@@ -246,7 +246,7 @@ const SampleArea = () => {
                           maximumFractionDigits: 2
                         })}
                       </td>
-                      <td>{order.BankName|| "---"}</td>
+                      <td>{order.BankName || "---"}</td>
                       <td>{order.payment_type || "----"}</td>
                       <td>{order.payment_status}</td>
                       <td>{order.samples.length}</td>

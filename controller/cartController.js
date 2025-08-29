@@ -112,7 +112,7 @@ const createCart = (req, res) => {
 
 const updateDocument = (req, res) => {
   const { id } = req.params; // tracking_id from URL
-  const {added_by}=req.body;
+  const { added_by } = req.body;
   const study_copy = req.files?.["study_copy"] ? req.files["study_copy"][0].buffer : null;
   const irb_file = req.files?.["irb_file"] ? req.files["irb_file"][0].buffer : null;
   const nbc_file = req.files?.["nbc_file"] ? req.files["nbc_file"][0].buffer : null;

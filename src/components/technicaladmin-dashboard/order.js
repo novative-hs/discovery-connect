@@ -70,7 +70,7 @@ const OrderPage = () => {
   const [show, setShow] = useState(false);
   const [documentloading, setDocumentLoading] = useState(false);
 
-    useEffect(() => {
+  useEffect(() => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
@@ -93,7 +93,7 @@ const OrderPage = () => {
 
       if (response.data.success) {
         const rows = response.data.documents || [];
-        
+
         // Group by document type and pick the latest version
         const latestByType = {};
         rows.forEach(row => {
@@ -497,7 +497,7 @@ const OrderPage = () => {
 
   // Convert transferNo to review label
   const getReviewLabel = (transferNo) => `${getOrdinal(Number(transferNo))} Review`;
-  
+
   useEffect(() => {
     if (showSampleModal || showTransferModal || showCommentsModal) {
       // Prevent background scroll when modal is open
@@ -600,7 +600,7 @@ const OrderPage = () => {
                   currentOrders.map((orderGroup) => (
                     <tr key={orderGroup.tracking_id}>
                       <td>{orderGroup.tracking_id}</td>
-                      <td>{new Date(orderGroup.created_at).toLocaleDateString('en-GB', {
+                      <td>{new Date(orderGroup.orderdate).toLocaleDateString('en-GB', {
                         day: 'numeric',
                         month: 'short',
                         year: '2-digit'
@@ -1069,8 +1069,8 @@ const OrderPage = () => {
 
             <Modal.Body
               style={{
-                maxHeight: '60vh', 
-                overflowY: 'auto', 
+                maxHeight: '60vh',
+                overflowY: 'auto',
                 padding: '1rem'
               }}
             >

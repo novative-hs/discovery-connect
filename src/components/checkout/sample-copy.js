@@ -90,7 +90,7 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
             <p className="text-muted h8">
               Upload Copy of the Study
               <strong>
-                <span className="text-danger">(optional)</span>
+                <span className="text-danger">*</span>
               </strong>
             </p>
             {renderFileUpload(studyFileRef, setStudyCopy, "studyCopy", studyCopy)}
@@ -100,7 +100,7 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
             <p className="text-muted h8">
               Institutional Review Board (IRB) Approval
               <strong>
-                <span className="text-danger">(optional)</span>
+                <span className="text-danger">*</span>
               </strong>
             </p>
             {renderFileUpload(irbFileRef, setIrbFile, "irbFile", irbFile)}
