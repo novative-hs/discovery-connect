@@ -332,7 +332,7 @@ const updatetestResultandUnit = (req, res) => {
 
   const { id } = req.params;
   const data = req.body;
-  data.samplepdf = req.body?.samplepdf?.[0]?.buffer || null;
+  data.samplepdf = req.files?.samplepdf?.[0]?.buffer || null;
 
   SampleModel.updatetestResultandUnit(id, data, (err, result) => {
     if (err) {

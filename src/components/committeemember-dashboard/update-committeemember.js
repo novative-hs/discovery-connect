@@ -294,7 +294,7 @@ const UpdateCommitteemember = () => {
 
             <div className="text-end">
               <button type="submit" className="tp-btn-3">
-                Update Collection Site
+                Update Committee Member
               </button>
             </div>
           </form>

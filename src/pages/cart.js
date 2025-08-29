@@ -7,10 +7,9 @@ import CartBreadcrumb from "@components/cart/cart-breadcrumb";
 import CartArea from "@components/cart/cart-area";
 
 export default function Cart({ query }) {
-
   const [userId, setUserId] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
-  
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const id = sessionStorage.getItem("userID");
@@ -23,17 +22,17 @@ export default function Cart({ query }) {
 
   return (
     <Wrapper>
-      <SEO pageTitle={"Cart"} />
       {userId ? (
         <>
-          <CartBreadcrumb title="Cart" subtitle="Cart" />
+          {/* Breadcrumb with cart icon */}
+          <CartBreadcrumb title="Cart" />
           <CartArea />
         </>
       ) : (
         <>
           <Header style_2={true} />
           <CartBreadcrumb title="Cart" subtitle="Cart" />
-          <CartArea/>
+          <CartArea />
           <Footer />
         </>
       )}

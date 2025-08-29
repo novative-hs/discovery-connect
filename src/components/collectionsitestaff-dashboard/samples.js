@@ -584,7 +584,7 @@ const SampleArea = () => {
   };
 
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return; // 🛑 Prevent double submission
 
@@ -915,12 +915,14 @@ const SampleArea = () => {
     setSamplePdfPreview(pdfPreviewUrl);
 
     // ✅ Add this block to properly show the country in the input field
-    const matchedCountry = countryname.find(
-      (c) =>
-        c.name?.toLowerCase() === sample.CountryOfCollection?.toLowerCase()
-    );
-    setSelectedCountry(matchedCountry || null);
-    setSearchCountry(matchedCountry ? matchedCountry.name : "");
+    if (sample.CountryOfCollection) {
+      const matchedCountry = countryname.find(
+        (c) =>
+          c.name?.toLowerCase() === sample.CountryOfCollection?.toLowerCase()
+      );
+      setSelectedCountry(matchedCountry || null);
+      setSearchCountry(matchedCountry ? matchedCountry.name : "");
+    }
   };
 
   const resetFormData = () => {
@@ -1865,7 +1867,7 @@ const SampleArea = () => {
                                   // required
                                   />
                                 </div>
-                                <div className="form-group col-md-4">
+                                <div className="form-group col-md-6">
                                   <label>
                                     Location (IDs){" "}
                                     <span className="text-danger"></span>
@@ -1896,7 +1898,7 @@ const SampleArea = () => {
                                     )}
                                   </InputMask>
                                 </div>
-                                <div className="form-group col-md-4 react-select-container">
+                                <div className="form-group col-md-6 react-select-container">
                                   <label>
                                     Analyte <span className="text-danger">*</span>
                                   </label>
@@ -1924,13 +1926,26 @@ const SampleArea = () => {
                                         display: "flex",
                                         alignItems: "center", // ensures vertical centering
                                       }),
+                                      singleValue: (base) => ({
+                                        ...base,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        height: "40px",
+                                        lineHeight: "40px",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        maxWidth: "calc(100% - 30px)", // leaves space for clear/dropdown icons
+                                      }),
                                       valueContainer: (base) => ({
                                         ...base,
                                         padding: "0 8px",
                                         display: "flex",
-                                        alignItems: "center", // centers text
+                                        alignItems: "center",
                                         height: 40,
+                                        overflow: "hidden",
                                       }),
+
                                       indicatorsContainer: (base) => ({
                                         ...base,
                                         height: 40,
@@ -1974,7 +1989,7 @@ const SampleArea = () => {
 
                                 </div>
 
-                                <div className="form-group col-md-4">
+                                <div className="form-group col-md-6">
                                   <label>
                                     Sample Type Matrix{" "}
                                     <span className="text-danger">*</span>
@@ -2188,8 +2203,6 @@ const SampleArea = () => {
 
                                   </div>
                                 </div>
-                              </div>
-                              <div className="row">
                                 <div className="form-group col-md-6">
                                   <label>
                                     Container Type{" "}
@@ -2217,6 +2230,8 @@ const SampleArea = () => {
                                     ))}
                                   </select>
                                 </div>
+                              </div>
+                              <div className="row">
                                 <div className="form-group col-md-6">
                                   <label>
                                     Sample Picture{" "}
@@ -2911,7 +2926,7 @@ const SampleArea = () => {
                     <div className="modal-body">
                       {/* Parallel Columns - 5 columns */}
                       <div className="row">
-                        {poolMode && (
+                       
                           <>
                             {/* Only show selected fields in pool mode */}
                             <div className="col-md-12">
@@ -2921,26 +2936,35 @@ const SampleArea = () => {
                                     Analyte <span className="text-danger">*</span>
                                   </label>
 
-                                  {analyteOptions.length > 0 ? (
+                                  {showEditPoolModal ? (
+                                    <input
+                                      type="text"
+                                      className="form-control"
+                                      name="Analyte"
+                                      value={formData.Analyte || ""}
+                                      disabled
+                                      style={{
+                                        height: "45px",
+                                        fontSize: "14px",
+                                        backgroundColor: "#f5f5f5",
+                                      }}
+                                    />
+                                  ) : (
                                     <select
                                       className="form-control"
                                       name="Analyte"
                                       value={formData.Analyte}
                                       onChange={(e) => {
-                                        const selected = e.target.value;
-                                        setSelectedSampleName(selected);
                                         setFormData((prev) => ({
                                           ...prev,
-                                          Analyte: selected,
+                                          Analyte: e.target.value,
                                         }));
                                       }}
                                       required
                                       style={{
                                         height: "45px",
                                         fontSize: "14px",
-                                        backgroundColor: !formData.Analyte
-                                          ? "#fdecea"
-                                          : "#fff",
+                                        backgroundColor: !formData.Analyte ? "#fdecea" : "#fff",
                                       }}
                                     >
                                       <option value="" disabled hidden>
@@ -2952,20 +2976,8 @@ const SampleArea = () => {
                                         </option>
                                       ))}
                                     </select>
-                                  ) : (
-                                    <input
-                                      type="text"
-                                      className="form-control"
-                                      name="Analyte"
-                                      value={selectedSampleName}
-                                      disabled
-                                      style={{
-                                        height: "45px",
-                                        fontSize: "14px",
-                                        backgroundColor: "#f5f5f5",
-                                      }}
-                                    />
                                   )}
+
                                 </div>
                                 <div className="form-group col-md-6">
                                   <label>
@@ -3014,19 +3026,20 @@ const SampleArea = () => {
                                         <input
                                           className="form-check-input"
                                           type="radio"
-                                          name="finalConcentration" // name is fine
+                                          name="finalConcentration"
                                           id={`finalConcentration-${level}`}
                                           value={level}
-                                          checked={mode === level}
+                                          checked={formData.finalConcentration === level} // <-- FIXED
                                           onChange={(e) => {
                                             setFormData((prev) => ({
                                               ...prev,
                                               finalConcentration: e.target.value,
-                                            }))
-                                            setMode(level)
+                                            }));
+                                            setMode(e.target.value)
                                           }}
                                           required
                                         />
+
                                         <label
                                           className="form-check-label"
                                           htmlFor={`finalConcentration-${level}`}
@@ -3200,7 +3213,7 @@ const SampleArea = () => {
                               </div>
                             </div>
                           </>
-                        )}
+                      
                       </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-between align-items-center">

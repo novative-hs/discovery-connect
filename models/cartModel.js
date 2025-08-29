@@ -766,113 +766,78 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
     }
   });
 };
+const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchValue, callback) => {
+  try {
+    const offset = (page - 1) * pageSize;
+    const connection = mysqlConnection.promise();
 
-const getAllOrderByCommittee = (id, page, pageSize, searchField, searchValue, callback) => {
-  const offset = (page - 1) * pageSize;
+    let whereClause = `WHERE ca.committee_member_id = ?`;
+    const params = [id];
 
-  const params = [id];
-  let whereClause = `WHERE ca.committee_member_id = ?`;
-
-  if (searchField && searchValue) {
-    let dbField = searchField;
-    if (searchField === "created_at") {
-      dbField = "c.created_at";
+    if (searchField && searchValue) {
+      let dbField;
+      switch (searchField) {
+        case "created_at": dbField = "c.created_at"; break;
+        case "tracking_id": dbField = "c.tracking_id"; break;
+        case "researcher_name": dbField = "r.ResearcherName"; break;
+        case "user_email": dbField = "u.email"; break;
+        case "organization_name": dbField = "org.OrganizationName"; break;
+      }
+      if (dbField) {
+        whereClause += ` AND ${dbField} LIKE ?`;
+        params.push(`%${searchValue}%`);
+      }
     }
-    // Mapping fields to DB fields
-    if (searchField === "tracking_id") {
-      dbField = "c.tracking_id";
-    } else if (searchField === "researcher_name") {
-      dbField = "r.ResearcherName";
-    } else if (searchField === "user_email") {
-      dbField = "u.email";
-    } else if (searchField === "organization_name") {
-      dbField = "org.OrganizationName";
-    }
-    whereClause += ` AND ${dbField} LIKE ?`;
-    params.push(`%${searchValue}%`);
+
+    const [rows] = await connection.query(`
+      SELECT *,
+             COUNT(*) OVER() AS totalCount
+      FROM (
+        SELECT 
+          c.id AS cart_id, 
+          c.tracking_id,
+          c.user_id, 
+          u.email AS user_email,
+          r.ResearcherName AS researcher_name, 
+          org.OrganizationName AS organization_name,
+          s.id AS sample_id,
+          s.Analyte, 
+          s.VolumeUnit,
+          s.volume,
+          s.room_number,s.freezer_id,s.box_id,
+          c.price, 
+          c.quantity, 
+          c.totalpayment, 
+          c.order_status,  
+          c.created_at,
+          ca.committee_status,  
+          ca.comments
+        FROM committeesampleapproval ca
+        JOIN cart c ON ca.cart_id = c.id  
+        JOIN user_account u ON c.user_id = u.id
+        LEFT JOIN researcher r ON u.id = r.user_account_id 
+        LEFT JOIN organization org ON r.nameofOrganization = org.id
+        JOIN sample s ON c.sample_id = s.id  
+        ${whereClause}
+        ORDER BY c.created_at ASC
+        LIMIT ? OFFSET ?
+      ) AS sub;
+    `, [...params, pageSize, offset]);
+
+    const totalCount = rows.length ? rows[0].totalCount : 0;
+    const results = rows.map(sample => ({
+      ...sample,
+      locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-')
+    }));
+
+    callback(null, { results, totalCount });
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+    callback(err, null);
   }
-
-  // SQL Query to get orders with pagination
-  const sqlQuery = `
-    SELECT 
-      c.id AS cart_id, 
-      c.tracking_id,
-      c.user_id, 
-      u.email AS user_email,
-      r.ResearcherName AS researcher_name, 
-      org.OrganizationName AS organization_name,
-      s.id AS sample_id,
-      s.Analyte, 
-      s.VolumeUnit,
-      s.volume,
-      s.room_number,s.freezer_id,s.box_id,
-      s.age, s.gender, s.ethnicity, s.samplecondition, 
-      s.storagetemp, s.ContainerType, s.CountryofCollection, 
-      s.VolumeUnit, s.SampleTypeMatrix, s.SmokingStatus, 
-      s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, 
-      s.InfectiousDiseaseResult, s.FreezeThawCycles, 
-      s.dateOfSampling, s.ConcurrentMedicalConditions, 
-      s.ConcurrentMedications, s.Analyte, 
-      s.TestResult, s.TestResultUnit, s.TestMethod, 
-      s.TestKitManufacturer, s.TestSystem, 
-      s.TestSystemManufacturer, s.SamplePriceCurrency,
-      c.price, 
-      c.quantity, 
-      c.totalpayment, 
-      c.order_status,  
-      c.created_at,
-      ca.committee_status,  
-      ca.comments
-    FROM committeesampleapproval ca
-    JOIN cart c ON ca.cart_id = c.id  
-    JOIN user_account u ON c.user_id = u.id
-    LEFT JOIN researcher r ON u.id = r.user_account_id 
-    LEFT JOIN organization org ON r.nameofOrganization = org.id
-    JOIN sample s ON c.sample_id = s.id  
-    LEFT JOIN sampledocuments sd ON c.id = sd.cart_id 
-    ${whereClause}
-    ORDER BY c.created_at ASC
-    LIMIT ? OFFSET ?
-  `;
-
-  const countQuery = `
-    SELECT COUNT(*) AS totalCount
-    FROM committeesampleapproval ca
-    JOIN cart c ON ca.cart_id = c.id  
-    JOIN user_account u ON c.user_id = u.id
-    LEFT JOIN researcher r ON u.id = r.user_account_id 
-    LEFT JOIN organization org ON r.nameofOrganization = org.id
-    JOIN sample s ON c.sample_id = s.id  
-    ${whereClause};
-  `;
-
-  const queryParams = [...params, pageSize, offset];
-
-  mysqlConnection.query(sqlQuery, queryParams, (err, results) => {
-    if (err) {
-      console.error("Error fetching committee member's orders:", err);
-      callback(err, null);
-    } else {
-      mysqlConnection.query(countQuery, params, (countErr, countResults) => {
-        if (countErr) {
-          console.error("Error fetching total count:", countErr);
-          callback(countErr, null);
-        } else {
-          // Add locationids field to each result
-          const updatedResults = results.map(sample => ({
-            ...sample,
-            locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-')
-          }));
-          callback(null, {
-            results: updatedResults,
-            totalCount: countResults[0].totalCount,
-          });
-        }
-
-      });
-    }
-  });
 };
+
+
 const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback) => {
   const offset = (page - 1) * pageSize;
 
@@ -1009,107 +974,116 @@ const getAllOrderByOrderPacking = (csrUserId, staffAction, callback) => {
   });
 };
 
-const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comment) => {
-  try {
-    const updateResults = [];
+const updateCartStatus = async (cartIds, cartStatus) => {
+  const placeholders = cartIds.map(() => '?').join(',');
 
-    // Step 1: Update status for all cart IDs
-    await Promise.all(cartIds.map(async (id) => {
-      await queryAsync(
-        `UPDATE technicaladminsampleapproval 
-         SET technical_admin_status = ?, Comments = ?,Approval_date = NOW()
-         WHERE cart_id = ?`,
-        [technical_admin_status, comment, id]
-      );
+  // 1. Update cart order_status in batch
+  await queryAsync(`UPDATE cart SET order_status = ? WHERE id IN (${placeholders})`, [cartStatus, ...cartIds]);
 
-      let newCartStatus = null;
-      if (technical_admin_status === 'Accepted') newCartStatus = 'Dispatched';
-      if (technical_admin_status === 'Rejected') newCartStatus = 'Rejected';
-      if (newCartStatus) await updateCartStatus(id, newCartStatus);
-
-      updateResults.push({ id, status: 'updated' });
-    }));
-
-    // Step 2: Fetch all carts with researcher email and tracking ID
-    const placeholders = cartIds.map(() => '?').join(',');
-    const cartDetails = await queryAsync(
-      `
-  SELECT 
-    ua.email, 
-    c.created_at, 
-    c.tracking_id, 
-    c.id AS cartId,
-    c.order_status,
-    s.Analyte
-  FROM user_account ua
-  JOIN cart c ON ua.id = c.user_id
-  JOIN sample s ON c.sample_id = s.id
-  WHERE c.id IN (${placeholders})
-  `,
+  if (cartStatus === 'Rejected') {
+    // Restore sample quantities
+    const cartSamples = await queryAsync(
+      `SELECT sample_id, quantity FROM cart WHERE id IN (${placeholders})`,
       cartIds
     );
 
-
-    // Step 3: Group carts by tracking_id
-    const trackingMap = {};
-    cartDetails.forEach(row => {
-      if (!trackingMap[row.tracking_id]) {
-        trackingMap[row.tracking_id] = { email: row.email, carts: [] };
-      }
-      trackingMap[row.tracking_id].carts.push(row);
-    });
-
-    // Step 4: Prepare message template
-    const baseMessage =
-      technical_admin_status === 'Accepted'
-        ? "Your sample request has been <b>approved</b> by the Technical Admin.<br/>"
-        : technical_admin_status === 'Rejected'
-          ? "Your sample request has been <b>rejected</b> by the Technical Admin.<br/>"
-          : "Your sample request is still <b>pending</b> approval by the Technical Admin.<br/>";
-
-    const fullMessage = comment ? `${baseMessage}<br/><b>Comment:</b> ${comment}` : baseMessage;
-
-    // Step 5: Send one email per tracking_id
-    const entries = Object.entries(trackingMap);
-    if (entries.length > 0) {
-      const [trackingId, data, status] = entries[0];  // Take only the first tracking ID
-
-      const emailMessage = `
-    <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px; text-align: center;">
-      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: left;">
-        <h2 style="color: #2c3e50; text-align: center;">Dear Researcher,</h2>
-        <p style="font-size: 16px;">${fullMessage}</p>
-        <p><strong>Order Status:</strong> ${status}</p>
-        <p style="font-size: 16px;">Here are the details of your cart(s) for tracking ID: <strong>${trackingId}</strong></p>
-        <ul style="list-style: none; padding: 0;">
-          ${data.carts.map(detail => `
-            <li style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 10px;">
-              <p><strong>Cart ID:</strong> ${detail.Analyte}</p>
-              <p><strong>Created At:</strong> ${new Date(detail.created_at).toLocaleString()}</p>
-            </li>
-          `).join('')}
-        </ul>
-        <p style="margin-top: 30px;">Best regards,<br/><strong>Discovery Connect Team</strong></p>
-        <hr style="margin-top: 40px; border: none; border-top: 1px solid #ccc;" />
-        <p style="font-size: 12px; color: #888; text-align: center;">
-          This is an automated message. Please do not reply directly to this email.
-        </p>
-      </div>
-    </div>
-  `;
-
-      await sendEmail(data.email, "Sample Request Status Update", emailMessage);
-      console.log(`Email sent to ${data.email} for tracking ID ${trackingId}`);
-    } else {
-      console.log("No tracking IDs found to send email.");
+    for (const cs of cartSamples) {
+      await queryAsync(
+        `UPDATE sample 
+         SET quantity = quantity + ?, quantity_allocated = quantity_allocated - ? 
+         WHERE id = ?`,
+        [cs.quantity, cs.quantity, cs.sample_id]
+      );
     }
-
-
-    return updateResults;
-  } catch (err) {
-    console.error("Error in bulk update in model:", err);
-    throw new Error("Bulk update in model failed");
   }
+};
+
+// Main bulk update function
+const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comment) => {
+  if (!cartIds || cartIds.length === 0) throw new Error("No cart IDs provided");
+
+  const placeholders = cartIds.map(() => '?').join(',');
+
+  // 1. Batch update technicaladminsampleapproval
+  await queryAsync(
+    `UPDATE technicaladminsampleapproval 
+     SET technical_admin_status = ?, Comments = ?, Approval_date = NOW() 
+     WHERE cart_id IN (${placeholders})`,
+    [technical_admin_status, comment, ...cartIds]
+  );
+
+  // 2. Determine new cart_status
+  let newCartStatus = null;
+  if (technical_admin_status === 'Accepted') newCartStatus = 'Dispatched';
+  if (technical_admin_status === 'Rejected') newCartStatus = 'Rejected';
+
+  if (newCartStatus) {
+    await updateCartStatus(cartIds, newCartStatus);
+  }
+
+  // 3. Fetch carts info for emails
+  const cartDetails = await queryAsync(
+    `SELECT c.id AS cartId, c.tracking_id, c.created_at, c.order_status, s.Analyte, ua.email
+     FROM cart c
+     JOIN sample s ON s.id = c.sample_id
+     JOIN user_account ua ON ua.id = c.user_id
+     WHERE c.id IN (${placeholders})`,
+    cartIds
+  );
+
+  // 4. Group by tracking_id
+  const trackingMap = {};
+  cartDetails.forEach(row => {
+    if (!trackingMap[row.tracking_id]) {
+      trackingMap[row.tracking_id] = { email: row.email, carts: [] };
+    }
+    trackingMap[row.tracking_id].carts.push(row);
+  });
+
+  // 5. Send emails asynchronously (non-blocking)
+  Object.entries(trackingMap).forEach(([trackingId, data]) => {
+    setImmediate(async () => {
+      try {
+        const baseMessage =
+          technical_admin_status === 'Accepted'
+            ? "Your sample request has been <b>approved</b> by the Technical Admin.<br/>"
+            : technical_admin_status === 'Rejected'
+              ? "Your sample request has been <b>rejected</b> by the Technical Admin.<br/>"
+              : "Your sample request is still <b>pending</b> approval by the Technical Admin.<br/>";
+
+        const fullMessage = comment ? `${baseMessage}<br/><b>Comment:</b> ${comment}` : baseMessage;
+
+        const emailMessage = `
+          <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px; text-align: center;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: left;">
+              <h2 style="color: #2c3e50; text-align: center;">Dear Researcher,</h2>
+              <p style="font-size: 16px;">${fullMessage}</p>
+              <p><strong>Order Date:</strong> ${data.carts?.[0]?.created_at ? new Date(data.carts[0].created_at).toLocaleString() : "N/A"}</p>
+              <p><strong>Order Status:</strong> ${data.carts?.[0]?.order_status}</p>
+              <p style="font-size: 16px;">Cart details for tracking ID: <strong>${trackingId}</strong></p>
+              <ul style="list-style: none; padding: 0;">
+                ${data.carts.map(detail => `<li style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 10px;">
+                  <p><strong>Analyte:</strong> ${detail.Analyte}</p>
+                </li>`).join('')}
+              </ul>
+              <p style="margin-top: 30px;">Best regards,<br/><strong>Discovery Connect Team</strong></p>
+              <hr style="margin-top: 40px; border: none; border-top: 1px solid #ccc;" />
+              <p style="font-size: 12px; color: #888; text-align: center;">
+                This is an automated message. Please do not reply directly to this email.
+              </p>
+            </div>
+          </div>
+        `;
+
+        await sendEmail(data.email, "Sample Request Status Update", emailMessage);
+        console.log(`Email sent to ${data.email} for tracking ID ${trackingId}`);
+      } catch (err) {
+        console.error("Email send error:", err);
+      }
+    });
+  });
+
+  return cartIds.map(id => ({ id, status: 'updated' }));
 };
 
 
@@ -1196,11 +1170,9 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
 
       const emailMessage = `
         <div style="font-family: Arial, sans-serif;">
-          Dear Researcher,<br/>
+          
           ${message}
           <br/><br/>
-        
-          <br/>Best regards,<br/>Discovery connect Team
         </div>
       `;
 
@@ -1237,80 +1209,7 @@ const queryAsync = (sql, params) => {
   });
 };
 
-const updateCartStatus = async (cartIds, cartStatus, callback) => {
-  try {
-    const ids = Array.isArray(cartIds) ? cartIds : [cartIds];
 
-    const message =
-      cartStatus === 'Rejected'
-        ? "Your sample request has been <b>rejected</b>.<br/>"
-        : cartStatus === 'Pending'
-          ? "Your sample documents have been <b>reviewed by a committee member and Technical Admin</b>.<br/>"
-          : "Your sample request status has been updated.<br/>";
-
-    const subject = "Sample Request Status Update";
-
-    // Step 1: Update each cart status
-    for (const id of ids) {
-      await queryAsync(`UPDATE cart SET order_status = ? WHERE id = ?`, [cartStatus, id]);
-    }
-
-    if (cartStatus === 'Rejected') {
-      // Step 2: If Rejected, add back cart quantities to sample quantities
-      const cartSamplesQuery = `
-        SELECT sample_id, quantity
-        FROM cart
-        WHERE id IN (${ids.map(() => '?').join(',')})
-      `;
-      const cartSamples = await queryAsync(cartSamplesQuery, ids);
-
-      for (const cs of cartSamples) {
-        await queryAsync(
-          `UPDATE sample 
-           SET quantity = quantity + ?, 
-               quantity_allocated = quantity_allocated - ? 
-           WHERE id = ?`,
-          [cs.quantity, cs.quantity, cs.sample_id]
-        );
-      }
-    }
-
-    // Step 3: Get email info for the FIRST cart only
-    // const getFirstCartEmailQuery = `
-    //   SELECT ua.email
-    //   FROM user_account ua
-    //   JOIN cart c ON ua.id = c.user_id
-    //   WHERE c.id = ?
-    // `;
-    // const result = await queryAsync(getFirstCartEmailQuery, [ids[0]]);
-
-    // if (!result || result.length === 0) {
-    //   throw new Error(`No researcher found for cart ID: ${ids[0]}`);
-    // }
-
-    // const { email } = result[0];
-
-    // // Step 4: Build email message
-    // const cartList = ids.map(id => `Cart ID: ${id}`).join("<br/>");
-    // const emailMessage = `Dear Researcher,<br/>${message}<br/>Updated Cart(s):<br/>${cartList}<br/>Best regards,<br/>Discovery connect Team`;
-
-    // // Step 5: Send email
-    // await sendEmail(email, subject, emailMessage);
-
-    // if (typeof callback === 'function') {
-    //   callback(null, "Cart status updated, sample quantity adjusted (if rejected), and researcher notified.");
-    // } else {
-    //   return "Cart status updated, sample quantity adjusted (if rejected), and researcher notified.";
-    // }
-  } catch (err) {
-    console.error("Error in update and notify:", err);
-    if (typeof callback === 'function') {
-      callback(err, null);
-    } else {
-      throw err;
-    }
-  }
-};
 
 module.exports = {
   createCartTable,

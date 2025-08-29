@@ -15,7 +15,7 @@ const BioSpecimenSection = () => {
     "/assets/img/slider/13/slider-8.png",
     "/assets/img/slider/13/slider-6.png",
     "/assets/img/slider/13/slider-11.jpg",
-    
+
   ];
 
   return (
@@ -36,7 +36,8 @@ const BioSpecimenSection = () => {
 
         <Row className="align-items-center">
           <Col md={6} className="mb-4 mb-md-0" data-aos="fade-right">
-            <h3 className="fw-bold mb-3" style={{ fontSize: "2.5rem" }}>
+            <h3 className="fw-bold mb-3 fs-2 fs-md-1">
+
               <span
                 style={{
                   background: "linear-gradient(to right, #007bff, #00b4d8)",
@@ -44,14 +45,14 @@ const BioSpecimenSection = () => {
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                Explore Cutting-Edge Biobanking Solutions
+                Helping Researchers Access Quality Samples
               </span>{" "}
-              for Advancing Medical and Scientific Innovation.
+              for Scientific Discovery.
             </h3>
             <p className="text-secondary fs-5">
-              Access a diverse range of biospecimens for groundbreaking
-              research.
+              We provide reliable biospecimens to support your research and innovation.
             </p>
+
           </Col>
 
           <Col md={6}>

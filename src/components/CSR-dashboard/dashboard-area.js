@@ -5,8 +5,8 @@ import { useRouter } from "next/router";  // Importing useRouter for redirect
 import ChangePassword from './change-password';
 import Header from '../../layout/dashboardheader';
 import OrderInfo from "./order-info";
-import ShippingSampleArea from "./dispatchedorder";
-import DispatchSampleArea from "./shippingorder";
+import DispatchSampleArea from "./dispatchedorder";
+import ShippingSampleArea from "./shippingorder";
 import CompletedSampleArea from "./completedorder";
 const DashboardArea = () => {
    const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
@@ -43,9 +43,9 @@ const DashboardArea = () => {
       case "order-info":
         return <OrderInfo setActiveTab={setActiveTab} />;
       case "dispatchorder":
-        return <ShippingSampleArea />;
+        return <DispatchSampleArea />;
         case "shippingorder":
-          return <DispatchSampleArea />;
+          return <ShippingSampleArea />;
           case "completedorder":
             return <CompletedSampleArea />;
       case "change-password":

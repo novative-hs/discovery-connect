@@ -45,6 +45,13 @@ const OrderPage = () => {
     const saved = localStorage.getItem("transferredOrders");
     return saved ? JSON.parse(saved) : [];
   });
+  const isScientificApproved = selectedOrder?.scientific_committee_status === "Approved";
+  const isEthicalApproved = selectedOrder?.ethical_committee_status === "Approved";
+
+  const shouldShowTransferButton = !(
+    (isScientificApproved || selectedOrder?.scientific_committee_status === null) &&
+    (isEthicalApproved || selectedOrder?.ethical_committee_status === null)
+  );
   // New state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedHistory, setSelectedHistory] = useState([]);
@@ -80,10 +87,17 @@ const OrderPage = () => {
   // Helper function to parse statuses
 
   useEffect(() => {
-    localStorage.removeItem("transferredOrders")
+    localStorage.removeItem("transferredOrders");
     fetchOrders(currentPage, ordersPerPage);
-  }, [currentPage]);
 
+    // Set interval to refresh every 5 minutes
+    const interval = setInterval(() => {
+      fetchOrders(currentPage, ordersPerPage);
+    }, 300000); // 300,000 ms = 5 minutes
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval);
+  }, [currentPage]);
   const fetchDocuments = async (tracking_id) => {
     setDocumentLoading(true);
     try {
@@ -263,6 +277,7 @@ const OrderPage = () => {
     } finally {
       setLoading(false);
       setShowModal(false);
+      setShowOrderModal(false);
       setComment(""); // Reset comment
       setTimeout(() => setSuccessMessage(""), 3000);
     }
@@ -496,7 +511,10 @@ const OrderPage = () => {
   };
 
   // Convert transferNo to review label
-  const getReviewLabel = (transferNo) => `${getOrdinal(Number(transferNo))} Review`;
+  const getReviewLabel = (transferNo) => {
+    const number = Number(transferNo);
+    return isNaN(number) ? "Review" : `${getOrdinal(number)} Review`;
+  };
 
   useEffect(() => {
     if (showSampleModal || showTransferModal || showCommentsModal) {
@@ -531,30 +549,14 @@ const OrderPage = () => {
                 <tr className="text-center">
                   {[
                     { label: "Order ID", field: "tracking_id" },
-                    {
-                      label: "Order Date",
-                      field: "created_at"
-                    },
+                    { label: "Order Date", field: "created_at" },
                     { label: "Client Name", field: "researcher_name" },
                     { label: "Client Email", field: "user_email" },
-
-                    {
-                      label: "Organization Name",
-                      field: "organization_name",
-                    },
-                    {
-                      label: "Scientific",
-                      field: "committee_status",
-                    },
-                    {
-                      label: "Ethical",
-                      field: "committee_status",
-                    },
+                    { label: "Organization Name", field: "organization_name" },
+                    { label: "Scientific", field: "committee_status" },
+                    { label: "Ethical", field: "committee_status" },
                     { label: "View Documents", key: "study_copy" },
-
-
-
-                  ].map(({ label, field }, index) => (
+                  ].map(({ label, field, key }, index) => (
                     <th
                       key={index}
                       className="px-1 py-1"
@@ -566,13 +568,15 @@ const OrderPage = () => {
                       }}
                     >
                       <div className="d-flex flex-column align-items-center">
-                        <input
-                          type="text"
-                          className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                          placeholder={`Search ${label}`}
-                          onChange={(e) => handleFilterChange(field, e.target.value)}
-                          style={{ width: "100%" }}
-                        />
+                        {label !== "View Documents" && (
+                          <input
+                            type="text"
+                            className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                            placeholder={`Search ${label}`}
+                            onChange={(e) => handleFilterChange(field, e.target.value)}
+                            style={{ width: "100%" }}
+                          />
+                        )}
                         <span
                           className="fw-bold mt-1 d-block fs-6 text-center"
                           style={{ wordWrap: "break-word", whiteSpace: "normal" }}
@@ -594,6 +598,7 @@ const OrderPage = () => {
                     Action
                   </th>
                 </tr>
+
               </thead>
               <tbody className="table-light">
                 {currentOrders.length > 0 ? (
@@ -797,8 +802,11 @@ const OrderPage = () => {
 
 
                           {/* Transfer */}
-                          {!(selectedOrder?.scientific_committee_status === "Approved" &&
-                            selectedOrder?.ethical_committee_status === "Approved") && (
+                          {!(
+                            (selectedOrder?.scientific_committee_status?.toLowerCase() === "approved" && selectedOrder?.ethical_committee_status?.toLowerCase() === "not sent") ||
+                            (selectedOrder?.ethical_committee_status?.toLowerCase() === "approved" && selectedOrder?.scientific_committee_status?.toLowerCase() === "not sent") ||
+                            (selectedOrder?.scientific_committee_status?.toLowerCase() === "approved" && selectedOrder?.ethical_committee_status?.toLowerCase() === "approved")
+                          ) && (
                               <button
                                 className="btn btn-outline-primary btn-sm"
                                 onClick={() => handleToggleTransferOptions(selectedOrder.order_id)}
@@ -806,6 +814,7 @@ const OrderPage = () => {
                                 Transfer
                               </button>
                             )}
+
 
 
                         </>
@@ -1063,34 +1072,49 @@ const OrderPage = () => {
             size="lg"
             scrollable
           >
-            <Modal.Header closeButton>
-              <Modal.Title className="fw-bold text-primary">Review History</Modal.Title>
+            <Modal.Header
+              closeButton
+              style={{
+                background: "linear-gradient(90deg, #007bff, #0056b3)",
+                color: "#fff",
+                borderBottom: "none",
+                padding: "1rem",
+                borderTopLeftRadius: "8px",
+                borderTopRightRadius: "8px",
+              }}
+            >
+              <Modal.Title style={{ fontWeight: "bold", fontSize: "1.5rem" }}>
+                Review History
+              </Modal.Title>
             </Modal.Header>
-
             <Modal.Body
               style={{
-                maxHeight: '60vh',
-                overflowY: 'auto',
-                padding: '1rem'
+                maxHeight: "60vh",
+                overflowY: "auto",
+                padding: "1.5rem",
+                backgroundColor: "#f4f6f9",
+                borderBottomLeftRadius: "8px",
+                borderBottomRightRadius: "8px",
               }}
             >
               {loadingHistory ? (
                 <div className="text-center py-4">
-                  <span className="spinner-border text-primary" role="status"></span>
-                  <p className="mt-2">Loading history...</p>
+                  <span
+                    className="spinner-border text-primary"
+                    style={{ width: "3rem", height: "3rem" }}
+                    role="status"
+                  ></span>
+                  <p className="mt-3 fs-5">Loading history...</p>
                 </div>
               ) : (
                 <>
-
-
-                  {selectedHistory.length > 0 && selectedHistory.some(h => Array.isArray(h.items) && h.items.length > 0) ? (
-
-                    // Flatten all items from all selectedHistory entries
+                  {selectedHistory.length > 0 &&
+                    selectedHistory.some(h => Array.isArray(h.items) && h.items.length > 0) ? (
                     Object.entries(
                       selectedHistory
                         .flatMap(h => h.items || [])
                         .reduce((acc, item) => {
-                          const key = item.transfer ?? 'no-transfer'; // use actual transfer number
+                          const key = item.transfer ?? "no-transfer";
                           if (!acc[key]) acc[key] = [];
                           acc[key].push(item);
                           return acc;
@@ -1100,90 +1124,150 @@ const OrderPage = () => {
 
                       return (
                         <div
-                          key={idx}
-                          className="mb-3 p-2 rounded shadow-sm"
                           style={{
-                            backgroundColor: "#f5f5f5", // light grey background
-                            minHeight: "auto",          // allows height to shrink based on content
-                            maxWidth: "90%",            // optional: limits width for chat look
-                            lineHeight: "1.4",          // tighter spacing
+                            background: "#ffffff",
+                            borderRadius: "10px",
+                            padding: "1.25rem",
+                            boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+                            marginBottom: "1.5rem",
                           }}
                         >
-                          <h5 className="fw-bold text-primary mb-2 text-center fs-4">
+                          <h5
+                            style={{
+                              color: "#007bff",
+                              fontWeight: "700",
+                              textAlign: "center",
+                              marginBottom: "1rem",
+                              fontSize: "1.3rem",
+                            }}
+                          >
                             {getReviewLabel(transferNo)}
                           </h5>
 
                           {/* Technical Admin */}
                           {firstHistory?.Technicaladmindate && (
-                            <div className="mb-3">
-                              <h6 className="fw-bold text-dark mb-1">
-                                {formatDT(firstHistory.Technicaladmindate)} case Referred by Technical Admin
+                            <div
+                              style={{
+                                backgroundColor: "#eef2f7",
+                                padding: "0.8rem",
+                                borderRadius: "6px",
+                                marginBottom: "1rem",
+                                borderLeft: "4px solid #0d6efd",
+                              }}
+                            >
+                              <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
+                                🛠️  {formatDT(firstHistory.Technicaladmindate)}  Referred by Technical Admin
                               </h6>
                             </div>
                           )}
-
                           {/* Committee Referrals */}
                           {histories.some(h => h.committee_created_at) && (
-                            <>
-                              <div className="mb-3">
-                                {histories.some(h => h.committee_created_at && h.committeetype) ? (
-                                  histories.map((history, i) => {
-                                    if (!history.committee_created_at || !history.committeetype) return null;
-
-                                    const committeeLabel =
-                                      history.committeetype === "Scientific"
-                                        ? "Scientific Committee Member"
-                                        : history.committeetype === "Ethical"
-                                          ? "Ethical Committee Member"
-                                          : `${history.committeetype} Committee Member`;
-
-                                    return (
-                                      <h6 key={i} className="fw-bold text-dark mb-1">
-                                        {formatDT(history.committee_created_at)} case Referred by {committeeLabel}: {history.CommitteeMemberName}
-                                      </h6>
-                                    );
-                                  })
-                                ) : (
-                                  <span className="text-muted">No Committee Referrals</span>
-                                )}
-                              </div>
-
-                              {/* Committee Member Status */}
-                              <div className="mb-3">
-                                <h6 className="fw-bold text-dark mb-2">👥 Committee Member Status</h6>
-                                {histories.map((history, i) => (
-                                  history.committee_created_at ? (
-                                    <div key={i} className="list-group-item d-flex flex-column align-items-start mb-2 rounded shadow-sm border">
-                                      <div className="fw-bold">
-                                        {history.committee_approval_date
-                                          ? `${formatDT(history.committee_approval_date)} ${history.committee_status} by ${history.committeetype} - ${history.CommitteeMemberName}`
-                                          : `Referred to ${history.committeetype} - ${history.CommitteeMemberName}`}
-                                      </div>
-
-                                    </div>
-                                  ) : null
-                                ))}
-                              </div>
-                            </>
+                            <div
+                              style={{
+                                backgroundColor: "#f8f9fa",
+                                padding: "0.8rem",
+                                borderRadius: "6px",
+                                marginBottom: "1rem",
+                                borderLeft: "4px solid #6f42c1",
+                              }}
+                            >
+                              {histories.map((history, i) =>
+                                history.committee_created_at ? (
+                                  <div key={i} style={{ marginBottom: "0.5rem" }}>
+                                    <h6 style={{ margin: 0, fontWeight: "600", color: "#6f42c1" }}>
+                                      🧑‍⚖️ <span style={{ margin: 0, fontSize: "0.9rem", color: "#6c757d" }}>
+                                        {formatDT(history.committee_created_at)}
+                                      </span> Referred by {history.committeetype} Committee Member:
+                                      <span style={{ color: "#343a40" }}> {history.CommitteeMemberName}</span>
+                                    </h6>
+                                  </div>
+                                ) : null
+                              )}
+                            </div>
                           )}
+                          {/* Committee Member Status */}
+                          <div style={{ marginBottom: "1rem" }}>
+                            <h6
+                              style={{
+                                fontWeight: "600",
+                                color: "#212529",
+                                marginBottom: "0.5rem",
+                              }}
+                            >
+                              👥 Committee Member Status
+                            </h6>
+                            {histories.map((history, i) =>
+                              history.committee_created_at ? (
+                                <div
+                                  key={i}
+                                  style={{
+                                    background: "#f1f3f5",
+                                    padding: "0.75rem",
+                                    borderRadius: "6px",
+                                    marginBottom: "0.5rem",
+                                    border: "1px solid #dee2e6",
+                                  }}
+                                >
+                                  <div style={{ fontWeight: "500", color: "#495057" }}>
+                                    {history.committee_approval_date
+                                      ? `${formatDT(history.committee_approval_date)} ${history.committee_status} by ${history.committeetype} - ${history.CommitteeMemberName}`
+                                      : `Referred to ${history.committeetype} - ${history.CommitteeMemberName}`}
+                                  </div>
+                                </div>
+                              ) : null
+                            )}
+                          </div>
 
                           {/* Uploaded Documents */}
-                          <div className="mb-3">
-                            <h6 className="fw-bold text-dark mb-2">📂 Uploaded Documents</h6>
+                          <div style={{
+                            marginBottom: "1rem",
+                            background: "#f8f9fa",
+                            borderRadius: "8px",
+                            padding: "15px",
+                            boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+                          }}>
+                            <h6
+                              style={{
+                                fontWeight: "600",
+                                color: "#0d6efd",
+                                marginBottom: "1rem",
+                                display: "flex",
+                                alignItems: "center",
+                                fontSize: "1rem"
+                              }}
+                            >
+                              📂 Uploaded Documents
+                            </h6>
+
                             {histories.flatMap(h => h.documents || []).length > 0 ? (
-                              <div className="table-responsive">
-                                <table className="table table-sm table-bordered">
-                                  <thead className="table-light">
+                              <div style={{
+                                overflowX: "auto",
+                                border: "1px solid #dee2e6",
+                                borderRadius: "6px"
+                              }}>
+                                <table
+                                  className="table table-sm"
+                                  style={{
+                                    margin: 0,
+                                    background: "#fff",
+                                    borderCollapse: "separate",
+                                    borderSpacing: "0"
+                                  }}
+                                >
+                                  <thead style={{
+                                    background: "#e9ecef",
+                                    color: "#495057",
+                                    fontSize: "0.9rem"
+                                  }}>
                                     <tr>
-                                      <th>Uploaded Date</th>
-                                      <th>Role</th>
-                                      <th>Action</th>
+                                      <th style={{ padding: "10px" }}>Uploaded Date</th>
+                                      <th style={{ padding: "10px" }}>Role</th>
+                                      <th style={{ padding: "10px" }}>Action</th>
                                     </tr>
                                   </thead>
                                   <tbody>
                                     {(() => {
                                       const allDocs = histories.flatMap(h => h.documents || []);
-
                                       const uniqueDocsMap = {};
                                       allDocs.forEach(doc => {
                                         const key = `${doc.uploaded_by_role}-${doc.added_by}`;
@@ -1191,22 +1275,41 @@ const OrderPage = () => {
                                       });
 
                                       return Object.values(uniqueDocsMap).map((doc, docIdx) => (
-                                        <tr key={docIdx}>
-                                          <td>
+                                        <tr key={docIdx} style={{ fontSize: "0.88rem" }}>
+                                          <td style={{ padding: "8px", color: "#495057" }}>
                                             {doc.created_at
                                               ? formatDT(doc.created_at)
                                               : doc.updated_at
                                                 ? formatDT(doc.updated_at)
                                                 : "---"}
                                           </td>
-                                          <td>{doc.uploaded_by_role || "Unknown"}</td>
-                                          <td>
+                                          <td style={{ padding: "8px", fontWeight: "500", color: "#212529" }}>
+                                            {doc.uploaded_by_role || "Unknown"}
+                                          </td>
+                                          <td style={{ padding: "8px" }}>
                                             {["study_copy", "irb_file", "nbc_file"].map(
                                               docKey =>
                                                 doc[docKey] && (
                                                   <button
                                                     key={docKey}
-                                                    className="btn btn-outline-primary btn-sm me-2 mb-1"
+                                                    className="btn btn-sm me-2 mb-1"
+                                                    style={{
+                                                      border: "1px solid #0d6efd",
+                                                      color: "#0d6efd",
+                                                      background: "#fff",
+                                                      fontSize: "0.8rem",
+                                                      borderRadius: "4px",
+                                                      padding: "4px 8px",
+                                                      transition: "all 0.2s ease-in-out"
+                                                    }}
+                                                    onMouseOver={(e) => {
+                                                      e.target.style.background = "#0d6efd";
+                                                      e.target.style.color = "#fff";
+                                                    }}
+                                                    onMouseOut={(e) => {
+                                                      e.target.style.background = "#fff";
+                                                      e.target.style.color = "#0d6efd";
+                                                    }}
                                                     onClick={() => openPdfFromBase64(doc[docKey])}
                                                   >
                                                     Download {docKey.replace("_", " ").toUpperCase()}
@@ -1221,29 +1324,23 @@ const OrderPage = () => {
                                 </table>
                               </div>
                             ) : (
-                              <span className="text-muted">No Documents Attached</span>
+                              <span style={{ color: "#6c757d", fontSize: "0.9rem" }}>No Documents Attached</span>
                             )}
                           </div>
 
-                          {/* Technical Admin Approval */}
-                          {firstHistory?.TechnicaladminApproval_date && (
-                            <div>
-                              <h6 className="fw-bold text-dark mb-1">
-                                {formatDT(firstHistory.TechnicaladminApproval_date)} Approved by Technical Admin
-                              </h6>
-                            </div>
-                          )}
+
 
                         </div>
                       );
                     })
                   ) : (
-                    <div className="text-muted">⚠ No history available</div>
+                    <div style={{ color: "#6c757d" }}>⚠ No history available</div>
                   )}
                 </>
               )}
             </Modal.Body>
           </Modal>
+
 
 
           {/* Admin Approval Modal */}

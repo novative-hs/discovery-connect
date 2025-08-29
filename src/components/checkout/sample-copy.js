@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
-import { notifyError, notifySuccess } from "@utils/toast";
+import { PDFDocument } from "pdf-lib";
+import { notifyError } from "@utils/toast";
 import { useRouter } from "next/router";
 
 const SampleCopy = ({ setSampleCopyData, onComplete }) => {
@@ -16,23 +17,48 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
     router.push("/dashboardheader?tab=invoice-area");
   };
 
-  const handleFileChange = (e, setter, field) => {
-    const file = e.target.files[0];
+  // PDF Compression Function
+  const compressPDF = async (file) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
 
-    if (!file) return; // No file selected
+      // Clear metadata to reduce size slightly
+      pdfDoc.setTitle("");
+      pdfDoc.setAuthor("");
+      pdfDoc.setSubject("");
+      pdfDoc.setKeywords([]);
+
+      const compressedBytes = await pdfDoc.save({ useObjectStreams: true });
+      return new File([compressedBytes], file.name, { type: "application/pdf" });
+    } catch (error) {
+      console.error("Compression failed, using original file:", error);
+      return file;
+    }
+  };
+
+  // Handle File Upload with Compression
+  const handleFileChange = async (e, setter, field) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
     if (file.type !== "application/pdf") {
       notifyError("Only PDF format is allowed.");
       setter(null);
       return;
     }
 
-    setter(file);
-    updateParent(field, file);
+    const compressedFile = await compressPDF(file);
+    setter(compressedFile);
+    updateParent(field, compressedFile);
   };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    // No validation needed as all fields are optional
+    if (!studyCopy || !irbFile) {
+      notifyError("Please upload all required documents in PDF format.");
+      return;
+    }
   };
 
   const updateParent = (field, value) => {
@@ -53,7 +79,7 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
           border: "none",
           padding: "8px 16px",
           borderRadius: "4px",
-          cursor: "pointer"
+          cursor: "pointer",
         }}
         onClick={() => fileRef.current.click()}
       >
@@ -68,8 +94,13 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
       />
       {file && (
         <p className="mt-2">
-          <a href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer" className="text-primary underline-link">
-            {file.name}
+          <a
+            href={URL.createObjectURL(file)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline-link"
+          >
+            {file.name} ({(file.size / 1024).toFixed(1)} KB)
           </a>
         </p>
       )}
@@ -77,7 +108,10 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
   );
 
   const handleNext = () => {
-    // No validation needed as all fields are optional
+    if (!studyCopy || !irbFile || !reportingMechanism) {
+      notifyError("Please upload all required fields before proceeding.");
+      return;
+    }
     onComplete();
   };
 
@@ -86,6 +120,7 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
       <h3>Upload Documents</h3>
       <form onSubmit={handleFormSubmit}>
         <div className="row">
+          {/* Study Copy */}
           <div className="col-12 mb-3">
             <p className="text-muted h8">
               Upload Copy of the Study
@@ -116,6 +151,7 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
             {renderFileUpload(nbcFileRef, setNbcFile, "nbcFile", nbcFile)}
           </div>
 
+          {/* Reporting Mechanism */}
           <div className="col-12 mb-3">
             <p className="text-muted h8">
               Any Additional Mechanism
@@ -134,11 +170,7 @@ const SampleCopy = ({ setSampleCopyData, onComplete }) => {
         </div>
       </form>
       <div className="d-flex justify-content-end mt-3">
-        <button
-          type="button"
-          className="tp-btn me-2"
-          onClick={handleInvoice}
-        >
+        <button type="button" className="tp-btn me-2" onClick={handleInvoice}>
           View Invoice
         </button>
         <button type="button" className="tp-btn" onClick={handleNext}>

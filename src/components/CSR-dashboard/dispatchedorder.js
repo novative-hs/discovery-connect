@@ -6,7 +6,7 @@ import { notifySuccess, notifyError } from "@utils/toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFileInvoice } from "@fortawesome/free-solid-svg-icons";
 
-const ShippingSampleArea = () => {
+const DispatchSampleArea = () => {
   const id = sessionStorage.getItem("userID");
 
   const [staffAction, setStaffAction] = useState(() => sessionStorage.getItem("staffAction") || "");
@@ -155,7 +155,7 @@ const ShippingSampleArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
         <h4 className="text-center text-dark fw-bold mb-4">
-          📦 Orders Ready for Packaging
+          📦 Pending Orders
         </h4>
         <div className="table-responsive w-100">
           <table className="table table-bordered table-hover text-center align-middle table-sm shadow-sm rounded">
@@ -227,8 +227,17 @@ const ShippingSampleArea = () => {
         <Pagination pageCount={totalPages} onPageChange={handlePageChange} />
 
         {showOrderStatusModal && (
-          <Modal show onHide={() => setShowOrderStatusModal(false)} size="lg" centered>
-            <Modal.Body className="p-4 bg-light rounded-3 shadow-sm">
+          <Modal
+            show
+            onHide={() => setShowOrderStatusModal(false)}
+            size="lg"
+            centered
+            scrollable // makes modal body scrollable when content is too tall
+          >
+            <Modal.Body
+              className="p-4 bg-light rounded-3 shadow-sm"
+              style={{ maxHeight: "80vh", overflowY: "auto" }} // max height & scroll
+            >
               <div className="d-flex justify-content-between align-items-start mb-3">
                 <div>
                   <h5 className="fw-bold text-dark mb-2">
@@ -260,7 +269,7 @@ const ShippingSampleArea = () => {
                     <tr>
                       <th>Item</th>
                       <th>Qty X Volume</th>
-                      
+
                       <th>Collection Site Name</th>
                       <th>Unit Price</th>
                       <th>Total</th>
@@ -363,14 +372,19 @@ const ShippingSampleArea = () => {
 
               <Form.Group className="mt-3">
                 <Form.Label>Order Status</Form.Label>
-                <Form.Select
-                  value={orderStatus}
-                  onChange={(e) => setOrderStatus(e.target.value)}
-                >
-                  <option value="">Select Status</option>
-                  <option value="Shipped">Shipped</option>
-                </Form.Select>
+                <div>
+                  <Form.Check
+                    type="radio"
+                    label="Shipped"
+                    value="Shipped"
+                    checked={orderStatus === "Shipped"}
+                    onChange={(e) => setOrderStatus(e.target.value)}
+                    inline
+                  />
+
+                </div>
               </Form.Group>
+
 
               <div className="mt-4 d-flex justify-content-end gap-3">
                 <Button variant="secondary" onClick={() => setShowOrderStatusModal(false)}>
@@ -392,4 +406,4 @@ const ShippingSampleArea = () => {
   );
 };
 
-export default ShippingSampleArea;
+export default DispatchSampleArea;

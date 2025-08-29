@@ -1025,7 +1025,7 @@ const createSample = (data, callback) => {
               const newStatus = data.alreadypooled === "Pooled" ? "AddtoPool" : "Pooled";
 
               const updateStatusQuery = `
-      UPDATE sample SET status = ?, sample_visibility = 'Non-Public'
+      UPDATE sample SET status = ?, sample_visibility = 'Non-Public',reserved=0
       WHERE id IN (?)
     `;
 
@@ -1075,7 +1075,7 @@ const updateSample = (id, data, file, callback) => {
 
   // Start with fields and values
   const fields = [
-    'PatientName = ?', 'FinalConcentration=?', 'samplemode=?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
+    'PatientName = ?','MRNumber=?', 'FinalConcentration=?', 'samplemode=?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
     'Analyte = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
     'samplecondition = ?', 'storagetemp = ?', 'ContainerType = ?', 'CountryOfCollection = ?',
     'quantity = ?', 'VolumeUnit = ?', 'SampleTypeMatrix = ?', 'SmokingStatus = ?',
@@ -1086,18 +1086,13 @@ const updateSample = (id, data, file, callback) => {
   ];
 
   const values = [
-    data.patientname, data.finalConcentration, data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.samplepdf
+    data.patientname, data.MRNumber,data.finalConcentration, data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.samplepdf
   ];
 
   // Add logo file if available
   if (file?.logo?.[0]?.buffer) {
     fields.push('logo = ?');
     values.push(file.logo[0].buffer);
-  }
-
-  if (file?.samplepdf?.[0]?.buffer) {
-    fields.push('samplepdf = ?');
-    values.push(file.samplepdf[0].buffer);
   }
 
   fields.push('updated_at = CURRENT_TIMESTAMP');
@@ -1195,12 +1190,13 @@ const updateSampleStatus = (id, status, callback) => {
 const updatetestResultandUnit = (id, data, callback) => {
   const query = `
     UPDATE sample
-    SET samplemode = ?, TestResult = ?, TestResultUnit = ?, samplepdf = ?, status = ?
+    SET samplemode = ?, TestResult = ?, TestResultUnit = ?, samplepdf = ?
+
     WHERE id = ?`;
 
   mysqlConnection.query(
     query,
-    [data.mode, data.TestResult, data.TestResultUnit, data.samplepdf, data.status, id],
+    [data.mode, data.TestResult, data.TestResultUnit, data.samplepdf, id],
     (err, result) => {
       callback(err, result);
     }

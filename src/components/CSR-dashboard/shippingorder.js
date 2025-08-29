@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
 
-const DispatchSampleArea = () => {
+const ShippingSampleArea = () => {
   const [staffAction, setStaffAction] = useState("");
   const [samples, setSamples] = useState([]);
   const [filteredSamples, setFilteredSamples] = useState([]);
@@ -209,4 +209,4 @@ const DispatchSampleArea = () => {
   );
 };
 
-export default DispatchSampleArea;
+export default ShippingSampleArea;

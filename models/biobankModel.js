@@ -39,7 +39,7 @@ const getBiobankSamples = (
 
   const paramsShared = [];
   const paramsOwn = [];
-
+  
   // const likeValue = `%${filters?.toLowerCase()}%`;
 
   // Price filter
@@ -72,28 +72,26 @@ const getBiobankSamples = (
         paramsOwn.push(likeValue);
         break;
 
-      case "volume":
-        baseWhereShared += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
-        baseWhereOwn += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
-        paramsShared.push(likeValue, value.toLowerCase());
-        paramsOwn.push(likeValue, value.toLowerCase());
-        break;
 
-      case "TestResult":
-        baseWhereShared += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
-        baseWhereOwn += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
-        paramsShared.push(likeValue);
-        paramsOwn.push(likeValue);
-        break;
 
       case "gender":
-        baseWhereShared += ` AND LOWER(sample.gender) = ?`;
-        baseWhereOwn += ` AND LOWER(sample.gender) = ?`;
-        paramsShared.push(value.toLowerCase());
-        paramsOwn.push(value.toLowerCase());
+        if (!isNaN(value)) {
+          // If value is a number, treat as age
+          baseWhereShared += ` AND sample.age = ?`;
+          baseWhereOwn += ` AND sample.age = ?`;
+          paramsShared.push(Number(value));
+          paramsOwn.push(Number(value));
+        } else {
+          // Otherwise treat as gender
+          baseWhereShared += ` AND LOWER(sample.gender) = ?`;
+          baseWhereOwn += ` AND LOWER(sample.gender) = ?`;
+          paramsShared.push(value.toLowerCase());
+          paramsOwn.push(value.toLowerCase());
+        }
         break;
 
-        break;
+
+
 
       case "date_from":
         baseWhereShared += ` AND sample.created_at >= ?`;
@@ -137,14 +135,77 @@ const getBiobankSamples = (
     const field = filters.searchField;
     const value = filters.searchValue;
     const likeValue = `%${value.toLowerCase()}%`;
-
-    if (field === "visibility") {
+    if (field === "locationids") {
+      baseWhereShared += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
+      baseWhereOwn += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
+      paramsShared.push(likeValue, likeValue, likeValue);
+      paramsOwn.push(likeValue, likeValue, likeValue);
+      
+    }
+    else if (field === "visibility") {
       baseWhereShared += ` AND LOWER(sample.sample_visibility) = ?`;
       paramsShared.push(value.toLowerCase());
       baseWhereOwn += ` AND LOWER(sample.sample_visibility) = ?`;
       paramsOwn.push(value.toLowerCase());
     }
+    else if (field === "price") {
+      baseWhereShared += `
+      AND LOWER(CONCAT_WS(' ', CAST(sample.price AS CHAR), sample.SamplePriceCurrency)) = ?`;
+      baseWhereOwn += `
+      AND LOWER(CONCAT_WS(' ', CAST(sample.price AS CHAR), sample.SamplePriceCurrency)) = ?`;
 
+      const likeValue = `%${String(value).toLowerCase()}%`;
+      paramsShared.push(likeValue);
+      paramsOwn.push(likeValue);
+    }
+
+
+    else if (field === "volume") {
+      baseWhereShared += `
+    AND (
+      LOWER(sample.VolumeUnit) = ? OR
+      LOWER(sample.volume) LIKE ?
+    )`;
+      baseWhereOwn += `
+    AND (
+      LOWER(sample.VolumeUnit) = ? OR
+      LOWER(sample.volume) LIKE ?
+    )`;
+
+      paramsShared.push(value.toLowerCase(), `%${value.toLowerCase()}%`);
+      paramsOwn.push(value.toLowerCase(), `%${value.toLowerCase()}%`);
+    }
+
+    else if (field === "gender") {
+      if (!isNaN(value)) {
+        // Value is a number → treat as age
+        baseWhereShared += ` AND sample.age = ?`;
+        baseWhereOwn += ` AND sample.age = ?`;
+        paramsShared.push(Number(value));
+        paramsOwn.push(Number(value));
+      } else {
+        // Value is a string → treat as gender
+        baseWhereShared += ` AND LOWER(sample.gender) = ?`;
+        baseWhereOwn += ` AND LOWER(sample.gender) = ?`;
+        paramsShared.push(value.toLowerCase());
+        paramsOwn.push(value.toLowerCase());
+
+        // If filters.age is also provided, combine with AND
+        if (filters.age) {
+          baseWhereShared += ` AND sample.age = ?`;
+          baseWhereOwn += ` AND sample.age = ?`;
+          paramsShared.push(Number(filters.age));
+          paramsOwn.push(Number(filters.age));
+        }
+      }
+    }
+
+    else if (field === "TestResult") {
+      baseWhereShared += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
+      baseWhereOwn += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
+      paramsShared.push(likeValue);
+      paramsOwn.push(likeValue);
+    }
     else if (field === "CollectionSiteName") {
       baseWhereShared += ` AND LOWER(collectionsite.CollectionSiteName) LIKE ?`;
       paramsShared.push(likeValue);
@@ -383,39 +444,34 @@ const postSamplePrice = (data, callback) => {
   mysqlConnection.query(
     updateQuery,
     [data.price, data.SamplePriceCurrency, data.sampleId],
-    (err, results) => {
+    (err) => {
       if (err) {
-        console.error("❌ Error adding price and currency into sample:", err);
+        console.error("❌ Error updating sample:", err);
         return callback(err, null);
       }
 
-      // ✅ Insert into sample_history table
+      // Insert into sample_history
       const historyQuery = `
-  INSERT INTO sample_history (sample_id, action_type)
-  VALUES (?, ?)
-`;
-
-
-      mysqlConnection.query(historyQuery, [data.sampleId, 'update'], (err, historyResults) => {
+        INSERT INTO sample_history (sample_id, action_type)
+        VALUES (?, ?)
+      `;
+      mysqlConnection.query(historyQuery, [data.sampleId, 'update'], (err) => {
         if (err) {
           console.error("❌ Error inserting into sample_history:", err);
           return callback(err, null);
         }
 
-        // ✅ Check if sample is in quote_requests
+        // Check for pending quote requests
         const checkQuoteQuery = `
-  SELECT 
-    qr.*, 
-    ua.email, 
-    r.ResearcherName,
-    s.masterID
-  FROM quote_requests qr
-  JOIN researcher r ON qr.researcher_id = r.user_account_id
-  JOIN user_account ua ON ua.id = r.user_account_id
-  JOIN sample s ON s.id = qr.sample_id
-  WHERE qr.sample_id = ? AND qr.status = 'pending'
-`;
-
+          SELECT 
+            qr.id AS quote_id,
+            ua.email, 
+            r.ResearcherName
+          FROM quote_requests qr
+          JOIN researcher r ON qr.researcher_id = r.user_account_id
+          JOIN user_account ua ON ua.id = r.user_account_id
+          WHERE qr.sample_id = ? AND qr.status = 'pending'
+        `;
 
         mysqlConnection.query(checkQuoteQuery, [data.sampleId], async (err, quoteResults) => {
           if (err) {
@@ -424,33 +480,30 @@ const postSamplePrice = (data, callback) => {
           }
 
           if (quoteResults.length > 0) {
-            const quote = quoteResults[0];
+            const quoteIds = quoteResults.map(q => q.quote_id);
 
-            // ✅ Update quote status to 'priced'
+            // Update all pending quotes to 'priced'
             const updateQuoteStatus = `
-              UPDATE quote_requests SET status = 'priced' WHERE id = ?
+              UPDATE quote_requests SET status = 'priced' WHERE id IN (?)
             `;
-
-            mysqlConnection.query(updateQuoteStatus, [quote.id], async (err) => {
+            mysqlConnection.query(updateQuoteStatus, [quoteIds], async (err) => {
               if (err) {
-                console.error("❌ Error updating quote_requests status:", err);
+                console.error("❌ Error updating quote_requests:", err);
                 return callback(err, null);
               }
 
-              // ✅ Send email to researcher
+              // ✅ Send only one email to the first researcher
+              const firstQuote = quoteResults[0];
               const emailBody = `
                 <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
                   <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <p style="font-size: 16px; color: #333;">Dear ${quote.ResearcherName},</p>
-
+                    <p style="font-size: 16px; color: #333;">Dear ${firstQuote.ResearcherName},</p>
                     <p style="font-size: 15px; color: #555;">
                       The price for one of your requested samples has been updated.
                     </p>
-
                     <p style="font-size: 15px; color: #555;">
                       You can now proceed to order this sample from your dashboard.
                     </p>
-
                     <p style="font-size: 15px; color: #333; margin-top: 20px;">
                       Regards,<br>
                       <strong>Biobank Team</strong>
@@ -460,20 +513,17 @@ const postSamplePrice = (data, callback) => {
               `;
 
               try {
-                await sendEmail(
-                  quote.email,
-                  "Sample Price Updated - Ready to Order",
-                  emailBody
-                );
-
+                await sendEmail(firstQuote.email, "Sample Price Updated - Ready to Order", emailBody);
               } catch (emailErr) {
-                console.error("❌ Error sending email to researcher:", emailErr);
+                console.error("❌ Error sending email:", emailErr);
               }
-            });
-          }
 
-          // ✅ Final callback
-          return callback(null, { insertId: data.sampleId });
+              return callback(null, { sampleId: data.sampleId });
+            });
+          } else {
+            // No pending quotes, just finish
+            return callback(null, { sampleId: data.sampleId });
+          }
         });
       });
     }

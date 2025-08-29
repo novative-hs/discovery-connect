@@ -5,11 +5,13 @@ const createPaymentTable = () => {
     CREATE TABLE IF NOT EXISTS payment (
       id INT PRIMARY KEY AUTO_INCREMENT, 
       cardholder_name VARCHAR(225) NOT NULL,
+      bank_id INT,
       card_number VARCHAR(19) NOT NULL, 
       card_expiry DATE, 
       card_cvc VARCHAR(4) NOT NULL, 
       payment_type ENUM('Debit', 'Credit') NOT NULL,  
-      payment_status ENUM('Paid', 'Unpaid') NOT NULL DEFAULT 'Unpaid'
+      payment_status ENUM('Paid', 'Unpaid') NOT NULL DEFAULT 'Unpaid',
+       FOREIGN KEY (bank_id) REFERENCES bank(id) ON DELETE CASCADE
     );
   `;
 

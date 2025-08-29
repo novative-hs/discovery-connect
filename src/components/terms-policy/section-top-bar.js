@@ -1,14 +1,11 @@
 import React from "react";
-// internal
-import bg from "@assets/img/contact/contact-bg.png";
 
 const SectionTop = ({ title, subtitle }) => {
   return (
-    <section className="tp-section-area p-relative z-index-1 tp-section-spacing">
-      <div
-        className="tp-section-bg include-bg"
-        style={{ backgroundImage: `url(${bg.src})` }}
-      ></div>
+    <section
+      className="tp-section-area p-relative tp-section-spacing"
+      style={{ backgroundColor: "#EEF1FF" }} // light bluish background
+    >
       <div className="container">
         <div className="row justify-content-center">
           <div className="col-xl-7 col-lg-8">

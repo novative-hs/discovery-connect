@@ -58,43 +58,32 @@ const Header = ({ setActiveTab, activeTab }) => {
   const actions = staffAction?.split(",").map(a => a.trim());
   const dropdownRef = useRef(null);
 
+useEffect(() => {
+  if (!id) return;
 
-  useEffect(() => {
-    if (id !== null) {
-      fetchCart();
-      fetchUserDetail();
-    }
-  }, [id]);
-
-
-  const fetchCart = async () => {
+  const fetchData = async () => {
     try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getCount/${id}`
-      );
+      const [cartRes, userRes] = await Promise.all([
+        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getCount/${id}`),
+        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`)
+      ]);
 
-      if (response.data.length > 0 && typeof response.data[0].Count === "number") {
-        setCartCount(response.data[0].Count);
-        sessionStorage.setItem("cartCount", response.data[0].Count);
-      } else {
-
-        sessionStorage.setItem("cartCount", 0);
+      if (cartRes.data?.[0]?.Count) {
+        setCartCount(cartRes.data[0].Count);
+        sessionStorage.setItem("cartCount", cartRes.data[0].Count);
       }
-    } catch (error) {
-      console.error("Error fetching cart:", error);
+
+      if (userRes.data?.[0]) {
+        setUser(userRes.data[0]);
+      }
+    } catch (err) {
+      console.error("Dashboard load error", err);
     }
   };
 
-  const fetchUserDetail = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/getAccountDetail/${id}`
-      );
-      setUser(response.data[0]);
-    } catch (error) {
-      console.error("Error fetching user detail:", error);
-    }
-  };
+  fetchData();
+}, [id]);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -111,16 +100,15 @@ const Header = ({ setActiveTab, activeTab }) => {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      setUserLogo(
-        user?.logo?.data
-          ? `data:image/jpeg;base64,${Buffer.from(user?.logo.data).toString(
-            "base64"
-          )}`
-          : null
-      );
-    }
-  });
+  if (user) {
+    setUserLogo(
+      user?.logo?.data
+        ? `data:image/jpeg;base64,${Buffer.from(user.logo.data).toString("base64")}`
+        : null
+    );
+  }
+}, [user]); // ✅ only run when user changes
+
 
   const handleUpdateProfile = () => {
     setShowDropdown(false);

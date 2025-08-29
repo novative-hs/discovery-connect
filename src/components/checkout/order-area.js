@@ -289,10 +289,20 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
     0
   );
 
+  // Add validateDocuments function
+  const validateDocuments = () => {
+    // Implement your validation logic here
+    if (!sampleCopyData.studyCopy || !sampleCopyData.reportingMechanism || !sampleCopyData.irbFile) {
+      notifyError("Please provide all required documents");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (paymentId) => {
     console.log("Stored data:", {
-      tracking: localStorage.getItem("tracking_id"),
-      createdAt: localStorage.getItem("created_at")
+      tracking: typeof window !== 'undefined' ? localStorage.getItem("tracking_id") : null,
+      createdAt: typeof window !== 'undefined' ? localStorage.getItem("created_at") : null
     });
 
     // Get user ID from sessionStorage
@@ -303,11 +313,13 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
       return false;
     }
 
+    if (!validateDocuments()) return false;
+
     const formData = new FormData();
+
     formData.append("researcher_id", userID);
     formData.append("payment_id", paymentId);
 
-    // Append cart items
     formData.append(
       "cart_items",
       JSON.stringify(
@@ -322,7 +334,6 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
       )
     );
 
-    // Add files and metadata
     formData.append("study_copy", sampleCopyData.studyCopy);
     formData.append("reporting_mechanism", sampleCopyData.reportingMechanism);
     formData.append("irb_file", sampleCopyData.irbFile);
@@ -330,45 +341,43 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
       formData.append("nbc_file", sampleCopyData.nbcFile);
     }
 
+    // Redirect immediately to show progress page
+    router.push("/order-processing");
+
+    // Then process API request in background
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
         formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
-      const result = response.data;
-      const trackingId = result.tracking_id;
-      const created_at = result.created_at;
+      const { tracking_id, created_at } = response.data;
 
-      // Store order details in localStorage
-      localStorage.setItem("tracking_id", trackingId);
-      localStorage.setItem("created_at", created_at);
-      localStorage.setItem("order_status", "Pending");
-      localStorage.setItem("technical_admin_status", "Pending");
-      localStorage.setItem("committee_status", "Pending");
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem("tracking_id", tracking_id);
+        sessionStorage.setItem("created_at", created_at);
+      }
 
-      // Clear cart and redirect
       dispatch(clear_cart());
       notifySuccess("Order placed successfully!");
 
       // Redirect to confirmation page
-      router.push("/order-confirmation");
-
-      return true;
+      setTimeout(() => {
+        router.push({
+          pathname: "/order-confirmation",
+          query: { id: tracking_id, created_at },
+        });
+      }, 500);
     } catch (error) {
       console.error("Error placing order:", error);
-      notifyError(
-        error.response?.data?.error || "Failed to place order. Please try again."
-      );
-      return false;
+      notifyError(error.response?.data?.error || "Failed to place order.");
     }
   };
 
   return (
     <div className="container py-4" style={{ maxWidth: "750px" }}>
+
       {/* Payment Accordion */}
       <div className="accordion" id="paymentAccordion">
         <div className="accordion-item">

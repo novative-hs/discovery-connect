@@ -9,6 +9,7 @@ import {
   faExchangeAlt,
   faDollarSign,
   faEye,
+  faRuler
 } from "@fortawesome/free-solid-svg-icons";
 import { getsessionStorage } from "@utils/sessionStorage";
 import Barcode from "react-barcode";
@@ -98,40 +99,47 @@ const BioBankSampleArea = () => {
   const [PoolSampleHistoryModal, setPoolSampleHistoryModal] = useState(false);
   const [searchField, setSearchField] = useState(null);
   const [searchValue, setSearchValue] = useState(null);
+  const [showPatientModal, setShowPatientModal] = useState(false);
+  const today = new Date().toISOString().split("T")[0]; // e.g. "2025-08-18"
+  const [showAddtestResultandUnitModal, setShowAddTestResultandUnitModal] = useState("");
+  const [showEdittestResultandUnitModal, setShowEditTestResultandUnitModal] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateTo, setDateTo] = useState(today);
   const [analyte, setAnalyte] = useState("");
   const [gender, setGender] = useState("");
   const [collectionSite, setCollectionSite] = useState("");
   const [visibility, setVisibility] = useState("");
   const [priceFilter, setPriceFilter] = useState("");
+  const [appliedFilters, setAppliedFilters] = useState({});
+
   const [filters, setFilters] = useState({
     Analyte: '',
     Gender: '',
     CollectionSiteName: '',
     price: '',
+    date_to: today
   });
-
+  const [samplePdfPreview, setSamplePdfPreview] = useState(null);
   const tableHeaders = [
     { label: "Specimen ID", key: "masterID" },
     { label: "Patient Name", key: "PatientName" },
-    { label: "Patient Location", key: "PatientLocation" },
-    { label: "Age", key: "age" },
+    // { label: "Patient Location", key: "PatientLocation" },
     { label: "Gender", key: "gender" },
-    { label: "MR Number", key: "MRNumber" },
-    // { label: "Location", key: "locationids" },
+    // { label: "MR Number", key: "MRNumber" },
+    { label: "Location", key: "locationids" },
     { label: "Analyte", key: "Analyte" },
     { label: "Test Result", key: "TestResult" },
     { label: "Volume", key: "volume" },
-    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Price", key: "price" },
     { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
     { label: "Sample Mode", key: "samplemode" },
-    { label: "Barcode", key: "barcode" },
+    // { label: "Barcode", key: "barcode" },
   ];
 
   const fieldsToShowInOrder = [
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Container Type", key: "ContainerType" },
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
@@ -229,10 +237,14 @@ const BioBankSampleArea = () => {
     setSelectedSample(sample);
     setShowModal(true);
   };
-
+  const openPatientModal = (sample) => {
+    setSelectedSample(sample);
+    setShowPatientModal(true);
+  };
   const closeModal = () => {
     setSelectedSample(null);
     setShowModal(false);
+    setShowPatientModal(false)
   };
 
   const handleSelectCountry = (country) => {
@@ -361,39 +373,41 @@ const BioBankSampleArea = () => {
     setCurrentPage(selectedPage); // This will trigger the data change based on selected page
   };
 
+
   const handleFilterChange = (field, value) => {
     const trimmed = value.trim?.() || value;
+    let newFilters = {};
 
     if (field === "price") {
       setPriceFilter(value);
       setSearchField("");
       setSearchValue("");
-      fetchSamples(currentPage, itemsPerPage, { priceFilter: value });
-
+      newFilters = { priceFilter: value };
     } else if (field === "visibility") {
       setVisibility(value);
       setSearchField("");
       setSearchValue("");
       setPriceFilter("");
-      fetchSamples(currentPage + 1, itemsPerPage, { visibility: value });
-
+      newFilters = { visibility: value };
     } else if (field === "date_from" || field === "date_to") {
       if (field === "date_from") setDateFrom(trimmed);
       if (field === "date_to") setDateTo(trimmed);
-
-      // ✅ Send both dates together to the API
-      fetchSamples(currentPage, itemsPerPage, {
+      newFilters = {
         date_from: field === "date_from" ? trimmed : dateFrom,
         date_to: field === "date_to" ? trimmed : dateTo
-      });
-
+      };
     } else {
       setSearchField(field);
       setSearchValue(value);
       setPriceFilter("");
-      fetchSamples(currentPage, itemsPerPage, { searchField: field, searchValue: value });
+      newFilters = { searchField: field, searchValue: value };
     }
+
+    setAppliedFilters(newFilters);  // <-- Store latest filters
+    fetchSamples(currentPage, itemsPerPage, newFilters);
   };
+
+
 
 
 
@@ -502,20 +516,22 @@ const BioBankSampleArea = () => {
   }, [selectedSampleName]);
 
   const handleSubmit = async (e) => {
-    let isMounted = true;
     e.preventDefault();
+    if (isSubmitting) return; // 🛑 Prevent double submission
 
-    let effectiveMode = mode;
-    if (
-      mode !== "Individual" &&
-      formData.TestResult?.trim() &&
-      formData.TestResultUnit?.trim()
-    ) {
-      effectiveMode = "Pooled";
-      setMode("Pooled"); // optional: update state for consistency
+    setIsSubmitting(true); // 
+    const isResultFilled = !!formData.TestResult && !!formData.TestResultUnit;
+
+    let effectiveMode = mode; // This is now directly the radio value if you use it for Low/Medium/High
+
+    // ✅ Only run fallback if mode is "Pooled"
+    if (mode === "Pooled") {
+      effectiveMode = isResultFilled ? "Pooled" : "AddtoPool";
     }
 
-    // ✅ 2. Construct form data
+    // ✅ If your radio sets mode to "Low"/"Medium"/"High", then it will override this anyway
+    // So no extra FinalConcentration check is needed — the radio sets it.
+
     const formDataToSend = new FormData();
     for (let key in formData) {
       formDataToSend.append(key, formData[key]);
@@ -523,7 +539,6 @@ const BioBankSampleArea = () => {
 
     formDataToSend.append("mode", effectiveMode);
 
-    // ✅ 3. Append selected samples if it's truly a pooled sample
     if (
       (effectiveMode !== "Individual") &&
       Array.isArray(selectedSamples) &&
@@ -531,7 +546,6 @@ const BioBankSampleArea = () => {
     ) {
       formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
     }
-
 
 
     try {
@@ -554,14 +568,60 @@ const BioBankSampleArea = () => {
       setSuccessMessage("Sample added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
 
-      // Reset form
       resetFormData();
       setLogoPreview(false);
       setShowAdditionalFields(false);
     } catch (error) {
+
+      if (error.response?.status === 409) {
+        // Duplicate entry
+        notifyError(error.response.data?.error || "Duplicate entry found.");
+      } else {
+        notifyError("Something went wrong while adding the sample.");
+      }
+    }
+    finally {
+      setIsSubmitting(false); // ✅ Always turn off loading state
+    }
+  };
+  const handleAddTestResult = async (e) => {
+    e.preventDefault();
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("mode", "Pooled");
+      formDataToSend.append("TestResult", formData.TestResult);
+      formDataToSend.append("TestResultUnit", formData.TestResultUnit);
+
+      // Append file only if present
+      if (formData.samplepdf) {
+        formDataToSend.append("samplepdf", formData.samplepdf);
+      }
+
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/updatetestresultandunit/${selectedSampleId}`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
+
+      setSelectedSampleId("");
+      setSelectedSampleName("");
+      setShowAddTestResultandUnitModal(false);
+      setSuccessMessage("Test result unit added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+
+      resetFormData();
+    } catch (error) {
       console.error("Error adding sample:", error);
     }
   };
+
 
   const handleTransferSubmit = async (e) => {
     let isMounted = true;
@@ -744,22 +804,13 @@ const BioBankSampleArea = () => {
   }
 
   const handleEditClick = (sample) => {
-    setSelectedSampleName(sample.Analyte)
-    setSelectedSampleUnit(sample.VolumeUnit)
-    setSelectedSampleVolume(sample.volume)
+
     setSelectedSampleId(sample.id);
-    setSelectedSampleName(sample.Analyte);
-    setSelectedSampleVolume(sample.volume);
-    setMode(sample.samplemode);
     setEditSample(sample);
 
-    // Combine the location parts into "room-freezer-box" format
-    const formattedLocationId = `${String(sample.room_number).padStart(
-      3,
-      "0"
-    )}-${String(sample.freezer_id).padStart(3, "0")}-${String(
-      sample.box_id
-    ).padStart(3, "0")}`;
+    setMode(sample.samplemode)
+    // Combine the location parts into "room-box-freezer" format
+    const formattedLocationId = `${String(sample.room_number).padStart(3, "0")}-${String(sample.freezer_id).padStart(3, "0")}-${String(sample.box_id).padStart(3, "0")}`;
 
     // Extract TestSign and TestValue from TestResult
     const testResult = sample.TestResult || "";
@@ -776,29 +827,26 @@ const BioBankSampleArea = () => {
       setPoolMode(true)
       setSelectedSampleName(sample.Analyte)
     }
-
-
+    console.log(sample)
     setFormData({
       patientname: sample.PatientName,
-      patientlocation: sample.PatientLocation,
       finalConcentration: sample.finalConcentration,
+      patientlocation: sample.PatientLocation,
       MRNumber: sample.MRNumber,
       locationids: formattedLocationId,
       Analyte: sample.Analyte,
+      volume: sample.volume,
       age: sample.age,
       phoneNumber: sample.phoneNumber,
       gender: sample.gender,
-      volume: sample.volume,
       ethnicity: sample.ethnicity,
       samplecondition: sample.samplecondition,
       storagetemp: sample.storagetemp,
       ContainerType: sample.ContainerType,
       CountryOfCollection: sample.CountryOfCollection,
-      price: sample.price,
-      SamplePriceCurrency: sample.SamplePriceCurrency,
       quantity: sample.quantity,
       VolumeUnit: sample.VolumeUnit,
-      SampleTypeMatrix: sample.SampleTypeMatrix,
+      SampleTypeMatrix: sample.SampleTypeMatrix?.trim() || "",
       SmokingStatus: sample.SmokingStatus,
       AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
       InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
@@ -808,7 +856,11 @@ const BioBankSampleArea = () => {
       ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
       ConcurrentMedications: sample.ConcurrentMedications,
       Analyte: sample.Analyte,
-      TestResult: sample.TestResult,
+      finalConcentration: sample.finalConcentration,
+      // TestResult: sample.TestResult,
+      TestSign,
+      TestValue,
+      TestResult: testResult,
       TestResultUnit: sample.TestResultUnit,
       TestMethod: sample.TestMethod,
       TestKitManufacturer: sample.TestKitManufacturer,
@@ -817,7 +869,9 @@ const BioBankSampleArea = () => {
       status: sample.status,
       user_account_id: id,
       logo: sample.logo,
+      samplepdf: sample.samplepdf,
     });
+
     const logoPreviewUrl =
       typeof sample.logo === "string"
         ? sample.logo
@@ -827,9 +881,25 @@ const BioBankSampleArea = () => {
           )
           : null;
     setLogoPreview(logoPreviewUrl);
-    // Add this block to properly show the country in the input field
+
+    // ✅ Generate sample PDF preview (if available)
+    const pdfPreviewUrl =
+      typeof sample.samplepdf === "string"
+        ? sample.samplepdf
+        : sample.samplepdf?.data
+          ? URL.createObjectURL(
+            new Blob([new Uint8Array(sample.samplepdf.data)], {
+              type: "application/pdf",
+            })
+          )
+          : null;
+
+    setSamplePdfPreview(pdfPreviewUrl);
+
+    // ✅ Add this block to properly show the country in the input field
     const matchedCountry = countryname.find(
-      (c) => c.name?.toLowerCase() === sample.CountryOfCollection?.toLowerCase()
+      (c) =>
+        c.name?.toLowerCase() === sample.CountryOfCollection?.toLowerCase()
     );
     setSelectedCountry(matchedCountry || null);
     setSearchCountry(matchedCountry ? matchedCountry.name : "");
@@ -848,6 +918,8 @@ const BioBankSampleArea = () => {
 
   const handleUpdate = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     const formDataToSend = new FormData();
 
@@ -855,41 +927,47 @@ const BioBankSampleArea = () => {
     let updatedMode = mode;
     if (
       mode !== "Individual" &&
-      formData.TestResult?.trim() ||
+      formData.TestResult?.trim() &&
       formData.TestResultUnit?.trim()
     ) {
       updatedMode = "Pooled";
-      setMode("Pooled");
+      setMode("Pooled"); // optional: update state for consistency
     }
 
-    // Append all fields except logo
+    // Append all form fields except logo
     for (const key in formData) {
-      if (key !== "logo") {
+      if (key !== "logo" && key !== "samplepdf") {
         formDataToSend.append(key, formData[key]);
       }
     }
 
-    formDataToSend.append("mode", updatedMode);
+    formDataToSend.append("mode", updatedMode); // 👈 append computed mode
 
-    // Only append logo if it's a File
+    // Only append logo if it's a new file
     if (formData.logo instanceof File) {
       formDataToSend.append("logo", formData.logo);
+    } else if (logoPreview && formData.logo?.data) {
+      const mimeType = logoPreview.includes(".jpg") || logoPreview.includes(".jpeg")
+        ? "image/jpeg"
+        : "image/png";
+
+      const logoBlob = new Blob([new Uint8Array(formData.logo.data)], {
+        type: mimeType,
+      });
+      formDataToSend.append("logo", logoBlob, "existing-logo.png");
     }
 
     try {
-      // 👇 Conditional API endpoint
-      const apiUrl = formData.TestResult?.trim()
-        ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/updatetestresultandunit/${selectedSampleId}`
-        : `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`;
-
-      await axios.put(apiUrl, formDataToSend, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      // ✅ Refresh updated data
-      fetchSamples(currentPage + 1, itemsPerPage, { searchField, searchValue });
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/edit/${selectedSampleId}`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      fetchSamples(currentPage, itemsPerPage, appliedFilters);
 
       setShowEditModal(false);
       setShowEditPoolModal(false);
@@ -901,6 +979,8 @@ const BioBankSampleArea = () => {
       }, 3000);
     } catch (error) {
       console.error(`Error updating sample with ID ${selectedSampleId}:`, error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -956,7 +1036,7 @@ const BioBankSampleArea = () => {
       setSelectedSamples([]);
 
       // Refresh sample list - consider a more optimized refresh if possible
-      fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
+      fetchSamples(currentPage, itemsPerPage, appliedFilters);
 
     } catch (error) {
       console.error("Update error:", error);
@@ -1155,7 +1235,25 @@ const BioBankSampleArea = () => {
 
     printWindow.document.close();
   };
+  const handleTestRsultsandUnit = (sample) => {
+    setSelectedSampleId(sample.id)
+    const testResult = sample.TestResult || "";
+    const testResultMatch = testResult.match(/^([<>]=?|=|\+|-)?\s*(.*)$/);
+    const TestSign = testResultMatch ? (testResultMatch[1] || "=") : "=";
+    const TestValue = testResultMatch ? testResultMatch[2] || "" : "";
+    const isNumeric = !isNaN(parseFloat(TestValue)) && isFinite(TestValue);
+    setShowTestResultNumericInput(isNumeric); // 👈 Add this line
+    setFormData({
+      // TestResult: sample.TestResult,
+      TestSign,
+      TestValue,
+      TestResult: testResult,
+      TestResultUnit: sample.TestResultUnit,
 
+    });
+    setSelectedSampleName(sample.Analyte)
+    setShowAddTestResultandUnitModal(true)
+  }
 
   if (id === null) {
     return <div>Loading...</div>;
@@ -1289,13 +1387,11 @@ const BioBankSampleArea = () => {
                   style={{ width: "200px", height: "42px" }}
                   value={dateFrom}
                   min="2025-05-01"
+                  max={today}
                   onChange={(e) => {
                     const value = e.target.value;
                     setDateFrom(value);
                     handleFilterChange("date_from", value);
-                    if (dateTo) {
-                      handleFilterChange("date_to", dateTo);
-                    }
                   }}
                 />
               </div>
@@ -1308,8 +1404,8 @@ const BioBankSampleArea = () => {
                   className="form-control border rounded-3"
                   style={{ width: "200px", height: "42px" }}
                   value={dateTo}
-                  min={dateFrom || "2025-05-01"} // Optional: prevent selecting before "From" date
-                  max={new Date().toISOString().split("T")[0]} // max = today
+                  min="2025-05-01"
+                  max={today}
                   onChange={(e) => {
                     const value = e.target.value;
                     setDateTo(value);
@@ -1317,6 +1413,8 @@ const BioBankSampleArea = () => {
                   }}
                 />
               </div>
+
+
             </div>
 
 
@@ -1333,7 +1431,7 @@ const BioBankSampleArea = () => {
                     setVisibility("");
                     setPriceFilter("");
                     setDateFrom("");
-                    setDateTo("");
+                    setDateTo(today);
                     fetchSamples(1, itemsPerPage, {});
                   }}
                 >
@@ -1499,8 +1597,6 @@ const BioBankSampleArea = () => {
                       </td>
                     )}
 
-
-
                     {tableHeaders.map(({ key }, index) => (
                       <td
                         key={index}
@@ -1527,32 +1623,39 @@ const BioBankSampleArea = () => {
                               cursor: "pointer",
                               transition: "color 0.2s",
                             }}
-                            onMouseOver={(e) =>
-                              (e.target.style.color = "#0a58ca")
-                            }
+                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
                             onMouseOut={(e) => (e.target.style.color = "")}
                           >
                             {sample.Analyte || "----"}
                           </span>
+                        ) : key === "PatientName" ? (
+                          <span
+                            className="text-primary fw-semibold fs-6 text-decoration-underline"
+                            role="button"
+                            title="Sample Details"
+                            onClick={() => openPatientModal(sample)}
+                            style={{ cursor: "pointer", transition: "color 0.2s" }}
+                            onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                            onMouseOut={(e) => (e.target.style.color = "")}
+                          >
+                            {sample.PatientName || "----"}
+                          </span>
                         ) : (
                           (() => {
                             if (key === "locationids") {
-                              const tooltip = `Room Number=${sample.room_number || "----"
-                                } 
-                                Freezer ID=${sample.freezer_id || "----"} 
-                                Box ID=${sample.box_id || "----"} `;
+                              const tooltip = `Room Number=${sample.room_number || "----"} 
+                                               Freezer ID=${sample.freezer_id || "----"} 
+                                               Box ID=${sample.box_id || "----"} `;
 
-                              // To show logo while clicking on location IDs
                               const handleLogoClick = () => {
                                 const logo =
                                   typeof sample.logo === "string"
                                     ? sample.logo
                                     : sample.logo?.data
                                       ? URL.createObjectURL(
-                                        new Blob(
-                                          [new Uint8Array(sample.logo.data)],
-                                          { type: "image/png" }
-                                        )
+                                        new Blob([new Uint8Array(sample.logo.data)], {
+                                          type: "image/png",
+                                        })
                                       )
                                       : null;
                                 if (logo) {
@@ -1575,8 +1678,24 @@ const BioBankSampleArea = () => {
                               );
                             } else if (key === "volume") {
                               return `${sample.volume} ${sample.VolumeUnit || ""}`;
+                            } else if (key === "gender") {
+                              const agePart = sample.age ? `${sample.age} year` : "";
+                              const genderPart = sample.gender || "";
+
+                              if (agePart && genderPart) {
+                                return `${agePart}| ${genderPart}`;
+                              } else if (agePart) {
+                                return agePart;
+                              } else if (genderPart) {
+                                return genderPart;
+                              } else {
+                                return "----";
+                              }
                             }
-                            else if (key === "samplemode" && ["Low", "Medium", "High"].includes(sample.samplemode)) {
+                            else if (
+                              key === "samplemode" &&
+                              ["Low", "Medium", "High"].includes(sample.samplemode)
+                            ) {
                               return (
                                 <span className="text-danger fw-semibold">
                                   Add to Pool - {sample.samplemode}
@@ -1584,98 +1703,116 @@ const BioBankSampleArea = () => {
                               );
                             }
 
-                            else if (key === "barcode") {
-                              return <button
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={() => {
-                                  setSelectedBarcodeId(sample.id);
-                                  handlePrint(sample.masterID); // Pass the ID directly
-                                }}
-                              >
-                                Print Barcode
-                              </button>
-                            }
-                            else if (key === "age") {
-                              if (!sample.age || sample.age === 0) {
-                                return "-----";
-                              }
-                              return `${sample.age} years`;
-                            } else if (key === "TestResult") {
-                              return `${sample.TestResult} ${sample.TestResultUnit || ""
-                                }`;
+                            else if (key === "TestResult") {
+                              return `${sample.TestResult} ${sample.TestResultUnit || ""}`;
                             } else if (key === "price") {
                               return sample.price && sample.SamplePriceCurrency
-                                ? `${sample.SamplePriceCurrency} ${new Intl.NumberFormat('en-PK').format(sample.price)}`
+                                ? `${sample.SamplePriceCurrency} ${new Intl.NumberFormat(
+                                  "en-PK"
+                                ).format(sample.price)}`
                                 : "----";
-                            }
-
-                            else {
+                            } else {
                               return sample[key] || "----";
                             }
                           })()
                         )}
                       </td>
                     ))}
+
                     <td className="text-center">
-                      <div className="d-flex justify-content-around gap-1">
+                      <div className="dropdown">
+                        {/* Three-dot trigger */}
                         <button
-                          className="btn btn-success btn-sm"
-                          onClick={() => handleEditClick(sample)}
-                          title="Edit"
+                          className="btn btn-light btn-sm"
+                          type="button"
+                          id={`dropdownMenuButton-${sample.id}`}
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
                         >
-                          <FontAwesomeIcon icon={faEdit} size="sm" />
+                          <i className="fas fa-ellipsis-v"></i>
                         </button>
-                        <button
-                          className="btn btn-warning btn-sm"
-                          onClick={() => handlePriceCurrencyClick(sample)}
-                          title="Set Price & Currency"
-                        >
-                          <FontAwesomeIcon icon={faDollarSign} size="sm" />
-                        </button>
-                        {/* <div className="d-flex justify-content-center gap-3">
-                          <button
-                            className="btn btn-dark btn-sm"
-                            onClick={() => openVisibilitystatusModal(sample)}
-                            title="Edit Sample Visibility Status"
-                          >
-                            <FontAwesomeIcon icon={faEye} size="xs" />
-                          </button>
-                        </div> */}
-                        <button
-                          className="btn btn-danger btn-sm py-0 px-1"
-                          onClick={() => {
-                            setSelectedSampleId(sample.id);
-                            setShowQuarantineModal(true);
-                          }}
-                          title="Quarantine Sample"
-                        >
-                          <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
-                        </button>
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleTransferClick(sample)}
-                          title="Transfer"
-                        >
-                          <FontAwesomeIcon icon={faExchangeAlt} size="sm" />
-                        </button>
-                        <button
-                          className="btn btn-outline-success btn-sm"
-                          onClick={() => handleShowHistory("sample", sample.id)}
-                          title="History"
-                        >
-                          <i className="fa fa-history"></i>
-                        </button>
-                        {(sample.samplemode !== 'Individual') && (
-                          <button
-                            className="btn btn-outline-success btn-sm"
-                            onClick={() => handlePoolSampleHistory(sample.id, sample.Analyte)}
-                            title="Track Sample"
-                          >
-                            <i class="fas fa-vial"></i>
-                          </button>
-                        )}
+
+                        {/* Dropdown Menu */}
+                        <ul className="dropdown-menu" aria-labelledby={`dropdownMenuButton-${sample.id}`}>
+                          <li>
+                            <button
+                              className="dropdown-item"
+                              onClick={() => {
+                                setSelectedBarcodeId(sample.id);
+                                handlePrint(sample.masterID);
+                              }}
+                            >
+                              <i className="fas fa-barcode me-2"></i> Print Barcode
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              className="dropdown-item"
+                              onClick={() => handleEditClick(sample)}
+                            >
+                              <FontAwesomeIcon icon={faEdit} className="me-2" /> Edit
+                            </button>
+                          </li>
+                          {sample.samplemode !== "Individual" && sample.samplemode !== "Pooled" && (
+                            <li>
+                              <button
+                                className="dropdown-item text-success fw-semibold"
+                                onClick={() => handleTestRsultsandUnit(sample)}
+                              >
+                                <FontAwesomeIcon icon={faRuler} className="me-2" />
+                                Test Result & Unit
+                              </button>
+                            </li>
+                          )}
+                          <li>
+                            <button
+                              className="dropdown-item"
+                              onClick={() => handlePriceCurrencyClick(sample)}
+                            >
+                              <FontAwesomeIcon icon={faDollarSign} className="me-2" /> Set Price & Currency
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              className="dropdown-item text-danger"
+                              onClick={() => {
+                                setSelectedSampleId(sample.id);
+                                setShowQuarantineModal(true);
+                              }}
+                            >
+                              <FontAwesomeIcon icon={faQuestionCircle} className="me-2" /> Quarantine Sample
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              className="dropdown-item"
+                              onClick={() => handleTransferClick(sample)}
+                            >
+                              <FontAwesomeIcon icon={faExchangeAlt} className="me-2" /> Transfer
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              className="dropdown-item"
+                              onClick={() => handleShowHistory("sample", sample.id)}
+                            >
+                              <i className="fa fa-history me-2"></i> History
+                            </button>
+                          </li>
+                          {sample.samplemode !== 'Individual' && (
+                            <li>
+                              <button
+                                className="dropdown-item"
+                                onClick={() => handlePoolSampleHistory(sample.id, sample.Analyte)}
+                              >
+                                <i className="fas fa-vial me-2"></i> Track Sample
+                              </button>
+                            </li>
+                          )}
+                        </ul>
                       </div>
                     </td>
+
                   </tr>
                 ))
               ) : (
@@ -1914,7 +2051,7 @@ const BioBankSampleArea = () => {
                                 <div className="form-group col-md-4">
                                   <label>
                                     Location (IDs){" "}
-                                    <span className="text-danger"></span>
+                                    {/* <span className="text-danger">*</span> */}
                                   </label>
                                   <InputMask
                                     mask="999-999-999"
@@ -1932,11 +2069,11 @@ const BioBankSampleArea = () => {
                                         style={{
                                           height: "45px",
                                           fontSize: "14px",
-                                          backgroundColor: !formData.locationids
+                                          backgroundColor: !formData.phoneNumber
                                             ? "#fff"
                                             : "#fff",
                                         }}
-                                        required
+                                        // required
                                         title="Location ID's = Room Number, Freezer ID and Box ID"
                                       />
                                     )}
@@ -1998,6 +2135,7 @@ const BioBankSampleArea = () => {
                                     ))}
                                   </select>
                                 </div>
+
                                 <div className="form-group col-md-6">
                                   <label>
                                     Volume <span className="text-danger">*</span>
@@ -2182,9 +2320,9 @@ const BioBankSampleArea = () => {
                                         ))}
                                       </select>
                                     )}
-
                                   </div>
                                 </div>
+
                               </div>
                               <div className="row">
                                 <div className="form-group col-md-6">
@@ -2217,7 +2355,7 @@ const BioBankSampleArea = () => {
                                 <div className="form-group col-md-6">
                                   <label>
                                     Sample Picture{" "}
-                                    <span className="text-danger"></span>
+                                    {/* <span className="text-danger">*</span> */}
                                   </label>
                                   <div className="d-flex align-items-center">
                                     <input
@@ -2992,16 +3130,18 @@ const BioBankSampleArea = () => {
                                         <input
                                           className="form-check-input"
                                           type="radio"
-                                          name="finalConcentration" // name is fine
+                                          name="finalConcentration"
                                           id={`finalConcentration-${level}`}
                                           value={level}
-                                          checked={mode === level}
+                                          checked={formData.finalConcentration === level} // <-- FIXED
                                           onChange={(e) => {
                                             setFormData((prev) => ({
                                               ...prev,
                                               finalConcentration: e.target.value,
-                                            }))
-                                            setMode(level)
+                                            }));
+                                            if (mode !== "Pooled") {
+                                              setMode(e.target.value)
+                                            }
                                           }}
                                           required
                                         />
@@ -3013,126 +3153,6 @@ const BioBankSampleArea = () => {
                                         </label>
                                       </div>
                                     ))}
-                                  </div>
-                                </div>
-                                <div className="form-group col-md-6">
-                                  <label>
-                                    Test Result & Unit{" "}
-                                    <span className="text-danger"></span>
-                                  </label>
-                                  <div
-                                    style={{
-                                      display: "flex",
-                                      gap: "10px",
-                                      alignItems: "center",
-                                    }}
-                                  >
-                                    {/* Test Result Dropdown or Numeric Input */}
-                                    {!showTestResultNumericInput ? (
-                                      <select
-                                        className="form-control"
-                                        value={formData.TestResult}
-                                        onChange={(e) => {
-                                          const val = e.target.value;
-                                          if (val === "Value") {
-                                            setShowTestResultNumericInput(true);
-                                            setFormData((prev) => ({
-                                              ...prev,
-                                              TestResult: "",
-                                            }));
-                                          } else {
-                                            setShowTestResultNumericInput(
-                                              false
-                                            ); // Ensure this is reset
-                                            setFormData((prev) => ({
-                                              ...prev,
-                                              TestResult: val,
-                                              TestResultUnit: "",
-                                            })); // Clear unit
-                                          }
-                                        }}
-
-                                        style={{
-                                          height: "40px",
-                                          fontSize: "14px",
-                                          border: !formData.TestResult ? "1px solid #ced4da" : "1px solid #ced4da",
-                                          minWidth: "140px",
-                                        }}
-                                      >
-                                        <option value="" disabled hidden>
-                                          Select result
-                                        </option>
-                                        <option value="Positive">
-                                          Positive
-                                        </option>
-                                        <option value="Negative">
-                                          Negative
-                                        </option>
-                                        <option value="Value">Value</option>
-                                      </select>
-                                    ) : (
-                                      <input
-                                        type="number"
-                                        className="form-control"
-                                        placeholder="Enter numeric value"
-                                        value={formData.TestResult}
-                                        onChange={(e) =>
-                                          setFormData((prev) => ({
-                                            ...prev,
-                                            TestResult: e.target.value,
-                                          }))
-                                        }
-                                        style={{
-                                          width: "110px",
-                                          height: "40px",
-                                          fontSize: "14px",
-                                          border: !formData.TestResult ? "1px solid #dc3545" : "1px solid #ced4da",
-                                          paddingRight: "10px",
-                                        }}
-                                        autoFocus
-                                        onBlur={() => {
-                                          if (!formData.TestResult) {
-                                            setShowTestResultNumericInput(
-                                              false
-                                            );
-                                            setFormData((prev) => ({
-                                              ...prev,
-                                              TestResultUnit: "",
-                                            })); // Clear unit
-                                          }
-                                        }}
-                                      />
-                                    )}
-                                    {/* Conditionally render Unit Dropdown */}
-                                    {showTestResultNumericInput && (
-                                      <select
-                                        className="form-control"
-                                        name="TestResultUnit"
-                                        value={formData.TestResultUnit}
-                                        onChange={handleInputChange}
-                                        required
-                                        style={{
-                                          height: "40px",
-                                          fontSize: "14px",
-                                          backgroundColor:
-                                            !formData.TestResultUnit
-                                              ? "#fdecea"
-                                              : "#fff",
-                                          minWidth: "100px",
-                                        }}
-                                      >
-                                        <option value="" hidden>
-                                          Unit
-                                        </option>
-                                        {testresultunitNames.map(
-                                          (name, index) => (
-                                            <option key={index} value={name}>
-                                              {name}
-                                            </option>
-                                          )
-                                        )}
-                                      </select>
-                                    )}
                                   </div>
                                 </div>
                                 <div className="form-group col-md-6">
@@ -3464,7 +3484,254 @@ const BioBankSampleArea = () => {
             </div>
           </>
         )}
+        {(showAddtestResultandUnitModal || showEdittestResultandUnitModal) && (
+          <>
+            {/* Bootstrap Backdrop with Blur */}
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(5px)" }}
+            ></div>
+            {/* Modal Content */}
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
+              style={{
+                zIndex: 1050,
+                position: "fixed",
+                top: "-30px",
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "100%",
+                overflow: "hidden",
+                transition: "top 0.3s ease-in-out",
+              }}
+            >
+              <div
+                className="modal-dialog"
+                role="document"
+                style={{
+                  width: "100%",
+                  transition: "all 0.3s ease-in-out",
+                }}
+              >
+                <div className="modal-content">
+                  <div
+                    className="modal-header"
+                    style={{ backgroundColor: "#cfe2ff" }}
+                  >
+                    <h5 className="modal-title">
+                      {selectedSampleName}
+                    </h5>
+                    <button
+                      type="button"
+                      className="close"
+                      onClick={() => {
+                        setShowAddTestResultandUnitModal(false);
+                        setSelectedSampleName("")
+                        setSelectedSampleId("")
+                        resetFormData();
+                      }}
+                      style={{
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span>&times;</span>
+                    </button>
+                  </div>
+                  <form
+                    onSubmit={handleAddTestResult}
+                  >
+                    <div className="modal-body">
+                      {/* Parallel Columns - 5 columns */}
+                      <div className="row">
+                        {/* Only show selected fields in pool mode */}
+                        <div className="col-md-12">
+                          <div className="row">
 
+                            <div className="form-group col-md-6">
+                              <label>
+                                Test Result & Unit{" "}
+                                <span className="text-danger"></span>
+                              </label>
+                              <div
+                                style={{
+                                  display: "flex",
+                                  gap: "10px",
+                                  alignItems: "center",
+                                }}
+                              >
+                                {/* Test Result Dropdown or Numeric Input */}
+                                {!showTestResultNumericInput ? (
+                                  <select
+                                    className="form-control"
+                                    value={formData.TestResult}
+                                    onChange={(e) => {
+                                      const val = e.target.value;
+                                      if (val === "Value") {
+                                        setShowTestResultNumericInput(true);
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          TestResult: "",
+                                        }));
+                                      } else {
+                                        setShowTestResultNumericInput(
+                                          false
+                                        ); // Ensure this is reset
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          TestResult: val,
+                                          TestResultUnit: "",
+                                        })); // Clear unit
+                                      }
+                                    }}
+
+                                    style={{
+                                      height: "40px",
+                                      fontSize: "14px",
+                                      border: !formData.TestResult ? "1px solid #ced4da" : "1px solid #ced4da",
+                                      minWidth: "140px",
+                                    }}
+                                  >
+                                    <option value="" disabled hidden>
+                                      Select result
+                                    </option>
+                                    <option value="Positive">
+                                      Positive
+                                    </option>
+                                    <option value="Negative">
+                                      Negative
+                                    </option>
+                                    <option value="Value">Value</option>
+                                  </select>
+                                ) : (
+                                  <input
+                                    type="number"
+                                    className="form-control"
+                                    placeholder="Enter numeric value"
+                                    value={formData.TestResult}
+                                    onChange={(e) =>
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        TestResult: e.target.value,
+                                      }))
+                                    }
+                                    style={{
+                                      width: "110px",
+                                      height: "40px",
+                                      fontSize: "14px",
+                                      border: !formData.TestResult ? "1px solid #dc3545" : "1px solid #ced4da",
+                                      paddingRight: "10px",
+                                    }}
+                                    autoFocus
+                                    onBlur={() => {
+                                      if (!formData.TestResult) {
+                                        setShowTestResultNumericInput(
+                                          false
+                                        );
+                                        setFormData((prev) => ({
+                                          ...prev,
+                                          TestResultUnit: "",
+                                        })); // Clear unit
+                                      }
+                                    }}
+                                  />
+                                )}
+                                {/* Conditionally render Unit Dropdown */}
+                                {showTestResultNumericInput && (
+                                  <select
+                                    className="form-control"
+                                    name="TestResultUnit"
+                                    value={formData.TestResultUnit}
+                                    onChange={handleInputChange}
+                                    required
+                                    style={{
+                                      height: "40px",
+                                      fontSize: "14px",
+                                      backgroundColor:
+                                        !formData.TestResultUnit
+                                          ? "#fdecea"
+                                          : "#fff",
+                                      minWidth: "100px",
+                                    }}
+                                  >
+                                    <option value="" hidden>
+                                      Unit
+                                    </option>
+                                    {testresultunitNames.map(
+                                      (name, index) => (
+                                        <option key={index} value={name}>
+                                          {name}
+                                        </option>
+                                      )
+                                    )}
+                                  </select>
+                                )}
+                              </div>
+                            </div>
+                            <div className="form-group col-md-6">
+                              <label>
+                                Test Result Report <span className="text-danger">*</span>
+                              </label>
+                              <div className="d-flex align-items-center">
+                                <input
+                                  name="samplepdf"
+                                  type="file"
+                                  accept="application/pdf"
+                                  onChange={(e) =>
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      samplepdf: e.target.files[0],
+                                    }))
+                                  }
+                                  className="form-control"
+                                  required={!formData.samplepdf}
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: !formData.samplepdf
+                                      ? "#fdecea"
+                                      : "#fff",
+                                    border: "1px solid #ced4da",
+                                  }}
+                                />
+                                {(formData.samplepdf instanceof File || samplePdfPreview) && (
+                                  <a
+                                    href={
+                                      formData.samplepdf instanceof File
+                                        ? URL.createObjectURL(formData.samplepdf)
+                                        : samplePdfPreview
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="ms-3"
+                                    style={{ fontSize: "13px" }}
+                                  >
+                                    View PDF
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="modal-footer d-flex justify-content-between align-items-center">
+                      <button type="submit" className="btn btn-primary">
+                        {showAddtestResultandUnitModal ? "Save" : "Update"}
+                      </button>
+                    </div>
+
+                  </form>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
         {showVisibilityModal && (
           <>
             <div
@@ -4167,6 +4434,53 @@ const BioBankSampleArea = () => {
             </div>
           </div>
         )}
+        <Modal
+          show={showPatientModal}
+          onHide={closeModal}
+          size="lg"
+          centered
+          backdrop="static"
+          keyboard={false}
+        >
+          <Modal.Header closeButton className="border-0">
+            <Modal.Title className="fw-bold text-danger">Patient Details</Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body
+            style={{ maxHeight: "500px", overflowY: "auto" }}
+            className="bg-light rounded"
+          >
+            {selectedSample ? (
+              <div className="p-3">
+                <div className="row g-3">
+                  {/* MRNumber */}
+                  <div className="col-md-6">
+                    <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                      <span className="text-muted small fw-bold mb-1">MRNumber</span>
+                      <span className="fs-6 text-dark">
+                        {selectedSample.MRNumber || "----"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Patient Location */}
+                  <div className="col-md-6">
+                    <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                      <span className="text-muted small fw-bold mb-1">Patient Location</span>
+                      <span className="fs-6 text-dark">
+                        {selectedSample.PatientLocation || "----"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-muted p-3">No details to show</div>
+            )}
+          </Modal.Body>
+
+          <Modal.Footer className="border-0" />
+        </Modal>
       </div>
       <Modal
         show={showModal}
