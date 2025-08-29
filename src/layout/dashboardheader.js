@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/router";
 import logo from "@assets/img/logo/discoveryconnectlogo.png";
 import { userLoggedOut } from "src/redux/features/auth/authSlice";
-import { Heart, Cart } from "@svg/index"; // Replace with actual paths to icons
+import { Cart } from "@svg/index"; // Replace with actual paths to icons
 import CartSidebar from "@components/common/sidebar/cart-sidebar";
 import axios from "axios";
 import useCartInfo from "@hooks/use-cart-info";

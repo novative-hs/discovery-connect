@@ -2,7 +2,7 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 // internal
-import { Compare, CartTwo, Times, HeartTwo } from "@svg/index";
+// import { Times } from "@svg/index";
 import SocialLinks from "@components/social";
 import OldNewPrice from "@components/products/old-new-price";
 import Quantity from "@components/products/quantity";
@@ -60,14 +60,14 @@ const ProductModal = ({ product, list_modal = false }) => {
         <div className="modal-content">
           <div className="product__modal-wrapper">
             <div className="product__modal-close">
-              <button
+              {/* <button
                 className="product__modal-close-btn"
                 type="button"
                 data-bs-dismiss="modal"
                 aria-label="Close"
               >
                 <Times />
-              </button>
+              </button> */}
             </div>
             <div className="row">
               <div className="col-lg-6">
@@ -135,7 +135,7 @@ const ProductModal = ({ product, list_modal = false }) => {
                       type="button"
                       className="product-add-cart-btn product-add-cart-btn-3"
                     >
-                      <CartTwo />
+                      {/* <CartTwo /> */}
                       Add to Cart
                     </button>
                     <button
@@ -145,7 +145,7 @@ const ProductModal = ({ product, list_modal = false }) => {
                         isWishlistAdded ? "active" : ""
                       }`}
                     >
-                      <HeartTwo />
+                      {/* <HeartTwo /> */}
                       <span className="product-action-tooltip">
                         Add To Wishlist
                       </span>
