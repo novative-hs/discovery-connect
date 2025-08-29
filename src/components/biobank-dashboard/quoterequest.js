@@ -3,7 +3,7 @@ import { Modal } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
-
+import ErrorMessage from "@components/error-message/error";
 const QuoteRequestTable = () => {
   const [samples, setSamples] = useState([]);
   const [selectedQuote, setSelectedQuote] = useState(null);
@@ -220,11 +220,8 @@ const [currencyError, setCurrencyError] = useState("");
                 </select>
               </div>
             )}
-            {currencyError && (
-              <div className="invalid-feedback d-block fs-5" style={{ marginLeft: "550px" }}>
-                {currencyError}
-              </div>
-            )}
+            {currencyError && <ErrorMessage message={currencyError} />}
+
             <div className="d-flex justify-content-end align-items-center gap-2">
               <label className="mb-0 fs-5 fw-bold">Currency:</label>
               <span className="mb-0 fs-5 fw-bold">{groupCurrency || "Not Selected"}</span>

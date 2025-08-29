@@ -10,19 +10,6 @@ const initialState = {
   orderQuantity: 1,
 };
 
-const isCartExpired = (cartProducts) => {
-  if (!Array.isArray(cartProducts) || cartProducts.length === 0) return false;
-
-  const now = new Date();
-  const oldestItem = cartProducts.reduce((oldest, current) =>
-    new Date(current.addedAt) < new Date(oldest.addedAt) ? current : oldest
-  );
-
-  const diffInMs = now - new Date(oldestItem.addedAt);
-  const diffInDays = diffInMs / (1000 * 60 * 60 * 24); // convert ms to days
-
-  return diffInDays > CART_EXPIRY_DAYS;
-};
 
 export const cartSlice = createSlice({
   name: "cart",
