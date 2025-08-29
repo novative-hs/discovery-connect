@@ -2,7 +2,6 @@ import Image from "next/image";
 import React from "react";
 import { useRouter } from "next/router";
 // internal
-import empty_img from "@assets/img/product/cartmini/empty-cart.png";
 
 const EmptyCart = ({ search_prd = false }) => {
   const router = useRouter();

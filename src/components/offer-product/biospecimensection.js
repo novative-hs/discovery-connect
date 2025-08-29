@@ -3,8 +3,6 @@ import { Container, Row, Col } from "react-bootstrap";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Policy from "src/pages/policy";
-import bg from "@assets/img/contact/contact-bg.png";
 const BioSpecimenSection = () => {
   useEffect(() => {
     AOS.init({ duration: 1000, once: true });

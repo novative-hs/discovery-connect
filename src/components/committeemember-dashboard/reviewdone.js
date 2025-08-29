@@ -131,13 +131,15 @@ const SampleArea = () => {
         researcher_name: head.researcher_name,
         organization_name: head.organization_name,
         committee_status: head.committee_status,
+        age:head.age,
+        gender:head.gender,
         group,
       };
     });
   }, [filtered]);
-
   // pagination (client-side)
   const pageCount = Math.max(1, Math.ceil(grouped.length / ITEMS_PER_PAGE));
+
   const pagedGroups = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE;
     return grouped.slice(start, start + ITEMS_PER_PAGE);
@@ -154,6 +156,7 @@ const SampleArea = () => {
   };
 
   const openGroupModal = (g) => {
+    console.log(g)
     setSelectedGroup(g);
     setShowGroupedModal(true);
   };

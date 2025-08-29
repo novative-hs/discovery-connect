@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import bg from "@assets/img/contact/contact-bg.png";  // You can uncomment the background image if you want it
+
 
 const cards = [
   {

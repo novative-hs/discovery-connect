@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
-import EmptyCart from "@components/common/sidebar/cart-sidebar/empty-cart";
 import { remove_product, set_cart_products } from "src/redux/features/cartSlice";
 import { notifyError, notifySuccess } from "@utils/toast";
 const CartArea = () => {

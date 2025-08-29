@@ -2,7 +2,6 @@ import React from "react";
 import Link from "next/link";
 import { useSelector } from "react-redux";
 // internal
-import EmptyCart from "@components/common/sidebar/cart-sidebar/empty-cart";
 import SingleWishlist from "./single-wishlist";
 
 const WishlistArea = () => {
@@ -51,7 +50,12 @@ const WishlistArea = () => {
                 </div>
               </form>
             )}
-            {wishlist.length === 0 && <EmptyCart />}
+            {wishlist.length === 0 &&
+            <div>
+              </div>
+            //  <EmptyCart />
+             }
+
           </div>
         </div>
       </div>
