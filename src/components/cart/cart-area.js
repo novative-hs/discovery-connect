@@ -152,7 +152,7 @@ const CartArea = () => {
                           <th>Specimen ID</th>
                           <th>Product</th>
                           <th>Quantity</th>
-                          <th>Unit Price</th>
+                          <th>Unit Price ({displayCurrency})</th>
                           <th>Remove</th>
                         </tr>
                       </thead>
@@ -184,7 +184,6 @@ const CartArea = () => {
                             <td>
                               {item.price && item.price > 0 ? (
                                 <span className="fw-semibold text-dark">
-                                  {displayCurrency}
                                   {Number(item.price).toLocaleString("en-PK", {
                                     minimumFractionDigits: 2,
                                   })}
@@ -229,11 +228,11 @@ const CartArea = () => {
                     <li className="list-group-item d-flex justify-content-between fw-semibold">
                       <span>
                         <i className="fas fa-receipt me-2 text-danger"></i>{" "}
-                        Subtotal
+                        Subtotal ({displayCurrency})
                       </span>
                       <span>
                         {subtotal && subtotal > 0
-                          ? `${displayCurrency}${subtotal.toLocaleString(
+                          ? `${subtotal.toLocaleString(
                             "en-PK",
                             { minimumFractionDigits: 2 }
                           )}`
@@ -243,10 +242,10 @@ const CartArea = () => {
                   </ul>
 
                   <div className="d-flex justify-content-between fw-bold fs-5 mb-3">
-                    <span>Total</span>
+                    <span>Total ({displayCurrency})</span>
                     <span>
                       {subtotal && subtotal > 0
-                        ? `${displayCurrency}${subtotal.toLocaleString("en-PK", {
+                        ? `${subtotal.toLocaleString("en-PK", {
                           minimumFractionDigits: 2,
                         })}`
                         : "---"}

@@ -882,6 +882,9 @@ const OrderPage = () => {
             </Modal.Header>
 
             <Modal.Body className="p-4">
+              <p className="text-danger fw-semibold mb-2">
+                In case, you want to change the wrong document, update it by clicking on these checkboxes:
+              </p>
               <div className="d-flex gap-3 mb-3">
                 {Object.keys(selectedDocs).map((docKey) => (
                   <Form.Check

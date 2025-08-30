@@ -14,8 +14,13 @@ const menu_data = [
     title: 'Discover',
     link: '/shop'
   },
-  {
+   {
     id: 4,
+    title: 'Board of Advisor',
+    link: '/boardadvisor'
+  },
+  {
+    id: 5,
     hasDropdown: true,
     title: 'Learn More',
     link: '/about',
