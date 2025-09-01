@@ -490,13 +490,20 @@ const OrderPage = () => {
                       <span
                         className={`badge px-3 py-2 fs-5 rounded-pill ${selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted")
                           ? "bg-success-subtle text-success"
-                          : "bg-warning-subtle text-danger"
+                          : selectedOrder.analytes?.some(item => item.technical_admin_status === "Pending")
+                            ? "bg-warning-subtle text-warning"
+                            : "bg-danger-subtle text-danger"
                           }`}
                       >
                         {selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted")
-                          ? "✅ Accepted"
-                          : " Pending"}
+                          ? "Accepted"
+                          : selectedOrder.analytes?.some(item => item.technical_admin_status === "Pending")
+                            ? "Pending"
+                            : "Rejected"}
                       </span>
+
+
+
                     </div>
 
                     {/* 🎯 Action Buttons */}
@@ -910,10 +917,17 @@ const OrderPage = () => {
                                 borderLeft: "4px solid #0d6efd",
                               }}
                             >
-                              <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
+                              <h6
+                                style={{
+                                  margin: 0,
+                                  fontWeight: 600,
+                                  color: ta.technical_admin_status === "Rejected" ? "red" : "green",
+                                }}
+                              >
                                 The order {ta.technical_admin_status} by the Technical Admin at{" "}
                                 {formatDT(ta.TechnicaladminApproval_date)}
                               </h6>
+
                             </div>
                           ) : null
                         )}

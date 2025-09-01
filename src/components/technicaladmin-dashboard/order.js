@@ -649,20 +649,27 @@ const OrderPage = () => {
                   <div className="d-flex flex-wrap align-items-center justify-content-between">
 
                     {/* 🟢 Technical Admin Status */}
-                    <div className="d-flex align-items-center mb-2 mb-md-0">
+                  <div className="d-flex align-items-center mb-2 mb-md-0">
                       <span className="fw-semibold text-secondary me-2 fs-5">
                         <i className="bi bi-person-check-fill text-success me-1"></i> Technical Admin Status:
                       </span>
                       <span
                         className={`badge px-3 py-2 fs-5 rounded-pill ${selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted")
-                          ? "bg-success-subtle text-success"
-                          : "bg-warning-subtle text-danger"
+                            ? "bg-success-subtle text-success"
+                            : selectedOrder.analytes?.some(item => item.technical_admin_status === "Pending")
+                              ? "bg-warning-subtle text-warning"
+                              : "bg-danger-subtle text-danger"
                           }`}
                       >
                         {selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted")
-                          ? "✅ Accepted"
-                          : " Pending"}
+                          ? "Accepted"
+                          : selectedOrder.analytes?.some(item => item.technical_admin_status === "Pending")
+                            ? "Pending"
+                            : "Rejected"}
                       </span>
+
+
+
                     </div>
 
                     {/* 🎯 Action Buttons */}
