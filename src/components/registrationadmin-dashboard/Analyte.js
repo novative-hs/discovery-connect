@@ -259,15 +259,14 @@ const AnalyteArea = () => {
 
     const logoPreviewUrl =
       typeof Analytename.image === "string"
-        ? Analytename.image
+        ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/${Analytename.image}` // prepend backend URL
         : Analytename.image?.data
           ? URL.createObjectURL(
             new Blob([new Uint8Array(Analytename.image.data)], { type: "image/png" })
           )
           : null;
+
     setLogoPreview(logoPreviewUrl);
-
-
     setShowEditModal(true);
   };
 

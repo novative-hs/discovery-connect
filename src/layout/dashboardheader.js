@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/router";
 import logo from "@assets/img/logo/discoveryconnectlogo.png";
 import { userLoggedOut } from "src/redux/features/auth/authSlice";
-import { Heart, Cart } from "@svg/index"; // Replace with actual paths to icons
+import { Cart } from "@svg/index"; // Replace with actual paths to icons
 import CartSidebar from "@components/common/sidebar/cart-sidebar";
 import axios from "axios";
 import useCartInfo from "@hooks/use-cart-info";
@@ -225,8 +225,8 @@ useEffect(() => {
                 : userType == "csr"
                   ? [
                     { label: "Profile", tab: "order-info" },
-                    { label: "Order Dispatch List", tab: "dispatchorder" },
-                    { label: "Order Shipped List", tab: "shippingorder" },
+                    { label: "Pending Order List", tab: "pendingorder" },
+                    { label: "Dispatched Order List", tab: "dispatchedorder" },
                     { label: "Order Completed List", tab: "completedorder" },
                   ]
                   : [];

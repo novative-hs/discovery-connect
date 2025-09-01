@@ -1,63 +1,6 @@
 const mysqlConnection = require("../config/db");
 const { sendEmail } = require("../config/email");
 
-const notifyResearcher = (cartIds, message, subject) => {
-  return new Promise((resolve, reject) => {
-    const ids = Array.isArray(cartIds) ? cartIds : [cartIds];
-    const placeholders = ids.map(() => '?').join(',');
-
-    const getResearcherEmailQuery = `
-      SELECT ua.email, c.created_at, c.tracking_id, c.id AS cartId
-      FROM user_account ua
-      JOIN cart c ON ua.id = c.user_id
-      WHERE c.id IN (${placeholders})
-    `;
-
-    mysqlConnection.query(getResearcherEmailQuery, ids, (emailErr, emailResults) => {
-      if (emailErr) return reject(emailErr);
-      if (emailResults.length === 0) return reject(new Error('No data found for provided cart IDs'));
-
-      const researcherEmail = emailResults[0].email;
-
-      // Email HTML layout
-      const emailMessage = `
-        <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px; text-align: center;">
-          <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: left;">
-            
-            <h2 style="color: #2c3e50; text-align: center;">Dear Researcher,</h2>
-            
-            <p style="font-size: 16px;">${message}</p>
-
-            <p style="font-size: 16px;">Here are the details of your cart(s):</p>
-
-            <ul style="list-style: none; padding: 0;">
-              ${emailResults.map(detail => `
-                <li style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 10px;">
-                  <p><strong>Tracking ID:</strong> ${detail.tracking_id}</p>
-                  <p><strong>Created At:</strong> ${new Date(detail.created_at).toLocaleString()}</p>
-                </li>
-              `).join('')}
-            </ul>
-
-            <p style="margin-top: 30px;">Best regards,<br/><strong>Discovery Connect Team</strong></p>
-
-            <hr style="margin-top: 40px; border: none; border-top: 1px solid #ccc;" />
-
-            <p style="font-size: 12px; color: #888; text-align: center;">
-              This is an automated message. Please do not reply directly to this email.
-            </p>
-          </div>
-        </div>
-      `;
-
-      sendEmail(researcherEmail, subject, emailMessage)
-        .then(() => resolve())
-        .catch((emailError) => reject(emailError));
-    });
-  });
-};
-
-
 
 const createCartTable = () => {
   const cartTableQuery = `
@@ -72,8 +15,11 @@ const createCartTable = () => {
     volume VARCHAR(255) NOT NULL,
     totalpayment DECIMAL(10, 2) NOT NULL,
     payment_id INT DEFAULT NULL,
+    dispatch_slip LONGBLB,
+    dispatch_via VARCHAR(50),
     order_status ENUM('Pending', 'Accepted', 'Rejected', 'Shipped', 'Dispatched', 'Completed') DEFAULT 'Pending',
-   delivered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    delivered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES user_account(id) ON DELETE CASCADE,
     FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
@@ -88,96 +34,6 @@ const createCartTable = () => {
     }
   });
 };
-
-const updateCartStatusToCompleted = (cartId, callback) => {
-  const getCartDetailsQuery = `
-    SELECT delivered_at, order_status,tracking_id
-    FROM cart
-    WHERE id = ?`;
-
-  mysqlConnection.query(getCartDetailsQuery, [cartId], (err, results) => {
-    if (err) {
-      console.error("Error retrieving cart details:", err);
-      return callback(err, null);
-    }
-
-    if (results.length === 0) {
-      return callback(new Error("Cart not found"), null);
-    }
-    const tracking_id = results[0].tracking_id;
-    const deliveredAt = results[0].delivered_at;
-    const currentOrderStatus = results[0].order_status;
-
-    // ✅ Check if delivered_at is null
-    if (!deliveredAt) {
-      return callback(null, null); // No update, since delivery hasn't been recorded yet
-    }
-
-    const now = new Date();
-    const deliveredAtDate = new Date(deliveredAt);
-
-    // Add 1 day to the delivered_at date
-    deliveredAtDate.setDate(deliveredAtDate.getDate() + 1);
-
-    // Normalize both dates to ignore time
-    const nowDateOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const deliveredDateOnly = new Date(deliveredAtDate.getFullYear(), deliveredAtDate.getMonth(), deliveredAtDate.getDate());
-
-    if (deliveredDateOnly <= nowDateOnly && currentOrderStatus === 'Dispatched') {
-      const updateStatusQuery = `
-    UPDATE cart 
-    SET order_status = 'Completed' 
-    WHERE id = ?`;
-
-      mysqlConnection.query(updateStatusQuery, [cartId], (updateErr, updateResults) => {
-        if (updateErr) {
-          console.error("Error updating cart status to 'Completed':", updateErr);
-          return callback(updateErr, null);
-        }
-
-        // ✅ Send email ONLY after status becomes Completed
-        const getEmailQuery = `
-      SELECT ua.email
-      FROM cart c
-      JOIN user_account ua ON c.user_id = ua.id
-      WHERE c.id = ? AND c.order_status = 'Completed'`;
-
-        mysqlConnection.query(getEmailQuery, [cartId], (emailErr, emailResults) => {
-          if (emailErr) {
-            console.error("Error retrieving researcher email:", emailErr);
-            return callback(emailErr, null);
-          }
-
-          if (emailResults.length === 0) {
-            return callback(new Error("Email not found or status not Completed"), null);
-          }
-
-          const researcherEmail = emailResults[0].email;
-
-          const emailBody = `
-        <p>Dear Researcher,</p>
-        <p>Your sample request has been <b>completed</b>.</p>
-        <p>Tracking ID: <b>${tracking_id}</b></p>
-        <p>Please check your dashboard for more details.</p>
-        <p>Regards,<br/>Discovery Connect Team</p>
-      `;
-
-          sendEmail(researcherEmail, "Sample Request Status Update", emailBody, (emailSendErr) => {
-            if (emailSendErr) {
-              return callback(emailSendErr, null);
-            }
-            return callback(null, updateResults);
-          });
-        });
-      });
-    }
-    else {
-      return callback(null, null);
-    }
-
-  });
-};
-
 
 function generateTrackingId() {
   return Math.floor(10000 + Math.random() * 90000).toString();
@@ -422,17 +278,11 @@ const updateDocument = (newCartData, callback) => {
   });
 };
 
-
-
-
-
-
 const getAllCart = (id, callback, res) => {
   const sqlQuery = `
   SELECT 
       s.id AS sampleid, 
       s.Analyte AS Analyte,
-      s.discount AS discount,
       s. user_account_id AS user_account_id,
       cs.CollectionSiteName,
       c.quantity AS samplequantity, 
@@ -463,8 +313,6 @@ const getSampleDocument = (id, callback) => {
   `;
   mysqlConnection.query(sql, [id], callback);
 };
-
-
 
 const getCartCount = (id, callback, res) => {
   const sqlQuery = `
@@ -592,7 +440,6 @@ const baseCommitteeStatus = (committeeType) => `
   )
 `;
 
-
 const getAllOrder = (page, pageSize, searchField, searchValue, status, callback) => {
   const offset = (page - 1) * pageSize;
   const queryParams = [];
@@ -622,11 +469,11 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
     whereClauses.push(searchCondition);
   }
   if (status === 'Pending') {
-    whereClauses.push("c.order_status = 'Pending'");
+    whereClauses.push("ra.technical_admin_status = 'Pending'");
   }
   else
     if (status === 'Accepted') {
-      whereClauses.push("c.order_status!='Pending'");
+      whereClauses.push("ra.technical_admin_status!='Pending'");
     }
 
   const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
@@ -734,29 +581,6 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
           console.error("Error fetching cart data:", err);
           callback(err, null);
         } else {
-          console.log("SQL Results:", results[0]);
-
-          // Format dates for display
-          results.forEach(order => {
-            if (order.created_at && order.created_at !== '---') {
-              // order.created_at = formatDate(order.created_at);
-            }
-
-            // Handle empty status values
-            order.technicaladmin_status = order.technicaladmin_status || '---';
-            order.ethical_committee_status = order.ethical_committee_status || '---';
-            order.scientific_committee_status = order.scientific_committee_status || '---';
-            order.final_committee_status = order.final_committee_status || '---';
-
-            if (order.order_status !== 'Dispatched' && order.order_status !== 'Shipped') {
-              updateCartStatusToCompleted(order.order_id, (updateErr) => {
-                if (updateErr) {
-                  console.error(`Error updating status for order ${order.order_id}:`, updateErr);
-                }
-              });
-            }
-          });
-
           callback(null, {
             results,
             totalCount,
@@ -766,6 +590,7 @@ const getAllOrder = (page, pageSize, searchField, searchValue, status, callback)
     }
   });
 };
+
 const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchValue, callback) => {
   try {
     const offset = (page - 1) * pageSize;
@@ -803,6 +628,10 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
           s.id AS sample_id,
           s.Analyte, 
           s.VolumeUnit,
+          s.age,
+          s.gender,
+          s.TestResult,
+          s.TestResultUnit,
           s.volume,
           s.room_number,s.freezer_id,s.box_id,
           s.age,           -- ✅ ADD THIS FIELD
@@ -846,7 +675,6 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
     callback(err, null);
   }
 };
-
 
 const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback) => {
   const offset = (page - 1) * pageSize;
@@ -918,53 +746,47 @@ const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback)
   });
 };
 
-
-
-const getAllOrderByOrderPacking = (csrUserId, staffAction, callback) => {
+const getAllOrderByCSR = (csrUserId, staffAction, callback) => {
   let sqlQuery = `
-    SELECT 
-      c.*, 
-      c.user_id, 
-      u.email AS user_email,
-      r.ResearcherName AS researcher_name,
-      r.phoneNumber,
-      r.fullAddress,
-      org.OrganizationName AS organization_name,
-      s.id AS sample_id,
-      s.Analyte, 
-      s.SamplePriceCurrency,
-      s.volume,
-      s.volumeUnit,
-      s.TestResult,
-      s.TestResultUnit,
-      s.gender,
-      s.age,
-      c.order_status,  
-      c.created_at,
-
-      city.name AS city_name,
-      country.name AS country_name,
-      district.name AS district_name,
-
-      cs.CollectionSiteName,
-      bb.Name AS BiobankName
-
-    FROM cart c
-    JOIN user_account u ON c.user_id = u.id
-    LEFT JOIN researcher r ON u.id = r.user_account_id 
-    LEFT JOIN organization org ON r.nameofOrganization = org.id
-    JOIN sample s ON c.sample_id = s.id
-    LEFT JOIN city ON r.city = city.id
-    LEFT JOIN country ON r.country = country.id
-    LEFT JOIN district ON r.district = district.id
-
-    LEFT JOIN collectionsitestaff css ON s.user_account_id = css.user_account_id
-    LEFT JOIN collectionsite cs ON css.collectionsite_id = cs.id
-    LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
-
-    LEFT JOIN collectionsitestaff cs_staff ON s.user_account_id = cs_staff.user_account_id
-    LEFT JOIN csr ON csr.collection_id = cs_staff.collectionsite_id
-  `;
+  SELECT 
+    c.*, 
+    c.user_id, 
+    u.email AS user_email,
+    r.ResearcherName AS researcher_name,
+    r.phoneNumber,
+    r.fullAddress,
+    org.OrganizationName AS organization_name,
+    s.id AS sample_id,
+    s.Analyte, 
+    s.SamplePriceCurrency,
+    s.volume,
+    s.volumeUnit,
+    s.TestResult,
+    s.TestResultUnit,
+    s.gender,
+    s.age,
+    c.order_status,  
+    c.created_at,
+    city.name AS city_name,
+    country.name AS country_name,
+    district.name AS district_name,
+    cs.CollectionSiteName,
+    bb.Name AS BiobankName
+  FROM cart c
+  JOIN user_account u ON c.user_id = u.id
+  LEFT JOIN researcher r ON u.id = r.user_account_id 
+  LEFT JOIN organization org ON r.nameofOrganization = org.id
+  JOIN sample s ON c.sample_id = s.id
+  LEFT JOIN city ON r.city = city.id
+  LEFT JOIN country ON r.country = country.id
+  LEFT JOIN district ON r.district = district.id
+  LEFT JOIN collectionsitestaff css ON s.user_account_id = css.user_account_id
+  LEFT JOIN collectionsite cs ON css.collectionsite_id = cs.id
+  LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
+  LEFT JOIN collectionsitestaff cs_staff ON s.user_account_id = cs_staff.user_account_id
+  LEFT JOIN csr ON csr.collection_id = cs_staff.collectionsite_id
+  JOIN technicaladminsampleapproval t ON t.cart_id = c.id AND t.technical_admin_status = 'Accepted'
+`;
 
   const params = [];
 
@@ -972,7 +794,6 @@ const getAllOrderByOrderPacking = (csrUserId, staffAction, callback) => {
     sqlQuery += ` WHERE csr.user_account_id = ? `;
     params.push(csrUserId);
   }
-
   sqlQuery += " ORDER BY c.created_at ASC;";
 
   mysqlConnection.query(sqlQuery, params, (err, results) => {
@@ -984,29 +805,40 @@ const getAllOrderByOrderPacking = (csrUserId, staffAction, callback) => {
   });
 };
 
-const updateCartStatus = async (cartIds, cartStatus) => {
-  const placeholders = cartIds.map(() => '?').join(',');
+const updateCartStatus = async (cartIds, cartStatus, dispatchSlip, callback) => {
+  try {
+    const placeholders = cartIds.map(() => '?').join(',');
 
-  // 1. Update cart order_status in batch
-  await queryAsync(`UPDATE cart SET order_status = ? WHERE id IN (${placeholders})`, [cartStatus, ...cartIds]);
-
-  if (cartStatus === 'Rejected') {
-    // Restore sample quantities
-    const cartSamples = await queryAsync(
-      `SELECT sample_id, quantity FROM cart WHERE id IN (${placeholders})`,
-      cartIds
+    await queryAsync(
+      `UPDATE cart SET completed_at= NOW(), order_status = ? WHERE id IN (${placeholders})`,
+      [cartStatus, ...cartIds]
     );
 
-    for (const cs of cartSamples) {
-      await queryAsync(
-        `UPDATE sample 
+    // If you also want to handle dispatchSlip update, add that logic here.
+    if (cartStatus === 'Rejected') {
+      // Restore sample quantities
+      const cartSamples = await queryAsync(
+        `SELECT sample_id, quantity FROM cart WHERE id IN (${placeholders})`,
+        cartIds
+      );
+
+      for (const cs of cartSamples) {
+        await queryAsync(
+          `UPDATE sample 
          SET quantity = quantity + ?, quantity_allocated = quantity_allocated - ? 
          WHERE id = ?`,
-        [cs.quantity, cs.quantity, cs.sample_id]
-      );
+          [cs.quantity, cs.quantity, cs.sample_id]
+        );
+      }
     }
+    if (typeof callback === "function") {
+      callback(); // Call after successful update
+    }
+  } catch (err) {
+    console.error("Error updating cart status:", err);
   }
 };
+
 
 // Main bulk update function
 const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comment) => {
@@ -1024,11 +856,10 @@ const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comme
 
   // 2. Determine new cart_status
   let newCartStatus = null;
-  if (technical_admin_status === 'Accepted') newCartStatus = 'Dispatched';
   if (technical_admin_status === 'Rejected') newCartStatus = 'Rejected';
 
   if (newCartStatus) {
-    await updateCartStatus(cartIds, newCartStatus);
+    await updateCartStatus(cartIds, newCartStatus, null);
   }
 
   // 3. Fetch carts info for emails
@@ -1098,10 +929,16 @@ const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comme
 
 
 
+const updateCartStatusbyCSR = async (req, dispatchSlip, callback) => {
 
-const updateCartStatusbyCSR = async (ids, req, callback) => {
   try {
-    const { cartStatus, deliveryDate, deliveryTime } = req.body;
+    // Parse ids properly
+    const ids = JSON.parse(req.body.ids || '[]');
+    const { cartStatus, deliveryDate, deliveryTime, dispatchVia } = req.body;
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new Error("Invalid or empty IDs");
+    }
     const message = `
   <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
     <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -1111,8 +948,8 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
       </p>
 
       <p style="font-size: 15px; color: #555;">
-        ${cartStatus === 'Shipped'
-        ? "📦 Your sample request has been <b style='color:#007bff;'>Shipped</b> and is on its way."
+        ${cartStatus === 'Dispatched'
+        ? "📦 Your sample request has been <b style='color:#007bff;'>Dispatched</b> and is on its way."
         : "ℹ️ Your sample request status has been updated."
       }
       </p>
@@ -1137,8 +974,8 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
     // Step 1: Update all cart statuses
     await Promise.all(ids.map(id =>
       queryAsync(
-        `UPDATE cart SET order_status = ?, delivered_at = ? WHERE id = ?`,
-        [cartStatus, deliveredAt, id]
+        `UPDATE cart SET order_status = ?, delivered_at = ?,dispatch_via=? , dispatch_slip=? WHERE id = ?`,
+        [cartStatus, deliveredAt, dispatchVia, dispatchSlip, id]
       )
     ));
 
@@ -1146,9 +983,10 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
     const placeholders = ids.map(() => '?').join(',');
     const cartDetails = await queryAsync(
       `
-      SELECT ua.email, c.created_at, c.tracking_id, c.id AS cartId
+      SELECT ua.email, c.created_at, c.tracking_id, c.id AS cartId,c.price,s.Analyte
       FROM user_account ua
       JOIN cart c ON ua.id = c.user_id
+      LEFT JOIN sample ON c.sample_id=s.id 
       WHERE c.id IN (${placeholders})
       `,
       ids
@@ -1167,34 +1005,40 @@ const updateCartStatusbyCSR = async (ids, req, callback) => {
       emailMap[row.email].push(row);
     });
 
-    // Step 4: Send one email per researcher
-    for (const [email, carts] of Object.entries(emailMap)) {
-      const cartList = carts
-        .map(detail =>
-          `<li>
-            <strong>Tracking ID:</strong> ${detail.tracking_id} <br/>
-            <strong>Created At:</strong> ${new Date(detail.created_at).toLocaleString()}
-          </li>`
-        )
+    // Step 4: Send one email only (no for loop)
+    if (Object.keys(emailMap).length > 0) {
+      const firstEmail = Object.keys(emailMap)[0];
+      const carts = emailMap[firstEmail];
+
+      // Get unique tracking IDs
+      const uniqueTrackingIds = [...new Set(carts.map(c => c.tracking_id))];
+
+      const cartList = uniqueTrackingIds
+        .map(trackingId => `
+      <li>
+        <strong>Tracking ID:</strong> ${trackingId}
+      </li>`)
         .join('');
 
       const emailMessage = `
-        <div style="font-family: Arial, sans-serif;">
-          
-          ${message}
-          <br/><br/>
-        </div>
-      `;
+    <div style="font-family: Arial, sans-serif;">
+      ${message}
+      <br/>
+      
+      <br/><br/>
+    </div>
+  `;
 
-      await sendEmail(email, subject, emailMessage);
-      console.log(`Email sent to ${email}`);
+      await sendEmail(firstEmail, subject, emailMessage);
+      console.log(`Email sent to ${firstEmail} (single email only)`);
     }
+
 
     // Callback or return success
     if (typeof callback === 'function') {
-      callback(null, "Cart status updated and researcher(s) notified.");
+      callback(null, "Order status updated");
     } else {
-      return "Cart status updated and researcher(s) notified.";
+      return "Order status updated";
     }
   } catch (err) {
     console.error("Error in update and notify:", err);
@@ -1232,7 +1076,7 @@ module.exports = {
   getAllOrder,
   getAllOrderByCommittee,
   getAllDocuments,
-  getAllOrderByOrderPacking,
+  getAllOrderByCSR,
   updateTechnicalAdminStatus,
   updateCartStatus,
   updateCartStatusbyCSR,

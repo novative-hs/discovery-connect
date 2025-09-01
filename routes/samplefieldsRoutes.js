@@ -17,16 +17,16 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, analyteImagePath);
   },
-  filename: (req, file, cb) => {
-    const uniqueName = Date.now() + '-' + file.originalname;
-    cb(null, uniqueName);
-  },
+filename: (req, file, cb) => {
+    cb(null, file.originalname);
+}
+
 });
 
 const upload = multer({
   storage: storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 10 * 1024 * 1024, 
   },
 });
 

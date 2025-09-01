@@ -24,14 +24,8 @@ router.get('/sample/getResearcherSamples/:id', SampleController.getResearcherSam
 router.get('/sample/getAllSamples', SampleController.getAllCSSamples);
 router.get('/sample/:id', SampleController.getSampleById);
 router.put("/sample/:id/reserve/:status", SampleController.updateReservedSample);
-router.post(
-    '/samples/postsample',
-    upload.fields([
-        { name: 'logo', maxCount: 1 },
-        { name: 'samplepdf', maxCount: 1 },
-    ]),
-    SampleController.createSample
-);
+router.post('/samples/postsample',upload.fields([{ name: 'logo', maxCount: 1 },{ name: 'samplepdf', maxCount: 1 },]),
+SampleController.createSample);
 router.put(
     '/samples/edit/:id',
     upload.fields([

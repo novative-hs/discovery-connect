@@ -52,6 +52,7 @@ const samplereturnRoutes = require("./routes/samplereturnRoutes")
 
 
 // Routes
+app.use('/assets', express.static('public/assets'));
 app.use('/api', historyRoutes);
 app.use("/api/user", registrationRoutes);
 app.use("/api/district", DistrictRoutes);

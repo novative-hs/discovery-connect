@@ -8,7 +8,6 @@ import UpdateUser from "./update-user";
 import SampleArea from "./samples";
 import ResearcherSamplesArea from "./ResearcherSamples";
 import Header from "../../layout/dashboardheader";
-import OrderInfo from "./order-info";
 import Shop from "../../pages/shop"
 import Cart from "../../pages/cart";
 import Checkout from "../../pages/checkout";
@@ -56,8 +55,7 @@ const DashboardArea = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      // case "order-info":
-      //   return <OrderInfo setActiveTab={setActiveTab} />;
+    
       case "Booksamples":
         return <Shop setActiveTab={setActiveTab} />;
       case "Cart":

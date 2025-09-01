@@ -449,8 +449,11 @@ const createAnalyte = (tableName, data, callback) => {
           `;
           await connection.promise().query(historyQuery, [historyValues]);
         }
-        // SINGLE INSERT PROCESSING
-        else {
+
+        // ✅ SINGLE INSERT: name, added_by, testresultunit_id are required
+        else if (name && added_by) {
+          const safeImage = typeof image === "string" && image.length > 0 ? image : null;
+
           const insertQuery = `
             INSERT INTO analyte (name, added_by, testresultunit_id, image)
             VALUES (?, ?, ?, ?)

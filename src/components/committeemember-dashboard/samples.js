@@ -36,6 +36,7 @@ const SampleArea = () => {
     irb_file: false,
     nbc_file: false,
   });
+
   const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [filters, setFilters] = useState({
     tracking_id: "",
@@ -144,15 +145,24 @@ const SampleArea = () => {
 
   // HANDLER TO OPEN DOCUMENT AND TRACK VIEWED STATUS GLOBALLY
   const handleViewDocument = useCallback((fileBuffer, fileName) => {
-    if (!fileBuffer) return alert("No document available.");
-    const blobUrl = URL.createObjectURL(new Blob([new Uint8Array(fileBuffer.data)], { type: "application/pdf" }));
+    if (!fileBuffer) {
+      alert("No document available.");
+      return;
+    }
+
+    // Open the PDF in a new tab
+    const blobUrl = URL.createObjectURL(
+      new Blob([new Uint8Array(fileBuffer.data)], { type: "application/pdf" })
+    );
     window.open(blobUrl, "_blank");
-    // ✅ Mark document as viewed
-    setViewedDocuments(prev => ({
+
+    // Mark document as viewed
+    setViewedDocuments((prev) => ({
       ...prev,
-      [fileName]: true
+      [fileName]: true, // fileName is "study_copy", "irb_file", or "nbc_file"
     }));
   }, []);
+
 
 
   // ✅ GLOBAL CHECK FOR DOCUMENTS VIEWED (not per sample)
@@ -278,7 +288,7 @@ const SampleArea = () => {
   if (!id) return <div>Loading...</div>;
   return (
     <div className="container py-3">
-      <h4 className="text-center text-success">Review Pending List</h4>
+      <h4 className="text-center text-success">Review Pending</h4>
       <div
         onScroll={handleScroll}
         className="table-responsive"
