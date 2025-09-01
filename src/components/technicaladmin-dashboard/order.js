@@ -711,7 +711,7 @@ const OrderPage = () => {
                             variant={
                               selectedOrder.analytes?.some(
                                 item =>
-                                  (item.scientific_committee_status === "Approved" || item.scientific_committee_status === "Not Sent" || item.scientific_committee_status === "Refused") &&
+                                  (item.scientific_committee_status === "Approved" || item.scientific_committee_status === "Not Sent") &&
                                   (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent")
                               )
                                 ? "outline-success"
@@ -725,8 +725,8 @@ const OrderPage = () => {
                             disabled={
                               !selectedOrder.analytes?.some(
                                 item =>
-                                  (item.scientific_committee_status === "Approved" || item.scientific_committee_status === "Not Sent" || item.scientific_committee_status === "Refused") &&
-                                  (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent" || item.ethical_committee_status === "Refused")
+                                  (item.scientific_committee_status === "Approved" || item.scientific_committee_status === "Not Sent") &&
+                                  (item.ethical_committee_status === "Approved" || item.ethical_committee_status === "Not Sent")
                               )
                             }
                           >
@@ -739,10 +739,10 @@ const OrderPage = () => {
                               const ethStatus = (item.ethical_committee_status || "").trim().toLowerCase();
 
                               // Scientific must be approved or refused
-                              const sciDone = ["approved", "refused", "not sent"].includes(sciStatus);
+                              const sciDone = ["approved", "not sent"].includes(sciStatus);
 
                               // Ethical must be approved/refused OR not sent
-                              const ethDone = ["approved", "refused", "not sent"].includes(ethStatus);
+                              const ethDone = ["approved", "not sent"].includes(ethStatus);
 
                               return sciDone && ethDone;
                             }) && (
@@ -834,6 +834,7 @@ const OrderPage = () => {
               </Modal.Body>
             </Modal>
           )}
+
           {/* Change Document */}
           <Modal show={showDocuments} onHide={handleCloseDocument} size="lg" centered>
             <Modal.Header closeButton className="bg-light border-bottom">
@@ -1097,7 +1098,7 @@ const OrderPage = () => {
                           }}
                           title={`Tracking ID: ${history.tracking_id}`}
                         >
-                          Review — {history.tracking_id}
+                          Review
                         </h5>
 
                         {/* Technical Admin: referred */}
@@ -1165,11 +1166,12 @@ const OrderPage = () => {
 
                                 {/* Approved line (committee_approval_date) */}
                                 {approval.committee_approval_date && (
-                                  <div style={{ fontWeight: "500", color: "#495057" }}>
-                                    The order has been approved by the committee member at{" "}
+                                  <div style={{ fontWeight: "500", color: approval.committee_status === "Refused" ? "#dc3545" : "#198754" }}>
+                                    The order has been {approval.committee_status?.toLowerCase()} by the committee member at{" "}
                                     {formatDT(approval.committee_approval_date)}
                                   </div>
                                 )}
+
                               </div>
                             ))}
                           </div>

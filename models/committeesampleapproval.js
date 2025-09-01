@@ -321,7 +321,7 @@ const getHistory = (tracking_ids, status, callback) => {
 
     const placeholders = tracking_ids.map(() => '?').join(',');
 
-    
+
     const sql = `
       SELECT
         c.tracking_id,
@@ -341,26 +341,27 @@ const getHistory = (tracking_ids, status, callback) => {
           ) t
         ) AS technicalAdminHistory,
 
-        -- Committee approvals (distinct combos)
-        (
-          SELECT JSON_ARRAYAGG(x)
-          FROM (
-            SELECT DISTINCT JSON_OBJECT(
-              'committee_status',       csa.committee_status,
-              'committee_comment',      csa.comments,
-              'CommitteeMemberName',    cm.CommitteeMemberName,
-              'committeetype',          cm.committeetype,
-              'committee_approval_date',csa.Approval_date,
-              'committee_created_at',   csa.created_at,
-              'transfer',               csa.transfer
-            ) AS x
-            FROM committeesampleapproval csa
-            LEFT JOIN committee_member cm
-              ON cm.user_account_id = csa.committee_member_id
-            WHERE csa.cart_id = c.id
-              AND csa.created_at IS NOT NULL
-          ) t
-        ) AS approvals,
+      
+(
+  SELECT JSON_ARRAYAGG(
+    JSON_OBJECT(
+      'committee_status',       csa.committee_status,
+      'committee_comment',      csa.comments,
+      'CommitteeMemberName',    cm.CommitteeMemberName,
+      'committeetype',          cm.committeetype,
+      'committee_approval_date',csa.Approval_date,
+      'committee_created_at',   csa.created_at,
+      'transfer',               csa.transfer
+    )
+  )
+  FROM committeesampleapproval csa
+  LEFT JOIN committee_member cm
+    ON cm.user_account_id = csa.committee_member_id
+  WHERE csa.cart_id = c.id
+    AND csa.created_at IS NOT NULL
+  ORDER BY csa.created_at
+) AS approvals,
+
 
         -- Documents (distinct by created_at + role)
         (
@@ -415,7 +416,34 @@ const getHistory = (tracking_ids, status, callback) => {
           files: Array.isArray(d.files) ? d.files.filter(Boolean) : []
         }))
       }));
-      callback(null, { results });
+      // Group results by tracking_id
+      const grouped = {};
+
+      results.forEach(r => {
+        if (!grouped[r.tracking_id]) {
+          grouped[r.tracking_id] = {
+            tracking_id: r.tracking_id,
+            technicalAdminHistory: [],
+            approvals: [],
+            documents: []
+          };
+        }
+
+        // Merge arrays without duplicates
+        grouped[r.tracking_id].technicalAdminHistory.push(...r.technicalAdminHistory);
+        grouped[r.tracking_id].approvals.push(...r.approvals);
+        grouped[r.tracking_id].documents.push(...r.documents);
+      });
+
+      // Remove duplicates inside each array (optional)
+      Object.values(grouped).forEach(g => {
+        g.technicalAdminHistory = Array.from(new Set(g.technicalAdminHistory.map(JSON.stringify))).map(JSON.parse);
+        g.approvals = Array.from(new Set(g.approvals.map(JSON.stringify))).map(JSON.parse);
+        g.documents = Array.from(new Set(g.documents.map(JSON.stringify))).map(JSON.parse);
+      });
+
+      callback(null, { results: Object.values(grouped) });
+
     });
   } catch (e) {
     console.error("Error fetching history:", err);

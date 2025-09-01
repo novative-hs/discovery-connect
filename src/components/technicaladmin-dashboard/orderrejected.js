@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useCallback} from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
 import { Modal, Button, Form, Table } from "react-bootstrap";
@@ -225,7 +225,7 @@ const OrderPage = () => {
   };
 
 
- const handleHistory = useCallback(async (orderGroup) => {
+  const handleHistory = useCallback(async (orderGroup) => {
     const trackingIds = orderGroup.analytes.map(a => a.tracking_id);
     setShowHistoryModal(true);
     setLoadingHistory(true);
@@ -853,11 +853,12 @@ const OrderPage = () => {
 
                                 {/* Approved line (committee_approval_date) */}
                                 {approval.committee_approval_date && (
-                                  <div style={{ fontWeight: "500", color: "#495057" }}>
-                                    The order has been approved by the committee member at{" "}
+                                  <div style={{ fontWeight: "500", color: approval.committee_status === "Refused" ? "#dc3545" : "#198754" }}>
+                                    The order has been {approval.committee_status?.toLowerCase()} by the committee member at{" "}
                                     {formatDT(approval.committee_approval_date)}
                                   </div>
                                 )}
+
                               </div>
                             ))}
                           </div>
