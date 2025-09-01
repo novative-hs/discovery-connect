@@ -805,6 +805,10 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
           s.VolumeUnit,
           s.volume,
           s.room_number,s.freezer_id,s.box_id,
+          s.age,           -- ✅ ADD THIS FIELD
+          s.gender,        -- ✅ ADD THIS FIELD
+          s.TestResult,    -- ✅ ADD THIS FIELD
+          s.TestResultUnit,-- ✅ ADD THIS FIELD
           c.price, 
           c.quantity, 
           c.totalpayment, 
@@ -823,6 +827,12 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
         LIMIT ? OFFSET ?
       ) AS sub;
     `, [...params, pageSize, offset]);
+
+    // ✅ DEBUGGING: Check if we're getting the fields
+    console.log("First row from database:", rows[0]);
+    console.log("Age field exists:", rows[0]?.age !== undefined);
+    console.log("Gender field exists:", rows[0]?.gender !== undefined);
+    console.log("TestResult field exists:", rows[0]?.TestResult !== undefined);
 
     const totalCount = rows.length ? rows[0].totalCount : 0;
     const results = rows.map(sample => ({

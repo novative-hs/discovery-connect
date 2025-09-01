@@ -366,7 +366,7 @@ const OrderPage = () => {
 
         <div className="row justify-content-center">
           <h4 className="tp-8 fw-bold text-success text-center pb-2">
-            Review Pending
+            Review Done
           </h4>
 
           {/* Table */}

@@ -143,11 +143,16 @@ const SampleArea = () => {
   };
 
   // HANDLER TO OPEN DOCUMENT AND TRACK VIEWED STATUS GLOBALLY
- const handleViewDocument = useCallback((fileBuffer, fileName) => {
-  if (!fileBuffer) return alert("No document available.");
-  const blobUrl = URL.createObjectURL(new Blob([new Uint8Array(fileBuffer.data)], { type: "application/pdf" }));
-  window.open(blobUrl, "_blank");
-}, []);
+  const handleViewDocument = useCallback((fileBuffer, fileName) => {
+    if (!fileBuffer) return alert("No document available.");
+    const blobUrl = URL.createObjectURL(new Blob([new Uint8Array(fileBuffer.data)], { type: "application/pdf" }));
+    window.open(blobUrl, "_blank");
+    // ✅ Mark document as viewed
+    setViewedDocuments(prev => ({
+      ...prev,
+      [fileName]: true
+    }));
+  }, []);
 
 
   // ✅ GLOBAL CHECK FOR DOCUMENTS VIEWED (not per sample)
@@ -441,103 +446,112 @@ const SampleArea = () => {
 
                 <tbody className="table-light">
                   {selectedResearcherSamples.length > 0 ? (
-                    selectedResearcherSamples.map((sample) => (
-                      <tr key={sample.id}>
-                        {SampleHeader.map(({ key }, index) => (
-                          <td
-                            key={index}
-                            className="text-center"
-                            style={{
-                              maxWidth: "150px",
-                              wordWrap: "break-word",
-                              cursor: key === "Analyte" ? "pointer" : "default",
-                              color: key === "Analyte" ? "blue" : "inherit",
-                              textDecoration: key === "Analyte" ? "underline" : "none",
-                              whiteSpace: "normal",
-                            }}
-                            onClick={(e) => {
-                              if (key === "Analyte") {
-                                e.stopPropagation();
-                                setSelectedSample(sample);
-                                setSampleShowModal(true);
-                              }
-                            }}
-                          >
-                            {key === "Analyte" ? (
-                              <>
-                                <span style={{ textDecoration: "underline" }}>{sample.Analyte || "N/A"}</span>
+                    selectedResearcherSamples.map((sample) => {
+                      // Debugging ke liye data check karein
+                      console.log("Sample data:", {
+                        id: sample.id,
+                        age: sample.age,
+                        gender: sample.gender,
+                        TestResult: sample.TestResult,
+                        TestResultUnit: sample.TestResultUnit,
+                        hasAge: sample.age !== undefined,
+                        hasGender: sample.gender !== undefined,
+                        hasTestResult: sample.TestResult !== undefined
+                      });
 
-                              </>
-                            ) : ["study_copy", "irb_file", "nbc_file"].includes(key) ? (
-                              "----"
-                            ) : key === "reporting_mechanism" && sample[key] ? (
-                              sample[key].length > 50 ? (
-                                <span
-                                  className="text-primary"
-                                  style={{ cursor: "pointer", textDecoration: "underline" }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedComment(sample[key]);
-                                    setShowCommentModal(true);
-                                  }}
-                                  title={sample[key]}
-                                >
-                                  Click to View
+                      return (
+                        <tr key={sample.id}>
+                          {SampleHeader.map(({ key }, index) => (
+                            <td
+                              key={index}
+                              className="text-center"
+                              style={{
+                                maxWidth: "150px",
+                                wordWrap: "break-word",
+                                cursor: key === "Analyte" ? "pointer" : "default",
+                                color: key === "Analyte" ? "blue" : "inherit",
+                                textDecoration: key === "Analyte" ? "underline" : "none",
+                                whiteSpace: "normal",
+                              }}
+                              onClick={(e) => {
+                                if (key === "Analyte") {
+                                  e.stopPropagation();
+                                  setSelectedSample(sample);
+                                  setSampleShowModal(true);
+                                }
+                              }}
+                            >
+                              {key === "Analyte" ? (
+                                <span style={{ textDecoration: "underline" }}>
+                                  {sample.Analyte || "N/A"}
                                 </span>
-                              ) : (
-                                <span title={sample[key]}>{sample[key]}</span>
-                              )
-                            ) : key === "comments" && sample[key] ? (
-                              sample[key].length > 50 ? (
-                                <span
-                                  className="text-primary"
-                                  style={{ cursor: "pointer", textDecoration: "underline" }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedComment(sample[key]);
-                                    setShowCommentModal(true);
-                                  }}
-                                  title={sample[key]}
-                                >
-                                  Click to View
-                                </span>
-                              ) : (
-                                <span title={sample[key]}>{sample[key]}</span>
-                              )
-                            ) : key === "quantity" ? (
-                              `${sample.quantity || 0} × ${sample.volume || 0}${sample.VolumeUnit || ''}`
-                            )
-                              : key === "TestResult" ? (
-                                (sample.TestResult || sample.TestResultUnit) ? (
-                                  <span>{`${sample.TestResult ?? ''} ${sample.TestResultUnit ?? ''}`}</span>
-                                ) : null
-                              )
-                                : key === "age" ? (
-                                  <td>
-                                    {sample.age ? `${sample.age} year` : "---"}
-                                  </td>
-
-
+                              ) : key === "quantity" ? (
+                                `${sample.quantity || 0} × ${sample.volume || 0}${sample.VolumeUnit || ''}`
+                              ) : key === "age" ? (
+                                // ✅ CORRECTED: Nested <td> removed
+                                sample.age !== undefined && sample.age !== null
+                                  ? `${sample.age}`
+                                  : "---"
+                              ) : key === "gender" ? (
+                                sample.gender || "---"
+                              ) : key === "TestResult" ? (
+                                (sample.TestResult || sample.TestResultUnit)
+                                  ? `${sample.TestResult || ''} ${sample.TestResultUnit || ''}`.trim()
+                                  : "---"
+                              ) : ["study_copy", "irb_file", "nbc_file"].includes(key) ? (
+                                "----"
+                              ) : key === "reporting_mechanism" && sample[key] ? (
+                                sample[key].length > 50 ? (
+                                  <span
+                                    className="text-primary"
+                                    style={{ cursor: "pointer", textDecoration: "underline" }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedComment(sample[key]);
+                                      setShowCommentModal(true);
+                                    }}
+                                    title={sample[key]}
+                                  >
+                                    Click to View
+                                  </span>
+                                ) : (
+                                  <span title={sample[key]}>{sample[key]}</span>
                                 )
-                                  : key === "locationids" ? (
-                                    <span
-                                      style={{ cursor: "pointer" }}
-                                      title="Location ID's = Room Number, Freezer ID and Box ID"
-                                    >
-                                      {sample[key] || "----"}
-                                    </span>
-                                  ) : (
-                                    sample[key] || "----"
-                                  )}
-
-                          </td>
-                        ))}
-
-                      </tr>
-                    ))
+                              ) : key === "comments" && sample[key] ? (
+                                sample[key].length > 50 ? (
+                                  <span
+                                    className="text-primary"
+                                    style={{ cursor: "pointer", textDecoration: "underline" }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedComment(sample[key]);
+                                      setShowCommentModal(true);
+                                    }}
+                                    title={sample[key]}
+                                  >
+                                    Click to View
+                                  </span>
+                                ) : (
+                                  <span title={sample[key]}>{sample[key]}</span>
+                                )
+                              ) : key === "locationids" ? (
+                                <span
+                                  style={{ cursor: "pointer" }}
+                                  title="Location ID's = Room Number, Freezer ID and Box ID"
+                                >
+                                  {sample[key] || "----"}
+                                </span>
+                              ) : (
+                                sample[key] || "----"
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
-                      <td colSpan="30" className="text-center">
+                      <td colSpan={SampleHeader.length} className="text-center">
                         No samples available
                       </td>
                     </tr>
