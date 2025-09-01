@@ -97,7 +97,7 @@ setCounts({ pending, dispatch, completed });
             info={showCount(counts.pending)}
             icon={<Truck />}
             
-            title="Dispatch Order"
+            title="Pending Order"
             onClick={() => handleNavigate("pendingorder")}
           />
           <SingleOrderInfo
