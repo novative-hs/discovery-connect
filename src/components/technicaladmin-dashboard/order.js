@@ -347,7 +347,7 @@ const OrderPage = () => {
     try {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/getHistory`,
-        { params: { trackingIds: trackingIds.join(','), status: 'Dispatched' } }
+        { params: { trackingIds: trackingIds.join(','), status: 'Pending' } }
       );
       setSelectedHistory(response.data.results.results || []);
     } catch (error) {
