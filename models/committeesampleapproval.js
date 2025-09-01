@@ -328,6 +328,7 @@ const getHistory = (tracking_ids, status, callback) => {
         csa.transfer,
         tas.created_at AS Technicaladmindate,
         tas.Approval_date AS TechnicaladminApproval_date,
+        tas.technical_admin_status,
         csa.committee_status,
         csa.comments AS committee_comment,
         cm.CommitteeMemberName,
@@ -351,30 +352,56 @@ const getHistory = (tracking_ids, status, callback) => {
       ORDER BY c.id, csa.transfer, csa.created_at
     `;
 
-    mysqlConnection.query(sql, [...tracking_ids, status], (err, results) => {
-      if (err) return callback(err, null);
+mysqlConnection.query(sql, [...tracking_ids, status], (err, results) => {
+  if (err) return callback(err, null);
 
-      // Group documents per cart_id
-      const grouped = results.reduce((acc, row) => {
-        let existing = acc.find(r => r.cart_id === row.cart_id);
-        if (!existing) {
-          existing = { ...row, documents: [] };
-          acc.push(existing);
-        }
-        existing.documents.push({
-          added_by: row.added_by,
-          uploaded_by_role: row.uploaded_by_role,
-          study_copy: row.study_copy,
-          irb_file: row.irb_file,
-          nbc_file: row.nbc_file,
-          created_at: row.doc_created_at,
-          updated_at: row.doc_updated_at
-        });
-        return acc;
-      }, []);
+  const grouped = results.reduce((acc, row) => {
+    // Find or create cart entry
+    let existing = acc.find(r => r.cart_id === row.cart_id);
+    if (!existing) {
+      existing = { 
+        cart_id: row.cart_id,
+        tracking_id: row.tracking_id,
+        Technicaladmindate: row.Technicaladmindate,
+        TechnicaladminApproval_date: row.TechnicaladminApproval_date,
+        approvals: [],   // Store all committee approvals
+        documents: []    // Store all documents
+      };
+      acc.push(existing);
+    }
 
-      callback(null, grouped);
-    });
+    // Push committee approval if present
+    if (row.committee_created_at) {
+      existing.approvals.push({
+        committee_status: row.committee_status,
+        committee_comment: row.committee_comment,
+        CommitteeMemberName: row.CommitteeMemberName,
+        committeetype: row.committeetype,
+        committee_approval_date: row.committee_approval_date,
+        committee_created_at: row.committee_created_at,
+        transfer: row.transfer
+      });
+    }
+
+    // Push document if present
+    if (row.study_copy || row.irb_file || row.nbc_file) {
+      existing.documents.push({
+        added_by: row.added_by,
+        uploaded_by_role: row.uploaded_by_role,
+        study_copy: row.study_copy,
+        irb_file: row.irb_file,
+        nbc_file: row.nbc_file,
+        created_at: row.doc_created_at,
+        updated_at: row.doc_updated_at
+      });
+    }
+
+    return acc;
+  }, []);
+
+  callback(null, grouped);
+});
+
   } catch (err) {
     console.error("Error fetching history:", err);
     callback(err, null);

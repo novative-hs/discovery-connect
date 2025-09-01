@@ -225,8 +225,8 @@ useEffect(() => {
                 : userType == "csr"
                   ? [
                     { label: "Profile", tab: "order-info" },
-                    { label: "Order Dispatch List", tab: "dispatchorder" },
-                    { label: "Order Shipped List", tab: "shippingorder" },
+                    { label: "Pending Order List", tab: "pendingorder" },
+                    { label: "Dispatched Order List", tab: "dispatchedorder" },
                     { label: "Order Completed List", tab: "completedorder" },
                   ]
                   : [];

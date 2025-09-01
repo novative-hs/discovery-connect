@@ -86,18 +86,15 @@ const OrderPage = () => {
   }, []);
   // Helper function to parse statuses
 
-  useEffect(() => {
-    localStorage.removeItem("transferredOrders");
-    fetchOrders(currentPage, ordersPerPage);
+useEffect(() => {
+  const interval = setInterval(() => {
+    fetchOrders(currentPage, ordersPerPage); // Refresh current page
+  }, 10000); // 10 seconds
 
-    // Set interval to refresh every 5 minutes
-    const interval = setInterval(() => {
-      fetchOrders(currentPage, ordersPerPage);
-    }, 300000); // 300,000 ms = 5 minutes
+  return () => clearInterval(interval); // Cleanup on page change/unmount
+}, [currentPage, ordersPerPage]);
 
-    // Cleanup interval on component unmount
-    return () => clearInterval(interval);
-  }, [currentPage]);
+
   const fetchDocuments = async (tracking_id) => {
     setDocumentLoading(true);
     try {
@@ -1158,7 +1155,7 @@ const OrderPage = () => {
                               }}
                             >
                               <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
-                                🛠️  {formatDT(firstHistory.Technicaladmindate)}  Referred by Technical Admin
+                                The order Referred to Technical Admin at {formatDT(firstHistory.Technicaladmindate)} 
                               </h6>
                             </div>
                           )}

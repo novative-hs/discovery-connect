@@ -12,7 +12,7 @@ const tablesAndColumns = [
       },
     ]
   },
-    {
+  {
     table: "sampledocuments",
     columnsToAdd: [
 
@@ -22,17 +22,17 @@ const tablesAndColumns = [
         nullable: true,
         references: { table: "user_account", column: "id" },
       },
-        {
+      {
         column: "updated_at",
         type: "TIMESTAMP",
         nullable: true,
       },
-       {
+      {
         column: "role",
         type: "VARCHAR(50)",
         nullable: true,
       },
-       
+
     ]
   },
 
@@ -133,6 +133,21 @@ const tablesAndColumns = [
         type: "VARCHAR(10)",
         nullable: true,
       },
+      {
+        column: "dispatch_slip",
+        type: "LONGBLOB",
+        nullable: true,
+      },
+      {
+        column: "dispatch_via",
+        type: "VARCHAR(50)",
+        nullable: true,
+      },
+      {
+        column: "completed_at",
+        type: "TIMESTAMP",
+        nullable: true,
+      }
     ]
   },
   {

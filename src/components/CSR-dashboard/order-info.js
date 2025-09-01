@@ -21,7 +21,7 @@ function SingleOrderInfo({ icon, info, title, onClick }) {
 
 const OrderInfo = ({ setActiveTab }) => {
   const [counts, setCounts] = useState({
-    shipping: null,
+    pending: null,
     dispatch: null,
     completed: null,
   });
@@ -48,26 +48,26 @@ const OrderInfo = ({ setActiveTab }) => {
     setLoading(true);
     try {
       const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyOrderPacking`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCSR`,
         {
           params: { csrUserId: id, staffAction: staffAction },
         }
       );
 
      // Get unique tracking IDs for each status
-const shipping = new Set(
-  data.filter(item => item.order_status === "Shipped").map(item => item.tracking_id)
-).size;
-
 const dispatch = new Set(
   data.filter(item => item.order_status === "Dispatched").map(item => item.tracking_id)
+).size;
+
+const pending = new Set(
+  data.filter(item => item.order_status === "Pending").map(item => item.tracking_id)
 ).size;
 
 const completed = new Set(
   data.filter(item => item.order_status === "Completed").map(item => item.tracking_id)
 ).size;
 
-setCounts({ shipping, dispatch, completed });
+setCounts({ pending, dispatch, completed });
 
     } catch (error) {
       console.error("Failed to fetch sample counts:", error);
@@ -94,17 +94,17 @@ setCounts({ shipping, dispatch, completed });
       <div className="profile__main-info ">
         <div className="row gx-3">
           <SingleOrderInfo
-            info={showCount(counts.dispatch)}
+            info={showCount(counts.pending)}
             icon={<Truck />}
             
             title="Dispatch Order"
-            onClick={() => handleNavigate("dispatchorder")}
+            onClick={() => handleNavigate("pendingorder")}
           />
           <SingleOrderInfo
-            info={showCount(counts.shipping)}
+            info={showCount(counts.dispatch)}
             icon={<Processing />}
             title="Shipping Order"
-            onClick={() => handleNavigate("shippingorder")}
+            onClick={() => handleNavigate("dispatchedorder")}
           />
           <SingleOrderInfo
             info={showCount(counts.completed)}
