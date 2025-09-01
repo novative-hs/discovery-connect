@@ -372,7 +372,7 @@ return (
                   <img
                     src={member.picture}
                     alt={member.name}
-                    className="rounded-circle border border-3 border-warning"
+                    className="rounded-circle border border-3 border-primary"
                     style={{ width: "120px", height: "120px", objectFit: "cover" }}
                   />
                 </div>
@@ -388,7 +388,7 @@ return (
                 {/* Name & Designation */}
                 <div className="card-footer bg-white border-0">
                   <h5 className="fw-bold text-dark mb-0">{member.name}</h5>
-                  <small className="text-warning fw-semibold">{member.designation}</small>
+                  <small className="text-primary fw-semibold">{member.designation}</small>
                   <p className="mb-0 text-muted">{member.university}</p>
                   <p className="mb-0 text-secondary">
                     {member.city}, {member.country}

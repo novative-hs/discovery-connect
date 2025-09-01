@@ -103,13 +103,13 @@ setCounts({ pending, dispatch, completed });
           <SingleOrderInfo
             info={showCount(counts.dispatch)}
             icon={<Processing />}
-            title="Shipping Order"
+            title="Dispatched Order"
             onClick={() => handleNavigate("dispatchedorder")}
           />
           <SingleOrderInfo
             info={showCount(counts.completed)}
             icon={<Delivery />}
-            title="Complete Order"
+            title="Completed Order"
             onClick={() => handleNavigate("completedorder")}
           />
         </div>
