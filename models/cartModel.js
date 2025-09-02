@@ -15,7 +15,7 @@ const createCartTable = () => {
     volume VARCHAR(255) NOT NULL,
     totalpayment DECIMAL(10, 2) NOT NULL,
     payment_id INT DEFAULT NULL,
-    dispatch_slip LONGBLB,
+    dispatch_slip LONGBLOB,
     dispatch_via VARCHAR(50),
     order_status ENUM('Pending', 'Accepted', 'Rejected', 'Shipped', 'Dispatched', 'Completed') DEFAULT 'Pending',
     delivered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -595,8 +595,8 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
     const offset = (page - 1) * pageSize;
     const connection = mysqlConnection.promise();
 
-    let whereClause = `WHERE ca.committee_member_id = ?`;
-    const params = [id];
+    let whereClause = `WHERE 1=1`; // always true
+    const params = [id]; // first param is committee_member_id for LEFT JOIN
 
     if (searchField && searchValue) {
       let dbField;
@@ -632,7 +632,9 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
           s.TestResult,
           s.TestResultUnit,
           s.volume,
-          s.room_number,s.freezer_id,s.box_id,
+          s.room_number,
+          s.freezer_id,
+          s.box_id,
           c.price, 
           c.quantity, 
           c.totalpayment, 
@@ -640,12 +642,13 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
           c.created_at,
           ca.committee_status,  
           ca.comments
-        FROM committeesampleapproval ca
-        JOIN cart c ON ca.cart_id = c.id  
+        FROM cart c
         JOIN user_account u ON c.user_id = u.id
         LEFT JOIN researcher r ON u.id = r.user_account_id 
         LEFT JOIN organization org ON r.nameofOrganization = org.id
         JOIN sample s ON c.sample_id = s.id  
+        LEFT JOIN committeesampleapproval ca
+          ON ca.cart_id = c.id AND ca.committee_member_id = ?
         ${whereClause}
         ORDER BY c.created_at ASC
         LIMIT ? OFFSET ?
@@ -653,8 +656,10 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
     `, [...params, pageSize, offset]);
 
     const totalCount = rows.length ? rows[0].totalCount : 0;
+
     const results = rows.map(sample => ({
       ...sample,
+      committee_status: sample.committee_status || "Pending",
       locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-')
     }));
 
@@ -664,6 +669,8 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
     callback(err, null);
   }
 };
+
+
 
 const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback) => {
   const offset = (page - 1) * pageSize;
@@ -972,10 +979,9 @@ const updateCartStatusbyCSR = async (req, dispatchSlip, callback) => {
     const placeholders = ids.map(() => '?').join(',');
     const cartDetails = await queryAsync(
       `
-      SELECT ua.email, c.created_at, c.tracking_id, c.id AS cartId,c.price,s.Analyte
+      SELECT ua.email, c.created_at, c.tracking_id, c.id AS cartId,c.price
       FROM user_account ua
       JOIN cart c ON ua.id = c.user_id
-      LEFT JOIN sample ON c.sample_id=s.id 
       WHERE c.id IN (${placeholders})
       `,
       ids

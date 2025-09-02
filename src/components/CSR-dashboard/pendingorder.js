@@ -298,8 +298,12 @@ const PendingSampleArea = () => {
                       <th>Qty X Volume</th>
 
                       <th>Collection Site Name</th>
-                      <th>Unit Price</th>
-                      <th>Total</th>
+                      <th>
+                        Unit Price ({selectedUserSamples[0]?.SamplePriceCurrency || '$'})
+                      </th>
+                      <th>
+                        Total ({selectedUserSamples[0]?.SamplePriceCurrency || '$'})
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -334,13 +338,16 @@ const PendingSampleArea = () => {
                         <td>{sample.BiobankName || sample.CollectionSiteName || "---"}</td>
                         <td style={{ textAlign: "right" }}>
                           {sample.price
-                            ? `${sample.SamplePriceCurrency} ${sample.price.toLocaleString()}`
+                            ? `${Number(sample.price).toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })}`
                             : "-"}
                         </td>
 
                         <td style={{ textAlign: "right" }}>
                           {sample.totalpayment
-                            ? `${sample.SamplePriceCurrency} ${Number(sample.totalpayment).toLocaleString("en-US", {
+                            ? `${Number(sample.totalpayment).toLocaleString("en-US", {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2
                             })}`
@@ -355,13 +362,13 @@ const PendingSampleArea = () => {
                   <tfoot className="bg-light">
                     <tr>
                       <td colSpan="4" className="text-end fw-bold">
-                        Total
+                       Total ({selectedUserSamples[0]?.SamplePriceCurrency || ""})
                       </td>
                       <td
                         className="fw-bold text-success"
                         style={{ textAlign: "right" }}
                       >
-                        {`${selectedUserSamples[0]?.SamplePriceCurrency || ""} ${selectedUserSamples
+                        {`${selectedUserSamples
                           .reduce((sum, s) => sum + Number(s.totalpayment || 0), 0)
                           .toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                       </td>

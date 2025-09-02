@@ -31,11 +31,11 @@ const SampleArea = () => {
   const [showGroupedModal, setShowGroupedModal] = useState(false);
   const [selectedResearcherSamples, setSelectedResearcherSamples] = useState(null);
   const [comments, setComments] = useState({});
- const [viewedDocuments, setViewedDocuments] = useState({
-  study_copy: false,
-  irb_file: false,
-  nbc_file: false,
-});
+  const [viewedDocuments, setViewedDocuments] = useState({
+    study_copy: false,
+    irb_file: false,
+    nbc_file: false,
+  });
 
   const [filteredSamplename, setFilteredSamplename] = useState([]);
   const [filters, setFilters] = useState({
@@ -84,8 +84,9 @@ const SampleArea = () => {
       ]);
 
       const orders = (orderRes.data.results || []).filter(order =>
-        order.committee_status === "Pending" // Filter for Pending status
+        (order.committee_status || "").toLowerCase() === "pending"
       );
+
 
       const totalCount = orders.length; // Adjusted count
       const documents = docRes.data.results || [];
@@ -144,24 +145,24 @@ const SampleArea = () => {
   };
 
   // HANDLER TO OPEN DOCUMENT AND TRACK VIEWED STATUS GLOBALLY
-const handleViewDocument = useCallback((fileBuffer, fileName) => {
-  if (!fileBuffer) {
-    alert("No document available.");
-    return;
-  }
+  const handleViewDocument = useCallback((fileBuffer, fileName) => {
+    if (!fileBuffer) {
+      alert("No document available.");
+      return;
+    }
 
-  // Open the PDF in a new tab
-  const blobUrl = URL.createObjectURL(
-    new Blob([new Uint8Array(fileBuffer.data)], { type: "application/pdf" })
-  );
-  window.open(blobUrl, "_blank");
+    // Open the PDF in a new tab
+    const blobUrl = URL.createObjectURL(
+      new Blob([new Uint8Array(fileBuffer.data)], { type: "application/pdf" })
+    );
+    window.open(blobUrl, "_blank");
 
-  // Mark document as viewed
-  setViewedDocuments((prev) => ({
-    ...prev,
-    [fileName]: true, // fileName is "study_copy", "irb_file", or "nbc_file"
-  }));
-}, []);
+    // Mark document as viewed
+    setViewedDocuments((prev) => ({
+      ...prev,
+      [fileName]: true, // fileName is "study_copy", "irb_file", or "nbc_file"
+    }));
+  }, []);
 
 
 
@@ -457,7 +458,7 @@ const handleViewDocument = useCallback((fileBuffer, fileName) => {
                 <tbody className="table-light">
                   {selectedResearcherSamples.length > 0 ? (
                     selectedResearcherSamples.map((sample) => (
-                      <tr key={sample.id}>
+                      <tr key={sample.cart_id}>
                         {SampleHeader.map(({ key }, index) => (
                           <td
                             key={index}
