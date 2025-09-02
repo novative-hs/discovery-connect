@@ -145,7 +145,7 @@ const DispatchSampleArea = () => {
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
-        <h4 className="text-center text-dark fw-bold mb-4">🚚 Ordered Sample Shipped</h4>
+        <h4 className="text-center text-dark fw-bold mb-4">🚚 Dispatched Ordered</h4>
 
         {/* Table */}
         <div className="table-responsive w-100">
