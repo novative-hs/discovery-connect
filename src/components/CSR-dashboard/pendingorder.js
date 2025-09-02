@@ -26,7 +26,7 @@ const PendingSampleArea = () => {
   const [dispatchVia, setDispatchVia] = useState("");
   const [dispatchSlip, setDispatchSlip] = useState(null);
   const [currency, setCurrency] = useState(null)
-  if (id === null) return <div>Loading...</div>;
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -166,6 +166,7 @@ const PendingSampleArea = () => {
     setDeliveryDate("");
     setDeliveryTime("");
   }
+  if (id === null) return <div>Loading...</div>;
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">

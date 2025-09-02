@@ -312,134 +312,144 @@ const updateCommitteeStatus = async (cart_ids, committee_member_id, committee_st
   callback(null, { success: !hasError, message: finalMessage });
 };
 
+
 const getHistory = (tracking_ids, status, callback) => {
   try {
+
+
+    const orderStatusCondition = status === 'Pending' ? 'c.order_status = ?' : "c.order_status != 'Pending'";
+
     const placeholders = tracking_ids.map(() => '?').join(',');
 
-    const orderStatusCondition =
-      status === 'Pending'
-        ? 'c.order_status = ?'
-        : "c.order_status != 'Pending'";
 
     const sql = `
-      SELECT 
-        c.id AS cart_id,
+      SELECT
         c.tracking_id,
-        csa.transfer,
-        tas.created_at AS Technicaladmindate,
-        tas.Approval_date AS TechnicaladminApproval_date,
-        tas.technical_admin_status,
-        csa.committee_status,
-        csa.comments AS committee_comment,
-        cm.CommitteeMemberName,
-        cm.committeetype,
-        csa.Approval_date AS committee_approval_date,
-        csa.created_at AS committee_created_at,
-        sd.added_by,
-        sd.role AS uploaded_by_role,
-        sd.study_copy,
-        sd.irb_file,
-        sd.nbc_file,
-        sd.created_at AS doc_created_at,
-        sd.updated_at AS doc_updated_at
+
+        -- Technical Admin history (distinct combos)
+        (
+          SELECT JSON_ARRAYAGG(x)
+          FROM (
+            SELECT DISTINCT JSON_OBJECT(
+              'Technicaladmindate', tas.created_at,
+              'TechnicaladminApproval_date', tas.Approval_date,
+              'technical_admin_status', tas.technical_admin_status
+            ) AS x
+            FROM technicaladminsampleapproval tas
+            WHERE tas.cart_id = c.id
+              AND (tas.created_at IS NOT NULL OR tas.Approval_date IS NOT NULL)
+          ) t
+        ) AS technicalAdminHistory,
+
+      
+(
+  SELECT JSON_ARRAYAGG(
+    JSON_OBJECT(
+      'committee_status',       csa.committee_status,
+      'committee_comment',      csa.comments,
+      'CommitteeMemberName',    cm.CommitteeMemberName,
+      'committeetype',          cm.committeetype,
+      'committee_approval_date',csa.Approval_date,
+      'committee_created_at',   csa.created_at,
+      'transfer',               csa.transfer
+    )
+  )
+  FROM committeesampleapproval csa
+  LEFT JOIN committee_member cm
+    ON cm.user_account_id = csa.committee_member_id
+  WHERE csa.cart_id = c.id
+    AND csa.created_at IS NOT NULL
+  ORDER BY csa.created_at
+) AS approvals,
+
+
+        -- Documents (distinct by created_at + role)
+        (
+          SELECT JSON_ARRAYAGG(x)
+          FROM (
+            SELECT DISTINCT JSON_OBJECT(
+              'added_by',         sd.added_by,
+              'uploaded_by_role', sd.role,
+              'files',            JSON_ARRAY(
+                                    IF(sd.study_copy IS NULL, NULL, 'study_copy'),
+                                    IF(sd.irb_file   IS NULL, NULL, 'irb_file'),
+                                    IF(sd.nbc_file   IS NULL, NULL, 'nbc_file')
+                                  ),
+              'created_at',       sd.created_at,
+              'updated_at',       sd.updated_at
+            ) AS x
+            FROM sampledocuments sd
+            WHERE sd.cart_id = c.id
+              AND (sd.study_copy IS NOT NULL OR sd.irb_file IS NOT NULL OR sd.nbc_file IS NOT NULL)
+          ) t
+        ) AS documents
+
       FROM cart c
-      LEFT JOIN technicaladminsampleapproval tas ON tas.cart_id = c.id
-      LEFT JOIN committeesampleapproval csa ON csa.cart_id = c.id
-      LEFT JOIN committee_member cm ON cm.user_account_id = csa.committee_member_id
-      LEFT JOIN sampledocuments sd ON sd.cart_id = c.id
       WHERE c.tracking_id IN (${placeholders})
         AND ${orderStatusCondition}
-      ORDER BY c.id, csa.transfer, csa.created_at
+      ORDER BY c.tracking_id;
     `;
 
-mysqlConnection.query(sql, [...tracking_ids, status], (err, results) => {
-  if (err) return callback(err, null);
+    const params = status === 'Pending' ? [...tracking_ids, status] : [...tracking_ids];
 
-  const grouped = results.reduce((acc, row) => {
-    // Find or create cart entry
-    let existing = acc.find(r => r.cart_id === row.cart_id);
-    if (!existing) {
-      existing = { 
-        cart_id: row.cart_id,
-        tracking_id: row.tracking_id,
-        Technicaladmindate: row.Technicaladmindate,
-        TechnicaladminApproval_date: row.TechnicaladminApproval_date,
-        approvals: [],   // Store all committee approvals
-        documents: []    // Store all documents
-      };
-      acc.push(existing);
-    }
+    mysqlConnection.query(sql, params, (err, rows) => {
+      if (err) return callback(err, null);
 
-    // Push committee approval if present
-    if (row.committee_created_at) {
-      existing.approvals.push({
-        committee_status: row.committee_status,
-        committee_comment: row.committee_comment,
-        CommitteeMemberName: row.CommitteeMemberName,
-        committeetype: row.committeetype,
-        committee_approval_date: row.committee_approval_date,
-        committee_created_at: row.committee_created_at,
-        transfer: row.transfer
+      // Parse JSON columns safely
+      const results = rows.map(r => ({
+        tracking_id: r.tracking_id,
+        technicalAdminHistory: Array.isArray(r.technicalAdminHistory)
+          ? r.technicalAdminHistory
+          : (typeof r.technicalAdminHistory === 'string'
+            ? JSON.parse(r.technicalAdminHistory || '[]') : []),
+        approvals: Array.isArray(r.approvals)
+          ? r.approvals
+          : (typeof r.approvals === 'string'
+            ? JSON.parse(r.approvals || '[]') : []),
+        documents: (Array.isArray(r.documents)
+          ? r.documents
+          : (typeof r.documents === 'string'
+            ? JSON.parse(r.documents || '[]') : [])
+        ).map(d => ({
+          ...d,
+          // Clean files array (remove nulls)
+          files: Array.isArray(d.files) ? d.files.filter(Boolean) : []
+        }))
+      }));
+      // Group results by tracking_id
+      const grouped = {};
+
+      results.forEach(r => {
+        if (!grouped[r.tracking_id]) {
+          grouped[r.tracking_id] = {
+            tracking_id: r.tracking_id,
+            technicalAdminHistory: [],
+            approvals: [],
+            documents: []
+          };
+        }
+
+        // Merge arrays without duplicates
+        grouped[r.tracking_id].technicalAdminHistory.push(...r.technicalAdminHistory);
+        grouped[r.tracking_id].approvals.push(...r.approvals);
+        grouped[r.tracking_id].documents.push(...r.documents);
       });
-    }
 
-    // Push document if present
-    if (row.study_copy || row.irb_file || row.nbc_file) {
-      existing.documents.push({
-        added_by: row.added_by,
-        uploaded_by_role: row.uploaded_by_role,
-        study_copy: row.study_copy,
-        irb_file: row.irb_file,
-        nbc_file: row.nbc_file,
-        created_at: row.doc_created_at,
-        updated_at: row.doc_updated_at
+      // Remove duplicates inside each array (optional)
+      Object.values(grouped).forEach(g => {
+        g.technicalAdminHistory = Array.from(new Set(g.technicalAdminHistory.map(JSON.stringify))).map(JSON.parse);
+        g.approvals = Array.from(new Set(g.approvals.map(JSON.stringify))).map(JSON.parse);
+        g.documents = Array.from(new Set(g.documents.map(JSON.stringify))).map(JSON.parse);
       });
-    }
 
-    return acc;
-  }, []);
+      callback(null, { results: Object.values(grouped) });
 
-  callback(null, grouped);
-});
-
-  } catch (err) {
+    });
+  } catch (e) {
     console.error("Error fetching history:", err);
     callback(err, null);
   }
 };
-
-
-// const getDocumentsByTrackingIds = (tracking_ids, callback) => {
-//   try {
-//     const placeholders = tracking_ids.map(() => '?').join(',');
-
-//     const sql = `
-//       SELECT 
-//         MIN(sd.cart_id) AS cart_id,        -- pick one cart_id
-//         c.tracking_id,
-//         sd.added_by,
-//         sd.role AS uploaded_by_role,
-//         MAX(sd.study_copy) AS study_copy,
-//         MAX(sd.irb_file) AS irb_file,
-//         MAX(sd.nbc_file) AS nbc_file,
-//         MIN(sd.created_at) AS created_at,
-//         MAX(sd.updated_at) AS updated_at
-//       FROM sampledocuments sd
-//       JOIN cart c ON c.id = sd.cart_id
-//       WHERE c.tracking_id IN (${placeholders})
-//       GROUP BY c.tracking_id, sd.added_by, sd.role
-//       ORDER BY created_at;
-//     `;
-
-//     mysqlConnection.query(sql, tracking_ids, callback);
-//   } catch (err) {
-//     console.error("Error fetching documents:", err);
-//     callback(err, null);
-//   }
-// };
-
-
-
 
 module.exports = {
   createcommitteesampleapprovalTable,

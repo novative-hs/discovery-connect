@@ -634,10 +634,6 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
           s.TestResultUnit,
           s.volume,
           s.room_number,s.freezer_id,s.box_id,
-          s.age,           -- ✅ ADD THIS FIELD
-          s.gender,        -- ✅ ADD THIS FIELD
-          s.TestResult,    -- ✅ ADD THIS FIELD
-          s.TestResultUnit,-- ✅ ADD THIS FIELD
           c.price, 
           c.quantity, 
           c.totalpayment, 
@@ -983,10 +979,9 @@ const updateCartStatusbyCSR = async (req, dispatchSlip, callback) => {
     const placeholders = ids.map(() => '?').join(',');
     const cartDetails = await queryAsync(
       `
-      SELECT ua.email, c.created_at, c.tracking_id, c.id AS cartId,c.price,s.Analyte
+      SELECT ua.email, c.created_at, c.tracking_id, c.id AS cartId,c.price
       FROM user_account ua
       JOIN cart c ON ua.id = c.user_id
-      LEFT JOIN sample ON c.sample_id=s.id 
       WHERE c.id IN (${placeholders})
       `,
       ids

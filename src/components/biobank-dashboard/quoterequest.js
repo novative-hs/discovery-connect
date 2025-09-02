@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDollarSign } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import ErrorMessage from "@components/error-message/error";
+import Pagination from "@ui/Pagination";
 const QuoteRequestTable = () => {
   const [currencyError, setCurrencyError] = useState("");
   const [samples, setSamples] = useState([]);
