@@ -47,5 +47,4 @@ router.put('/cart/cartstatusbyCSR',
   cartController.updateCartStatusbyCSR);
 
 router.delete('/cart/delete/:id', cartController.deleteCart); // Remove a product from the cart
-
 module.exports = router;

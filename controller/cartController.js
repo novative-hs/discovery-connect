@@ -285,7 +285,7 @@ const updateCartStatusbyCSR = (req, res) => {
 const updateCartStatus = (req, res) => {
   try {
     let ids = req.body.ids;
-    let cartStatus = req.body.cartStatus;
+    let {cartStatus,deliveryDate,deliveryTime} = req.body;
 
     // Parse ids if sent as JSON string
     if (typeof ids === "string") {
@@ -306,7 +306,7 @@ const updateCartStatus = (req, res) => {
       ? req.files.dispatchSlip[0].buffer
       : null;
 
-    cartModel.updateCartStatus(ids, cartStatus, dispatchSlip, (err, result) => {
+    cartModel.updateCartStatus(ids, cartStatus,deliveryDate,deliveryTime, dispatchSlip, (err, result) => {
       if (err) {
         console.error(err);
         return res.status(500).json({ error: err });

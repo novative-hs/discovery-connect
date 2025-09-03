@@ -74,6 +74,7 @@ const CompletedSampleArea = () => {
     { label: "Order ID", key: "tracking_id" },
     { label: "User Name", key: "researcher_name" },
     { label: "Analyte", key: "Analyte" },
+    // { label: "Delivered At", key: "completed_at" },
     { label: "Order Date", key: "created_at" },
     { label: "Status", key: "order_status" },
   ];
@@ -116,7 +117,7 @@ const CompletedSampleArea = () => {
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
-        <h4 className="text-center text-dark fw-bold mb-4">🚚 Ordered Sample Shipped</h4>
+        <h4 className="text-center text-dark fw-bold mb-4">Completed Ordered</h4>
 
         {/* Table */}
         <div className="table-responsive w-100">

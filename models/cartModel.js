@@ -35,6 +35,28 @@ const createCartTable = () => {
   });
 };
 
+const createCartDispatch = () => {
+  const cartDispatchtable = `
+  CREATE TABLE IF NOT EXISTS cart_dispatch (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  cart_id INT NOT NULL,
+  delivered_at DATETIME,
+  dispatch_via VARCHAR(50),
+  dispatch_slip LONGBLOB,
+  completed_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE CASCADE
+);
+`
+  mysqlConnection.query(cartDispatchtable, (err, result) => {
+    if (err) {
+      console.error("Error creating cart dispatch table:", err);
+    } else {
+      console.log("Cart dispatch table created or already exists.");
+    }
+  });
+}
+
 function generateTrackingId() {
   return Math.floor(10000 + Math.random() * 90000).toString();
 }
@@ -801,34 +823,65 @@ const getAllOrderByCSR = (csrUserId, staffAction, callback) => {
   });
 };
 
-const updateCartStatus = async (cartIds, cartStatus, dispatchSlip, callback) => {
+const updateCartStatus = async (cartIds, cartStatus, deliveryDate, deliveryTime, dispatchSlip, callback) => {
   try {
     const placeholders = cartIds.map(() => '?').join(',');
+    const deliveredAt = `${deliveryDate} ${deliveryTime}:00`;
 
+    // 1. Update cart table
     await queryAsync(
-      `UPDATE cart SET completed_at= NOW(), order_status = ? WHERE id IN (${placeholders})`,
+      `UPDATE cart 
+       SET order_status = ? 
+       WHERE id IN (${placeholders})`,
       [cartStatus, ...cartIds]
     );
 
-    // If you also want to handle dispatchSlip update, add that logic here.
+    // 2. Update dispatch info (if not rejected)
+    if (cartStatus !== 'Rejected') {
+      for (const cartId of cartIds) {
+        if (dispatchSlip) {
+          // Update both slip + completed_at
+          await queryAsync(
+            `UPDATE cart_dispatch 
+             SET dispatch_slip = ?, completed_at = ?
+             WHERE cart_id = ?`,
+            [dispatchSlip, deliveredAt, cartId]
+          );
+        } else {
+          // Only update completed_at
+          await queryAsync(
+            `UPDATE cart_dispatch 
+             SET completed_at = ?
+             WHERE cart_id = ?`,
+            [deliveredAt, cartId]
+          );
+        }
+      }
+    }
+
+    // 3. If rejected → restore sample quantities
     if (cartStatus === 'Rejected') {
-      // Restore sample quantities
       const cartSamples = await queryAsync(
-        `SELECT sample_id, quantity FROM cart WHERE id IN (${placeholders})`,
+        `SELECT sample_id, quantity 
+         FROM cart 
+         WHERE id IN (${placeholders})`,
         cartIds
       );
 
       for (const cs of cartSamples) {
         await queryAsync(
           `UPDATE sample 
-         SET quantity = quantity + ?, quantity_allocated = quantity_allocated - ? 
-         WHERE id = ?`,
+           SET quantity = quantity + ?, 
+               quantity_allocated = quantity_allocated - ? 
+           WHERE id = ?`,
           [cs.quantity, cs.quantity, cs.sample_id]
         );
       }
     }
+
+    // 4. Callback after success
     if (typeof callback === "function") {
-      callback(); // Call after successful update
+      callback();
     }
   } catch (err) {
     console.error("Error updating cart status:", err);
@@ -855,7 +908,7 @@ const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comme
   if (technical_admin_status === 'Rejected') newCartStatus = 'Rejected';
 
   if (newCartStatus) {
-    await updateCartStatus(cartIds, newCartStatus, null);
+    await updateCartStatus(cartIds, newCartStatus, null, null, null);
   }
 
   // 3. Fetch carts info for emails
@@ -968,12 +1021,23 @@ const updateCartStatusbyCSR = async (req, dispatchSlip, callback) => {
     const deliveredAt = `${deliveryDate} ${deliveryTime}:00`; // Ensure full DATETIME
 
     // Step 1: Update all cart statuses
-    await Promise.all(ids.map(id =>
-      queryAsync(
-        `UPDATE cart SET order_status = ?, delivered_at = ?,dispatch_via=? , dispatch_slip=? WHERE id = ?`,
-        [cartStatus, deliveredAt, dispatchVia, dispatchSlip, id]
-      )
-    ));
+    await Promise.all(
+      ids.map(async (id) => {
+        // Step 1: update status in cart table
+        await queryAsync(
+          `UPDATE cart SET order_status = ? WHERE id = ?`,
+          [cartStatus, id]
+        );
+
+        // Step 2: insert dispatch info in cart_dispatch
+        await queryAsync(
+          `INSERT INTO cart_dispatch 
+        (cart_id, delivered_at, dispatch_via, dispatch_slip) 
+       VALUES (?, ?, ?, ?)`,
+          [id, deliveredAt, dispatchVia, dispatchSlip]
+        );
+      })
+    );
 
     // Step 2: Get all carts' researcher emails and details
     const placeholders = ids.map(() => '?').join(',');
@@ -1076,5 +1140,6 @@ module.exports = {
   updateCartStatus,
   updateCartStatusbyCSR,
   updateDocument,
-  getSampleDocument
+  getSampleDocument,
+  createCartDispatch
 };

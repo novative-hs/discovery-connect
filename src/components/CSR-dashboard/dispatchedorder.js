@@ -15,7 +15,8 @@ const DispatchSampleArea = () => {
   const [isReceived, setIsReceived] = useState(false);
   const [receiptSlip, setReceiptSlip] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [deliveryDate, setDeliveryDate] = useState("");
+  const [deliveryTime, setDeliveryTime] = useState("");
   const id = typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
 
   // Fetch staffAction only once when component mounts
@@ -98,6 +99,11 @@ const DispatchSampleArea = () => {
     setCurrentPage(event.selected);
     setExpandedId(null); // Collapse any open details when page changes
   };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    if (name === "DeliveryDate") setDeliveryDate(value);
+    if (name === "DeliveryTime") setDeliveryTime(value);
+  };
 
   // Filter samples by field and value; filters original samples, not grouped data
   const handleFilterChange = (field, value) => {
@@ -118,11 +124,18 @@ const DispatchSampleArea = () => {
 
 
   const handleCompleteOrder = async () => {
+    if (!deliveryDate || !deliveryTime) {
+      notifyError("Please select all the details.");
+      return setIsSubmitting(false);
+    }
+
     setIsSubmitting(true);
     try {
       const formData = new FormData();
       formData.append("ids", JSON.stringify(selectedCartId)); // sends as string
       formData.append("cartStatus", "Completed");
+      formData.append("deliveryDate", deliveryDate);
+      formData.append("deliveryTime", deliveryTime);
       if (receiptSlip) formData.append("dispatchSlip", receiptSlip);
       await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/updatecart-status`,
@@ -131,7 +144,6 @@ const DispatchSampleArea = () => {
       );
       notifySuccess("Order Successfully Completed")
       setShowConfirmModal(false);
-      setIsReceived(false);
       fetchSamples();
     } catch (err) {
       console.error("Error completing order:", err);
@@ -241,54 +253,80 @@ const DispatchSampleArea = () => {
           />
         )}
         {showConfirmModal && (
-          <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+          <div
+            className="modal fade show d-block"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
             <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content p-3">
-                <div className="modal-header">
-                  <h5 className="modal-title">Confirm Order</h5>
-                  <button className="btn-close"
-                    onClick={() => {
-                      setIsReceived(false)
-                      setShowConfirmModal(false)
-                    }
-                    }></button>
+              <div className="modal-content p-3 rounded-3 shadow-lg border-0">
+                {/* Header */}
+                <div className="modal-header border-0">
+                  <h5 className="modal-title fw-bold text-dark">Confirm Order</h5>
+                  <button
+                    className="btn-close"
+                    style={{ filter: "invert(0.5)" }}
+                    onClick={() => setShowConfirmModal(false)}
+                  ></button>
                 </div>
+
+                {/* Body */}
                 <div className="modal-body">
-                  <label className="form-check-label">
+                  <div className="mt-3">
+                    <label className="form-label fw-semibold">Dispatch Date</label>
                     <input
-                      type="radio"
-                      name="confirmOrder"
-                      checked={isReceived}
-                      onChange={() => setIsReceived(true)}
-                      className="form-check-input me-2"
+                      type="date"
+                      className="form-control border rounded-2 shadow-sm"
+                      name="DeliveryDate"
+                      value={deliveryDate}
+                      max={new Date().toISOString().split("T")[0]}  // 👈 disables future dates
+                      onChange={handleInputChange}
                     />
-                    Parcel has been received
-                  </label>
+                  </div>
+
 
                   <div className="mt-3">
-                    <label className="form-label">Upload Receipt (Optional)</label>
+                    <label className="form-label fw-semibold">Dispatch Time</label>
+                    <input
+                      type="time"
+                      className="form-control border rounded-2 shadow-sm"
+                      name="DeliveryTime"
+                      value={deliveryTime}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+
+                  <div className="mt-3">
+                    <label className="form-label fw-semibold">Upload Receipt (Optional)</label>
                     <input
                       type="file"
-                      className="form-control"
+                      className="form-control border rounded-2 shadow-sm"
                       onChange={(e) => setReceiptSlip(e.target.files[0])}
                     />
                   </div>
                 </div>
-                <div className="modal-footer">
 
+                {/* Footer */}
+                <div className="modal-footer border-0">
                   <button
-                    className="btn btn-primary"
-                    disabled={!isReceived || isSubmitting}
+                    className="btn px-4 py-2 text-white fw-semibold"
+                    style={{
+                      backgroundColor: isSubmitting ? "#6c757d" : "#28a745", // green instead of blue
+                      borderRadius: "8px",
+                      boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+                      cursor: isSubmitting ? "not-allowed" : "pointer",
+                    }}
+                    disabled={isSubmitting}
                     onClick={handleCompleteOrder}
                   >
                     {isSubmitting ? "Processing..." : "Order Complete"}
                   </button>
-
                 </div>
               </div>
             </div>
           </div>
         )}
+
+
 
       </div>
     </section>
