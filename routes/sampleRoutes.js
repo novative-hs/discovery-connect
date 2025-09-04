@@ -13,14 +13,8 @@ const upload = multer({
 });
 
 // Sample Routes
-router.get("/sample/getAllSampleinindex/:name", SampleController.getAllSampleinIndex);
-router.get("/sample/getAllSampleinDiscover",SampleController.getAllSampleinDiscover)
-router.get("/sample/getVolumnUnits/:name", SampleController.getAllVolumnUnits)
-router.get("/sample/filterdata", SampleController.getFilteredSamples);
-router.get('/create-table', SampleController.createSampleTable);
 router.get('/sample/get/:id', SampleController.getSamples);
 router.get('/sample/getAll', SampleController.getAllSamples);
-router.get('/sample/getResearcherSamples/:id', SampleController.getResearcherSamples);
 router.get('/sample/getAllSamples', SampleController.getAllCSSamples);
 router.get('/sample/:id', SampleController.getSampleById);
 router.put("/sample/:id/reserve/:status", SampleController.updateReservedSample);
@@ -44,4 +38,11 @@ router.put('/sample/updatetestresultandunit/:id',
     ]), SampleController.updatetestResultandUnit)
 
 router.get('/sample/getSingleSample/:sampleId', SampleController.getsingleSamples)
+
+
+
+router.get("/sample/getAllSampleinindex/:name", SampleController.getAllSampleinIndex);
+router.get("/sample/getVolumnUnits/:name", SampleController.getAllVolumnUnits)
+router.get("/sample/filterdata", SampleController.getFilteredSamples);
+
 module.exports = router;

@@ -9,7 +9,7 @@ export const authApi = apiSlice.injectEndpoints({
     }),
 
     getAllSampleinDiscover: builder.query({
-      query: () => "api/sample/getAllSampleinDiscover",
+      query: () => "api/order/getSampleinDiscover",
     }),
     // get discount products
     getDiscountProducts: builder.query({

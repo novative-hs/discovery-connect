@@ -111,7 +111,7 @@ const boardMembers = [
     comments: "Research interests include human molecular genetics with a focus on Mendelian disorders.",
     picture: "/assets/img/board-advisory/userimage.png"
   },
-   {
+  {
     name: "Dr. Muhammad Ansar",
     designation: "Professor-Biochemistry (BMB)",
     university: "Quaid-i-Azam University, Islamabad",
@@ -367,7 +367,7 @@ const BoardAdvisoryArea = () => {
           {boardMembers.map((member, index) => (
             <div className="col-md-6 col-lg-4 mb-4" key={index}>
               <div className="card shadow-sm border-0 h-100 text-center p-3 hover-scale">
-                
+
                 {/* Profile Image */}
                 <div className="mb-3">
                   <img
@@ -385,29 +385,45 @@ const BoardAdvisoryArea = () => {
                 </div>
 
                 {/* University & Location */}
-                <div className="mb-2 text-muted">
-                  <p className="mb-0">{member.university}</p>
-                  <p className="mb-0">{member.city}, {member.country}</p>
-                </div>
+                {/* University & Location */}
+                {(member.university || member.city || member.country) && (
+                  <div className="mb-2 text-muted">
+                    {member.university && <p className="mb-0">{member.university}</p>}
+                    {(member.city || member.country) && (
+                      <p className="mb-0">
+                        {member.city}{member.city && member.country ? ", " : ""}{member.country}
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {/* Contact Info */}
-                <div className="mb-3 text-secondary">
-                  <p className="mb-1">
-                    <i className="fas fa-phone-alt me-2"></i>{member.contact || "" }
-                  </p>
-                  <p className="mb-0">
-                    <i className="fas fa-envelope me-2"></i>{member.email || ""}
-                  </p>
-                </div>
+                {(member.contact && member.contact !== "-") || (member.email && member.email !== "-") ? (
+                  <div className="mb-3 text-secondary">
+                    {member.contact && member.contact !== "-" && (
+                      <p className="mb-1">
+                        <i className="fas fa-phone-alt me-2"></i>{member.contact}
+                      </p>
+                    )}
+                    {member.email && member.email !== "-" && (
+                      <p className="mb-0">
+                        <i className="fas fa-envelope me-2"></i>{member.email}
+                      </p>
+                    )}
+                  </div>
+                ) : null}
 
                 {/* Comments / Quotes */}
-                <div className="card-body bg-light rounded">
-                  <p className="fst-italic text-muted mb-0">
-                    <i className="fas fa-quote-left text-warning me-1"></i>
-                    {member.comments}
-                    <i className="fas fa-quote-right text-warning ms-1"></i>
-                  </p>
-                </div>
+                {member.comments && member.comments !== "-" && (
+                  <div className="card-body bg-light rounded">
+                    <p className="fst-italic text-muted mb-0">
+                      <i className="fas fa-quote-left text-warning me-1"></i>
+                      {member.comments}
+                      <i className="fas fa-quote-right text-warning ms-1"></i>
+                    </p>
+                  </div>
+                )}
+
               </div>
             </div>
           ))}

@@ -49,10 +49,12 @@ const contactusRoutes = require("./routes/contactusRoutes");
 const committeesampleapproval = require("./routes/committeesampleapprovalRoutes")
 const collectionsiteStaffRoutes = require("./routes/collectionsitestaffRoutes")
 const samplereturnRoutes = require("./routes/samplereturnRoutes")
-
-
+const orderRoutes=require("./routes/orderRoutes")
+const technicalapprovalRoutes=require("./routes/technicalapprovalRoutes")
 // Routes
 app.use('/assets', express.static('public/assets'));
+app.use('/api/order',orderRoutes)
+app.use('/api/technicalapproval',technicalapprovalRoutes)
 app.use('/api', historyRoutes);
 app.use("/api/user", registrationRoutes);
 app.use("/api/district", DistrictRoutes);

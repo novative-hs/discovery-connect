@@ -45,73 +45,70 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
     return true;
   };
 
-const handleSubmit = async (paymentId) => {
-  if (!validateDocuments()) return false;
+  const handleSubmit = async (paymentId) => {
+    if (!validateDocuments()) return false;
 
-  const userID = sessionStorage.getItem("userID");
-  const formData = new FormData();
+    const userID = sessionStorage.getItem("userID");
+    const formData = new FormData();
 
-  formData.append("researcher_id", userID);
-  formData.append("payment_id", paymentId);
+    formData.append("researcher_id", userID);
+    formData.append("payment_id", paymentId);
 
-  formData.append(
-    "cart_items",
-    JSON.stringify(
-      cart_products.map((item) => ({
-        sample_id: item.id,
-        price: Number(item.price),
-        samplequantity: Number(item.orderQuantity),
-        volume: item.Volume,
-        VolumeUnit: item.VolumeUnit,
-        total: Number(item.orderQuantity) * Number(item.price),
-      }))
-    )
-  );
-
-  formData.append("study_copy", sampleCopyData.studyCopy);
-  formData.append("reporting_mechanism", sampleCopyData.reportingMechanism);
-  formData.append("irb_file", sampleCopyData.irbFile);
-  if (sampleCopyData.nbcFile) {
-    formData.append("nbc_file", sampleCopyData.nbcFile);
-  }
-
-  // Redirect immediately to show progress page
-  router.push("/order-confirmation");
-
-  // Then process API request in background
-  try {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
+    formData.append(
+      "cart_items",
+      JSON.stringify(
+        cart_products.map((item) => ({
+          sample_id: item.id,
+          price: Number(item.price),
+          samplequantity: Number(item.orderQuantity),
+          volume: item.Volume,
+          VolumeUnit: item.VolumeUnit,
+          total: Number(item.orderQuantity) * Number(item.price),
+        }))
+      )
     );
 
-    const { tracking_id, created_at } = response.data;
-    sessionStorage.setItem("tracking_id", tracking_id);
-    sessionStorage.setItem("created_at", created_at);
+    formData.append("study_copy", sampleCopyData.studyCopy);
+    formData.append("reporting_mechanism", sampleCopyData.reportingMechanism);
+    formData.append("irb_file", sampleCopyData.irbFile);
+    if (sampleCopyData.nbcFile) {
+      formData.append("nbc_file", sampleCopyData.nbcFile);
+    }
 
-    dispatch(clear_cart());
-    notifySuccess("Order placed successfully!");
+    // Then process API request in background
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/place-order`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
 
-    // Redirect to confirmation page
-    setTimeout(() => {
-      router.push({
-        pathname: "/order-confirmation",
-        query: { id: tracking_id, created_at },
-      });
-    }, 500);
-  } catch (error) {
-    console.error("Error placing order:", error);
-    notifyError(error.response?.data?.error || "Failed to place order.");
-  }
-};
+      const { tracking_id, created_at } = response.data;
+      sessionStorage.setItem("tracking_id", tracking_id);
+      sessionStorage.setItem("created_at", created_at);
+      router.push("/order-confirmation");
+      dispatch(clear_cart());
+      notifySuccess("Order placed successfully!");
+
+      // Redirect to confirmation page
+      setTimeout(() => {
+        router.push({
+          pathname: "/order-confirmation",
+          query: { id: tracking_id, created_at },
+        });
+      }, 500);
+    } catch (error) {
+      console.error("Error placing order:", error);
+      notifyError(error.response?.data?.error || "Failed to place order.");
+    }
+  };
 
 
 
 
   return (
     <div className="container py-4" style={{ maxWidth: "750px" }}>
-      
+
       {/* Payment Accordion */}
       <div className="accordion" id="paymentAccordion">
         <div className="accordion-item">

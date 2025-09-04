@@ -1,33 +1,5 @@
 const mysqlConnection = require("../config/db");
 
-const createSampleReturnTable = () => {
-  const createTableQuery = `
-    CREATE TABLE IF NOT EXISTS samplereturn (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      TransferTo INT NOT NULL,
-      TransferFrom INT NOT NULL,
-      dispatchVia VARCHAR(255) NOT NULL,
-      dispatcherName VARCHAR(255) NOT NULL,
-      dispatchReceiptNumber VARCHAR(255) NOT NULL,
-      Quantity VARCHAR(255) NOT NULL,
-      status VARCHAR(255) DEFAULT 'Returned',
-      ReturnDate DATE DEFAULT (CURRENT_DATE),
-      sampleID VARCHAR(36) NOT NULL,
-      FOREIGN KEY (sampleID) REFERENCES sample(id),
-      FOREIGN KEY (TransferTo) REFERENCES user_account(id) ON DELETE CASCADE,
-      FOREIGN KEY (TransferFrom) REFERENCES user_account(id) ON DELETE CASCADE
-    )
-  `;
-
-  mysqlConnection.query(createTableQuery, (err, res) => {
-    if (err) {
-      console.error("Error creating sample Return table:", err);
-    } else {
-      console.log("Sample Return table created or already exists.");
-    }
-  });
-};
-
 const getSamples = (id, page, pageSize, searchField, searchValue, callback) => {
   const staffId = parseInt(id, 10);
   if (isNaN(staffId)) {
@@ -145,6 +117,5 @@ const getSamples = (id, page, pageSize, searchField, searchValue, callback) => {
 
 
 module.exports = {
-  createSampleReturnTable,
   getSamples
 };

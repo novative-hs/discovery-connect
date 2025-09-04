@@ -54,6 +54,7 @@ const tablesAndColumns = [
 
     ]
   },
+
   {
     table: "committeesampleapproval",
     columnsToAdd: [
@@ -71,7 +72,6 @@ const tablesAndColumns = [
       },
     ]
   },
-
 
   {
     table: "sample",
@@ -107,6 +107,7 @@ const tablesAndColumns = [
       },
     ]
   },
+
   {
     table: "analyte",
     columnsToAdd: [
@@ -124,6 +125,7 @@ const tablesAndColumns = [
       },
     ]
   },
+
   {
     table: "cart",
     columnsToAdd: [
@@ -133,23 +135,9 @@ const tablesAndColumns = [
         type: "VARCHAR(10)",
         nullable: true,
       },
-      {
-        column: "dispatch_slip",
-        type: "LONGBLOB",
-        nullable: true,
-      },
-      {
-        column: "dispatch_via",
-        type: "VARCHAR(50)",
-        nullable: true,
-      },
-      {
-        column: "completed_at",
-        type: "TIMESTAMP",
-        nullable: true,
-      }
     ]
   },
+
   {
     table: "quote_requests",
     columnsToAdd: [
@@ -161,6 +149,7 @@ const tablesAndColumns = [
       },
     ]
   },
+
   {
     table: "registrationadmin_history",
     columnsToAdd: [
@@ -232,15 +221,6 @@ const tablesAndColumns = [
   //   ]
   // },
   // {
-  //   table: "sample",
-  //   columnsToAdd: [
-  //     {
-  //       column: "samplemode",
-  //       type: "Enum ('Individual','Pooled') DEFAULT 'individual'"
-  //     }
-  //   ]
-  // },
-  // {
   //   table: "csr",
   //   columnsToAdd: [
   //     {
@@ -249,20 +229,8 @@ const tablesAndColumns = [
   //       nullable: true,
   //     }
   //   ]
-
   // },
 
-  // {
-  //   table: "registrationadmin_history",
-  //   columnsToAdd: [
-  //     {
-  //       column: "Analyte_id",
-  //       type: "INT",
-  //       nullable: true, // Change to true
-  //       references: { table: "Analyte", column: "id" },
-  //     },
-  //   ]
-  // },
   // {
   //   table: "cart",
   //   columnsToAdd: [
@@ -375,27 +343,6 @@ const tablesAndColumns = [
   //   ]
   // },
 
-  // {
-  //   table: "cart",
-  //   columnsToAdd: [
-  //     {
-  //       column: "order_status",
-  //       type: "ENUM('Pending', 'Shipped', 'Delivered', 'Cancelled') NOT NULL DEFAULT 'Pending'",
-  //     },
-  //     {
-  //       column: "payment_id",
-  //       type: "INT",
-  //       nullable: true, // Change to true
-  //       references: { table: "payment", column: "id" },
-  //     },
-  //     {
-  //       column: "delivered_at",
-  //       type: "DATETIME",
-  //       nullable: true,
-  //     },
-  //   ],
-  //   columnsToDelete: ["payment_status", "payment_method"],
-  // },
 ];
 
 // Function to check if column exists and add it if not

@@ -48,7 +48,7 @@ const OrderInfo = ({ setActiveTab }) => {
     setLoading(true);
     try {
       const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCSR`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/getOrderbyCSR`,
         {
           params: { csrUserId: id, staffAction: staffAction },
         }

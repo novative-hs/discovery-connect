@@ -59,7 +59,7 @@ const SampleArea = () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getResearcherSamples/${id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/getOrderByResearcher/${id}`
       );
 
       if (response.data.error) {

@@ -89,7 +89,7 @@ const ProductModal = ({ product }) => {
               <>
                 <div className="col-md-5 text-center">
                   <img
-                    src={product.imageUrl || "/placeholder.jpg"}
+                    src={product.imageUrl || ""}
                     alt={product.Analyte}
                     className="img-fluid rounded"
                     style={{ maxHeight: "200px", objectFit: "cover" }}
@@ -111,7 +111,7 @@ const ProductModal = ({ product }) => {
             ) : (
               <div className="col-12 text-center">
                 <img
-                  src={product.imageUrl || "/placeholder.jpg"}
+                  src={product.imageUrl || ""}
                   alt={product.Analyte}
                   className="img-fluid rounded"
                   style={{ maxHeight: "130px", objectFit: "cover" }}

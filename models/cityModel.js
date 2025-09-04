@@ -296,19 +296,21 @@ const deleteCity = (id, callback) => {
 const getCount = (callback) => {
   // Queries to get the record count for each table
   const queries = {
-    totalCities: 'SELECT COUNT(*) AS count FROM city',
-    totalDistricts: 'SELECT COUNT(*) AS count FROM district',
-    totalCountries: 'SELECT COUNT(*) AS count FROM country',
-    totalResearchers: 'SELECT COUNT(*) AS count FROM researcher',
-    totalOrganizations: 'SELECT COUNT(*) AS count FROM organization',
-    totalCommitteeMembers: 'SELECT COUNT(*) AS count FROM committee_member',
-    totalCollectionSites: 'SELECT COUNT(*) AS count FROM collectionsite',
+    totalCities: "SELECT COUNT(*) AS count FROM city",
+    totalDistricts: "SELECT COUNT(*) AS count FROM district",
+    totalCountries: "SELECT COUNT(*) AS count FROM country",
+    totalResearchers: "SELECT COUNT(*) AS count FROM researcher",
+    totalOrganizations: "SELECT COUNT(*) AS count FROM organization",
+    totalCommitteeMembers: "SELECT COUNT(*) AS count FROM committee_member",
+    totalCollectionSites: "SELECT COUNT(*) AS count FROM collectionsite",
 
-    // ✅ Use consistent alias AS count here
-    totalOrders: `SELECT COUNT(*) AS count FROM cart c WHERE c.order_status != 'Rejected'`,
-    totalOrdersRejected: `SELECT COUNT(*) AS count FROM cart c WHERE c.order_status = 'Rejected'`,
+    // ✅ Escape reserved keyword `order`
+    totalOrders:
+      "SELECT COUNT(*) AS count FROM orders o WHERE o.order_status != 'Rejected'",
+    totalOrdersRejected:
+      "SELECT COUNT(*) AS count FROM orders o WHERE o.order_status = 'Rejected'",
 
-    totalCSR: 'SELECT COUNT(*) AS count FROM csr'
+    totalCSR: "SELECT COUNT(*) AS count FROM csr",
   };
 
   let results = {};
@@ -318,15 +320,13 @@ const getCount = (callback) => {
     return new Promise((resolve, reject) => {
       mysqlConnection.query(query, (err, result) => {
         if (err) {
-          reject(err); 
+          reject(err);
         } else {
-          // ✅ Always use the 'count' field since all queries now return it
           if (result && result[0]) {
             results[key] = result[0].count || 0;
           } else {
             results[key] = 0;
           }
-
           resolve();
         }
       });
@@ -334,21 +334,17 @@ const getCount = (callback) => {
   };
 
   // Run all queries concurrently
-  Promise.all(Object.entries(queries).map(([key, query]) => executeQuery(key, query)))
+  Promise.all(
+    Object.entries(queries).map(([key, query]) => executeQuery(key, query))
+  )
     .then(() => {
-
-      callback(null, results); // Return the counts when all queries have completed
+      callback(null, results);
     })
     .catch((err) => {
       console.error("Error fetching counts:", err);
-      callback(err, null); // If any error occurs, pass the error to the callback
+      callback(err, null);
     });
 };
-
-
-
-
-
 
 module.exports = {
   createCityTable,

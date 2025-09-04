@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
 import Pagination from "@ui/Pagination";
@@ -25,6 +25,7 @@ const PendingSampleArea = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dispatchVia, setDispatchVia] = useState("");
   const [dispatchSlip, setDispatchSlip] = useState(null);
+  const fileInputRef = useRef(null);
   const [currency, setCurrency] = useState(null)
   if (id === null) return <div>Loading...</div>;
 
@@ -46,7 +47,7 @@ const PendingSampleArea = () => {
   const fetchSamples = async (action = staffAction) => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCSR`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/getOrderbyCSR`,
         {
           params: {
             csrUserId: id,
@@ -114,9 +115,8 @@ const PendingSampleArea = () => {
 
   const handleOrderStatusSubmit = async () => {
     setIsSubmitting(true);
-    const ids = selectedUserSamples.map((s) => s.id);
 
-    // Validation
+    // // Validation
     if (!deliveryDate || !deliveryTime || !dispatchVia || !dispatchSlip) {
       notifyError("Please select all the details.");
       return setIsSubmitting(false);
@@ -124,7 +124,7 @@ const PendingSampleArea = () => {
 
     try {
       const formData = new FormData();
-      formData.append("ids", JSON.stringify(ids));
+      formData.append("orderid", selectedUserSamples[0].id);
       formData.append("cartStatus", orderStatus);
       formData.append("deliveryDate", deliveryDate);
       formData.append("deliveryTime", deliveryTime);
@@ -132,7 +132,7 @@ const PendingSampleArea = () => {
       if (dispatchSlip) formData.append("dispatchSlip", dispatchSlip);
 
       const res = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/cartstatusbyCSR`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/updatestatusbyCSR`,
         formData,
         {
           headers: {
@@ -151,21 +151,29 @@ const PendingSampleArea = () => {
     } finally {
       setIsSubmitting(false);
       setOrderStatus("Dispatched");
-      setDispatchSlip("");
+      setDispatchSlip(null);
       setDispatchVia("");
       setDeliveryDate("");
       setDeliveryTime("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
+const handleCancelModal = () => {
+  setShowOrderStatusModal(false);
+  setOrderStatus("Dispatched");
+  setDispatchSlip(null);
+  setDispatchVia("");
+  setDeliveryDate("");
+  setDeliveryTime("");
 
-  const handleCancelModal = async () => {
-    setShowOrderStatusModal(false)
-    setOrderStatus("Dispatched");
-    setDispatchSlip("");
-    setDispatchVia("");
-    setDeliveryDate("");
-    setDeliveryTime("");
+  // clear actual file input field
+  if (fileInputRef.current) {
+    fileInputRef.current.value = "";
   }
+};
+
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
@@ -301,9 +309,9 @@ const PendingSampleArea = () => {
                       <th>
                         Unit Price ({selectedUserSamples[0]?.SamplePriceCurrency || '$'})
                       </th>
-                      <th>
+                      {/* <th>
                         Total ({selectedUserSamples[0]?.SamplePriceCurrency || '$'})
-                      </th>
+                      </th> */}
                     </tr>
                   </thead>
                   <tbody>
@@ -333,7 +341,7 @@ const PendingSampleArea = () => {
                         </td>
 
                         <td>
-                          {sample.quantity || 0} × {sample.volume || 0}{sample.VolumeUnit || ''}
+                          {sample.quantity || 0} × {sample.volume || 0}{sample.volumeUnit || ''}
                         </td>
                         <td>{sample.BiobankName || sample.CollectionSiteName || "---"}</td>
                         <td style={{ textAlign: "right" }}>
@@ -345,14 +353,14 @@ const PendingSampleArea = () => {
                             : "-"}
                         </td>
 
-                        <td style={{ textAlign: "right" }}>
+                        {/* <td style={{ textAlign: "right" }}>
                           {sample.totalpayment
                             ? `${Number(sample.totalpayment).toLocaleString("en-US", {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2
                             })}`
                             : "-"}
-                        </td>
+                        </td> */}
 
 
 
@@ -361,8 +369,8 @@ const PendingSampleArea = () => {
                   </tbody>
                   <tfoot className="bg-light">
                     <tr>
-                      <td colSpan="4" className="text-end fw-bold">
-                       Total ({selectedUserSamples[0]?.SamplePriceCurrency || ""})
+                      <td colSpan="3" className="text-end fw-bold">
+                        Total ({selectedUserSamples[0]?.SamplePriceCurrency || ""})
                       </td>
                       <td
                         className="fw-bold text-success"
@@ -382,6 +390,7 @@ const PendingSampleArea = () => {
                 <Form.Label>Upload Dispatch Slip</Form.Label>
                 <Form.Control
                   type="file"
+                  ref={fileInputRef}
                   name="dispatchSlip"
                   onChange={(e) => setDispatchSlip(e.target.files[0])}
                   accept=".jpg,.jpeg,.png,.pdf"

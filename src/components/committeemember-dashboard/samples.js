@@ -1,31 +1,65 @@
-// Modified SampleArea Component with Grouped Researcher View
-import React, { useState, useEffect, useCallback } from "react";
+// SampleArea.jsx
+import React, { useState, useCallback } from "react";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
 import { notifyError, notifySuccess } from "@utils/toast";
 import Pagination from "@ui/Pagination";
-import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faDownload,
-  faCheck,
-  faTimes,
-  faFilePdf,
-} from "@fortawesome/free-solid-svg-icons";
+import { faDownload, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+// ---------- Fetcher ----------
+const fetchSamples = async ({ queryKey }) => {
+  const [, id, page, pageSize, searchField, searchValue] = queryKey;
+
+  const docFields = ["study_copy", "reporting_mechanism", "irb_file", "nbc_file"];
+  const filterForDoc = docFields.includes(searchField);
+
+  let orderUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}`;
+  let docUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/getAllDocuments/${id}?page=${page}&pageSize=${pageSize}`;
+
+  if (searchField && searchValue) {
+    const filter = `&searchField=${searchField}&searchValue=${searchValue}`;
+    if (filterForDoc) {
+      docUrl += filter;
+    } else {
+      orderUrl += filter;
+    }
+  }
+
+  const [orderRes, docRes] = await Promise.all([axios.get(orderUrl), axios.get(docUrl)]);
+  const orders = (orderRes.data.results || []).filter(
+    (order) => (order.committee_status || "").toLowerCase() === "pending"
+  );
+
+  const documents = docRes.data.results || [];
+
+  const docMap = {};
+  documents.forEach((doc) => {
+    if (doc.order_id) docMap[doc.order_id] = doc;
+  });
+
+  const merged = orders.map((order) => ({
+    ...order,
+    ...(docMap[order.order_id] || {}),
+  }));
+
+  return { samples: merged, totalCount: orders.length };
+};
+
+// ---------- Component ----------
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
+  const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [actionType, setActionType] = useState("");
   const [comment, setComment] = useState("");
   const [selectedComment, setSelectedComment] = useState("");
   const [showCommentModal, setShowCommentModal] = useState(false);
-  const [samples, setSamples] = useState([]);
   const [showSampleModal, setSampleShowModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
-  const [totalPages, setTotalPages] = useState(0);
   const [searchField, setSearchField] = useState("");
   const [searchValue, setSearchValue] = useState("");
   const [showGroupedModal, setShowGroupedModal] = useState(false);
@@ -60,71 +94,19 @@ const SampleArea = () => {
     { label: "Test Result & Unit", key: "TestResult" },
   ];
 
-  const fetchSamples = useCallback(async (page = 1, pageSize = 10, filters = {}) => {
-    try {
-      const { searchField, searchValue } = filters;
-      const docFields = ["study_copy", "reporting_mechanism", "irb_file", "nbc_file"];
-      const filterForDoc = docFields.includes(searchField);
-
-      let orderUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}`;
-      let docUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${page}&pageSize=${pageSize}`;
-
-      if (searchField && searchValue) {
-        const filter = `&searchField=${searchField}&searchValue=${searchValue}`;
-        if (filterForDoc) {
-          docUrl += filter;
-        } else {
-          orderUrl += filter;
-        }
-      }
-
-      const [orderRes, docRes] = await Promise.all([
-        axios.get(orderUrl),
-        axios.get(docUrl),
-      ]);
-
-      const orders = (orderRes.data.results || []).filter(order =>
-        (order.committee_status || "").toLowerCase() === "pending"
-      );
+  // Query
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["orders", id, currentPage, itemsPerPage, searchField, searchValue],
+    queryFn: fetchSamples,
+    keepPreviousData: true,
+    staleTime: 1000 * 60,
+  });
 
 
-      const totalCount = orders.length; // Adjusted count
-      const documents = docRes.data.results || [];
+  const samples = data?.samples || [];
+  const totalPages = Math.ceil((data?.totalCount || 0) / itemsPerPage);
 
-      const docMap = {};
-      documents.forEach((doc) => {
-        if (doc.cart_id) {
-          docMap[doc.cart_id] = doc;
-        }
-      });
-
-      const merged = orders.map((order) => ({
-        ...order,
-        ...(docMap[order.cart_id] || {}),
-      }));
-      const uniqueSamples = merged.filter(
-        (value, index, self) =>
-          index === self.findIndex(
-            (s) =>
-              s.cart_id === value.cart_id &&
-              s.Analyte === value.Analyte // ensure unique analyte
-          )
-      );
-
-      setSamples(uniqueSamples);
-      setFilteredSamplename(uniqueSamples);
-      setTotalPages(Math.ceil(totalCount / pageSize));
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (id) {
-      fetchSamples(currentPage, itemsPerPage, { searchField, searchValue });
-    }
-  }, [id, currentPage, itemsPerPage, searchField, searchValue, fetchSamples]);
-
+  // Group by researcher (tracking_id)
   const groupedByResearcher = samples.reduce((acc, sample) => {
     const key = sample.tracking_id || "Unknown";
     if (!acc[key]) acc[key] = [];
@@ -132,146 +114,74 @@ const SampleArea = () => {
     return acc;
   }, {});
 
-  const handlePageChange = (event) => {
-    const selectedPage = event.selected + 1;
-    setCurrentPage(selectedPage);
-  };
-
+  // ---------- Handlers ----------
+  const handlePageChange = (event) => setCurrentPage(event.selected + 1);
 
   const handleFilterChange = (field, value) => {
     setSearchField(field);
     setSearchValue(value);
-    setCurrentPage(1); // Optionally reset to page 1 when filtering
+    setCurrentPage(1);
   };
 
-  // HANDLER TO OPEN DOCUMENT AND TRACK VIEWED STATUS GLOBALLY
   const handleViewDocument = useCallback((fileBuffer, fileName) => {
     if (!fileBuffer) {
       alert("No document available.");
       return;
     }
-
-    // Open the PDF in a new tab
     const blobUrl = URL.createObjectURL(
       new Blob([new Uint8Array(fileBuffer.data)], { type: "application/pdf" })
     );
     window.open(blobUrl, "_blank");
-
-    // Mark document as viewed
-    setViewedDocuments((prev) => ({
-      ...prev,
-      [fileName]: true, // fileName is "study_copy", "irb_file", or "nbc_file"
-    }));
+    setViewedDocuments((prev) => ({ ...prev, [fileName]: true }));
   }, []);
 
-
-
-  // ✅ GLOBAL CHECK FOR DOCUMENTS VIEWED (not per sample)
   const allDocumentsViewed = () => {
-    const requiredDocs = ["study_copy", "irb_file"];
+    const requiredDocs = ["study_copy"];
     const optionalDoc = "nbc_file";
-
     const hasViewedRequired = requiredDocs.every((doc) => viewedDocuments[doc]);
     const hasViewedOptional =
-      !selectedResearcherSamples[0][optionalDoc] || viewedDocuments[optionalDoc];
-
+      !selectedResearcherSamples?.[0][optionalDoc] || viewedDocuments[optionalDoc];
     return hasViewedRequired && hasViewedOptional;
   };
 
-  // OPEN MODAL HANDLER
   const handleOpenModal = (type, samplesGroup) => {
-    if (!samplesGroup || !samplesGroup.length) {
-      alert("Sample data is missing.");
-      return;
-    }
-
-    if (!allDocumentsViewed()) {
-      alert("Please view all required documents before proceeding.");
-      return;
-    }
-
-    setSelectedSample(samplesGroup[0]); // Use first sample as reference
+    if (!samplesGroup?.length) return alert("Sample data missing.");
+    if (!allDocumentsViewed()) return alert("Please view all required documents first.");
+    setSelectedResearcherSamples(samplesGroup);
     setActionType(type);
     setShowModal(true);
   };
 
-  // Close Modal
+  const handleSubmit = async () => {
+    const trimmedComment = comment.trim();
+    if (!id || !selectedResearcherSamples?.length || !trimmedComment) {
+      return alert("Please enter a comment.");
+    }
+    try {
+      await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/bulk-committee-approval`,
+        {
+          committee_member_id: id,
+          committee_status: actionType,
+          comments: trimmedComment,
+          order_id: selectedResearcherSamples[0].order_id,
+        }
+      );
+      notifySuccess(`${actionType} successful for all samples.`);
+      setShowModal(false);
+      setShowGroupedModal(false);
+      setComment("");
+      refetch(); // ✅ re-fetch fresh data
+    } catch (err) {
+      console.error("❌ Error:", err);
+      notifyError("Bulk approval/refusal failed.");
+    }
+  };
   const handleCloseModal = () => {
     setSelectedSample(null); // Ensure the selected sample is set
     setActionType(null);
     setShowModal(false);
   };
-
-  const handleSubmit = async () => {
-    const trimmedComment = comment.trim();
-
-    if (!id || !selectedResearcherSamples || selectedResearcherSamples.length === 0 || !trimmedComment) {
-      alert("Please enter a comment.");
-      return;
-    }
-
-    try {
-      // Prepare payload with all cart_ids at once
-      const payload = {
-        committee_member_id: id,
-        committee_status: actionType, // "Approved" or "Refused"
-        comments: trimmedComment,
-        cart_ids: selectedResearcherSamples.map(sample => sample.cart_id),
-      };
-
-      // Send a single request
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/bulk-committee-approval`,
-        payload
-      );
-
-      notifySuccess(`${actionType} successful for all samples.`);
-      setShowModal(false);
-      setShowGroupedModal(false)
-      setComment("");
-
-      // ✅ Refetch updated data
-      const updatedOrderRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
-      );
-      const updatedDocRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${currentPage}&pageSize=${itemsPerPage}`
-      );
-
-      const updatedDocuments = updatedDocRes.data.results || [];
-      const updatedOrders = (updatedOrderRes.data.results || []).filter(order =>
-        order.committee_status === "Pending" // Filter for Pending status
-      );
-
-      const updatedDocMap = {};
-      updatedDocuments.forEach((doc) => {
-        if (doc.cart_id) {
-          updatedDocMap[doc.cart_id] = doc;
-        }
-      });
-
-      const updatedMerged = updatedOrders.map((order) => ({
-        ...order,
-        ...(updatedDocMap[order.cart_id] || {}),
-      }));
-
-      setSamples(updatedMerged);
-
-      const updatedGroup = updatedMerged.filter(
-        (s) => s.tracking_id === selectedResearcherSamples[0].tracking_id
-      );
-      setSelectedResearcherSamples(updatedGroup);
-
-    } catch (error) {
-      console.error("❌ Error updating samples:", error);
-      notifyError("Bulk approval/refusal failed. Please check logs.");
-    }
-  };
-
-
-
-
-
   const handleScroll = (e) => {
     const isVerticalScroll = e.target.scrollHeight !== e.target.clientHeight;
 
@@ -285,58 +195,42 @@ const SampleArea = () => {
       }
     }
   };
-
   if (!id) return <div>Loading...</div>;
+  if (isLoading) return <div>Fetching data...</div>;
+
   return (
     <div className="container py-3">
       <h4 className="text-center text-success">Review Pending</h4>
-      <div
-        onScroll={handleScroll}
-        className="table-responsive"
-        style={{ overflowX: "auto" }}
-      >
+
+      {/* Orders Table */}
+      <div className="table-responsive">
         <table className="table table-bordered table-hover text-center align-middle">
           <thead className="table-primary text-dark">
             <tr>
-              {tableHeaders.map(({ label, key }, index) => (
-                <th key={index} className="px-2">
+              {["Order ID", "Order Date", "Researcher Name", "Organization Name", "Review Status"].map((label, idx) => (
+                <th key={idx}>
                   <div className="d-flex flex-column align-items-center">
                     <input
                       type="text"
-                      className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                      className="form-control form-control-sm text-center"
                       placeholder={`Search ${label}`}
-                      onChange={(e) =>
-                        handleFilterChange(key, e.target.value)
-                      }
-                      style={{ minWidth: "100px" }} // Adjusted minWidth
+                      onChange={(e) => handleFilterChange(label.toLowerCase().replace(" ", "_"), e.target.value)}
                     />
-                    <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-10">
-                      {label}
-                    </span>
+                    <span className="fw-bold mt-1">{label}</span>
                   </div>
                 </th>
               ))}
-              <th className="p-2 text-center" style={{ minWidth: "50px" }}>
-                Action
-              </th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {Object.entries(groupedByResearcher).map(([researcher, group], idx) => (
               <tr key={idx}>
-
                 <td>{group[0].tracking_id}</td>
-                <td>{new Date(group[0].created_at).toLocaleDateString('en-GB', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: '2-digit'
-                }).replace(/ /g, '-')}
-                </td>
+                <td>{new Date(group[0].created_at).toLocaleDateString()}</td>
                 <td>{group[0].researcher_name}</td>
                 <td>{group[0].organization_name}</td>
                 <td>{group[0].committee_status}</td>
-
-
                 <td>
                   <button
                     className="btn btn-outline-info btn-sm"
@@ -354,11 +248,8 @@ const SampleArea = () => {
         </table>
       </div>
 
-      <Pagination
-        handlePageClick={handlePageChange}
-        pageCount={totalPages}
-        focusPage={currentPage - 1}
-      />
+      {/* Pagination */}
+      <Pagination handlePageClick={handlePageChange} pageCount={totalPages} focusPage={currentPage - 1} />
 
       {showGroupedModal && selectedResearcherSamples && (
         <Modal
@@ -767,7 +658,6 @@ const SampleArea = () => {
           </Modal.Body>
         </Modal>
       )}
-
 
     </div>
   );

@@ -4,7 +4,7 @@ const createcommitteesampleapprovalTable = () => {
   const committeesampleapprovalableQuery = `
  CREATE TABLE IF NOT EXISTS committeesampleapproval (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  cart_id INT NOT NULL,  
+  order_id INT NOT NULL,  
   sender_id INT NOT NULL,  -- Registration admin
   committee_member_id INT NOT NULL, 
   committee_status ENUM('Pending', 'Approved', 'Refused') NOT NULL DEFAULT 'Pending',
@@ -12,7 +12,7 @@ const createcommitteesampleapprovalTable = () => {
   Approval_date TIMESTAMP,
   transfer INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (cart_id) REFERENCES cart(id) ON DELETE CASCADE,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
   FOREIGN KEY (sender_id) REFERENCES user_account(id) ON DELETE CASCADE,
   FOREIGN KEY (committee_member_id) REFERENCES user_account(id) ON DELETE CASCADE
 );
@@ -27,13 +27,10 @@ const createcommitteesampleapprovalTable = () => {
     }
   });
 };
-const insertCommitteeApproval = async (cartIds, senderId, committeeType, callback) => {
+const insertCommitteeApproval = async (cartId, senderId, committeeType , callback) => {
   try {
-    if (!Array.isArray(cartIds) || cartIds.length === 0) {
-      return callback(new Error("No cart IDs provided"), null);
-    }
-
     const connection = mysqlConnection.promise();
+    const orderId = cartId; 
 
     // 1. Fetch committee members (only active ones)
     let memberQuery = "";
@@ -52,69 +49,58 @@ const insertCommitteeApproval = async (cartIds, senderId, committeeType, callbac
       return callback(null, { message: "No active committee members found." });
     }
 
-    // 2. Fetch max transfer IDs for all carts in one go
+    // 2. Fetch max transfer ID for this order
     const [transferResults] = await connection.query(
-      `SELECT cart_id, COALESCE(MAX(transfer),0) AS maxTransferId 
+      `SELECT COALESCE(MAX(transfer),0) AS maxTransferId 
        FROM committeesampleapproval 
-       WHERE cart_id IN (?) 
-       GROUP BY cart_id`,
-      [cartIds]
+       WHERE order_id = ?`,
+      [orderId]
     );
 
-    const transferMap = {};
-    transferResults.forEach(row => {
-      transferMap[row.cart_id] = row.maxTransferId;
-    });
+    const maxTransferId = transferResults[0]?.maxTransferId || 0;
+    const newTransferId = maxTransferId + 1;
 
     // 3. Prepare batch insert
-    const insertValues = [];
-    cartIds.forEach(cartId => {
-      const newTransferId = (transferMap[cartId] || 0) + 1;
-      committeeMembers.forEach(member => {
-        insertValues.push([cartId, senderId, member.user_account_id, "Pending", newTransferId]);
-      });
-    });
+    const insertValues = committeeMembers.map(member => [
+      orderId,
+      senderId,
+      member.user_account_id,
+      "Pending",
+      newTransferId,
+    ]);
 
     await connection.query(
       `INSERT INTO committeesampleapproval 
-       (cart_id, sender_id, committee_member_id, committee_status, transfer) VALUES ?`,
+       (order_id, sender_id, committee_member_id, committee_status, transfer) VALUES ?`,
       [insertValues]
     );
 
-    // 4. Update cart status in one query
+    // 4. Update order status
     await connection.query(
-      `UPDATE cart SET order_status = 'Pending' WHERE id IN (?)`,
-      [cartIds]
+      `UPDATE orders SET order_status = 'Pending' WHERE id = ?`,
+      [orderId]
     );
 
-    // 5. Fetch researcher emails & tracking IDs
+    // 5. Fetch researcher email & tracking ID
     const [emailResults] = await connection.query(
-      `SELECT DISTINCT ua.email, r.researcherName, c.tracking_id
+      `SELECT ua.email, r.researcherName, o.tracking_id
        FROM user_account ua
-       JOIN cart c ON ua.id = c.user_id
+       JOIN orders o ON ua.id = o.user_id
        JOIN researcher r ON ua.id = r.user_account_id
-       WHERE c.id IN (?)`,
-      [cartIds]
+       WHERE o.id = ?`,
+      [orderId]
     );
 
-    // 6. Send emails asynchronously (doesn't block response)
-    const emailMap = {};
-    emailResults.forEach(({ email, researcherName, tracking_id }) => {
-      if (!emailMap[email]) emailMap[email] = { researcherName, trackingIds: [] };
-      emailMap[email].trackingIds.push(tracking_id);
-    });
-
-    Object.entries(emailMap).forEach(([email, { researcherName, trackingIds }]) => {
+    // 6. Send email
+    if (emailResults.length) {
+      const { email, researcherName, tracking_id } = emailResults[0];
       setImmediate(async () => {
         try {
           await sendEmail(email, "Your Sample Submission is Under Review", `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 8px;">
               <h2 style="color: #2c3e50;">Sample Request Under Review</h2>
               <p>Dear <strong>${researcherName}</strong>,</p>
-              <p>The following sample request(s) you submitted are now <strong>under review</strong> by the committee:</p>
-              <ul style="background: #f9f9f9; padding: 15px; border-radius: 5px;">
-                Tracking ID(s): ${trackingIds.join(", ")}
-              </ul>
+              <p>Your sample request (Tracking ID: <strong>${tracking_id}</strong>) is now <strong>under review</strong> by the committee.</p>
               <p>You can log in to your dashboard for further updates.</p>
               <p style="margin-top: 30px;">Thank you for using <strong>Discovery Connect</strong>.</p>
               <p style="color: #7f8c8d;">Best regards,<br/>Discovery Connect Team</p>
@@ -124,7 +110,7 @@ const insertCommitteeApproval = async (cartIds, senderId, committeeType, callbac
           console.error(`Email failed for ${email}:`, err);
         }
       });
-    });
+    }
 
     callback(null, { message: "Transfer to the Committee Member Successfully" });
 
@@ -135,325 +121,235 @@ const insertCommitteeApproval = async (cartIds, senderId, committeeType, callbac
 };
 
 
-const updateCommitteeStatus = async (cart_ids, committee_member_id, committee_status, comments, callback) => {
 
-  if (!Array.isArray(cart_ids) || cart_ids.length === 0) {
-    return callback(new Error("Invalid input: cart_ids must be a non-empty array"), null);
-  }
-  const getCommitteeTypeQuery = `SELECT committeetype FROM committee_member WHERE user_account_id = ?`;
-  const committeeTypeResult = await new Promise((resolve) => {
-    mysqlConnection.query(getCommitteeTypeQuery, [committee_member_id], (err, result) => {
-      if (err) {
-        console.error("Error fetching committee type:", err);
-        return resolve([]);
-      }
-      resolve(result);
-    });
-  });
+const updateCommitteeStatus = async (order_id, committee_member_id, committee_status, comments, callback) => {
+  try {
+    // 1. Get committee type
+    const getCommitteeTypeQuery = `SELECT committeetype FROM committee_member WHERE user_account_id = ?`;
+    const [committeeTypeResult] = await mysqlConnection.promise().query(getCommitteeTypeQuery, [committee_member_id]);
+    const committeeType = committeeTypeResult[0]?.committeetype || "Committee";
 
-  const committeeType = (committeeTypeResult[0]?.committeetype);
-
-  const pendingEmailCarts = [];
-
-  let processed = 0;
-  const total = cart_ids.length;
-  let hasError = false;
-
-  for (const cartid of cart_ids) {
-
+    // 2. Update committee status for this order
     const updateQuery = `
       UPDATE committeesampleapproval 
-      SET committee_status = ?, comments = ? ,
-     Approval_date = NOW()
-      WHERE committee_member_id = ? AND cart_id = ? AND committee_status='Pending'`;
+      SET committee_status = ?, comments = ?, Approval_date = NOW()
+      WHERE committee_member_id = ? AND order_id = ? AND committee_status = 'Pending'
+    `;
+    await mysqlConnection.promise().query(updateQuery, [committee_status, comments, committee_member_id, order_id]);
 
-    await new Promise((resolve) => {
-      mysqlConnection.query(updateQuery, [committee_status, comments, committee_member_id, cartid], async (err) => {
-        if (err) {
-          console.error(`Error updating committee status for cart ${cartid}:`, err);
-          hasError = true;
-          return resolve();
-        }
+    // 3. Check if all members have submitted
+    const [checkResult] = await mysqlConnection.promise().query(
+      `SELECT COUNT(*) AS pending FROM committeesampleapproval WHERE order_id = ? AND committee_status IS NULL`,
+      [order_id]
+    );
 
-        // if (committee_status === 'Refused') {
-        //   try {
-        //     revertSampleQuantity(cartid);
-        //   } catch (revertErr) {
-        //     console.error(`❌ Error reverting quantity for cart ${cartid}:`, revertErr);
-        //   }
-        // }
-
-        // Check if all committee members submitted
-        const checkAllStatusQuery = `
-          SELECT COUNT(*) AS pending 
-          FROM committeesampleapproval 
-          WHERE cart_id = ? AND committee_status IS NULL`;
-
-        mysqlConnection.query(checkAllStatusQuery, [cartid], (checkErr, checkResult) => {
-          if (checkErr) {
-            console.error(`Error checking committee status for cart ${cartid}:`, checkErr);
-            hasError = true;
-            return resolve();
-          }
-
-          const pending = checkResult[0].pending;
-          if (pending === 0) {
-            pendingEmailCarts.push({ cartId: cartid, latestComment: comments });
-          }
-
-          resolve();
-        });
-      });
-    });
-
-    processed++;
-  }
-
-  // Now send emails only once per cart
-  const emailMap = new Map();
-
-  for (const { cartId, latestComment } of pendingEmailCarts) {
-    const getEmailQuery = `
-    SELECT ua.email, r.researcherName, c.tracking_id 
-    FROM user_account ua
-    JOIN cart c ON ua.id = c.user_id 
-    JOIN researcher r ON ua.id = r.user_account_id
-    WHERE c.id = ?`;
-
-    const results = await new Promise((resolve) => {
-      mysqlConnection.query(getEmailQuery, [cartId], (err, result) => {
-        if (err) {
-          console.error("Error fetching email:", err);
-          return resolve([]);
-        }
-        resolve(result);
-      });
-    });
-
-    if (results.length > 0) {
-      const { email, researcherName, tracking_id } = results[0];
-
-      if (!emailMap.has(email)) {
-        emailMap.set(email, {
-          researcherName,
-          trackingIds: [tracking_id],
-          comment: latestComment,
-        });
-      } else {
-        const entry = emailMap.get(email);
-        entry.trackingIds.push(tracking_id); // multiple IDs
-      }
-
-      // Update cart status once per cart
-      const updateCartStatusQuery = `UPDATE cart SET order_status = 'Pending' WHERE id = ?`;
-      mysqlConnection.query(updateCartStatusQuery, [cartId], (cartErr) => {
-        if (cartErr) {
-          console.error(`Failed to update cart status for cart ${cartId}:`, cartErr);
-        }
-      });
+    let sendEmailFlag = false;
+    if (checkResult[0].pending === 0) {
+      sendEmailFlag = true;
     }
-  }
 
-  // Send one email per unique user
-  for (const [email, { researcherName, trackingIds, comment }] of emailMap.entries()) {
-    const uniqueTrackingIds = [...new Set(trackingIds)];
+    if (sendEmailFlag) {
+      // 4. Fetch researcher email + info
+      const getEmailQuery = `
+        SELECT ua.email, r.ResearcherName, o.tracking_id 
+        FROM user_account ua
+        JOIN orders o ON ua.id = o.user_id 
+        JOIN researcher r ON ua.id = r.user_account_id
+        WHERE o.id = ?
+      `;
+      const [results] = await mysqlConnection.promise().query(getEmailQuery, [order_id]);
 
-    // Format tracking IDs as list items
-    const trackingListHTML = uniqueTrackingIds.map(id => `<li>${id}</li>`).join("");
-    const subject = `Committee Status Update`;
-    const text = `
-  <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
-    <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-      
-      <p style="font-size: 16px; color: #333;">
-        <b>Dear ${researcherName},</b>
-      </p>
+      if (results.length > 0) {
+        const { email, ResearcherName, tracking_id } = results[0];
 
-      <p style="font-size: 15px; color: #555; line-height: 1.6;">
-        Your sample request(s) for the following Tracking ID(s) have been reviewed by 
-        <b>${committeeType}</b> committee members:
-      </p>
+        // 5. Update order status
+        await mysqlConnection.promise().query(
+          `UPDATE orders SET order_status = 'Pending' WHERE id = ?`,
+          [order_id]
+        );
 
-      <ul style="font-size: 15px; color: #555; background-color: #f4f6f8; padding: 10px; border-radius: 6px;">
-        Tracking ID(s): ${trackingListHTML}
-      </ul>
+        // 6. Send email
+        const subject = `Committee Status Update`;
+        const html = `
+          <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
+            <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+              <p><b>Dear ${ResearcherName},</b></p>
+              <p>Your sample request with <b>Tracking ID: ${tracking_id}</b> has been reviewed by 
+              <b>${committeeType}</b> committee members.</p>
+              <p><b>Status:</b> ${committee_status}</p>
+              <p><b>Comment:</b> ${comments || "No comments provided."}</p>
+              <p>Please check your dashboard for details.</p>
+              <p>Regards,<br><strong>Discovery Connect Team</strong></p>
+            </div>
+          </div>
+        `;
 
-      <p style="font-size: 15px; color: #555; margin-top: 15px;">
-        📝 <b>Latest Comment:</b> ${comment}
-      </p>
-
-      <p style="font-size: 15px; color: #555; margin-top: 20px;">
-        Please check your <b>dashboard</b> for details. 🚀
-      </p>
-
-      <p style="font-size: 15px; color: #333; margin-top: 20px;">
-        Regards,<br>
-        <strong>Discovery Connect Team</strong>
-      </p>
-
-    </div>
-  </div>
-`;
-
-    sendEmail(email, subject, text, (emailErr) => {
-      if (emailErr) {
-        console.error(`Failed to send email to ${email}:`, emailErr);
-      } else {
-        console.log(`✅ Email sent to ${email}`);
+        sendEmail(email, subject, html, (err) => {
+          if (err) {
+            console.error(`❌ Failed to send email to ${email}:`, err);
+          } else {
+            console.log(`✅ Email sent to ${email}`);
+          }
+        });
       }
-    });
+    }
+
+    callback(null, { success: true, message: "Committee status updated successfully." });
+  } catch (err) {
+    console.error("Error updating committee status:", err);
+    callback(err, { success: false, message: "Error updating committee status." });
   }
-
-
-  const finalMessage = hasError
-    ? "Some updates failed. Check logs."
-    : "Committee statuses updated and email(s) sent where applicable.";
-
-  callback(null, { success: !hasError, message: finalMessage });
 };
 
 
-const getHistory = (tracking_ids, status, callback) => {
+const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchValue, callback) => {
   try {
+    const offset = (page - 1) * pageSize;
+    const connection = mysqlConnection.promise();
 
+    let whereClause = `WHERE 1=1`; 
+    const params = [id]; // committee_member_id
 
-    const orderStatusCondition = status === 'Pending' ? 'c.order_status = ?' : "c.order_status != 'Pending'";
+    if (searchField && searchValue) {
+      let dbField;
+      switch (searchField) {
+        case "created_at": dbField = "o.created_at"; break;
+        case "tracking_id": dbField = "o.tracking_id"; break;
+        case "researcher_name": dbField = "r.ResearcherName"; break;
+        case "user_email": dbField = "u.email"; break;
+        case "organization_name": dbField = "org.OrganizationName"; break;
+      }
+      if (dbField) {
+        whereClause += ` AND ${dbField} LIKE ?`;
+        params.push(`%${searchValue}%`);
+      }
+    }
 
-    const placeholders = tracking_ids.map(() => '?').join(',');
+    const [rows] = await connection.query(`
+      SELECT *,
+             COUNT(*) OVER() AS totalCount
+      FROM (
+        SELECT 
+          o.id AS order_id, 
+          o.tracking_id,
+          o.user_id, 
+          u.email AS user_email,
+          r.ResearcherName AS researcher_name, 
+          org.OrganizationName AS organization_name,
+          s.id AS sample_id,
+          s.Analyte, 
+          s.VolumeUnit,
+          s.age,
+          s.gender,
+          s.TestResult,
+          s.TestResultUnit,
+          s.volume,
+          s.room_number,
+          s.freezer_id,
+          s.box_id,
+          c.price, 
+          c.quantity, 
+          o.totalpayment, 
+          o.order_status,  
+          o.created_at,
+          ca.committee_status,  
+          ca.comments
+        FROM orders o
+        JOIN cart c ON o.id = c.order_id              -- 🔑 link cart to order
+        JOIN user_account u ON o.user_id = u.id
+        LEFT JOIN researcher r ON u.id = r.user_account_id 
+        LEFT JOIN organization org ON r.nameofOrganization = org.id
+        JOIN sample s ON c.sample_id = s.id           -- 🔑 sample belongs to cart
+        LEFT JOIN committeesampleapproval ca
+          ON ca.order_id = o.id AND ca.committee_member_id = ?
+        ${whereClause}
+        ORDER BY o.created_at ASC
+        LIMIT ? OFFSET ?
+      ) AS sub;
+    `, [...params, pageSize, offset]);
 
+    const totalCount = rows.length ? rows[0].totalCount : 0;
 
-    const sql = `
-      SELECT
-        c.tracking_id,
+    const results = rows.map(sample => ({
+      ...sample,
+      committee_status: sample.committee_status || "Pending",
+      locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-')
+    }));
 
-        -- Technical Admin history (distinct combos)
-        (
-          SELECT JSON_ARRAYAGG(x)
-          FROM (
-            SELECT DISTINCT JSON_OBJECT(
-              'Technicaladmindate', tas.created_at,
-              'TechnicaladminApproval_date', tas.Approval_date,
-              'technical_admin_status', tas.technical_admin_status
-            ) AS x
-            FROM technicaladminsampleapproval tas
-            WHERE tas.cart_id = c.id
-              AND (tas.created_at IS NOT NULL OR tas.Approval_date IS NOT NULL)
-          ) t
-        ) AS technicalAdminHistory,
-
-      
-(
-  SELECT JSON_ARRAYAGG(
-    JSON_OBJECT(
-      'committee_status',       csa.committee_status,
-      'committee_comment',      csa.comments,
-      'CommitteeMemberName',    cm.CommitteeMemberName,
-      'committeetype',          cm.committeetype,
-      'committee_approval_date',csa.Approval_date,
-      'committee_created_at',   csa.created_at,
-      'transfer',               csa.transfer
-    )
-  )
-  FROM committeesampleapproval csa
-  LEFT JOIN committee_member cm
-    ON cm.user_account_id = csa.committee_member_id
-  WHERE csa.cart_id = c.id
-    AND csa.created_at IS NOT NULL
-  ORDER BY csa.created_at
-) AS approvals,
-
-
-        -- Documents (distinct by created_at + role)
-        (
-          SELECT JSON_ARRAYAGG(x)
-          FROM (
-            SELECT DISTINCT JSON_OBJECT(
-              'added_by',         sd.added_by,
-              'uploaded_by_role', sd.role,
-              'files',            JSON_ARRAY(
-                                    IF(sd.study_copy IS NULL, NULL, 'study_copy'),
-                                    IF(sd.irb_file   IS NULL, NULL, 'irb_file'),
-                                    IF(sd.nbc_file   IS NULL, NULL, 'nbc_file')
-                                  ),
-              'created_at',       sd.created_at,
-              'updated_at',       sd.updated_at
-            ) AS x
-            FROM sampledocuments sd
-            WHERE sd.cart_id = c.id
-              AND (sd.study_copy IS NOT NULL OR sd.irb_file IS NOT NULL OR sd.nbc_file IS NOT NULL)
-          ) t
-        ) AS documents
-
-      FROM cart c
-      WHERE c.tracking_id IN (${placeholders})
-        AND ${orderStatusCondition}
-      ORDER BY c.tracking_id;
-    `;
-
-    const params = status === 'Pending' ? [...tracking_ids, status] : [...tracking_ids];
-
-    mysqlConnection.query(sql, params, (err, rows) => {
-      if (err) return callback(err, null);
-
-      // Parse JSON columns safely
-      const results = rows.map(r => ({
-        tracking_id: r.tracking_id,
-        technicalAdminHistory: Array.isArray(r.technicalAdminHistory)
-          ? r.technicalAdminHistory
-          : (typeof r.technicalAdminHistory === 'string'
-            ? JSON.parse(r.technicalAdminHistory || '[]') : []),
-        approvals: Array.isArray(r.approvals)
-          ? r.approvals
-          : (typeof r.approvals === 'string'
-            ? JSON.parse(r.approvals || '[]') : []),
-        documents: (Array.isArray(r.documents)
-          ? r.documents
-          : (typeof r.documents === 'string'
-            ? JSON.parse(r.documents || '[]') : [])
-        ).map(d => ({
-          ...d,
-          // Clean files array (remove nulls)
-          files: Array.isArray(d.files) ? d.files.filter(Boolean) : []
-        }))
-      }));
-      // Group results by tracking_id
-      const grouped = {};
-
-      results.forEach(r => {
-        if (!grouped[r.tracking_id]) {
-          grouped[r.tracking_id] = {
-            tracking_id: r.tracking_id,
-            technicalAdminHistory: [],
-            approvals: [],
-            documents: []
-          };
-        }
-
-        // Merge arrays without duplicates
-        grouped[r.tracking_id].technicalAdminHistory.push(...r.technicalAdminHistory);
-        grouped[r.tracking_id].approvals.push(...r.approvals);
-        grouped[r.tracking_id].documents.push(...r.documents);
-      });
-
-      // Remove duplicates inside each array (optional)
-      Object.values(grouped).forEach(g => {
-        g.technicalAdminHistory = Array.from(new Set(g.technicalAdminHistory.map(JSON.stringify))).map(JSON.parse);
-        g.approvals = Array.from(new Set(g.approvals.map(JSON.stringify))).map(JSON.parse);
-        g.documents = Array.from(new Set(g.documents.map(JSON.stringify))).map(JSON.parse);
-      });
-
-      callback(null, { results: Object.values(grouped) });
-
-    });
-  } catch (e) {
-    console.error("Error fetching history:", err);
+    callback(null, { results, totalCount });
+  } catch (err) {
+    console.error("Error fetching orders:", err);
     callback(err, null);
   }
 };
+
+const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback) => {
+  const offset = (page - 1) * pageSize;
+
+  let whereClause = "WHERE 1=1";
+  const params = [];
+
+  // Filter by search field
+  if (searchField && searchValue) {
+    let dbField = searchField;
+    if (searchField === "order_id") dbField = "o.id";  // changed cart_id → order_id
+    whereClause += ` AND ${dbField} LIKE ?`;
+    params.push(`%${searchValue}%`);
+  }
+
+  // Filter by committee member ID
+  if (id) {
+    whereClause += " AND csa.committee_member_id = ?";
+    params.push(id);
+  }
+
+  // Optimized SQL using CTE + ROW_NUMBER()
+  const sqlQuery = `
+    WITH latest_docs AS (
+      SELECT
+        sd.order_id,
+        sd.study_copy,
+        sd.irb_file,
+        sd.nbc_file,
+        sd.reporting_mechanism,
+        ROW_NUMBER() OVER (
+          PARTITION BY sd.order_id
+          ORDER BY COALESCE(sd.updated_at, sd.created_at) DESC
+        ) AS rn
+      FROM sampledocuments sd
+    )
+    SELECT 
+      o.id AS order_id,
+      ld.study_copy,
+      ld.irb_file,
+      ld.nbc_file,
+      ld.reporting_mechanism
+    FROM orders o
+    JOIN committeesampleapproval csa ON o.id = csa.order_id
+    LEFT JOIN latest_docs ld ON o.id = ld.order_id AND ld.rn = 1
+    ${whereClause}
+    ORDER BY o.created_at ASC
+    LIMIT ? OFFSET ?;
+  `;
+
+  const queryParams = [...params, pageSize, offset];
+
+  mysqlConnection.query(sqlQuery, queryParams, (err, results) => {
+    if (err) {
+      console.error("Error fetching documents:", err);
+      callback(err, null);
+    } else {
+      callback(null, { results });
+    }
+  });
+};
+
 
 module.exports = {
   createcommitteesampleapprovalTable,
   insertCommitteeApproval,
   updateCommitteeStatus,
-  getHistory
+  getAllOrderByCommittee,
+  getAllDocuments,
+
 };

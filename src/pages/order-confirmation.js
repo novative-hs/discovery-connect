@@ -9,11 +9,15 @@ import Link from "next/link";
 const OrderConfirmation = () => {
   const router = useRouter();
   const { id, created_at, orderStatus, technical_admin_status, committee_status } = router.query;
-
+  console.log(orderStatus, technical_admin_status, committee_status)
   const [progressWidth, setProgressWidth] = useState("10%");
   const [steps, setSteps] = useState(Array(7).fill("secondary"));
 
   useEffect(() => {
+    const committeeStatus = (committee_status || "").toLowerCase();
+    const technicalAdminStatus = (technical_admin_status || "").toLowerCase();
+    const orderStatusLower = (orderStatus || "").toLowerCase();
+
     let width = "10%";
     let stepColors = Array(6).fill("secondary");
 
@@ -22,43 +26,41 @@ const OrderConfirmation = () => {
     width = "10%";
 
     // Step 1: Committee
-    if (committee_status === "Pending") {
+    if (committeeStatus === "pending") {
       stepColors[1] = "warning";
       width = "20%";
-    } else if (committee_status === "rejected") {
+    } else if (committeeStatus === "refused") {
       stepColors[1] = "danger";
       width = "20%";
-    } else if (committee_status === "Accepted") {
+    } else if (committeeStatus === "accepted") {
       stepColors[1] = "success";
       width = "30%";
     }
 
-    // Step 2: Admin
-    if (committee_status === "Accepted") {
-      if (technical_admin_status === "Pending") {
+    // Step 2: Admin (only if committee accepted)
+    if (committeeStatus === "accepted") {
+      if (technicalAdminStatus === "pending") {
         stepColors[2] = "warning";
         width = "40%";
-      } else if (technical_admin_status === "Rejected") {
+      } else if (technicalAdminStatus === "rejected") {
         stepColors[2] = "danger";
         width = "40%";
-      } else if (technical_admin_status === "Accepted") {
+      } else if (technicalAdminStatus === "accepted") {
         stepColors[2] = "success";
         width = "50%";
       }
     }
 
-    // Step 3–5: Further progress only if admin accepted
-    if (technical_admin_status === "Accepted") {
-      if (orderStatus === "Dispatched") {
+    // Step 3–5: Order progress (only if admin accepted)
+    if (technicalAdminStatus === "accepted") {
+      if (orderStatusLower === "dispatched") {
         stepColors[3] = "success";
         width = "65%";
-      }
-      if (orderStatus === "Shipped") {
+      } else if (orderStatusLower === "shipped") {
         stepColors[3] = "success";
         stepColors[4] = "success";
         width = "85%";
-      }
-      if (orderStatus === "Completed") {
+      } else if (orderStatusLower === "completed") {
         stepColors[3] = "success";
         stepColors[4] = "success";
         stepColors[5] = "success";
@@ -70,11 +72,6 @@ const OrderConfirmation = () => {
     setSteps(stepColors);
   }, [orderStatus, technical_admin_status, committee_status]);
 
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "----";
-    const formattedDate = moment(dateString).format("MMMM Do YYYY, h:mm:ss a");
-    return moment(formattedDate).isValid() ? formattedDate : "Invalid Date";
-  };
 
   const handleTrack = () => {
     router.push(`/dashboardheader?tab=my-samples`);
@@ -99,7 +96,7 @@ const OrderConfirmation = () => {
           <p className="text-dark fs-6">
             Order <strong>#{id || "----"}</strong> was placed on{" "}
             <strong>
-              
+
               {new Date(created_at).toLocaleDateString('en-GB', {
                 day: '2-digit',
                 month: 'short',
@@ -142,20 +139,21 @@ const OrderConfirmation = () => {
                 let icon = <i className="bi bi-check-lg"></i>;
 
                 if (idx === 1) {
-                  if (committee_status === "Pending") {
+                  if (committee_status === "pending") {
                     icon = <i className="bi bi-hourglass-split"></i>;
                   } else if (committee_status === "rejected") {
                     icon = <i className="bi bi-x-lg"></i>;
                   }
                 }
 
-                if (idx === 2 && committee_status === "Accepted") {
+                if (idx === 2 && committee_status === "accepted") {
                   if (technical_admin_status === "Pending") {
                     icon = <i className="bi bi-hourglass-split"></i>;
                   } else if (technical_admin_status === "Rejected") {
-                    icon = <i className="bi bi-x-lg"></i>;
+                    icon = <i className="bi bi-x-lg"></i>; 
                   }
                 }
+
 
                 return (
                   <div

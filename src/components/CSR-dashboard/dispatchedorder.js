@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
-import { notifySuccess } from "@utils/toast";
+import { notifySuccess,notifyError } from "@utils/toast";
 
 const DispatchSampleArea = () => {
   const [staffAction, setStaffAction] = useState("");
@@ -35,7 +35,7 @@ const DispatchSampleArea = () => {
   const fetchSamples = async (staffAction) => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCSR`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/getOrderbyCSR`,
         {
           params: { csrUserId: id, staffAction },
         }
@@ -89,7 +89,7 @@ const DispatchSampleArea = () => {
 
   // Group filtered samples by tracking_id
   const groupedData = getGroupedData(filteredSamples);
-
+console.log(groupedData)
   // Paginate grouped data
   const currentData = groupedData.slice(
     currentPage * itemsPerPage,
@@ -128,17 +128,16 @@ const DispatchSampleArea = () => {
       notifyError("Please select all the details.");
       return setIsSubmitting(false);
     }
-
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append("ids", JSON.stringify(selectedCartId)); // sends as string
+      formData.append("orderid", selectedCartId); // sends as string
       formData.append("cartStatus", "Completed");
       formData.append("deliveryDate", deliveryDate);
       formData.append("deliveryTime", deliveryTime);
       if (receiptSlip) formData.append("dispatchSlip", receiptSlip);
       await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/updatecart-status`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/updateOrderStatus`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
@@ -217,11 +216,7 @@ const DispatchSampleArea = () => {
                         <button
                           className="btn btn-sm btn-success"
                           onClick={() => {
-                            const cartIds = filteredSamples
-                              .filter(item => item.tracking_id === sample.tracking_id)
-                              .map(item => item.id);
-
-                            setSelectedCartId(cartIds); // Store all matching cart IDs
+                            setSelectedCartId(sample.id); // Store all matching cart IDs
                             setShowConfirmModal(true);
                           }}
 

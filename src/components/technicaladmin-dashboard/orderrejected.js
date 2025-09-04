@@ -84,64 +84,6 @@ const OrderPage = () => {
     fetchOrders(currentPage, ordersPerPage);
   }, [currentPage]);
 
-  const fetchDocuments = async (tracking_id) => {
-    setDocumentLoading(true);
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getsampledocuments/${tracking_id}`
-      );
-
-      if (response.data.success) {
-        const rows = response.data.documents || [];
-
-        // Group by document type and pick the latest version
-        const latestByType = {};
-        rows.forEach(row => {
-          ["study_copy", "irb_file", "nbc_file"].forEach(docType => {
-            if (row[docType]) {
-              const current = latestByType[docType];
-              const currentDate = current ? new Date(current.updated_at || current.created_at) : null;
-              const newDate = new Date(row.updated_at || row.created_at);
-
-              if (!current || newDate > currentDate) {
-                latestByType[docType] = row;
-              }
-            }
-          });
-        });
-
-
-        const docsToShow = {};
-        Object.keys(latestByType).forEach(key => {
-          docsToShow[key] = latestByType[key][key];
-        });
-        setTrackingID(tracking_id)
-        setDocuments(docsToShow);
-
-        // Initialize selectedDocs
-        const initialSelected = {};
-        Object.keys(docsToShow).forEach((key) => {
-          initialSelected[key] = false;
-        });
-        setSelectedDocs(initialSelected);
-        setShowDocument(true);
-      } else {
-        notifyError(response.data.message || "Failed to fetch documents.");
-      }
-    } catch (err) {
-      console.error("Error fetching documents:", err);
-      notifyError("Error fetching documents");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setSelectedOrderId(null);
-    setShowModal(false);
-  };
-
-
   useEffect(() => {
     if (!searchField || !searchValue) {
       setOrders(allOrdersRaw);
@@ -161,7 +103,7 @@ const OrderPage = () => {
     setLoading(true);
     try {
       const { searchField, searchValue } = filters;
-      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder?page=${page}&pageSize=${pageSize}&status=Accepted`;
+       let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/technicalapproval/getOrderbyTechnical?page=${page}&pageSize=${pageSize}&status=Accepted`;
 
       if (searchField && searchValue) {
         url += `&searchField=${searchField}&searchValue=${encodeURIComponent(searchValue)}`;
@@ -226,22 +168,30 @@ const OrderPage = () => {
 
 
   const handleHistory = useCallback(async (orderGroup) => {
-    const trackingIds = orderGroup.analytes.map(a => a.tracking_id);
-    setShowHistoryModal(true);
-    setLoadingHistory(true);
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/getHistory`,
-        { params: { trackingIds: trackingIds.join(','), status: 'Dispatched' } }
-      );
-      setSelectedHistory(response.data.results.results || []);
-    } catch (error) {
-      console.error(error);
-      setShowHistoryModal(false);
-    } finally {
-      setLoadingHistory(false);
-    }
-  }, []);
+  console.log(orderGroup);
+  setShowHistoryModal(true);
+  setLoadingHistory(true);
+
+  try {
+    const response = await axios.get(   // ✅ await here
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/technicalapproval/getHistory`,
+      {
+        params: {
+          tracking_id: orderGroup.tracking_id,
+          status: "Pending",
+        },
+      }
+    );
+
+    console.log(response.data.results);
+    setSelectedHistory(response.data.results || []);
+  } catch (error) {
+    console.error(error);
+    setShowHistoryModal(false);
+  } finally {
+    setLoadingHistory(false);
+  }
+}, []);
 
   const formatDT = (date) =>
     date
@@ -253,63 +203,6 @@ const OrderPage = () => {
         hour12: true,
       }).replace("AM", "am").replace("PM", "pm")
       : "";
-
-
-  const openPdfFromBase64 = (fileData) => {
-    if (!fileData) {
-      notifyError("No document available.");
-      return;
-    }
-
-    let base64 = "";
-
-    // Handle Buffer-like object
-    if (fileData.type === "Buffer" && Array.isArray(fileData.data)) {
-      const chunkSize = 0x8000; // 32k chunks
-      let result = "";
-      for (let i = 0; i < fileData.data.length; i += chunkSize) {
-        const chunk = fileData.data.slice(i, i + chunkSize);
-        result += String.fromCharCode(...chunk);
-      }
-      base64 = btoa(result);
-    }
-    // Handle string (already base64)
-    else if (typeof fileData === "string") {
-      base64 = fileData;
-    } else {
-      notifyError("Invalid file format.");
-      return;
-    }
-
-    try {
-      const binaryString = atob(base64);
-      const len = binaryString.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-
-      const blob = new Blob([bytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-    } catch (err) {
-      console.error(err);
-      notifyError("Failed to open PDF. Invalid Base64 data.");
-    }
-  };
-
-
-  const getOrdinal = (n) => {
-    const s = ["th", "st", "nd", "rd"];
-    const v = n % 100;
-    return n + (s[(v - 20) % 10] || s[v] || s[0]);
-  };
-
-  // Convert transferNo to review label
-  const getReviewLabel = (transferNo) => {
-    const number = Number(transferNo);
-    return isNaN(number) ? "Review" : `${getOrdinal(number)} Review`;
-  };
 
   useEffect(() => {
     if (showSampleModal || showTransferModal || showCommentsModal) {
@@ -917,17 +810,10 @@ const OrderPage = () => {
                                 borderLeft: "4px solid #0d6efd",
                               }}
                             >
-                              <h6
-                                style={{
-                                  margin: 0,
-                                  fontWeight: 600,
-                                  color: ta.technical_admin_status === "Rejected" ? "red" : "green",
-                                }}
-                              >
+                              <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
                                 The order {ta.technical_admin_status} by the Technical Admin at{" "}
                                 {formatDT(ta.TechnicaladminApproval_date)}
                               </h6>
-
                             </div>
                           ) : null
                         )}

@@ -49,8 +49,8 @@ const SampleArea = () => {
       const page = 1;
       const pageSize = 500; // grab a big chunk to enable client-side filtering; tweak as needed
 
-      const orderUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}`;
-      const docUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getAllDocuments/${id}?page=${page}&pageSize=${pageSize}`;
+      let orderUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}`;
+      let docUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/getAllDocuments/${id}?page=${page}&pageSize=${pageSize}`;
 
       const [orderRes, docRes] = await Promise.all([axios.get(orderUrl), axios.get(docUrl)]);
 
@@ -73,22 +73,22 @@ const SampleArea = () => {
     fetchAll();
   }, [fetchAll]);
 
-  // map documents by cart_id
+  // map documents by order_id
   const docMap = useMemo(() => {
     const m = new Map();
     documents.forEach(d => {
-      if (d?.cart_id) m.set(d.cart_id, d);
+      if (d?.order_id) m.set(d.order_id, d);
     });
     return m;
   }, [documents]);
 
   // merge orders with docs & ensure unique analyte per cart_id (like your original)
   const merged = useMemo(() => {
-    const list = orders.map(o => ({ ...o, ...(docMap.get(o.cart_id) || {}) }));
+    const list = orders.map(o => ({ ...o, ...(docMap.get(o.order_id) || {}) }));
     // unique by cart_id + Analyte
     const seen = new Set();
     return list.filter(item => {
-      const key = `${item.cart_id}__${item.Analyte}`;
+      const key = `${item.order_id}__${item.Analyte}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -131,8 +131,8 @@ const SampleArea = () => {
         researcher_name: head.researcher_name,
         organization_name: head.organization_name,
         committee_status: head.committee_status,
-        age:head.age,
-        gender:head.gender,
+        age: head.age,
+        gender: head.gender,
         group,
       };
     });
