@@ -109,8 +109,7 @@ const getAllSamples = (req, res) => {
 };
 
 const updateReservedSample = (req, res) => {
-  const sampleId = req.params.id;
-  const status = req.params.status
+  const {sampleId,status} = req.body;
 
   SampleModel.updateReservedSample(sampleId, status, (err, result) => {
     if (err) {

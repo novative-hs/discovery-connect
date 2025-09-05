@@ -81,7 +81,7 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
 
   const getSample = async (name, page = 1, pageSize = 10, additionalFilters = {}) => {
     setLoading(true);
-    
+
 
     try {
       const encodedName = encodeURIComponent(name);
@@ -91,7 +91,7 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
 
       if (allFilters.gender) {
         queryParams.push(`gender=${allFilters.gender}`);
-        
+
       }
 
       if (allFilters.TestResult) { queryParams.push(`TestResult=${allFilters.TestResult}`) }
@@ -124,7 +124,7 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
       }
 
       const query = queryParams.join("&");
-      
+
 
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getAllSampleinindex/${encodedName}?${query}`
@@ -214,12 +214,18 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
     );
     try {
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/${sample.id}/reserve/1`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/reserve`,
+        {
+          sampleId: sample.id,
+          status: 1
+        }
       );
+
       if (response.data.error) notifyError(response.data.error);
     } catch (error) {
       notifyError("Error reserving sample");
     }
+
   };
 
   return (
