@@ -58,7 +58,7 @@ const SampleArea = () => {
     keepPreviousData: true,
     staleTime: 60_000,
     enabled: !!id,
-  });
+  })
 
   const samples = data?.samples || [];
   const totalPages = Math.ceil((data?.totalCount || 0) / itemsPerPage);
@@ -69,14 +69,14 @@ const SampleArea = () => {
     const url = URL.createObjectURL(new Blob([new Uint8Array(buf.data)], { type: "application/pdf" }));
     window.open(url, "_blank");
     setViewedDocuments((v) => ({ ...v, [name]: true }));
-  }, []);
+  }, [])
 
   const allDocsViewed = () => {
     const first = selectedResearcherSamples?.[0];
     const reqOK = viewedDocuments.study_copy;
     const optOK = !first?.nbc_file || viewedDocuments.nbc_file;
     return reqOK && optOK;
-  };
+  }
 
   const handleOpenModal = (type, group) => {
     if (!group?.length) return alert("Sample data missing.");
@@ -84,7 +84,7 @@ const SampleArea = () => {
     setSelectedResearcherSamples(group);
     setActionType(type);
     setShowModal(true);
-  };
+  }
 
   const handleSubmit = async () => {
     const text = comment.trim();
@@ -104,7 +104,7 @@ const SampleArea = () => {
     } catch {
       notifyError("Bulk approval/refusal failed.");
     }
-  };
+  }
 
   const renderLongText = (text) =>
     text?.length > 50 ? (
@@ -122,7 +122,7 @@ const SampleArea = () => {
       </span>
     ) : (
       <span title={text}>{text}</span>
-    );
+    )
 
   const renderCell = (k, s) => {
     if (k === "Analyte") return <span style={{ textDecoration: "underline" }}>{s.Analyte || "N/A"}</span>;
@@ -133,16 +133,15 @@ const SampleArea = () => {
     if (k === "locationids") return <span title="Location ID's = Room Number, Freezer ID and Box ID">{s[k] || "----"}</span>;
     if (docKeys.includes(k)) return "----";
     return s[k] || "----";
-  };
+  }
 
   const onScroll = (e) => {
     const el = e.target;
     const bottom = el.scrollHeight === el.scrollTop + el.clientHeight;
     if (bottom && currentPage < totalPages) setCurrentPage((p) => p + 1);
-  };
+  }
 
-  if (!id) return <div>Loading...</div>;
-  if (isLoading) return <div>Fetching data...</div>;
+  if (!id) return <div>Loading...</div>
 
   return (
     <div className="container py-3">
