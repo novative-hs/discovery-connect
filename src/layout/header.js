@@ -53,7 +53,7 @@ const Header = ({ style_2 = false }) => {
 
                 <div className="col-xxl-8 col-xl-7 d-none d-xl-block">
                   <div className="main-menu main-menu-13 pl-45 main-menu-ff-space" style={{ display: "flex", justifyContent: "center", alignItems: "start" }}>
-                    <nav id="mobile-menu-3"><Menus isHovered={isHovered} /></nav>
+                    <nav id="mobile-menu-3"><Menus isHovered={isHovered} currentRoute={router.pathname} /></nav>
                   </div>
                 </div>
 

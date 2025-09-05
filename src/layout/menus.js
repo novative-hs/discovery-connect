@@ -15,12 +15,22 @@ const Menus = ({ currentRoute, isHovered }) => {
     textDecoration: "none",
     whiteSpace: "nowrap", // keeps them in one line
   };
-  
+
 
   const activeLinkStyle = {
     borderBottom: "2px solid red",
     color: "red",
   };
+
+  const isActive = (menu) => {
+    if (currentRoute === menu.link && menu.link !== "/") return true;
+
+    if (menu.hasDropdown && menu.submenus) {
+      return menu.submenus.some((sub) => currentRoute === sub.link);
+    }
+    return false;
+  };
+
 
   return (
     <ul
@@ -37,37 +47,44 @@ const Menus = ({ currentRoute, isHovered }) => {
       {menu_data.map((menu, i) => (
         <li key={i} className={`${menu.hasDropdown ? "has-dropdown" : ""}`}>
           <Link
-            href={`${menu.link}`}
-            className={`fs-7 small align-item-start ${currentRoute === menu.link ? "active-link" : ""}`}
-            style={currentRoute === menu.link ? { ...linkStyle, ...activeLinkStyle } : linkStyle}
+            href={menu.link}
+            className={`fs-7 small align-item-start ${isActive(menu) ? "active-link" : ""}`}
+            style={isActive(menu) ? { ...linkStyle, ...activeLinkStyle } : linkStyle}
             onMouseEnter={(e) => {
-              e.target.style.borderBottom = "2px solid red";
-              e.target.style.color = "red";
+              e.currentTarget.style.borderBottom = "2px solid red";
+              e.currentTarget.style.color = "red";
             }}
             onMouseLeave={(e) => {
-              e.target.style.borderBottom =
-                currentRoute === menu.link ? "2px solid red" : "2px solid transparent";
-              e.target.style.color =
-                currentRoute === menu.link ? "red" : "black" ;
+              if (isActive(menu)) {
+                e.currentTarget.style.borderBottom = "2px solid red";
+                e.currentTarget.style.color = "red";
+              } else {
+                e.currentTarget.style.borderBottom = "2px solid transparent";
+                e.currentTarget.style.color = "black";
+              }
             }}
           >
             {menu.title}
           </Link>
+
+
 
           {menu.hasDropdown && (
             <ul className="submenu fs-7 small">
               {menu.submenus.map((sub, i) => (
                 <li key={i}>
                   <Link
-                    href={`${sub.link}`}
-                    className="fs-7 small"
-                    style={{
-                      fontSize: "0.85rem",
-                      textDecoration: "none",
-                    }}
+                    href={sub.link}
+                    className={`dropdown-item ${currentRoute === sub.link ? "active-link" : ""}`}
+                    style={
+                      currentRoute === sub.link
+                        ? { ...linkStyle, ...activeLinkStyle }
+                        : linkStyle
+                    }
                   >
                     {sub.title}
                   </Link>
+
                 </li>
               ))}
             </ul>

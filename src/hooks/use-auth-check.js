@@ -7,21 +7,17 @@ export default function useAuthCheck() {
     const [authChecked, setAuthChecked] = useState(false);
 
     useEffect(() => {
-        const localAuth = sessionStorage?.getItem("auth");
-
-        if (localAuth) {
-            const auth = JSON.parse(localAuth);
-            if (auth?.accessToken && auth?.user) {
-                dispatch(
-                    userLoggedIn({
-                        accessToken: auth.accessToken,
-                        user: auth.user,
-                    })
-                );
+        if (typeof window !== "undefined") {
+            const localAuth = window.sessionStorage.getItem("auth");
+            if (localAuth) {
+                const auth = JSON.parse(localAuth);
+                if (auth?.accessToken && auth?.user) {
+                    dispatch(userLoggedIn({ accessToken: auth.accessToken, user: auth.user }));
+                }
             }
         }
         setAuthChecked(true);
-    }, [dispatch, setAuthChecked]);
+    }, [dispatch]);
 
     return authChecked;
 }

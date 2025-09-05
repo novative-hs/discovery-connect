@@ -393,7 +393,7 @@ const updateCartStatus = async (cartId, cartStatus, callback) => {
     // 2. If rejected → restore sample quantities
     if (cartStatus === 'Rejected') {
       const cartSample = await queryAsync(
-        `SELECT sample_id, quantity 
+        `SELECT sample_id, quantity
          FROM cart 
          WHERE order_id = ?`,
         [cartId]
@@ -404,7 +404,8 @@ const updateCartStatus = async (cartId, cartStatus, callback) => {
         await queryAsync(
           `UPDATE sample 
            SET quantity = quantity + ?, 
-               quantity_allocated = quantity_allocated - ? 
+               quantity_allocated = quantity_allocated - ? ,
+               reserved=0
            WHERE id = ?`,
           [cs.quantity, cs.quantity, cs.sample_id]
         );

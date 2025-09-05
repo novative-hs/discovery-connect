@@ -23,16 +23,18 @@ const notifyError = (message) =>
     progress: undefined,
   });
 
-<ToastContainer
-  position="top-center"
-  autoClose={3000}
-  hideProgressBar={false}
-  newestOnTop={false}
-  closeOnClick
-  rtl={false}
-  pauseOnFocusLoss
-  draggable
-  pauseOnHover
-/>;
+const ToastRoot = () => (
+  <ToastContainer
+    position="top-center"
+    autoClose={3000}
+    hideProgressBar={false}
+    newestOnTop={false}
+    closeOnClick
+    rtl={false}
+    pauseOnFocusLoss
+    draggable
+    pauseOnHover
+  />
+);
 
-export { ToastContainer, notifySuccess, notifyError };
+export { ToastContainer, ToastRoot, notifySuccess, notifyError };

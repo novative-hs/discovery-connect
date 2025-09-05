@@ -100,7 +100,7 @@ const SampleArea = () => {
           order_status: sample.order_status,
           payment_type: sample.payment_method,
           payment_status: sample.payment_status,
-          BankName:sample.BankName,
+          BankName: sample.BankName,
           samples: [],
           totalpayment: 0,
         };
@@ -173,103 +173,95 @@ const SampleArea = () => {
         <h7 className="text-danger fw-bold mb-3">Click on Analyte to get detail about sample.</h7>
         <div className="row justify-content-center">
           <div className="table-responsive w-100">
-            <table className="table table-bordered table-hover text-center align-middle w-auto border">
-
+             <table className="table table-bordered table-hover table-sm text-center align-middle">
               <thead className="table-primary text-dark">
                 <tr>
-                  {tableHeaders.map(({ label, key }, index) => {
-                    // Check if it's the "Price" column and merge it with "Sample Price Currency"
-                    if (key === "price") {
-                      return (
-                        <th key={index} className="px-4 text-center">
-                          <div className="d-flex flex-column align-items-center">
-                            <input
-                              type="text"
-                              className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                              placeholder="Price (Currency)"
-                              onChange={(e) =>
-                                handleFilterChange("price", e.target.value)
-                              }
-                              style={{ minWidth: "110px" }}
-                            />
-                            <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-10">
-                              Price (Currency)
-                            </span>
-                          </div>
-                        </th>
-                      );
-                    }
-
-                    // Render other columns normally
-                    return (
-                      <th key={index} className="col-md-1 px-2">
-
-                        <div className="d-flex flex-column align-items-center">
-                          <input
-                            type="text"
-                            className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                            placeholder={`Search ${label}`}
-                            onChange={(e) => handleFilterChange(key, e.target.value)}
-                            style={{ minWidth: "100px", maxWidth: "120px", width: "100px" }}
-                          />
-                          <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
-                            {label}
-                          </span>
-
-                        </div>
-                      </th>
-                    );
-                  })}
-                  <th className="p-2 text-center" style={{ minWidth: "50px" }}>
-                    Action
-                  </th>
+                  {tableHeaders.map(({ label, key }, index) => (
+                    <th key={index} className="px-3 py-2" style={{ minWidth: "120px" }}>
+                      <div className="d-flex flex-column">
+                        <input
+                          type="text"
+                          className="form-control form-control-sm mb-1 text-center shadow-none"
+                          placeholder={`Search ${label}`}
+                          onChange={(e) => handleFilterChange(key, e.target.value)}
+                        />
+                        <span className="fw-semibold small">{label}</span>
+                      </div>
+                    </th>
+                  ))}
+                  <th className="px-3 py-2">Action</th>
                 </tr>
               </thead>
+
               <tbody>
                 {orders.length > 0 ? (
                   orders.map((order, index) => (
                     <tr key={index}>
                       <td>{order.tracking_id}</td>
-                      <td>{new Date(order.created_at).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: '2-digit'
-                      }).replace(/ /g, '-')}</td>
-
+                      <td>
+                        {new Date(order.created_at).toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "2-digit",
+                        }).replace(/ /g, "-")}
+                      </td>
                       <td className="text-end">
                         {{
                           PKR: "Rs",
                           USD: "$",
                           INR: "₹",
-                        }[order.samples[0].SamplePriceCurrency] || order.samples.SamplePriceCurrency} {order.totalpayment.toLocaleString("en-IN", {
+                        }[order.samples[0].SamplePriceCurrency] || order.samples.SamplePriceCurrency}{" "}
+                        {order.totalpayment.toLocaleString("en-IN", {
                           minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
+                          maximumFractionDigits: 2,
                         })}
                       </td>
-                      <td>{order.BankName|| "---"}</td>
+                      <td>{order.BankName || "---"}</td>
                       <td>{order.payment_type || "----"}</td>
-                      <td>{order.payment_status}</td>
+                      <td>
+                        <span
+                          className={`badge px-3 py-2 ${order.payment_status === "Paid"
+                              ? "bg-success"
+                              : "bg-warning text-dark"
+                            }`}
+                        >
+                          {order.payment_status}
+                        </span>
+                      </td>
                       <td>{order.samples.length}</td>
-                      <td>{order.samples[0].order_status}</td>
+                      <td>
+                        <span
+                          className={`badge px-3 py-2 ${order.samples[0].order_status === "Pending"
+                              ? "bg-warning text-dark"
+                              : order.samples[0].order_status === "Rejected"
+                                ? "bg-danger"
+                                : "bg-success"
+                            }`}
+                        >
+                          {order.samples[0].order_status}
+                        </span>
+                      </td>
                       <td>
                         <button
-                          className="btn btn-outline-info btn-sm"
+                          className="btn btn-sm btn-outline-primary"
                           onClick={() => openModal(order)}
                         >
-                          View Order Detail
+                          View Order
                         </button>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="5" className="text-center">No orders found</td>
+                    <td colSpan="9" className="text-center">
+                      No orders found
+                    </td>
                   </tr>
                 )}
               </tbody>
-
             </table>
           </div>
+
           {totalPages >= 0 && (
             <Pagination
               handlePageClick={handlePageChange}
