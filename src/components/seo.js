@@ -18,7 +18,7 @@ const SEO = ({ pageTitle, font }) => (
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no"
       />
-      <link rel="icon" href="/faviconn.ico" />
+      <link rel="icon" href="faviconn.ico" />
     </Head>
   </>
 );
