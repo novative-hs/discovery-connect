@@ -146,20 +146,102 @@ const createOrder = (data, callback) => {
                             if (err) return callback(err);
 
                             if (user.length) {
-                              const subject = "Sample Request Created - Discovery Connect";
+                              const subject = "✨ Sample Request Created - Discovery Connect";
                               const emailMessage = `
-                                <div>
-                                  <h3>Discovery Connect</h3>
-                                  <p>Your sample request has been created successfully.</p>
-                                  <p><b>Tracking ID:</b> ${tracking_id}</p>
-                                </div>
-                              `;
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f6f8;
+      }
+      .container {
+        max-width: 600px;
+        margin: 30px auto;
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0px 4px 10px rgba(0,0,0,0.08);
+      }
+      .header {
+        text-align: center;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+      }
+      .header h2 {
+        color: #0d6efd;
+        margin: 0;
+      }
+      .content {
+        padding: 20px 0;
+        font-size: 15px;
+        color: #444;
+        line-height: 1.6;
+      }
+      .highlight {
+        background: #e8f3ff;
+        color: #0d6efd;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 16px;
+        text-align: center;
+        font-weight: bold;
+        margin: 15px 0;
+      }
+      .btn {
+        display: inline-block;
+        background: #0d6efd;
+        color: #fff !important;
+        text-decoration: none;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-size: 15px;
+        margin-top: 15px;
+      }
+      .footer {
+        margin-top: 25px;
+        font-size: 12px;
+        text-align: center;
+        color: #888;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>Discovery Connect</h2>
+      </div>
+      <div class="content">
+        <p>Dear User,</p>
+        <p>We are excited to let you know that your <b>sample request</b> has been created successfully.</p>
+        <div class="highlight">
+          Tracking ID: ${tracking_id}
+        </div>
+        <p>You can track the status of your request by visiting your dashboard.</p>
+        <p style="text-align:center;">
+          <a href="https://discovery-connect.com" class="btn">View My Requests</a>
+        </p>
+        <p>Thank you for choosing <b>Discovery Connect</b>.<br/>We’re here to support your journey!</p>
+      </div>
+      <div class="footer">
+        © ${new Date().getFullYear()} Discovery Connect. All rights reserved.
+      </div>
+    </div>
+  </body>
+  </html>
+  `;
                               try {
                                 await sendEmail(user[0].email, subject, emailMessage);
                               } catch (emailErr) {
                                 console.error("Failed to send email:", emailErr);
                               }
                             }
+
 
                             // ✅ Final callback
                             return callback(null, {
@@ -364,24 +446,24 @@ const updateCartStatusbyCSR = async (req, dispatchSlip, callback) => {
     const subject = "Sample Request Status Update";
     const deliveredAt = `${deliveryDate} ${deliveryTime}:00`; // Ensure DATETIME format
 
-    // Step 1: Update status in order table
-    await queryAsync(
-      `UPDATE orders SET order_status = ? WHERE id = ?`,
-      [cartStatus, id]
-    );
+    // --- Step 1 & 2: Run update and insert in parallel ---
+    await Promise.all([
+      queryAsync(
+        `UPDATE orders SET order_status = ? WHERE id = ?`,
+        [cartStatus, id]
+      ),
+      queryAsync(
+        `INSERT INTO order_dispatch 
+         (order_id, delivered_at, dispatch_via, dispatch_slip) 
+         VALUES (?, ?, ?, ?)`,
+        [id, deliveredAt, dispatchVia, dispatchSlip]
+      )
+    ]);
 
-    // Step 2: Insert dispatch info in order_dispatch table
-    await queryAsync(
-      `INSERT INTO order_dispatch 
-       (order_id, delivered_at, dispatch_via, dispatch_slip) 
-       VALUES (?, ?, ?, ?)`,
-      [id, deliveredAt, dispatchVia, dispatchSlip]
-    );
-
-    // Step 3: Get researcher email for this order
+    // --- Step 3: Get researcher email for this order ---
     const orderDetails = await queryAsync(
       `
-      SELECT ua.email, o.created_at, o.tracking_id, o.id AS orderId, o.totalpayment
+      SELECT ua.email, o.tracking_id
       FROM user_account ua
       JOIN orders o ON ua.id = o.user_id
       WHERE o.id = ?
@@ -395,7 +477,7 @@ const updateCartStatusbyCSR = async (req, dispatchSlip, callback) => {
 
     const { email, tracking_id } = orderDetails[0];
 
-    // Step 4: Build email message
+    // --- Step 4: Build email message ---
     const message = `
       <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
         <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -403,10 +485,10 @@ const updateCartStatusbyCSR = async (req, dispatchSlip, callback) => {
             Dear Researcher,
           </p>
           <p style="font-size: 15px; color: #555;">
-            ${cartStatus === 'Dispatched'
-              ? "📦 Your sample request has been <b style='color:#007bff;'>Dispatched</b> and is on its way."
-              : "ℹ️ Your sample request status has been updated."
-            }
+            ${cartStatus === "Dispatched"
+        ? "📦 Your sample request has been <b style='color:#007bff;'>Dispatched</b> and is on its way."
+        : "ℹ️ Your sample request status has been updated."
+      }
           </p>
           <p><strong>Tracking ID:</strong> ${tracking_id}</p>
           <p style="font-size: 15px; color: #555;">Please check your dashboard for more details.</p>
@@ -418,16 +500,17 @@ const updateCartStatusbyCSR = async (req, dispatchSlip, callback) => {
       </div>
     `;
 
-    // Step 5: Send email
-    await sendEmail(email, subject, message);
-    console.log(`Email sent to ${email}`);
-
-    // Callback or return success
+    // --- Step 5: Respond immediately ---
     if (typeof callback === "function") {
       callback(null, "Order status updated");
     } else {
       return "Order status updated";
     }
+
+    // --- Step 6: Send email in background (non-blocking) ---
+    sendEmail(email, subject, message)
+      .catch((err) => console.error("❌ Failed to send email:", err));
+
   } catch (err) {
     console.error("Error in update and notify:", err);
     if (typeof callback === "function") {
@@ -437,6 +520,7 @@ const updateCartStatusbyCSR = async (req, dispatchSlip, callback) => {
     }
   }
 };
+
 
 const updateOrderStatus = async (
   orderid,
@@ -457,24 +541,24 @@ const updateOrderStatus = async (
       [cartStatus, orderid]
     );
 
-      if (dispatchSlip) {
-        // Update both slip + completed_at
-        await queryAsync(
-          `UPDATE order_dispatch 
+    if (dispatchSlip) {
+      // Update both slip + completed_at
+      await queryAsync(
+        `UPDATE order_dispatch 
            SET dispatch_slip = ?, completed_at = ?
            WHERE order_id = ?`,
-          [dispatchSlip, deliveredAt, orderid]
-        );
-      } else {
-        // Only update completed_at
-        await queryAsync(
-          `UPDATE order_dispatch 
+        [dispatchSlip, deliveredAt, orderid]
+      );
+    } else {
+      // Only update completed_at
+      await queryAsync(
+        `UPDATE order_dispatch 
            SET completed_at = ?
            WHERE order_id = ?`,
-          [deliveredAt, orderid]
-        );
-      }
-    
+        [deliveredAt, orderid]
+      );
+    }
+
 
     // 4. Callback after success
     if (typeof callback === "function") {
