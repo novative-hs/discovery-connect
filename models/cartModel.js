@@ -38,29 +38,32 @@ const queryAsync = (sql, params) => {
   });
 };
 
-const getAllCart = (id, callback, res) => {
+const getAllCart = (id, callback) => {
   const sqlQuery = `
-  SELECT 
-      s.id AS sampleid, 
-      s.Analyte AS Analyte,
-      s. user_account_id AS user_account_id,
-      cs.CollectionSiteName,
-      c.quantity AS samplequantity, 
-      c.*
-  FROM cart c
-  JOIN sample s ON c.sample_id = s.id
-  JOIN collectionsite cs ON c.collectionsite_id = cs.user_account_id
-  WHERE c.user_id = ?
-`;
+    SELECT 
+        s.id AS sampleid, 
+        s.Analyte AS Analyte,
+        cs.CollectionSiteName,
+        c.quantity AS samplequantity, 
+        c.*,
+        o.user_id AS order_user_id
+    FROM cart c
+    JOIN sample s ON c.sample_id = s.id
+    JOIN collectionsite cs ON c.collectionsite_id = cs.user_account_id
+    JOIN orders o ON c.order_id = o.id
+    WHERE o.user_id = ?
+  `;
+  
   mysqlConnection.query(sqlQuery, [id], (err, results) => {
     if (err) {
       console.error("Error fetching cart data:", err);
-      callback(null, results);
+      callback(err, null);
     } else {
       callback(null, results);
     }
   });
 };
+
 
 const getCartCount = (userId, callback) => {
   const sqlQuery = `

@@ -5,17 +5,17 @@ const { decryptAndShort } = require("../config/encryptdecrptUtils");
 const createOrderTable = () => {
   const orderTableQuery = `
   CREATE TABLE IF NOT EXISTS orders (
-  id INT AUTO_INCREMENT PRIMARY KEY,      
-  tracking_id VARCHAR(20) UNIQUE NOT NULL, 
-  user_id INT NOT NULL,
-  totalpayment DECIMAL(10, 2) NOT NULL,
-  order_status ENUM('Pending', 'Accepted', 'Rejected', 'Shipped', 'Dispatched', 'Completed') DEFAULT 'Pending',
-  payment_id INT DEFAULT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  FOREIGN KEY (user_id) REFERENCES user_account(id) ON DELETE CASCADE,
-  FOREIGN KEY (payment_id) REFERENCES payment(id) ON DELETE SET NULL
-);
-`
+    id INT AUTO_INCREMENT PRIMARY KEY,      
+    tracking_id VARCHAR(20) UNIQUE NOT NULL, 
+    user_id INT NOT NULL,
+    totalpayment DECIMAL(10, 2) NOT NULL,
+    order_status ENUM('Pending', 'Accepted', 'Rejected', 'Shipped', 'Dispatched', 'Completed') DEFAULT 'Pending',
+    payment_id INT DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES user_account(id) ON DELETE CASCADE,
+    FOREIGN KEY (payment_id) REFERENCES payment(id) ON DELETE SET NULL
+  );
+  `;
 
   mysqlConnection.query(orderTableQuery, (err, result) => {
     if (err) {
