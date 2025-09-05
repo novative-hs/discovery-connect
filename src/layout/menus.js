@@ -22,15 +22,13 @@ const Menus = ({ currentRoute, isHovered }) => {
     color: "red",
   };
 
-  const isActive = (menu) => {
-    if (currentRoute === menu.link && menu.link !== "/") return true;
-
-    if (menu.hasDropdown && menu.submenus) {
-      return menu.submenus.some((sub) => currentRoute === sub.link);
-    }
-    return false;
+  const isActive = (path) => {
+    const p = router.asPath || router.pathname;
+    if (!p) return false;
+    if (path === "/") return p === "/";
+    return p === path || p.startsWith(path + "?") || p.startsWith(path + "/");
   };
-
+  const isMenuActive = (menu) => menu.hasDropdown ? menu.submenus?.some((s) => isActive(s.link)) : isActive(menu.link);
 
   return (
     <ul
@@ -74,17 +72,15 @@ const Menus = ({ currentRoute, isHovered }) => {
               {menu.submenus.map((sub, i) => (
                 <li key={i}>
                   <Link
-                    href={sub.link}
-                    className={`dropdown-item ${currentRoute === sub.link ? "active-link" : ""}`}
-                    style={
-                      currentRoute === sub.link
-                        ? { ...linkStyle, ...activeLinkStyle }
-                        : linkStyle
-                    }
+                    href={`${sub.link}`}
+                    className="fs-7 small"
+                    style={{
+                      fontSize: "0.85rem",
+                      textDecoration: "none",
+                    }}
                   >
                     {sub.title}
                   </Link>
-
                 </li>
               ))}
             </ul>
