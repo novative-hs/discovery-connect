@@ -410,7 +410,7 @@ const OrderPage = () => {
                   currentOrders.map((orderGroup) => (
                     <tr key={orderGroup.tracking_id}>
                       <td>{orderGroup.tracking_id}</td>
-                      <td>{new Date(orderGroup.created_at).toLocaleDateString('en-GB', {
+                      <td>{new Date(orderGroup.orderdate).toLocaleDateString('en-GB', {
                         day: 'numeric',
                         month: 'short',
                         year: '2-digit'
