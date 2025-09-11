@@ -302,99 +302,6 @@ const getAllSamples = (callback) => {
   });
 };
 
-
-const getResearcherSamples = (userId, callback) => {
-  const query = `
-    SELECT
-      s.*,
-      sm.Analyte,
-      sm.age,
-      sm.gender,
-      sm.ethnicity,
-      sm.samplecondition,
-      sm.storagetemp,
-      sm.ContainerType,
-      sm.CountryOfCollection,
-      country.name AS CountryName,
-      sm.price,
-      sm.SamplePriceCurrency,
-      sm.SampleTypeMatrix,
-      sm.SmokingStatus,
-      sm.AlcoholOrDrugAbuse,
-      sm.InfectiousDiseaseTesting,
-      sm.InfectiousDiseaseResult,
-      sm.FreezeThawCycles,
-      sm.DateOfSampling,
-      sm.ConcurrentMedicalConditions,
-      sm.ConcurrentMedications,
-      sm.TestResult,
-      sm.TestResultUnit,
-      sm.TestMethod,
-      sm.TestKitManufacturer,
-      sm.TestSystem,
-      sm.TestSystemManufacturer,
-      sm.status,
-      sm.sample_visibility,
-      sm.logo,
-      cs.CollectionSiteName,
-      bb.Name AS BiobankName,
-      c.name AS CityName,
-      d.name AS DistrictName,
-      p.payment_type AS payment_method,
-      p.payment_status AS payment_status,
-      s.quantity AS orderquantity,
-      ra.technical_admin_status,
-      sm.masterID,
-      b.name AS BankName,
-      CASE
-          WHEN COUNT(ca.committee_status) = 0 THEN NULL
-          WHEN SUM(CASE WHEN ca.committee_status = 'refused' THEN 1 ELSE 0 END) > 0 THEN 'rejected'
-          WHEN SUM(CASE WHEN ca.committee_status = 'UnderReview' THEN 1 ELSE 0 END) > 0 THEN 'UnderReview'
-          ELSE 'accepted'
-      END AS committee_status
-
-    FROM cart s
-    JOIN user_account ua ON s.user_id = ua.id
-    LEFT JOIN sample sm ON s.sample_id = sm.id
-    LEFT JOIN collectionsitestaff css ON sm.user_account_id = css.user_account_id
-    LEFT JOIN collectionsite cs ON cs.id = css.collectionsite_id
-    LEFT JOIN biobank bb ON sm.user_account_id = bb.id
-    LEFT JOIN city c ON cs.city = c.id
-    LEFT JOIN district d ON cs.district = d.id
-    LEFT JOIN country ON sm.CountryOfCollection = country.id
-    JOIN payment p ON s.payment_id = p.id
-    JOIN bank b ON p.bank_id=b.id
-    LEFT JOIN technicaladminsampleapproval ra ON s.id = ra.cart_id
-    LEFT JOIN committeesampleapproval ca ON s.id = ca.cart_id
-
-    WHERE s.user_id = ?
-
-    GROUP BY s.id, sm.id, cs.id, bb.id, c.id, d.id, country.id, ra.technical_admin_status
-
-    ORDER BY s.created_at DESC;
-  `;
-
-  mysqlConnection.query(query, [userId], (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
-      return callback(err, null);
-    }
-
-    if (results.length === 0) {
-      return callback(null, { error: "No samples found" });
-    }
-
-    // Decrypt masterID for each result
-    const decryptedResults = results.map(sample => ({
-      ...sample,
-      masterID: sample.masterID ? decryptAndShort(sample.masterID) : null
-    }));
-
-    callback(null, decryptedResults);
-  });
-};
-
-
 const getAllVolumnUnits = (name, callback) => {
   const query = 'SELECT id, quantity, volume, VolumeUnit FROM sample WHERE Analyte = ? and quantity>0';
 
@@ -511,135 +418,6 @@ const getAllSampleinIndex = (analyte, limit, offset, filters, callback) => {
       callback(null, {
         data: modifiedResults,
         total,
-      });
-    });
-  });
-};
-
-const getAllSampleinDiscover = (filters, callback) => {
-  let baseWhere = `(s.quantity > 0 OR s.quantity_allocated>0) AND s.sample_visibility = "Public" AND s.status = "In Stock"`;
-  let queryParams = [];
-
-  const {
-    ageMin,
-    ageMax,
-    gender,
-    sampleType,
-    smokingStatus,
-    search,
-    TestResult,
-    exactAge,
-  } = filters;
-
-  if (exactAge !== null) {
-    baseWhere += ` AND s.age = ?`;
-    queryParams.push(exactAge);
-  } else {
-    if (ageMin !== null) {
-      baseWhere += ` AND s.age >= ?`;
-      queryParams.push(ageMin);
-    }
-    if (ageMax !== null) {
-      baseWhere += ` AND s.age <= ?`;
-      queryParams.push(ageMax);
-    }
-  }
-
-  if (gender) {
-    baseWhere += ` AND s.gender = ?`;
-    queryParams.push(gender);
-  }
-
-  if (sampleType) {
-    baseWhere += ` AND s.sampleType = ?`;
-    queryParams.push(sampleType);
-  }
-
-  if (smokingStatus) {
-    baseWhere += ` AND s.smokingStatus = ?`;
-    queryParams.push(smokingStatus);
-  }
-
-  if (TestResult) {
-    baseWhere += ` AND s.TestResult = ?`;
-    queryParams.push(TestResult);
-  }
-
-  if (search) {
-    baseWhere += ` AND (s.PatientName LIKE ? OR s.masterID LIKE ?)`;
-    queryParams.push(`%${search}%`, `%${search}%`);
-  }
-
-  // Query 1: Get all samples
-  const sampleQuery = `
-    SELECT s.*
-    FROM sample s
-    WHERE ${baseWhere}
-  `;
-
-  // Query 2: Get all analyte images (distinct analyte)
-  const imageQuery = `
-    SELECT a.name AS analyteName, a.image AS analyteImage
-    FROM analyte a
-  `;
-
-
-  // Step 1: Get all samples
-  mysqlConnection.query(sampleQuery, queryParams, (err, samples) => {
-    if (err) {
-      console.error("Database query error (samples):", err);
-      return callback(err, null);
-    }
-
-    const countParams = queryParams.slice(0, queryParams.length - 2);
-
-    // Step 2: Get analyte images
-    mysqlConnection.query(imageQuery, [], (err, images) => {
-      if (err) {
-        console.error("Database query error (images):", err);
-        return callback(err, null);
-      }
-
-      // Map analyte name → image
-      const imageMap = {};
-      images.forEach(img => {
-        imageMap[img.analyteName] = img.analyteImage;
-      });
-
-      // Step 3: Merge images into samples
-      const mergedResults = samples.map(sample => {
-        let safeMasterID = null;
-        try {
-          safeMasterID = decryptAndShort(sample.masterID)
-
-        } catch (err) {
-          console.error("Error decrypting masterID:", sample.masterID, err.message);
-          safeMasterID = null;
-        }
-
-        return {
-          ...sample,
-          masterID: safeMasterID,
-          analyteImage: imageMap[sample.Analyte] || null
-        };
-      });
-
-      // Step 4: Get total count for pagination
-      const countQuery = `
-        SELECT COUNT(*) AS total
-        FROM sample s
-        WHERE ${baseWhere};
-      `;
-      mysqlConnection.query(countQuery, countParams, (err, countResults) => {
-        if (err) {
-          console.error("Database query error (count):", err);
-          return callback(err, null);
-        }
-
-        callback(null, {
-          data: mergedResults,
-          total: countResults[0].total,
-        });
       });
     });
   });
@@ -1323,7 +1101,6 @@ module.exports = {
   createPoolSampleTable,
   getSamples,
   getAllSamples,
-  getResearcherSamples,
   getAllCSSamples,
   getSampleById,
   createSample,
@@ -1338,5 +1115,4 @@ module.exports = {
   createPriceRequest,
   getsingleSamples,
   updateReservedSample,
-  getAllSampleinDiscover
 };

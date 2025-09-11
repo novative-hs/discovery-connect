@@ -102,7 +102,7 @@ const OfferPopularProduct = () => {
               <div className="card border-0 shadow-lg p-3 h-100 text-center rounded-3">
                 <div className="product-image mb-2 m-2">
                   <img
-                    src={category.imageUrl || "/placeholder.jpg"}
+                    src={category.imageUrl || ""}
                     alt={category.Analyte}
                     className="img-fluid rounded-2"
                     style={{

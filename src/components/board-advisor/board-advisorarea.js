@@ -111,7 +111,7 @@ const boardMembers = [
     comments: "Research interests include human molecular genetics with a focus on Mendelian disorders.",
     picture: "/assets/img/board-advisory/userimage.png"
   },
-   {
+  {
     name: "Dr. Muhammad Ansar",
     designation: "Professor-Biochemistry (BMB)",
     university: "Quaid-i-Azam University, Islamabad",
@@ -357,7 +357,7 @@ const boardMembers = [
 ];
 
 const BoardAdvisoryArea = () => {
-return (
+  return (
     <section className="board-advisory py-5 bg-light">
       <div className="container">
         <h2 className="text-center mb-5 text-uppercase fw-bold text-primary">
@@ -366,9 +366,10 @@ return (
         <div className="row">
           {boardMembers.map((member, index) => (
             <div className="col-md-6 col-lg-4 mb-4" key={index}>
-              <div className="card shadow-lg border-0 h-100 text-center p-4">
+              <div className="card shadow-sm border-0 h-100 text-center p-3 hover-scale">
+
                 {/* Profile Image */}
-                <div className="d-flex justify-content-center">
+                <div className="mb-3">
                   <img
                     src={member.picture}
                     alt={member.name}
@@ -377,28 +378,67 @@ return (
                   />
                 </div>
 
-                {/* Comment */}
-                <div className="card-body">
-                  <p className="fst-italic text-muted">
-                    <i className="fas fa-quote-left text-warning"></i> {member.comments}{" "}
-                    <i className="fas fa-quote-right text-warning"></i>
-                  </p>
+                {/* Name & Designation */}
+                <div className="mb-2">
+                  <h5 className="fw-bold text-dark mb-1">{member.name}</h5>
+                  <small className="text-primary fw-semibold">{member.designation}</small>
                 </div>
 
-                {/* Name & Designation */}
-                <div className="card-footer bg-white border-0">
-                  <h5 className="fw-bold text-dark mb-0">{member.name}</h5>
-                  <small className="text-primary fw-semibold">{member.designation}</small>
-                  <p className="mb-0 text-muted">{member.university}</p>
-                  <p className="mb-0 text-secondary">
-                    {member.city}, {member.country}
-                  </p>
-                </div>
+                {/* University & Location */}
+                {/* University & Location */}
+                {(member.university || member.city || member.country) && (
+                  <div className="mb-2 text-muted">
+                    {member.university && <p className="mb-0">{member.university}</p>}
+                    {(member.city || member.country) && (
+                      <p className="mb-0">
+                        {member.city}{member.city && member.country ? ", " : ""}{member.country}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Contact Info */}
+                {(member.contact && member.contact !== "-") || (member.email && member.email !== "-") ? (
+                  <div className="mb-3 text-secondary">
+                    {member.contact && member.contact !== "-" && (
+                      <p className="mb-1">
+                        <i className="fas fa-phone-alt me-2"></i>{member.contact}
+                      </p>
+                    )}
+                    {member.email && member.email !== "-" && (
+                      <p className="mb-0">
+                        <i className="fas fa-envelope me-2"></i>{member.email}
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+
+                {/* Comments / Quotes */}
+                {member.comments && member.comments !== "-" && (
+                  <div className="card-body bg-light rounded">
+                    <p className="fst-italic text-muted mb-0">
+                      <i className="fas fa-quote-left text-warning me-1"></i>
+                      {member.comments}
+                      <i className="fas fa-quote-right text-warning ms-1"></i>
+                    </p>
+                  </div>
+                )}
+
               </div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Extra CSS for hover effect */}
+      <style jsx>{`
+        .hover-scale {
+          transition: transform 0.3s;
+        }
+        .hover-scale:hover {
+          transform: translateY(-5px) scale(1.03);
+        }
+      `}</style>
     </section>
   );
 };

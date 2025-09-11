@@ -45,35 +45,6 @@ const getAllSampleinIndex = (req, res) => {
   );
 };
 
-const getAllSampleinDiscover = (req, res) => {
-
-  // Get filters
-  const ageMin = req.query.ageMin ? parseInt(req.query.ageMin) : null;
-  const ageMax = req.query.ageMax ? parseInt(req.query.ageMax) : null;
-  const gender = req.query.gender || null;
-  const sampleType = req.query.sampleType || null;
-  const smokingStatus = req.query.smokingStatus || null;
-  const search = req.query.search || null;
-  const TestResult = req.query.TestResult || null;
-  const exactAge = req.query.age ? parseInt(req.query.age) : null;
-
-
-  // Now pass these to your model function
-  SampleModel.getAllSampleinDiscover(
-    { ageMin, ageMax, exactAge, gender, sampleType, smokingStatus, search, TestResult },
-    (err, results) => {
-      if (err) {
-        return res.status(500).json({ error: "Error fetching samples detail" });
-      }
-
-      res.status(200).json({
-        data: results.data,
-        total: results.total,
-      });
-    }
-  );
-};
-
 
 // Controller to get all samples
 const getSamples = (req, res) => {
@@ -136,27 +107,9 @@ const getAllSamples = (req, res) => {
     res.status(200).json(results);
   });
 };
-const getResearcherSamples = (req, res) => {
-  const { id } = req.params; // Get user ID from request parameters
-
-  if (!id) {
-    return res.status(400).json({ error: "User ID is required" });
-  }
-
-  SampleModel.getResearcherSamples(id, (err, results) => {
-    if (err) {
-      return res.status(500).json({ error: "Error fetching sample", details: err.message });
-    }
-    if (results.length === 0) {
-      return res.status(404).json({ error: "No samplesdddddd found" });
-    }
-    res.status(200).json(results);
-  });
-};
 
 const updateReservedSample = (req, res) => {
-  const sampleId = req.params.id;
-  const status = req.params.status
+  const {sampleId,status} = req.body;
 
   SampleModel.updateReservedSample(sampleId, status, (err, result) => {
     if (err) {
@@ -349,7 +302,6 @@ module.exports = {
   getFilteredSamples,
   getSamples,
   getAllSamples,
-  getResearcherSamples,
   getAllCSSamples,
   getSampleById,
   createSample,
@@ -362,5 +314,4 @@ module.exports = {
   updatetestResultandUnit,
   getsingleSamples,
   updateReservedSample,
-  getAllSampleinDiscover
 };

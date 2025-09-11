@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Box, Delivery, Processing, Truck } from "@svg/index";
+import { FaMapMarkedAlt, FaHospital } from "react-icons/fa";
 import axios from "axios";
 import { useRouter } from 'next/router';
 
@@ -24,8 +25,9 @@ const OrderInfo = ({ setActiveTab }) => {
     pending: null,
     dispatch: null,
     completed: null,
+    collectionsite: null,
   });
-
+  const [collectionCount, setCollectionCount] = useState(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [staffAction, setStaffAction] = useState("");
@@ -41,6 +43,7 @@ const OrderInfo = ({ setActiveTab }) => {
   useEffect(() => {
     if (id && staffAction) {
       fetchSampleCounts();
+      fetchUserCount()
     }
   }, [id, staffAction]);
 
@@ -48,31 +51,48 @@ const OrderInfo = ({ setActiveTab }) => {
     setLoading(true);
     try {
       const { data } = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrderbyCSR`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/getOrderbyCSR`,
         {
           params: { csrUserId: id, staffAction: staffAction },
         }
       );
+      console.log("API Response:", data);
 
-     // Get unique tracking IDs for each status
-const dispatch = new Set(
-  data.filter(item => item.order_status === "Dispatched").map(item => item.tracking_id)
-).size;
 
-const pending = new Set(
-  data.filter(item => item.order_status === "Pending").map(item => item.tracking_id)
-).size;
+      // Get unique tracking IDs for each status
+      const dispatch = new Set(
+        data.filter(item => item.order_status === "Dispatched").map(item => item.tracking_id)
+      ).size;
 
-const completed = new Set(
-  data.filter(item => item.order_status === "Completed").map(item => item.tracking_id)
-).size;
+      const pending = new Set(
+        data.filter(item => item.order_status === "Pending").map(item => item.tracking_id)
+      ).size;
 
-setCounts({ pending, dispatch, completed });
+      const completed = new Set(
+        data.filter(item => item.order_status === "Completed").map(item => item.tracking_id)
+      ).size;
+
+      // ✅ new: unique collection sites
+      const collectionsite = new Set(
+        data.map(item => item.collection_site_id) // or item.site_name
+      ).size;
+
+      setCounts({ pending, dispatch, completed, collectionsite });
 
     } catch (error) {
       console.error("Failed to fetch sample counts:", error);
     } finally {
       setLoading(false);
+    }
+  };
+  const fetchUserCount = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/getAll`
+      );
+      setCollectionCount(response.data.totalCollectionSites);
+    } catch (error) {
+      console.error("Error fetching user count:", error);
     }
   };
 
@@ -88,7 +108,7 @@ setCounts({ pending, dispatch, completed });
         <h4 className="profile__main-title text-capitalize">
           Welcome Customer Service Representative
         </h4>
-       
+
       </div>
 
       <div className="profile__main-info ">
@@ -96,7 +116,7 @@ setCounts({ pending, dispatch, completed });
           <SingleOrderInfo
             info={showCount(counts.pending)}
             icon={<Truck />}
-            
+
             title="Pending Order"
             onClick={() => handleNavigate("pendingorder")}
           />
@@ -111,6 +131,12 @@ setCounts({ pending, dispatch, completed });
             icon={<Delivery />}
             title="Completed Order"
             onClick={() => handleNavigate("completedorder")}
+          />
+          <SingleOrderInfo
+            info={showCount(collectionCount)}
+            icon={<FaMapMarkedAlt size={28} />}
+            title="Collection Sites"
+            onClick={() => handleNavigate("collectionsitelist")}
           />
         </div>
       </div>

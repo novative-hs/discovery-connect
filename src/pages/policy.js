@@ -11,13 +11,14 @@ export default function Policy() {
       <SEO pageTitle={"Policy"} />
       <Header style_2={true} />
       <SectionTop
-       title={
-        <h2 style={{ fontSize: '40px', fontFamily: 'Montserrat, sans-serif', fontWeight: '700' }}>
-          Welcome to Discovery-Connect
-        </h2>
-      }
-     
-    />
+        title={
+          <h2 style={{ fontSize: '40px', fontFamily: 'Montserrat, sans-serif', fontWeight: '700', color: "white" }}>
+            Welcome to Discovery Connect
+          </h2>
+        }
+        backgroundImage="/assets/img/about/good.jpg"
+
+      />
       <PolicyArea />
       <Footer />
     </Wrapper>

@@ -96,7 +96,7 @@ const OrderPage = () => {
     setDocumentLoading(true);
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getsampledocuments/${tracking_id}`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/technicalapproval/getDocuments/${tracking_id}`
       );
 
       if (response.data.success) {
@@ -169,7 +169,7 @@ const OrderPage = () => {
     setLoading(true);
     try {
       const { searchField, searchValue } = filters;
-      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/getOrder?page=${page}&pageSize=${pageSize}&status=Pending`;
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/technicalapproval/getOrderbyTechnical?page=${page}&pageSize=${pageSize}&status=Pending`;
 
       if (searchField && searchValue) {
         url += `&searchField=${searchField}&searchValue=${encodeURIComponent(searchValue)}`;
@@ -228,8 +228,7 @@ const OrderPage = () => {
 
 
   const handleAdminStatus = async (newStatus) => {
-    if (!selectedOrder || !selectedOrder.analytes || selectedOrder.analytes.length === 0) return;
-
+    if (!selectedOrder) return;
     // Trim and validate comment if rejected
     const trimmedComment = comment.trim();
 
@@ -241,13 +240,11 @@ const OrderPage = () => {
     setLoading(true);
 
     try {
-      const allOrderIds = selectedOrder.analytes.map(analyte => analyte.order_id);
-
       // Send one combined request
       await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/bulk-update-Technicalstatus`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/technicalapproval/update-Technicalstatus`,
         {
-          order_ids: allOrderIds,
+          order_id: selectedOrder.order_id,
           technical_admin_status: newStatus,
           comment: newStatus === "Rejected" ? trimmedComment : null,
         }
@@ -293,20 +290,12 @@ const OrderPage = () => {
   const handleCommitteeApproval = async (committeeType) => {
     setTransferLoading(true);
 
-    const analyteIdsToTransfer = [
-      ...new Set(
-        (selectedOrder?.analytes || [])
-          .filter(item => !item.sender_id)
-          .map(item => String(item.order_id)) // ensure uniform type
-      )
-    ];
-
 
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/transfertocommittee`,
         {
-          cartId: analyteIdsToTransfer,
+          cartId: selectedOrderId,
           senderId: user_id,
           committeeType,
         }
@@ -341,22 +330,31 @@ const OrderPage = () => {
   };
 
   const handleHistory = useCallback(async (orderGroup) => {
-    const trackingIds = orderGroup.analytes.map(a => a.tracking_id);
-    setShowHistoryModal(true);
-    setLoadingHistory(true);
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeesampleapproval/getHistory`,
-        { params: { trackingIds: trackingIds.join(','), status: 'Pending' } }
-      );
-      setSelectedHistory(response.data.results.results || []);
-    } catch (error) {
-      console.error(error);
-      setShowHistoryModal(false);
-    } finally {
-      setLoadingHistory(false);
-    }
-  }, []);
+  console.log(orderGroup);
+  setShowHistoryModal(true);
+  setLoadingHistory(true);
+
+  try {
+    const response = await axios.get(   // ✅ await here
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/technicalapproval/getHistory`,
+      {
+        params: {
+          tracking_id: orderGroup.tracking_id,
+          status: "Pending",
+        },
+      }
+    );
+
+    console.log(response.data.results);
+    setSelectedHistory(response.data.results || []);
+  } catch (error) {
+    console.error(error);
+    setShowHistoryModal(false);
+  } finally {
+    setLoadingHistory(false);
+  }
+}, []);
+
 
   const formatDT = (date) =>
     date

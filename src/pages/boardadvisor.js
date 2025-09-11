@@ -12,7 +12,7 @@ export default function BoardAdvisor() {
             <SEO pageTitle={"Board-Advisory"} />
             <Header style_2={true} />
 
-            <BoardAdvisorArea /> {/* <-- Moved here */}
+            <BoardAdvisorArea />
 
             <Footer />
         </Wrapper>

@@ -214,12 +214,18 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
     );
     try {
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/${sample.id}/reserve/1`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/reserve`,
+        {
+          sampleId: sample.id,
+          status: 1
+        }
       );
+
       if (response.data.error) notifyError(response.data.error);
     } catch (error) {
       notifyError("Error reserving sample");
     }
+
   };
 
   return (

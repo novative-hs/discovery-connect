@@ -1,7 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 // internal
-import man from "@assets/img/login/pointing5.png";
+import man from "@assets/img/login/shape-1.png";
 import sample1 from "@assets/img/login/sample1.png";
 import shape_2 from "@assets/img/login/shape-2.png";
 // import sample3 from "@assets/img/login/sample3.png";

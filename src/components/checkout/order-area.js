@@ -300,21 +300,9 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
   };
 
   const handleSubmit = async (paymentId) => {
-    console.log("Stored data:", {
-      tracking: typeof window !== 'undefined' ? localStorage.getItem("tracking_id") : null,
-      createdAt: typeof window !== 'undefined' ? localStorage.getItem("created_at") : null
-    });
-
-    // Get user ID from sessionStorage
-    const userID = typeof window !== 'undefined' ? sessionStorage.getItem("userID") : null;
-
-    if (!userID) {
-      notifyError("User not found. Please log in again.");
-      return false;
-    }
-
     if (!validateDocuments()) return false;
 
+    const userID = sessionStorage.getItem("userID");
     const formData = new FormData();
 
     formData.append("researcher_id", userID);
@@ -341,24 +329,18 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
       formData.append("nbc_file", sampleCopyData.nbcFile);
     }
 
-    // Redirect immediately to show progress page
-    router.push("/order-confirmation");
-
     // Then process API request in background
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/place-order`,
         formData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
 
       const { tracking_id, created_at } = response.data;
-
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem("tracking_id", tracking_id);
-        sessionStorage.setItem("created_at", created_at);
-      }
-
+      sessionStorage.setItem("tracking_id", tracking_id);
+      sessionStorage.setItem("created_at", created_at);
+      router.push("/order-confirmation");
       dispatch(clear_cart());
       notifySuccess("Order placed successfully!");
 
@@ -374,6 +356,9 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
       notifyError(error.response?.data?.error || "Failed to place order.");
     }
   };
+
+
+
 
   return (
     <div className="container py-4" style={{ maxWidth: "750px" }}>

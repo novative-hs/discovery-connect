@@ -42,12 +42,12 @@ const baseCommitteeStatus = (committeeType) => `
             SELECT 1 
             FROM committeesampleapproval ca
             JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-            WHERE ca.cart_id = c.id AND cm.committeetype = '${committeeType}'
+            WHERE ca.order_id = c.id AND cm.committeetype = '${committeeType}'
         ) AND EXISTS (
             SELECT 1 
             FROM committeesampleapproval ca
             JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-            WHERE ca.cart_id = c.id AND cm.committeetype = '${committeeType === 'Scientific' ? 'Ethical' : 'Scientific'}'
+            WHERE ca.order_id = c.id AND cm.committeetype = '${committeeType === 'Scientific' ? 'Ethical' : 'Scientific'}'
         ) THEN 'Not Sent'
         WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
         WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'UnderReview') > 0 THEN 'UnderReview'
@@ -56,7 +56,7 @@ const baseCommitteeStatus = (committeeType) => `
       END
     FROM committeesampleapproval ca 
     JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-    WHERE ca.cart_id = c.id AND cm.committeetype = '${committeeType}'
+    WHERE ca.order_id = c.id AND cm.committeetype = '${committeeType}'
   )
 `;
 
@@ -66,24 +66,26 @@ const fetchOrderHistory = (researcherId, callback) => {
       r.ResearcherName AS researcher_name,
       s.Analyte,
       c.quantity,
-      c.totalpayment,
+      o.totalpayment,
       c.price,
-      c.order_status,
+      o.order_status,
       ta.technical_admin_status AS technicaladmin_status,  -- Technical Admin status
       ${baseCommitteeStatus('Scientific')} AS scientific_committee_status,  -- Scientific committee status
       ${baseCommitteeStatus('Ethical')} AS ethical_committee_status  -- Ethical committee status
-    FROM cart c
-    JOIN user_account ua ON c.user_id = ua.id
+    FROM orders o
+    JOIN user_account ua ON o.user_id = ua.id
     JOIN researcher r ON ua.id = r.user_account_id
+
+    JOIN cart c ON o.id = c.order_id
     JOIN sample s ON c.sample_id = s.id
-    LEFT JOIN technicaladminsampleapproval ta ON c.id = ta.cart_id  -- Join to get technical admin status
+    LEFT JOIN technicaladminsampleapproval ta ON o.id = ta.order_id 
     WHERE r.id = ?
-    ORDER BY c.id DESC
+    ORDER BY o.id DESC
   `;
 
   mysqlConnection.query(query, [researcherId], (err, results) => {
     if (err) {
-      console.error("Error fetching researcher cart order history:", err);
+      console.error("Error fetching researcher order history:", err);
       return callback(err, null);
     }
 

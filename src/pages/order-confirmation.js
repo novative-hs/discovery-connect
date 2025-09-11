@@ -9,40 +9,15 @@ import Link from "next/link";
 const OrderConfirmation = () => {
   const router = useRouter();
   const [orderDetails, setOrderDetails] = useState(null);
+  const { id, created_at, orderStatus, technical_admin_status, committee_status } = router.query;
+  console.log(orderStatus, technical_admin_status, committee_status)
   const [progressWidth, setProgressWidth] = useState("10%");
   const [steps, setSteps] = useState(Array(7).fill("secondary"));
 
   useEffect(() => {
-    // Retrieve data from localStorage
-    const trackingId = localStorage.getItem("tracking_id");
-    const createdAt = localStorage.getItem("created_at");
-    const orderStatus = localStorage.getItem("order_status");
-    const technicalAdminStatus = localStorage.getItem("technical_admin_status");
-    const committeeStatus = localStorage.getItem("committee_status");
-
-    if (trackingId) {
-      setOrderDetails({
-        tracking_id: trackingId,
-        created_at: createdAt,
-        order_status: orderStatus,
-        technical_admin_status: technicalAdminStatus,
-        committee_status: committeeStatus || null,
-      });
-    } else {
-      // router.push(`/dashboardheader?tab=my-samples`);
-    }
-
-    return () => {
-      localStorage.removeItem("tracking_id");
-      localStorage.removeItem("created_at");
-      localStorage.removeItem("order_status");
-      localStorage.removeItem("technical_admin_status");
-      localStorage.removeItem("committee_status");
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!orderDetails) return;
+    const committeeStatus = (committee_status || "").toLowerCase();
+    const technicalAdminStatus = (technical_admin_status || "").toLowerCase();
+    const orderStatusLower = (orderStatus || "").toLowerCase();
 
     let width = "10%";
     let stepColors = Array(6).fill("secondary");
@@ -53,50 +28,53 @@ const OrderConfirmation = () => {
 
     // Step 1: Committee Approval
     if (orderDetails.committee_status === "Pending") {
-      stepColors[1] = "warning";
-      width = "20%";
-    } else if (orderDetails.committee_status === "rejected") {
-      stepColors[1] = "danger";
-      width = "20%";
-    } else if (orderDetails.committee_status === "Accepted") {
-      stepColors[1] = "success";
-      width = "30%";
-    }
+      if (committeeStatus === "pending") {
+        stepColors[1] = "warning";
+        width = "20%";
+      } else if (orderDetails.committee_status === "rejected") {
+      } else if (committeeStatus === "refused") {
+        stepColors[1] = "danger";
+        width = "20%";
+      } else if (committeeStatus === "accepted") {
+        stepColors[1] = "success";
+        width = "30%";
+      }
 
-    // Step 2: Admin Approval
-    if (orderDetails.committee_status === "Accepted") {
-      if (orderDetails.technical_admin_status === "Pending") {
-        stepColors[2] = "warning";
-        width = "40%";
-      } else if (orderDetails.technical_admin_status === "Rejected") {
-        stepColors[2] = "danger";
-        width = "40%";
-      } else if (orderDetails.technical_admin_status === "Accepted") {
-        stepColors[2] = "success";
-        width = "50%";
+      // Step 2: Admin (only if committee accepted)
+      if (committeeStatus === "accepted") {
+        if (technicalAdminStatus === "pending") {
+          stepColors[2] = "warning";
+          width = "40%";
+        } else if (technicalAdminStatus === "rejected") {
+          stepColors[2] = "danger";
+          width = "40%";
+        } else if (technicalAdminStatus === "accepted") {
+          stepColors[2] = "success";
+          width = "50%";
+        }
       }
-    }
 
-    // Steps 3-5: Shipping Progress
-    if (orderDetails.technical_admin_status === "Accepted") {
-      if (orderDetails.order_status === "Dispatched") {
-        stepColors[3] = "success";
-        width = "65%";
-      }
-      if (orderDetails.order_status === "Shipped") {
-        stepColors[3] = "success";
-        stepColors[4] = "success";
-        width = "85%";
-      }
-      if (orderDetails.order_status === "Completed") {
-        stepColors.fill("success");
-        width = "100%";
+      // Step 3–5: Order progress (only if admin accepted)
+      if (technicalAdminStatus === "accepted") {
+        if (orderStatusLower === "dispatched") {
+          stepColors[3] = "success";
+          width = "65%";
+        } else if (orderStatusLower === "shipped") {
+          stepColors[3] = "success";
+          stepColors[4] = "success";
+          width = "85%";
+        } else if (orderStatusLower === "completed") {
+          stepColors[3] = "success";
+          stepColors[4] = "success";
+          stepColors[5] = "success";
+          width = "100%";
+        }
       }
     }
 
     setProgressWidth(width);
     setSteps(stepColors);
-  }, [orderDetails]);
+  }, [orderStatus, technical_admin_status, committee_status]);
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "----";
@@ -149,12 +127,13 @@ const OrderConfirmation = () => {
           <p className="text-dark fs-6">
             Order <strong>#{orderDetails.tracking_id}</strong> was placed on{" "}
             <strong>
-              {new Date(orderDetails.created_at).toLocaleDateString('en-GB', {
+
+              {new Date(created_at).toLocaleDateString('en-GB', {
                 day: '2-digit',
                 month: 'short',
                 year: '2-digit',
               }).replace(/ /g, '-')}{" "}
-              {new Date(orderDetails.created_at).toLocaleTimeString('en-GB', {
+              {new Date(created_at).toLocaleTimeString('en-GB', {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true,
@@ -189,20 +168,21 @@ const OrderConfirmation = () => {
                 let icon = <i className="bi bi-check-lg"></i>;
 
                 if (idx === 1) {
-                  if (orderDetails.committee_status === "Pending") {
+                  if (committee_status === "pending") {
                     icon = <i className="bi bi-hourglass-split"></i>;
-                  } else if (orderDetails.committee_status === "rejected") {
+                  } else if (committee_status === "rejected") {
                     icon = <i className="bi bi-x-lg"></i>;
                   }
                 }
 
-                if (idx === 2 && orderDetails.committee_status === "Accepted") {
-                  if (orderDetails.technical_admin_status === "Pending") {
+                if (idx === 2 && committee_status === "accepted") {
+                  if (technical_admin_status === "Pending") {
                     icon = <i className="bi bi-hourglass-split"></i>;
-                  } else if (orderDetails.technical_admin_status === "Rejected") {
+                  } else if (technical_admin_status === "Rejected") {
                     icon = <i className="bi bi-x-lg"></i>;
                   }
                 }
+
 
                 return (
                   <div
@@ -214,6 +194,7 @@ const OrderConfirmation = () => {
                   </div>
                 );
               })}
+
             </div>
           </div>
 

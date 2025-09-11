@@ -6,24 +6,15 @@ const createCartTable = () => {
   const cartTableQuery = `
   CREATE TABLE IF NOT EXISTS cart (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    order_id INT NOT NULL,
     sample_id VARCHAR(36) NOT NULL,
-    tracking_id VARCHAR(10),
     price FLOAT NOT NULL,
     quantity INT NOT NULL,
     VolumeUnit VARCHAR(20),
     volume VARCHAR(255) NOT NULL,
-    totalpayment DECIMAL(10, 2) NOT NULL,
-    payment_id INT DEFAULT NULL,
-    dispatch_slip LONGBLB,
-    dispatch_via VARCHAR(50),
-    order_status ENUM('Pending', 'Accepted', 'Rejected', 'Shipped', 'Dispatched', 'Completed') DEFAULT 'Pending',
-    delivered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP DEFAULT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES user_account(id) ON DELETE CASCADE,
-    FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE,
-    FOREIGN KEY (payment_id) REFERENCES payment(id) ON DELETE SET NULL
+    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (sample_id) REFERENCES sample(id) ON DELETE CASCADE
   )`;
 
   mysqlConnection.query(cartTableQuery, (err, result) => {
@@ -35,188 +26,85 @@ const createCartTable = () => {
   });
 };
 
-function generateTrackingId() {
-  return Math.floor(10000 + Math.random() * 90000).toString();
-}
-
-const createCart = (data, callback) => {
-  const {
-    researcher_id,
-    cart_items,
-    payment_id,
-    study_copy,
-    reporting_mechanism,
-    irb_file,
-    nbc_file,
-  } = data;
-  const tracking_id = generateTrackingId();
-  let created_at = 0;
-  // Validate required fields
-
-  if (
-    !researcher_id ||
-    !cart_items ||
-    !payment_id ||
-    !study_copy ||
-    !reporting_mechanism ||
-    !irb_file
-  ) {
-    return callback(
-      new Error(
-        "Missing required fields (Payment ID, Study Copy, Reporting Mechanism, and IRB File are required)"
-      )
-    );
-  }
-
-  const getAdminIdQuery = `SELECT id FROM user_account WHERE accountType = 'TechnicalAdmin' LIMIT 1`;
-
-  mysqlConnection.query(getAdminIdQuery, (err, adminResults) => {
-    if (err) return callback(err);
-
-    if (adminResults.length === 0) {
-      return callback(new Error("No Technical Admin found"));
-    }
-
-    const technicalAdminId = adminResults[0].id;
-
-    // Insert each cart item
-    const insertPromises = cart_items.map((item) => {
-
-      return new Promise((resolve, reject) => {
-        const sample_id = item.sample_id;
-
-        const insertCartQuery = `
-          INSERT INTO cart (user_id, sample_id, price, quantity, volume, VolumeUnit, payment_id, totalpayment,tracking_id)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)
-        `;
-
-        const cartValues = [
-          researcher_id,
-          sample_id,
-          item.price,
-          item.samplequantity,
-          item.volume,
-          item.VolumeUnit,
-          payment_id,
-          item.total,
-          tracking_id
-        ];
-
-        mysqlConnection.query(insertCartQuery, cartValues, (err, cartResult) => {
-          if (err) return reject(err);
-
-          const cartId = cartResult.insertId;
-
-          const getCreatedAtQuery = `SELECT created_at FROM cart WHERE id = ?`;
-          mysqlConnection.query(getCreatedAtQuery, [cartId], (err, createdAtResult) => {
-            if (err) return reject(err);
-
-            created_at = createdAtResult?.[0]?.created_at;
-
-            const insertApprovalQuery = `
-              INSERT INTO technicaladminsampleapproval (cart_id, technical_admin_id, technical_admin_status)
-              VALUES (?, ?, 'pending')
-            `;
-
-            mysqlConnection.query(insertApprovalQuery, [cartId, technicalAdminId], (err) => {
-              if (err) return reject(err);
-
-              const insertDocumentsQuery = `
-                INSERT INTO sampledocuments (cart_id, study_copy, reporting_mechanism, irb_file, nbc_file,added_by,role)
-                VALUES (?, ?, ?, ?, ?,?,?)
-              `;
-
-              const documentValues = [cartId, study_copy, reporting_mechanism, irb_file, nbc_file || null, researcher_id, "Researcher"];
-
-              mysqlConnection.query(insertDocumentsQuery, documentValues, (err) => {
-                if (err) return reject(err);
-
-                const updateQuery = `
-                  UPDATE sample 
-                  SET 
-                    quantity = quantity - ?, 
-                    quantity_allocated = IFNULL(quantity_allocated, 0) + ?
-                  WHERE id = ? AND quantity >= ?
-                `;
-
-                const updateValues = [
-                  item.samplequantity,
-                  item.samplequantity,
-                  sample_id,
-                  item.samplequantity,
-                ];
-
-                mysqlConnection.query(updateQuery, updateValues, (err) => {
-                  if (err) return reject(err);
-
-                  resolve({ tracking_id, created_at });
-                });
-              });
-            });
-          });
-        });
-      });
+const queryAsync = (sql, params) => {
+  return new Promise((resolve, reject) => {
+    mysqlConnection.query(sql, params, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
     });
+  });
+};
 
-    Promise.all(insertPromises)
-      .then(() => {
+const getAllCart = (id, callback) => {
+  const sqlQuery = `
+    SELECT 
+        s.id AS sampleid, 
+        s.Analyte AS Analyte,
+        cs.CollectionSiteName,
+        c.quantity AS samplequantity, 
+        c.*,
+        o.user_id AS order_user_id
+    FROM cart c
+    JOIN sample s ON c.sample_id = s.id
+    JOIN collectionsite cs ON c.collectionsite_id = cs.user_account_id
+    JOIN orders o ON c.order_id = o.id
+    WHERE o.user_id = ?
+  `;
 
-        const subject = "Sample Request Status Update";
+  mysqlConnection.query(sqlQuery, [id], (err, results) => {
+    if (err) {
+      console.error("Error fetching cart data:", err);
+      callback(err, null);
+    } else {
+      callback(null, results);
+    }
+  });
+};
 
-        const getResearcherEmailQuery = `
-      SELECT ua.email, c.created_at, c.id AS cartId
-      FROM user_account ua
-      JOIN cart c ON ua.id = c.user_id
-      WHERE c.tracking_id = ?
+
+const getCartCount = (userId, callback) => {
+  const sqlQuery = `
+    SELECT 
+      COUNT(c.id) AS itemCount
+    FROM orders o
+    JOIN cart c ON o.id = c.order_id
+    WHERE o.user_id = ?
+  `;
+
+  mysqlConnection.query(sqlQuery, [userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching order items count:", err);
+      callback(err, null);
+    } else {
+      callback(null, results[0].itemCount);
+    }
+  });
+};
+
+const deleteCart = (id, callback, res) => {
+  const sqlQuery = `
+    DELETE FROM cart 
+WHERE user_id = ?;
     `;
+  mysqlConnection.query(sqlQuery, [id], (err, results) => {
+    if (err) {
+      console.error("Error deleting cart:", err);
+    }
+  });
+};
 
-        mysqlConnection.query(getResearcherEmailQuery, [tracking_id], (emailErr, emailResults) => {
-          if (emailErr) return callback(emailErr);
-
-          if (emailResults.length === 0) {
-            return callback(new Error("No data found for provided tracking ID"));
-          }
-
-          const researcherEmail = emailResults[0].email;
-          const cartIdsList = emailResults
-            .map((detail) => `Cart ID: ${detail.cartId} (Created At: ${detail.created_at})`)
-            .join("<br/>");
-
-          const emailMessage = `
-                <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
-                  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    
-                    <p style="font-size: 16px; color: #333;">Dear Researcher,</p>
-
-                    <p style="font-size: 15px; color: #555;">
-                      Your sample request has been <b style="color: green;">successfully created</b>. 
-                      Please check your dashboard for more details.
-                    </p>
-
-                    <p style="font-size: 15px; color: #555;">
-                      Tracking ID: <b>${tracking_id}</b>
-                    </p>
-
-                    <p style="font-size: 15px; color: #333; margin-top: 20px;">
-                      Best regards,<br>
-                      <strong>Discovery Connect</strong>
-                    </p>
-
-                  </div>
-                </div>
-              `;
-
-
-          sendEmail(researcherEmail, subject, emailMessage)
-            .then(() => {
-              callback(null, { message: "Cart created successfully", tracking_id, created_at });
-            })
-            .catch((emailSendErr) => {
-              console.error("Failed to send researcher email:", emailSendErr);
-              callback(emailSendErr);
-            });
-        });
-      })
+const deleteSingleCartItem = (id, callback, res) => {
+  const sqlQuery = `
+      DELETE FROM cart 
+  WHERE sample_id = ?;
+      `;
+  mysqlConnection.query(sqlQuery, [id], (err, results) => {
+    if (err) {
+      console.error("Error deleting cart item :", err);
+    }
   });
 };
 
@@ -278,803 +166,12 @@ const updateDocument = (newCartData, callback) => {
   });
 };
 
-const getAllCart = (id, callback, res) => {
-  const sqlQuery = `
-  SELECT 
-      s.id AS sampleid, 
-      s.Analyte AS Analyte,
-      s. user_account_id AS user_account_id,
-      cs.CollectionSiteName,
-      c.quantity AS samplequantity, 
-      c.*
-  FROM cart c
-  JOIN sample s ON c.sample_id = s.id
-  JOIN collectionsite cs ON c.collectionsite_id = cs.user_account_id
-  WHERE c.user_id = ?
-`;
-  mysqlConnection.query(sqlQuery, [id], (err, results) => {
-    if (err) {
-      console.error("Error fetching cart data:", err);
-      callback(null, results);
-    } else {
-      callback(null, results);
-    }
-  });
-};
-
-const getSampleDocument = (id, callback) => {
-  const sql = `
-    SELECT sd.study_copy, sd.irb_file, sd.nbc_file, sd.role, c.tracking_id, 
-           sd.created_at, sd.updated_at
-    FROM cart c
-    JOIN sampledocuments sd ON c.id = sd.cart_id
-    WHERE c.tracking_id = ?
-    ORDER BY sd.created_at ASC
-  `;
-  mysqlConnection.query(sql, [id], callback);
-};
-
-const getCartCount = (id, callback, res) => {
-  const sqlQuery = `
-    
- SELECT 
-      count(c.id) as Count
-  FROM cart c
-  WHERE c.user_id = ?
-  `;
-  mysqlConnection.query(sqlQuery, [id], (err, results) => {
-    if (err) {
-      console.error("Error fetching cart data:", err);
-      callback(err, results);
-    } else {
-      callback(null, results);
-    }
-  });
-};
-
-const deleteCart = (id, callback, res) => {
-  const sqlQuery = `
-    DELETE FROM cart 
-WHERE user_id = ?;
-    `;
-  mysqlConnection.query(sqlQuery, [id], (err, results) => {
-    if (err) {
-      console.error("Error deleting cart:", err);
-    }
-  });
-};
-
-const deleteSingleCartItem = (id, callback, res) => {
-  const sqlQuery = `
-      DELETE FROM cart 
-  WHERE sample_id = ?;
-      `;
-  mysqlConnection.query(sqlQuery, [id], (err, results) => {
-    if (err) {
-      console.error("Error deleting cart item :", err);
-    }
-  });
-};
-
-const updateCart = (id, data, callback, res) => {
-  const { researcher_id, user_account_id, price, samplequantity, total } = data;
-
-  const updateQuery = `
-    UPDATE cart 
-    SET price = ?, quantity = ?, totalpayment = ?
-    WHERE user_id = ? AND sample_id = ? AND collectionsite_id = ?
-  `;
-
-  const values = [
-    price,
-    samplequantity,
-    total,
-    researcher_id,
-    id,
-    user_account_id,
-  ];
-
-  mysqlConnection.query(updateQuery, values, (err, result) => {
-    if (err) {
-      callback(err, null);
-    } else {
-      callback(null, result);
-    }
-  });
-};
-
-const baseCommitteeStatus = (committeeType) => `
-  (
-    SELECT 
-      CASE 
-        WHEN NOT EXISTS (
-            SELECT 1 
-            FROM committeesampleapproval ca
-            JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-            WHERE ca.cart_id = c.id 
-              AND cm.committeetype = '${committeeType}'
-              AND ca.transfer = (
-                SELECT MAX(transfer) 
-                FROM committeesampleapproval 
-                WHERE cart_id = c.id
-              )
-        ) 
-        AND EXISTS (
-            SELECT 1 
-            FROM committeesampleapproval ca
-            JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-            WHERE ca.cart_id = c.id 
-              AND cm.committeetype = '${committeeType === 'Scientific' ? 'Ethical' : 'Scientific'}'
-              AND ca.transfer = (
-                SELECT MAX(transfer) 
-                FROM committeesampleapproval 
-                WHERE cart_id = c.id
-              )
-        ) 
-        THEN 'Not Sent'
-
-        WHEN COUNT(*) > 0 
-          AND SUM(ca.committee_status = 'Refused') > 0 
-        THEN 'Refused'
-
-        WHEN COUNT(*) > 0 
-          AND SUM(ca.committee_status = 'Pending') > 0 
-        THEN 'Pending'
-
-        WHEN COUNT(*) > 0 
-          AND SUM(ca.committee_status = 'Approved') = COUNT(*) 
-        THEN 'Approved'
-
-        ELSE NULL
-      END
-    FROM committeesampleapproval ca 
-    JOIN committee_member cm 
-      ON cm.user_account_id = ca.committee_member_id
-    WHERE ca.cart_id = c.id 
-      AND cm.committeetype = '${committeeType}'
-      AND ca.transfer = (
-        SELECT MAX(transfer) 
-        FROM committeesampleapproval 
-        WHERE cart_id = c.id
-      )
-  )
-`;
-
-const getAllOrder = (page, pageSize, searchField, searchValue, status, callback) => {
-  const offset = (page - 1) * pageSize;
-  const queryParams = [];
-
-  let whereClauses = [];
-  let searchCondition = '';
-
-  // Map searchField to actual DB fields
-  const searchFieldMap = {
-    order_id: 'c.tracking_id',
-    Analyte: 's.Analyte',
-    researcher_name: 'r.ResearcherName',
-    organization_name: 'org.OrganizationName',
-    scientific_committee_status: baseCommitteeStatus('Scientific'),
-    ethical_committee_status: baseCommitteeStatus('Ethical'),
-    order_status: 'c.order_status', // ✅ ADD THIS
-    technical_admin_status: 'ra.technical_admin_status',
-    created_at: 'c.created_at',
-  };
-
-
-  const dbField = searchFieldMap[searchField];
-
-  if (dbField && searchValue) {
-    searchCondition = `${dbField} LIKE ?`;
-    queryParams.push(`%${searchValue}%`);
-    whereClauses.push(searchCondition);
-  }
-  if (status === 'Pending') {
-    whereClauses.push("ra.technical_admin_status = 'Pending'");
-  }
-  else
-    if (status === 'Accepted') {
-      whereClauses.push("ra.technical_admin_status!='Pending'");
-    }
-
-  const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
-
-  const sqlQuery = `
-  SELECT 
-    c.id AS order_id, 
-    c.tracking_id,
-    c.user_id, 
-    u.email AS user_email,
-    r.ResearcherName AS researcher_name,
-    r.phoneNumber AS phoneNumber, 
-    org.OrganizationName AS organization_name,
-    cs.CollectionSiteName AS collectionsitename,
-    b.Name AS biobankname,
-    COALESCE(cs.CollectionSiteName, b.Name) AS source_name,
-    c.sample_id, 
-    s.Analyte, 
-    s.VolumeUnit,
-    s.volume,
-    s.age, s.gender, s.ethnicity, s.samplecondition, s.storagetemp, s.ContainerType, 
-    s.CountryofCollection, s.VolumeUnit, s.SampleTypeMatrix, s.SmokingStatus, 
-    s.AlcoholOrDrugAbuse, s.InfectiousDiseaseTesting, s.InfectiousDiseaseResult, 
-    s.FreezeThawCycles, s.dateOfSampling, s.ConcurrentMedicalConditions, 
-    s.ConcurrentMedications, s.Analyte, s.TestResult, 
-    s.TestResultUnit, s.TestMethod, s.TestKitManufacturer, s.TestSystem, 
-    s.TestSystemManufacturer, s.SamplePriceCurrency,
-    c.price, 
-    c.quantity,  
-    c.totalpayment, 
-    c.order_status,
-    c.created_at AS orderdate,
-    IFNULL(ra.technical_admin_status, NULL) AS technical_admin_status,
-    ra.created_at AS Technicaladmindate,
-    ra.Approval_date AS TechnicaladminApproval_date,
-    ${baseCommitteeStatus('Ethical')} AS ethical_committee_status,
-    ${baseCommitteeStatus('Scientific')} AS scientific_committee_status,
-    CASE
-      WHEN (${baseCommitteeStatus('Scientific')} = 'Refused' 
-            OR ${baseCommitteeStatus('Ethical')} = 'Refused') 
-           THEN 'Refused'
-      WHEN (${baseCommitteeStatus('Scientific')} = 'Pending' 
-            OR ${baseCommitteeStatus('Ethical')} = 'Pending') 
-           THEN 'Pending'
-      WHEN (${baseCommitteeStatus('Scientific')} = 'Approved' 
-            AND ${baseCommitteeStatus('Ethical')} = 'Approved') 
-           THEN 'Approved'
-      WHEN (${baseCommitteeStatus('Scientific')} = 'Not Sent' 
-            OR ${baseCommitteeStatus('Ethical')} = 'Not Sent') 
-           THEN 'Not Sent'
-      ELSE '---'
-    END AS final_committee_status,
-    -- Comments only
-(
-  SELECT GROUP_CONCAT(
-    DISTINCT CONCAT(
-      cm.CommitteeMemberName, 
-      ' (', cm.committeetype, ') : ', 
-      ca.comments,
-      ' [', ca.committee_status, ']'
-    ) SEPARATOR ' | '
-  )
-  FROM committeesampleapproval ca
-  JOIN committee_member cm 
-    ON cm.user_account_id = ca.committee_member_id
-  WHERE ca.cart_id = c.id
-) AS committee_comments
-  FROM cart c
-  JOIN user_account u ON c.user_id = u.id
-  LEFT JOIN researcher r ON u.id = r.user_account_id 
-  LEFT JOIN organization org ON r.nameofOrganization = org.id
-  JOIN sample s ON c.sample_id = s.id
-  LEFT JOIN biobank b ON s.user_account_id = b.user_account_id
-  LEFT JOIN collectionsitestaff css ON s.user_account_id = css.user_account_id
-  LEFT JOIN collectionsite cs ON css.collectionsite_id = cs.id
-  LEFT JOIN technicaladminsampleapproval ra ON c.id = ra.cart_id
-  
-  ${whereClause}
-  ORDER BY c.created_at DESC
-  LIMIT ? OFFSET ?
-`;
-
-  queryParams.push(parseInt(pageSize), parseInt(offset));
-
-  const countQuery = `
-    SELECT COUNT(*) AS totalCount
-    FROM cart c
-    JOIN user_account u ON c.user_id = u.id
-    LEFT JOIN researcher r ON u.id = r.user_account_id 
-    LEFT JOIN organization org ON r.nameofOrganization = org.id
-    JOIN sample s ON c.sample_id = s.id
-    LEFT JOIN technicaladminsampleapproval ra ON c.id = ra.cart_id
-    ${whereClause}
-  `;
-
-  mysqlConnection.query(countQuery, queryParams.slice(0, queryParams.length - 2), (countErr, countResults) => {
-    if (countErr) {
-      console.error("Error getting total count:", countErr);
-      callback(countErr, null);
-    } else {
-      const totalCount = countResults[0].totalCount;
-
-      mysqlConnection.query(sqlQuery, queryParams, (err, results) => {
-        if (err) {
-          console.error("Error fetching cart data:", err);
-          callback(err, null);
-        } else {
-          callback(null, {
-            results,
-            totalCount,
-          });
-        }
-      });
-    }
-  });
-};
-
-const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchValue, callback) => {
-  try {
-    const offset = (page - 1) * pageSize;
-    const connection = mysqlConnection.promise();
-
-    let whereClause = `WHERE ca.committee_member_id = ?`;
-    const params = [id];
-
-    if (searchField && searchValue) {
-      let dbField;
-      switch (searchField) {
-        case "created_at": dbField = "c.created_at"; break;
-        case "tracking_id": dbField = "c.tracking_id"; break;
-        case "researcher_name": dbField = "r.ResearcherName"; break;
-        case "user_email": dbField = "u.email"; break;
-        case "organization_name": dbField = "org.OrganizationName"; break;
-      }
-      if (dbField) {
-        whereClause += ` AND ${dbField} LIKE ?`;
-        params.push(`%${searchValue}%`);
-      }
-    }
-
-    const [rows] = await connection.query(`
-      SELECT *,
-             COUNT(*) OVER() AS totalCount
-      FROM (
-        SELECT 
-          c.id AS cart_id, 
-          c.tracking_id,
-          c.user_id, 
-          u.email AS user_email,
-          r.ResearcherName AS researcher_name, 
-          org.OrganizationName AS organization_name,
-          s.id AS sample_id,
-          s.Analyte, 
-          s.VolumeUnit,
-          s.age,
-          s.gender,
-          s.TestResult,
-          s.TestResultUnit,
-          s.volume,
-          s.room_number,s.freezer_id,s.box_id,
-          c.price, 
-          c.quantity, 
-          c.totalpayment, 
-          c.order_status,  
-          c.created_at,
-          ca.committee_status,  
-          ca.comments
-        FROM committeesampleapproval ca
-        JOIN cart c ON ca.cart_id = c.id  
-        JOIN user_account u ON c.user_id = u.id
-        LEFT JOIN researcher r ON u.id = r.user_account_id 
-        LEFT JOIN organization org ON r.nameofOrganization = org.id
-        JOIN sample s ON c.sample_id = s.id  
-        ${whereClause}
-        ORDER BY c.created_at ASC
-        LIMIT ? OFFSET ?
-      ) AS sub;
-    `, [...params, pageSize, offset]);
-
-    // ✅ DEBUGGING: Check if we're getting the fields
-    console.log("First row from database:", rows[0]);
-    console.log("Age field exists:", rows[0]?.age !== undefined);
-    console.log("Gender field exists:", rows[0]?.gender !== undefined);
-    console.log("TestResult field exists:", rows[0]?.TestResult !== undefined);
-
-    const totalCount = rows.length ? rows[0].totalCount : 0;
-    const results = rows.map(sample => ({
-      ...sample,
-      locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-')
-    }));
-
-    callback(null, { results, totalCount });
-  } catch (err) {
-    console.error("Error fetching orders:", err);
-    callback(err, null);
-  }
-};
-
-const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback) => {
-  const offset = (page - 1) * pageSize;
-
-  let whereClause = "WHERE 1=1";
-  const params = [];
-
-  // Filter by search field
-  if (searchField && searchValue) {
-    let dbField = searchField;
-    if (searchField === "cart_id") dbField = "c.id";
-    whereClause += ` AND ${dbField} LIKE ?`;
-    params.push(`%${searchValue}%`);
-  }
-
-  // Filter by committee member ID
-  if (id) {
-    whereClause += " AND csa.committee_member_id = ?";
-    params.push(id);
-  }
-
-  const sqlQuery = `
-    SELECT 
-      c.id AS cart_id,
-      -- Latest study_copy
-      (SELECT sd2.study_copy 
-       FROM sampledocuments sd2 
-       WHERE sd2.cart_id = c.id AND sd2.study_copy IS NOT NULL
-       ORDER BY COALESCE(sd2.updated_at, sd2.created_at) DESC
-       LIMIT 1) AS study_copy,
-
-      -- Latest irb_file
-      (SELECT sd2.irb_file 
-       FROM sampledocuments sd2 
-       WHERE sd2.cart_id = c.id AND sd2.irb_file IS NOT NULL
-       ORDER BY COALESCE(sd2.updated_at, sd2.created_at) DESC
-       LIMIT 1) AS irb_file,
-
-      -- Latest nbc_file
-      (SELECT sd2.nbc_file 
-       FROM sampledocuments sd2 
-       WHERE sd2.cart_id = c.id AND sd2.nbc_file IS NOT NULL
-       ORDER BY COALESCE(sd2.updated_at, sd2.created_at) DESC
-       LIMIT 1) AS nbc_file,
-
-      -- You can also get reporting_mechanism if needed similarly
-      (SELECT sd2.reporting_mechanism 
-       FROM sampledocuments sd2 
-       WHERE sd2.cart_id = c.id AND sd2.reporting_mechanism IS NOT NULL
-       ORDER BY COALESCE(sd2.updated_at, sd2.created_at) DESC
-       LIMIT 1) AS reporting_mechanism
-
-    FROM cart c
-    JOIN committeesampleapproval csa ON c.id = csa.cart_id
-    ${whereClause}
-    ORDER BY c.created_at ASC
-    LIMIT ? OFFSET ?  
-  `;
-
-  const queryParams = [...params, pageSize, offset];
-
-  mysqlConnection.query(sqlQuery, queryParams, (err, results) => {
-    if (err) {
-      console.error("Error fetching documents:", err);
-      callback(err, null);
-    } else {
-      callback(null, { results });
-    }
-  });
-};
-
-const getAllOrderByCSR = (csrUserId, staffAction, callback) => {
-  let sqlQuery = `
-  SELECT 
-    c.*, 
-    c.user_id, 
-    u.email AS user_email,
-    r.ResearcherName AS researcher_name,
-    r.phoneNumber,
-    r.fullAddress,
-    org.OrganizationName AS organization_name,
-    s.id AS sample_id,
-    s.Analyte, 
-    s.SamplePriceCurrency,
-    s.volume,
-    s.volumeUnit,
-    s.TestResult,
-    s.TestResultUnit,
-    s.gender,
-    s.age,
-    c.order_status,  
-    c.created_at,
-    city.name AS city_name,
-    country.name AS country_name,
-    district.name AS district_name,
-    cs.CollectionSiteName,
-    bb.Name AS BiobankName
-  FROM cart c
-  JOIN user_account u ON c.user_id = u.id
-  LEFT JOIN researcher r ON u.id = r.user_account_id 
-  LEFT JOIN organization org ON r.nameofOrganization = org.id
-  JOIN sample s ON c.sample_id = s.id
-  LEFT JOIN city ON r.city = city.id
-  LEFT JOIN country ON r.country = country.id
-  LEFT JOIN district ON r.district = district.id
-  LEFT JOIN collectionsitestaff css ON s.user_account_id = css.user_account_id
-  LEFT JOIN collectionsite cs ON css.collectionsite_id = cs.id
-  LEFT JOIN biobank bb ON s.user_account_id = bb.user_account_id
-  LEFT JOIN collectionsitestaff cs_staff ON s.user_account_id = cs_staff.user_account_id
-  LEFT JOIN csr ON csr.collection_id = cs_staff.collectionsite_id
-  JOIN technicaladminsampleapproval t ON t.cart_id = c.id AND t.technical_admin_status = 'Accepted'
-`;
-
-  const params = [];
-
-  if (staffAction !== "all_order") {
-    sqlQuery += ` WHERE csr.user_account_id = ? `;
-    params.push(csrUserId);
-  }
-  sqlQuery += " ORDER BY c.created_at ASC;";
-
-  mysqlConnection.query(sqlQuery, params, (err, results) => {
-    if (err) {
-      console.error("Error fetching orders:", err);
-      return callback(err, null);
-    }
-    callback(null, results);
-  });
-};
-
-const updateCartStatus = async (cartIds, cartStatus, dispatchSlip, callback) => {
-  try {
-    const placeholders = cartIds.map(() => '?').join(',');
-
-    await queryAsync(
-      `UPDATE cart SET completed_at= NOW(), order_status = ? WHERE id IN (${placeholders})`,
-      [cartStatus, ...cartIds]
-    );
-
-    // If you also want to handle dispatchSlip update, add that logic here.
-    if (cartStatus === 'Rejected') {
-      // Restore sample quantities
-      const cartSamples = await queryAsync(
-        `SELECT sample_id, quantity FROM cart WHERE id IN (${placeholders})`,
-        cartIds
-      );
-
-      for (const cs of cartSamples) {
-        await queryAsync(
-          `UPDATE sample 
-         SET quantity = quantity + ?, quantity_allocated = quantity_allocated - ? 
-         WHERE id = ?`,
-          [cs.quantity, cs.quantity, cs.sample_id]
-        );
-      }
-    }
-    if (typeof callback === "function") {
-      callback(); // Call after successful update
-    }
-  } catch (err) {
-    console.error("Error updating cart status:", err);
-  }
-};
-
-
-// Main bulk update function
-const updateTechnicalAdminStatus = async (cartIds, technical_admin_status, comment) => {
-  if (!cartIds || cartIds.length === 0) throw new Error("No cart IDs provided");
-
-  const placeholders = cartIds.map(() => '?').join(',');
-
-  // 1. Batch update technicaladminsampleapproval
-  await queryAsync(
-    `UPDATE technicaladminsampleapproval 
-     SET technical_admin_status = ?, Comments = ?, Approval_date = NOW() 
-     WHERE cart_id IN (${placeholders})`,
-    [technical_admin_status, comment, ...cartIds]
-  );
-
-  // 2. Determine new cart_status
-  let newCartStatus = null;
-  if (technical_admin_status === 'Rejected') newCartStatus = 'Rejected';
-
-  if (newCartStatus) {
-    await updateCartStatus(cartIds, newCartStatus, null);
-  }
-
-  // 3. Fetch carts info for emails
-  const cartDetails = await queryAsync(
-    `SELECT c.id AS cartId, c.tracking_id, c.created_at, c.order_status, s.Analyte, ua.email
-     FROM cart c
-     JOIN sample s ON s.id = c.sample_id
-     JOIN user_account ua ON ua.id = c.user_id
-     WHERE c.id IN (${placeholders})`,
-    cartIds
-  );
-
-  // 4. Group by tracking_id
-  const trackingMap = {};
-  cartDetails.forEach(row => {
-    if (!trackingMap[row.tracking_id]) {
-      trackingMap[row.tracking_id] = { email: row.email, carts: [] };
-    }
-    trackingMap[row.tracking_id].carts.push(row);
-  });
-
-  // 5. Send emails asynchronously (non-blocking)
-  Object.entries(trackingMap).forEach(([trackingId, data]) => {
-    setImmediate(async () => {
-      try {
-        const baseMessage =
-          technical_admin_status === 'Accepted'
-            ? "Your sample request has been <b>approved</b> by the Technical Admin.<br/>"
-            : technical_admin_status === 'Rejected'
-              ? "Your sample request has been <b>rejected</b> by the Technical Admin.<br/>"
-              : "Your sample request is still <b>pending</b> approval by the Technical Admin.<br/>";
-
-        const fullMessage = comment ? `${baseMessage}<br/><b>Comment:</b> ${comment}` : baseMessage;
-
-        const emailMessage = `
-          <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px; text-align: center;">
-            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: left;">
-              <h2 style="color: #2c3e50; text-align: center;">Dear Researcher,</h2>
-              <p style="font-size: 16px;">${fullMessage}</p>
-              <p><strong>Order Date:</strong> ${data.carts?.[0]?.created_at ? new Date(data.carts[0].created_at).toLocaleString() : "N/A"}</p>
-              <p><strong>Order Status:</strong> ${data.carts?.[0]?.order_status}</p>
-              <p style="font-size: 16px;">Cart details for tracking ID: <strong>${trackingId}</strong></p>
-              <ul style="list-style: none; padding: 0;">
-                ${data.carts.map(detail => `<li style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin-bottom: 10px;">
-                  <p><strong>Analyte:</strong> ${detail.Analyte}</p>
-                </li>`).join('')}
-              </ul>
-              <p style="margin-top: 30px;">Best regards,<br/><strong>Discovery Connect Team</strong></p>
-              <hr style="margin-top: 40px; border: none; border-top: 1px solid #ccc;" />
-              <p style="font-size: 12px; color: #888; text-align: center;">
-                This is an automated message. Please do not reply directly to this email.
-              </p>
-            </div>
-          </div>
-        `;
-
-        await sendEmail(data.email, "Sample Request Status Update", emailMessage);
-        console.log(`Email sent to ${data.email} for tracking ID ${trackingId}`);
-      } catch (err) {
-        console.error("Email send error:", err);
-      }
-    });
-  });
-
-  return cartIds.map(id => ({ id, status: 'updated' }));
-};
-
-
-
-const updateCartStatusbyCSR = async (req, dispatchSlip, callback) => {
-
-  try {
-    // Parse ids properly
-    const ids = JSON.parse(req.body.ids || '[]');
-    const { cartStatus, deliveryDate, deliveryTime, dispatchVia } = req.body;
-
-    if (!Array.isArray(ids) || ids.length === 0) {
-      throw new Error("Invalid or empty IDs");
-    }
-    const message = `
-  <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
-    <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-
-      <p style="font-size: 16px; color: #333;">
-        Dear Researcher,
-      </p>
-
-      <p style="font-size: 15px; color: #555;">
-        ${cartStatus === 'Dispatched'
-        ? "📦 Your sample request has been <b style='color:#007bff;'>Dispatched</b> and is on its way."
-        : "ℹ️ Your sample request status has been updated."
-      }
-      </p>
-
-      <p style="font-size: 15px; color: #555;">
-        Please check your dashboard for more details.
-      </p>
-
-      <p style="font-size: 15px; color: #333; margin-top: 20px;">
-        Regards,<br>
-        <strong>Discovery Connect Team</strong>
-      </p>
-
-    </div>
-  </div>
-`;
-
-
-    const subject = "Sample Request Status Update";
-    const deliveredAt = `${deliveryDate} ${deliveryTime}:00`; // Ensure full DATETIME
-
-    // Step 1: Update all cart statuses
-    await Promise.all(ids.map(id =>
-      queryAsync(
-        `UPDATE cart SET order_status = ?, delivered_at = ?,dispatch_via=? , dispatch_slip=? WHERE id = ?`,
-        [cartStatus, deliveredAt, dispatchVia, dispatchSlip, id]
-      )
-    ));
-
-    // Step 2: Get all carts' researcher emails and details
-    const placeholders = ids.map(() => '?').join(',');
-    const cartDetails = await queryAsync(
-      `
-      SELECT ua.email, c.created_at, c.tracking_id, c.id AS cartId,c.price
-      FROM user_account ua
-      JOIN cart c ON ua.id = c.user_id
-      WHERE c.id IN (${placeholders})
-      `,
-      ids
-    );
-
-    if (!cartDetails.length) {
-      throw new Error(`No researcher found for provided cart IDs`);
-    }
-
-    // Step 3: Group carts by email
-    const emailMap = {};
-    cartDetails.forEach(row => {
-      if (!emailMap[row.email]) {
-        emailMap[row.email] = [];
-      }
-      emailMap[row.email].push(row);
-    });
-
-    // Step 4: Send one email only (no for loop)
-    if (Object.keys(emailMap).length > 0) {
-      const firstEmail = Object.keys(emailMap)[0];
-      const carts = emailMap[firstEmail];
-
-      // Get unique tracking IDs
-      const uniqueTrackingIds = [...new Set(carts.map(c => c.tracking_id))];
-
-      const cartList = uniqueTrackingIds
-        .map(trackingId => `
-      <li>
-        <strong>Tracking ID:</strong> ${trackingId}
-      </li>`)
-        .join('');
-
-      const emailMessage = `
-    <div style="font-family: Arial, sans-serif;">
-      ${message}
-      <br/>
-      
-      <br/><br/>
-    </div>
-  `;
-
-      await sendEmail(firstEmail, subject, emailMessage);
-      console.log(`Email sent to ${firstEmail} (single email only)`);
-    }
-
-
-    // Callback or return success
-    if (typeof callback === 'function') {
-      callback(null, "Order status updated");
-    } else {
-      return "Order status updated";
-    }
-  } catch (err) {
-    console.error("Error in update and notify:", err);
-    if (typeof callback === 'function') {
-      callback(err, null);
-    } else {
-      throw err;
-    }
-  }
-};
-
-
-const queryAsync = (sql, params) => {
-  return new Promise((resolve, reject) => {
-    mysqlConnection.query(sql, params, (err, results) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(results);
-      }
-    });
-  });
-};
-
-
 
 module.exports = {
   createCartTable,
   getAllCart,
-  createCart,
   getCartCount,
   deleteCart,
   deleteSingleCartItem,
-  updateCart,
-  getAllOrder,
-  getAllOrderByCommittee,
-  getAllDocuments,
-  getAllOrderByCSR,
-  updateTechnicalAdminStatus,
-  updateCartStatus,
-  updateCartStatusbyCSR,
   updateDocument,
-  getSampleDocument
 };

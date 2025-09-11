@@ -17,22 +17,6 @@ const getAllCart = (req, res) => {
   });
 };
 
-const getSampleDocument = (req, res) => {
-  const { id } = req.params;
-  cartModel.getSampleDocument(id, (err, results) => {
-    if (err) {
-      return res.status(500).json({
-        success: false,
-        message: "Error fetching sample document",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      documents: results, // Send in the expected key
-    });
-  });
-};
 
 const getCartCount = (req, res) => {
   const { id } = req.params;
@@ -43,72 +27,7 @@ const getCartCount = (req, res) => {
     res.status(200).json(results);
   });
 };
-const createCart = (req, res) => {
-  const {
-    researcher_id,
-    payment_id,
-    cart_items,
-    reporting_mechanism,
-    sample_id
-  } = req.body;
 
-  // Read files from `req.files`
-  const study_copy = req.files?.["study_copy"] ? req.files["study_copy"][0].buffer : null;
-  const irb_file = req.files?.["irb_file"] ? req.files["irb_file"][0].buffer : null;
-  const nbc_file = req.files?.["nbc_file"] ? req.files["nbc_file"][0].buffer : null;
-
-  // Parse cart_items
-  let cartItems;
-  try {
-    cartItems = typeof cart_items === "string" ? JSON.parse(cart_items) : cart_items;
-    if (!Array.isArray(cartItems) || cartItems.length === 0) {
-      return res.status(400).json({ error: "cart_items must be a non-empty array" });
-    }
-  } catch (error) {
-    return res.status(400).json({ error: "Invalid cart_items format" });
-  }
-
-  // Parse sample_id (optional, only if needed)
-  let sampleIds = [];
-  try {
-    sampleIds = typeof sample_id === "string" ? JSON.parse(sample_id) : sample_id;
-  } catch (error) {
-    return res.status(400).json({ error: "Invalid sample_id format" });
-  }
-
-  // Check required fields
-  if (!researcher_id || !payment_id || !reporting_mechanism) {
-    return res.status(400).json({
-      error: "Missing required fields (Researcher ID, Payment ID, and Reporting Mechanism are required)"
-    });
-  }
-
-  // Construct data object
-  const newCartData = {
-    researcher_id,
-    payment_id,
-    sample_ids: sampleIds, // use parsed sampleIds
-    cart_items: cartItems,
-    reporting_mechanism,
-    study_copy,
-    irb_file,
-    nbc_file,
-  };
-
-  cartModel.createCart(newCartData, (err, result) => {
-    if (err) {
-      console.error("Error creating cart:", err);
-      return res.status(400).json({ error: err.message || "Error creating Cart" });
-    }
-
-    return res.status(201).json({
-      message: "Cart created successfully",
-      tracking_id: result.tracking_id,
-      created_at: result.created_at
-    });
-
-  });
-};
 
 const updateDocument = (req, res) => {
   const { id } = req.params; // tracking_id from URL
@@ -136,18 +55,6 @@ const updateDocument = (req, res) => {
       tracking_id: result.tracking_id,
       updatedRows: result.affectedRows,
     });
-  });
-};
-
-
-const updateCard = (req, res) => {
-  const { id } = req.params;
-  const updatedData = req.body;
-  cartModel.updateCart(id, updatedData, (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: "Error in updating cart" });
-    }
-    res.status(200).json({ message: "Cart updated successfully" });
   });
 };
 
@@ -357,17 +264,7 @@ module.exports = {
   createCartTable,
   getAllCart,
   getCartCount,
-  createCart,
-  updateCard,
   deleteCart,
   deleteSingleCartItem,
-  getAllOrder,
-  getAllOrderByCommittee,
-  getAllDocuments,
-  getAllOrderByCSR,
-  updateTechnicalAdminStatus,
-  updateCartStatus,
-  updateCartStatusbyCSR,
   updateDocument,
-  getSampleDocument
 };

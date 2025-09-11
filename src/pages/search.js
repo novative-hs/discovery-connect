@@ -11,7 +11,7 @@ import SingleProduct from "@components/products/single-product";
 import ProductLoader from "@components/loader/product-loader";
 import EmptyCart from "@components/common/sidebar/cart-sidebar/empty-cart";
 import { useGetShowingProductsQuery } from "src/redux/features/productApi";
-import LoadMoreBtn from "@components/load-more-btn";
+import LoadMoreBtn from "@ui/load-more-btn";
 
 
 export default function Search({ query }) {

@@ -25,7 +25,7 @@ import Truck from "./truck";
 import Delivery from "./delivery";
 import Processing from "./processing";
 import LoadMore from "./load-more";
-
+import CollectionSite from "./collectionsite";
 export {
   Delivery,
   Processing,
@@ -54,4 +54,5 @@ export {
   Email,
   ErrorSvg,
   RightArrowThree,
+  CollectionSite,
 }

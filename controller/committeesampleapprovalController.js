@@ -2,11 +2,6 @@ const committeesampleapproval = require("../models/committeesampleapproval");
 
 const createCommitteeSample = async (req, res) => {
   const { cartId, senderId, committeeType } = req.body;
-
-  if (!Array.isArray(cartId)) {
-    return res.status(400).json({ error: "cartId must be an array" });
-  }
-
   try {
     committeesampleapproval.insertCommitteeApproval(cartId, senderId, committeeType, (err, result) => {
       if (err) {
@@ -24,18 +19,17 @@ const createCommitteeSample = async (req, res) => {
 
 
 const updateCommitteeStatus = (req, res) => {
-  const { committee_status, comments, committee_member_id, cart_ids } = req.body;
+  const { committee_status, comments, committee_member_id, order_id} = req.body;
 
   if (
-    !cart_ids || !Array.isArray(cart_ids) || cart_ids.length === 0 ||
-    !committee_status || !comments || !committee_member_id
+    !order_id || !committee_status || !comments || !committee_member_id
   ) {
     return res.status(400).json({ success: false, error: "Missing or invalid required fields" });
   }
 
   // Call once, no loop
   committeesampleapproval.updateCommitteeStatus(
-    cart_ids,
+    order_id,
     committee_member_id,
     committee_status,
     comments,
@@ -46,32 +40,55 @@ const updateCommitteeStatus = (req, res) => {
       }
 
       // ✅ Respond properly on success
-      return res.status(200).json({ success: true, message: "All updates successful", result });
+      return res.status(200).json({ success: true, message: "Comments updates successful", result });
     }
   );
 };
 
-const getHistory = (req, res) => {
-  const { trackingIds, status } = req.query;
 
-  const idsArray = trackingIds ? trackingIds.split(',') : [];
+const getAllOrderByCommittee = (req, res) => {
+  const { id } = req.params; // committee_member_id
+  const { page = 1, pageSize = 10, searchField, searchValue } = req.query;
 
-  committeesampleapproval.getHistory(idsArray, status, (err, data) => {
-    if (err) {
-      return res.status(500).json({
-        success: false,
-        message: "Error getting committee approval history",
-        error: err.message
+  committeesampleapproval.getAllOrderByCommittee(
+    id,
+    parseInt(page),
+    parseInt(pageSize),
+    searchField,
+    searchValue,
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: "Error fetching cart list" });
+      }
+      // Return paginated data and total count
+      res.status(200).json({
+        results: result.results,
+        totalCount: result.totalCount,
+        currentPage: parseInt(page),
+        pageSize: parseInt(pageSize),
       });
     }
-    return res.status(200).json({ results:data });
-  });
+  );
 };
 
+const getAllDocuments = (req, res) => {
+  const { id } = req.params; // committee_member_id
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
+  const { searchField, searchValue } = req.query;
 
+  committeesampleapproval.getAllDocuments(page, pageSize, searchField, searchValue, id, (err, data) => {
+    if (err) {
+      console.error('Controller Error:', err);
+      return res.status(500).json({ error: 'Internal Server Error' });
+    }
+    res.status(200).json(data);
+  });
+};
 
 module.exports = {
   createCommitteeSample,
   updateCommitteeStatus,
-  getHistory
+  getAllOrderByCommittee,
+  getAllDocuments
 }

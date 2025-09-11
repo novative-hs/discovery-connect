@@ -8,8 +8,9 @@ import OrderInfo from "./order-info";
 import PendingSampleArea from "./pendingorder";
 import DispatchSampleArea from "./dispatchedorder";
 import CompletedSampleArea from "./completedorder";
+import CollectionsiteList from "./collectionsitelist";
 const DashboardArea = () => {
-   const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
+  const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
   const router = useRouter();
   const [id, setUserID] = useState(null);
 
@@ -28,7 +29,7 @@ const DashboardArea = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-    
+
     } else {
       console.error("No userID found in sessionStorage");
       router.push("/login");
@@ -44,38 +45,40 @@ const DashboardArea = () => {
         return <OrderInfo setActiveTab={setActiveTab} />;
       case "pendingorder":
         return <PendingSampleArea />;
-        case "dispatchedorder":
-          return <DispatchSampleArea />;
-          case "completedorder":
-            return <CompletedSampleArea />;
+      case "dispatchedorder":
+        return <DispatchSampleArea />;
+      case "completedorder":
+        return <CompletedSampleArea />;
       case "change-password":
         return <ChangePassword />;
+      case "collectionsitelist":
+        return <CollectionsiteList />;
       default:
-          return <OrderInfo setActiveTab={setActiveTab} />;
+        return <OrderInfo setActiveTab={setActiveTab} />;
     }
   };
 
   return (
     <>
       <Header setActiveTab={setActiveTab} activeTab={activeTab} />
-               <section className="profile__area py-2 h-auto d-flex align-items-center my-4 overflow-hidden">
+      <section className="profile__area py-2 h-auto d-flex align-items-center my-4 overflow-hidden">
         <div className="container-fluid profile__inner position-relative">
           <div className="row justify-content-center">
             <div className="col-xl-12 col-lg-10 col-md-9 col-sm-10 col-12">
-             <div
-  className="profile__tab-content mx-auto p-3 my-1 h-auto"
-  style={{ maxWidth: "95%", width: "100%" }}
->
+              <div
+                className="profile__tab-content mx-auto p-3 my-1 h-auto"
+                style={{ maxWidth: "95%", width: "100%" }}
+              >
                 {renderContent()}
               </div>
             </div>
           </div>
         </div>
-      </section> 
+      </section>
     </>
   );
-  
-  
+
+
 };
 
 export default DashboardArea;

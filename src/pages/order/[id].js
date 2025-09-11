@@ -9,7 +9,7 @@ import Wrapper from "@layout/wrapper";
 import Header from "@layout/header";
 import Footer from "@layout/footer";
 import { useGetUserOrderByIdQuery } from "src/redux/features/orderApi";
-import logo from "@assets/img/logo/logo-black.svg";
+import logo from "@assets/img/logo/discoveryconnectlogo.png";
 import ErrorMessage from "@components/error-message/error";
 
 
