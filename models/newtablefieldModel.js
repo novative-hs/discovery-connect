@@ -167,8 +167,44 @@ const tablesAndColumns = [
       }
 
     ]
+  },
+  {
+    table: "orders",
+    columnsToAdd: [
+      {
+        column: "subtotal",
+        type: "DECIMAL(10, 2)",
+        nullable: false,
+      },
+      {
+        column: "tax_value",
+        type: "DECIMAL(10,2)",
+        default: 0,
+      },
+      {
+        column: "tax_type",
+        type:"VARCHAR(50)",
+      },
+      {
+        column: "platform_value",
+        type: "DECIMAL(10,2)",
+        default: 0,
+      },
+      {
+        column: "platform_type",
+        type:"VARCHAR(50)",
+      },
+      {
+        column: "freight_value",
+        type: "DECIMAL(10,2)",
+        default: 0,
+      },
+      {
+        column: "freight_type",
+        type:"VARCHAR(50)",
+      }
+    ]
   }
-
 
   // {
   //   table: "csr",

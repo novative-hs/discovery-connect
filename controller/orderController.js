@@ -5,7 +5,20 @@ const createOrder = (req, res) => {
     payment_id,
     cart_items,
     reporting_mechanism,
-    sample_id
+    sample_id,
+    subtotal,
+    totalpayment,
+     // ✅ Tax
+      tax_value,
+      tax_type,
+
+      // ✅ Platform
+      platform_value,
+      platform_type,
+
+      // ✅ Freight
+      freight_value,
+      freight_type
   } = req.body;
 
   // Read files from req.files
@@ -49,8 +62,20 @@ const createOrder = (req, res) => {
     study_copy,
     irb_file,
     nbc_file,
-  };
+    subtotal,
+    totalpayment,
+     // ✅ Tax
+      tax_value,
+      tax_type,
 
+      // ✅ Platform
+      platform_value,
+      platform_type,
+
+      // ✅ Freight
+      freight_value,
+      freight_type
+  };
   // ✅ Call the model using callback
   orderModel.createOrder(newCartData, (err, result) => {
     if (err) {

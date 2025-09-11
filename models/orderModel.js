@@ -8,6 +8,13 @@ const createOrderTable = () => {
     id INT AUTO_INCREMENT PRIMARY KEY,      
     tracking_id VARCHAR(20) UNIQUE NOT NULL, 
     user_id INT NOT NULL,
+    subtotal DECIMAL(10, 2) NOT NULL,
+    tax_value DECIMAL(10,2) DEFAULT 0,
+    tax_type VARCHER(50),
+    platform_value DECIMAL(10,2) DEFAULT 0,
+    platform_type VARCHER(50),
+    freight_value DECIMAL(10,2) DEFAULT 0,
+    freight_type VARCHER(50),
     totalpayment DECIMAL(10, 2) NOT NULL,
     order_status ENUM('Pending', 'Accepted', 'Rejected', 'Shipped', 'Dispatched', 'Completed') DEFAULT 'Pending',
     payment_id INT DEFAULT NULL,
@@ -62,6 +69,19 @@ const createOrder = (data, callback) => {
     reporting_mechanism,
     irb_file,
     nbc_file,
+    totalpayment,
+    subtotal,
+      // ✅ Tax
+      tax_value,
+      tax_type,
+
+      // ✅ Platform
+      platform_value,
+      platform_type,
+
+      // ✅ Freight
+      freight_value,
+      freight_type
   } = data;
 
   if (!researcher_id || !cart_items || !payment_id || !study_copy || !reporting_mechanism || !irb_file) {
@@ -69,12 +89,10 @@ const createOrder = (data, callback) => {
   }
 
   const tracking_id = generateTrackingId();
-  const totalpayment = cart_items.reduce((sum, item) => sum + item.total, 0);
-
   // 1️⃣ Insert order
   mysqlConnection.query(
-    `INSERT INTO orders (tracking_id, user_id, totalpayment, payment_id) VALUES (?, ?, ?, ?)`,
-    [tracking_id, researcher_id, totalpayment, payment_id],
+    `INSERT INTO orders (tracking_id, user_id, subtotal,tax_value,tax_type,platform_value,platform_type,freight_value,freight_type,totalpayment, payment_id) VALUES (?, ?, ?, ?,?,?,?,?,?,?,?)`,
+    [tracking_id, researcher_id, subtotal,tax_value,tax_type,platform_value,platform_type,freight_value,freight_type,totalpayment, payment_id],
     (err, orderResult) => {
       if (err) return callback(err);
 
@@ -275,6 +293,14 @@ const getOrderByResearcher = (userId, callback) => {
       o.tracking_id,
       o.order_status,
       o.totalpayment,
+      o.subtotal,
+      o.tax_type,
+      o.tax_value,
+      o.platform_type,
+      o.platform_value,
+      o.freight_type,
+      o.freight_value,
+
       sm.Analyte,
       sm.age,
       sm.gender,
@@ -352,7 +378,6 @@ const getOrderByResearcher = (userId, callback) => {
     if (results.length === 0) {
       return callback(null, { error: "No samples found" });
     }
-
     const decryptedResults = results.map(sample => ({
       ...sample,
       masterID: sample.masterID ? decryptAndShort(sample.masterID) : null

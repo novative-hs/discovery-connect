@@ -10,7 +10,6 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
 
 
   const { cart_products } = useSelector((state) => state.cart);
-console.log(cart_products)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [showOrderDetails, setShowOrderDetails] = useState(false);
 
@@ -25,11 +24,32 @@ console.log(cart_products)
   // const subtotal = calculateSubtotal();
 
   // Calculate subtotal and total
+// 🔹 Step 1: Calculate subtotal
+const subtotal = cart_products.reduce((acc, item) => {
+  const price = Number(item.price) || 0;
+  const quantity = Number(item.orderQuantity) || 1;
+  return acc + price * quantity;
+}, 0);
 
-  const subtotal = cart_products.reduce(
-    (acc, item) => acc + item.price * item.orderQuantity,
-    0
-  );
+// 🔹 Step 2: Extract overall charges (percent or amount)
+const taxPercent = Number(cart_products[0]?.tax_percent || 0);
+const taxAmount = Number(cart_products[0]?.tax_amount || 0);
+
+const platformPercent = Number(cart_products[0]?.platform_percent || 0);
+const platformAmount = Number(cart_products[0]?.platform_amount || 0);
+
+const freightPercent = Number(cart_products[0]?.freight_percent || 0);
+const freightAmount = Number(cart_products[0]?.freight_amount || 0);
+
+// 🔹 Step 3: Calculate each charge (based on percent OR fixed amount)
+const tax = taxPercent > 0 ? (subtotal * taxPercent) / 100 : taxAmount;
+const platform =
+  platformPercent > 0 ? (subtotal * platformPercent) / 100 : platformAmount;
+const freight =
+  freightPercent > 0 ? (subtotal * freightPercent) / 100 : freightAmount;
+
+// 🔹 Step 4: Calculate grand total
+const grandTotal = subtotal + tax + platform + freight;
 
   const validateDocuments = () => {
     let missingFields = [];
@@ -45,63 +65,75 @@ console.log(cart_products)
     return true;
   };
 
-  const handleSubmit = async (paymentId) => {
-    if (!validateDocuments()) return false;
+const handleSubmit = async (paymentId) => {
+  if (!validateDocuments()) return false;
+  const userID = sessionStorage.getItem("userID");
+  const formData = new FormData();
+  formData.append("researcher_id", userID);
+  formData.append("payment_id", paymentId);
+  formData.append("subtotal", subtotal);
+  formData.append("totalpayment", grandTotal);
 
-    const userID = sessionStorage.getItem("userID");
-    const formData = new FormData();
+  // 🔹 Tax
+  formData.append("tax_value", taxAmount > 0 ? taxAmount : taxPercent);
+  formData.append("tax_type", taxAmount > 0 ? "amount" : "percent");
 
-    formData.append("researcher_id", userID);
-    formData.append("payment_id", paymentId);
+  // 🔹 Platform
+  formData.append("platform_value", platformAmount > 0 ? platformAmount : platformPercent);
+  formData.append("platform_type", platformAmount > 0 ? "amount" : "percent");
 
-    formData.append(
-      "cart_items",
-      JSON.stringify(
-        cart_products.map((item) => ({
-          sample_id: item.id,
-          price: Number(item.price),
-          samplequantity: Number(item.orderQuantity),
-          volume: item.Volume,
-          VolumeUnit: item.VolumeUnit,
-          total: Number(item.orderQuantity) * Number(item.price),
-        }))
-      )
+  // 🔹 Freight
+  formData.append("freight_value", freightAmount > 0 ? freightAmount : freightPercent);
+  formData.append("freight_type", freightAmount > 0 ? "amount" : "percent");
+
+  // 🔹 Cart Items
+  formData.append(
+    "cart_items",
+    JSON.stringify(
+      cart_products.map((item) => ({
+        sample_id: item.id,
+        price: Number(item.price),
+        samplequantity: Number(item.orderQuantity),
+        volume: item.Volume,
+        VolumeUnit: item.VolumeUnit,
+      }))
+    )
+  );
+
+  // 🔹 Documents
+  formData.append("study_copy", sampleCopyData.studyCopy);
+  formData.append("reporting_mechanism", sampleCopyData.reportingMechanism);
+  formData.append("irb_file", sampleCopyData.irbFile);
+  if (sampleCopyData.nbcFile) {
+    formData.append("nbc_file", sampleCopyData.nbcFile);
+  }
+
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/place-order`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
     );
 
-    formData.append("study_copy", sampleCopyData.studyCopy);
-    formData.append("reporting_mechanism", sampleCopyData.reportingMechanism);
-    formData.append("irb_file", sampleCopyData.irbFile);
-    if (sampleCopyData.nbcFile) {
-      formData.append("nbc_file", sampleCopyData.nbcFile);
-    }
+    const { tracking_id, created_at } = response.data;
+    sessionStorage.setItem("tracking_id", tracking_id);
+    sessionStorage.setItem("created_at", created_at);
+    router.push("/order-confirmation");
+    dispatch(clear_cart());
+    notifySuccess("Order placed successfully!");
 
-    // Then process API request in background
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/place-order`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+    setTimeout(() => {
+      router.push({
+        pathname: "/order-confirmation",
+        query: { id: tracking_id, created_at },
+      });
+    }, 500);
+  } catch (error) {
+    console.error("Error placing order:", error);
+    notifyError(error.response?.data?.error || "Failed to place order.");
+  }
+};
 
-      const { tracking_id, created_at } = response.data;
-      sessionStorage.setItem("tracking_id", tracking_id);
-      sessionStorage.setItem("created_at", created_at);
-      router.push("/order-confirmation");
-      dispatch(clear_cart());
-      notifySuccess("Order placed successfully!");
-
-      // Redirect to confirmation page
-      setTimeout(() => {
-        router.push({
-          pathname: "/order-confirmation",
-          query: { id: tracking_id, created_at },
-        });
-      }, 500);
-    } catch (error) {
-      console.error("Error placing order:", error);
-      notifyError(error.response?.data?.error || "Failed to place order.");
-    }
-  };
 
 
 
