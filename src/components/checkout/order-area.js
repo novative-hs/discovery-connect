@@ -10,7 +10,7 @@ const OrderArea = ({ sampleCopyData, stripe, isCheckoutSubmit, error }) => {
 
 
   const { cart_products } = useSelector((state) => state.cart);
-
+console.log(cart_products)
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [showOrderDetails, setShowOrderDetails] = useState(false);
 

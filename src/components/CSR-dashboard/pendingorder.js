@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
 import Pagination from "@ui/Pagination";
@@ -38,9 +38,11 @@ const PendingSampleArea = () => {
   const tableHeaders = [
     { label: "Order ID", key: "tracking_id" },
     { label: "Order Date", key: "created_at" },
-    { label: "Researcher Name", key: "researcher_name" },
-    { label: "Organization Name", key: "organization_name" },
-    // { label: "Source Name", key: "source_name" },
+    { label: "Product Location", key: "source_name" },
+    { label: "Customer Name", key: "researcher_name" },
+    { label: "Customer Contact", key: "user_email" },
+    { label: "Customer City", key: "city_name" },
+    { label: "Customer Adress", key: "fullAddress" },
     { label: "Order Status", key: "order_status" },
   ];
 
@@ -83,6 +85,7 @@ const PendingSampleArea = () => {
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
+  console.log(groupedSamples)
 
   useEffect(() => {
     if (id) {
@@ -160,23 +163,26 @@ const PendingSampleArea = () => {
       }
     }
   };
-const handleCancelModal = () => {
-  setShowOrderStatusModal(false);
-  setOrderStatus("Dispatched");
-  setDispatchSlip(null);
-  setDispatchVia("");
-  setDeliveryDate("");
-  setDeliveryTime("");
+  const handleCancelModal = () => {
+    setShowOrderStatusModal(false);
+    setOrderStatus("Dispatched");
+    setDispatchSlip(null);
+    setDispatchVia("");
+    setDeliveryDate("");
+    setDeliveryTime("");
 
-  // clear actual file input field
-  if (fileInputRef.current) {
-    fileInputRef.current.value = "";
-  }
-};
+    // clear actual file input field
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
+        <h6 className="text-start text-danger fw-bold mb-4">
+          Note: Only orders that have been approved by the Scientific/Ethical Committee Member and the Technical Admin are shown here.
+        </h6>
         <h4 className="text-center text-dark fw-bold mb-4">
           📦 Pending Orders
         </h4>
@@ -222,12 +228,19 @@ const handleCancelModal = () => {
                       month: 'short',
                       year: '2-digit'
                     }).replace(/ /g, '-')}</td>
-                    <td>{records[0].researcher_name}</td>
-                    <td>{records[0].organization_name}</td>
-                    {/* <td>
-                      {records[0].BiobankName || records[0].CollectionSiteName || "---"}
-                    </td> */}
+                    <td>
+                      {records && records.length > 0
+                        ? records
+                          .map((rec) => rec.BiobankName || rec.CollectionSiteName || "---")
+                          .join(", ")
+                        : "---"}
+                    </td>
 
+
+                    <td>{records[0].researcher_name}</td>
+                    <td>{records[0].user_email} | {records[0].phoneNumber}</td>
+                    <td>{records[0].city_name}</td>
+                    <td>{records[0].fullAddress} ,{records[0].district_name} District,{records[0].city_name},{records[0].country_name}</td>
                     <td>{records[0].order_status}</td>
                     <td>
                       <button
@@ -269,49 +282,17 @@ const handleCancelModal = () => {
               className="p-4 bg-light rounded-3 shadow-sm"
               style={{ maxHeight: "80vh", overflowY: "auto" }} // max height & scroll
             >
-              <div className="d-flex justify-content-between align-items-start mb-3">
-                <div>
-                  <h5 className="fw-bold text-dark mb-2">
-                    <div>
-                      <span className="text-primary"> Name:</span>{" "}
-                      {selectedUserSamples[0]?.researcher_name}
-                    </div>
-                    <span className="text-primary"> Email:</span>{" "}
-                    {selectedUserSamples[0]?.user_email}
-                  </h5>
-                </div>
-                <div className="text-end small text-secondary">
-                  <div>
-                    <span className="fw-bold text-primary">📍 Address:</span>
-                    <br />
-                    {selectedUserSamples[0]?.fullAddress},<br />
-                    {selectedUserSamples[0]?.district_name},{" "}
-                    {selectedUserSamples[0]?.city_name},{" "}
-                    {selectedUserSamples[0]?.country_name}
-                  </div>
-                  <div className="mt-2">
-                    <span className="fw-bold">🗓️ Order Date:</span>{" "}
-                    {new Date(selectedUserSamples[0]?.created_at).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-
-              <hr className="mb-4" />
-
               <div className="table-responsive">
                 <table className="table table-bordered table-hover text-center table-sm align-middle bg-white rounded shadow-sm">
                   <thead className="table-success text-dark">
                     <tr>
                       <th>Item</th>
                       <th>Qty X Volume</th>
-
-                      <th>Collection Site Name</th>
+                    
                       <th>
                         Unit Price ({selectedUserSamples[0]?.SamplePriceCurrency || '$'})
                       </th>
-                      {/* <th>
-                        Total ({selectedUserSamples[0]?.SamplePriceCurrency || '$'})
-                      </th> */}
+
                     </tr>
                   </thead>
                   <tbody>
@@ -343,7 +324,8 @@ const handleCancelModal = () => {
                         <td>
                           {sample.quantity || 0} × {sample.volume || 0}{sample.volumeUnit || ''}
                         </td>
-                        <td>{sample.BiobankName || sample.CollectionSiteName || "---"}</td>
+                        
+                        
                         <td style={{ textAlign: "right" }}>
                           {sample.price
                             ? `${Number(sample.price).toLocaleString("en-US", {
@@ -369,7 +351,7 @@ const handleCancelModal = () => {
                   </tbody>
                   <tfoot className="bg-light">
                     <tr>
-                      <td colSpan="3" className="text-end fw-bold">
+                      <td colSpan="2" className="text-end fw-bold">
                         Total ({selectedUserSamples[0]?.SamplePriceCurrency || ""})
                       </td>
                       <td
@@ -385,18 +367,6 @@ const handleCancelModal = () => {
 
                 </table>
               </div>
-
-              <Form.Group className="mt-4">
-                <Form.Label>Upload Dispatch Slip</Form.Label>
-                <Form.Control
-                  type="file"
-                  ref={fileInputRef}
-                  name="dispatchSlip"
-                  onChange={(e) => setDispatchSlip(e.target.files[0])}
-                  accept=".jpg,.jpeg,.png,.pdf"
-                />
-                <small className="text-muted">Allowed formats: JPG, PNG, PDF</small>
-              </Form.Group>
               <Form.Group className="mt-3">
                 <Form.Label>Dispatch Via</Form.Label>
                 <Form.Select
@@ -414,7 +384,20 @@ const handleCancelModal = () => {
               </Form.Group>
 
               <Form.Group className="mt-4">
-                <Form.Label>Estimate Dispatch Date</Form.Label>
+                <Form.Label>Upload Dispatch Slip</Form.Label>
+                <Form.Control
+                  type="file"
+                  ref={fileInputRef}
+                  name="dispatchSlip"
+                  onChange={(e) => setDispatchSlip(e.target.files[0])}
+                  accept=".jpg,.jpeg,.png,.pdf"
+                />
+                <small className="text-muted">Allowed formats: JPG, PNG, PDF</small>
+              </Form.Group>
+
+
+              <Form.Group className="mt-4">
+                <Form.Label>Dispatch Date</Form.Label>
                 <Form.Control
                   type="date"
                   name="DeliveryDate"
@@ -424,7 +407,7 @@ const handleCancelModal = () => {
               </Form.Group>
 
               <Form.Group className="mt-2">
-                <Form.Label>Estimate Dispatch Time</Form.Label>
+                <Form.Label>Dispatch Time</Form.Label>
                 <Form.Control
                   type="time"
                   name="DeliveryTime"

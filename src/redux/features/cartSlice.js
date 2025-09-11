@@ -47,6 +47,7 @@ export const cartSlice = createSlice({
           ...payload,
           isLocked: true,
           orderQuantity: 1,
+          tax_amount: payload.tax_amount,
           volumes: payload.volumes || 1,
           addedAt: now.toISOString(),
           imageUrl: payload.imageUrl,
@@ -168,6 +169,29 @@ export const cartSlice = createSlice({
       setsessionStorage(CART_STORAGE_KEY, state.cart_products);
       setLocalStorage(CART_STORAGE_KEY, state.cart_products);
     },
+    update_cart_product: (state, { payload }) => {
+      const { sampleId, price, SamplePriceCurrency, ...charges } = payload;
+      console.log("Looking for sampleId:", sampleId);
+      console.log("Cart items:", state.cart_products.map(i => i.id));
+
+      const product = state.cart_products.find((item) => item.id === sampleId);
+
+      if (product) {
+        // Update existing product with new values
+        product.price = price;
+        product.SamplePriceCurrency = SamplePriceCurrency;
+        Object.assign(product, charges); // merge tax, platform, freight
+
+        notifySuccess("Cart updated with latest charges");
+      } else {
+        notifyError("Sample not found in cart to update");
+      }
+
+      // Persist to storage
+      setsessionStorage(CART_STORAGE_KEY, state.cart_products);
+      setLocalStorage(CART_STORAGE_KEY, state.cart_products);
+    },
+
   },
 
 
@@ -184,6 +208,7 @@ export const {
   initialOrderQuantity,
   updateQuantity,
   set_cart_products,
+  update_cart_product
 } = cartSlice.actions;
 
 export default cartSlice.reducer;

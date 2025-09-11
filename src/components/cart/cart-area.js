@@ -18,11 +18,82 @@ const CartArea = () => {
   const unpricedItems = cart_products.filter((item) => !item.price || item.price === 0);
   const validItems = cart_products.filter((item) => item.price && item.price > 0);
   const displayCurrency = validItems.length > 0 ? currencySymbols[validItems[0].SamplePriceCurrency] || validItems[0].SamplePriceCurrency : "Rs"; const allItemsHavePrice = unpricedItems.length === 0;
-  const subtotal = validItems.reduce((acc, item) => acc + item.price, 0);
+
   const getCartHash = (items) => { return items.map((item) => item.id).sort().join("-"); };
   const cartHash = getCartHash(unpricedItems);
   const quoteSentKey = `quoteSent_${userID}_${cartHash}`;
   const [quoteAlreadySent, setQuoteAlreadySent] = useState(false);
+
+  const totalprice = cart_products.reduce((acc, item) => {
+    const price = Number(item.price) || 0;
+    return acc + price;
+  }, 0);
+
+  const calculateCartBreakdown = (cart_products) => {
+    // Step 1: Subtotal
+    const subtotal = cart_products.reduce(
+      (acc, item) => acc + (Number(item.price) || 0),
+      0
+    );
+
+    // Step 2: Collect overall percentages/amounts (assuming same for all items or take first item)
+    const taxPercent = Number(cart_products[0]?.tax_percent ?? 0);
+    const taxAmount = Number(cart_products[0]?.tax_amount ?? 0);
+    const platformPercent = Number(cart_products[0]?.platform_percent ?? 0);
+    const platformAmount = Number(cart_products[0]?.platform_amount ?? 0);
+    const freightPercent = Number(cart_products[0]?.freight_percent ?? 0);
+    const freightAmount = Number(cart_products[0]?.freight_amount ?? 0);
+
+    // Step 3: Calculate charges on subtotal
+    const tax =
+      taxPercent > 0 ? (subtotal * taxPercent) / 100 : taxAmount > 0 ? taxAmount : 0;
+
+    const platform =
+      platformPercent > 0
+        ? (subtotal * platformPercent) / 100
+        : platformAmount > 0
+          ? platformAmount
+          : 0;
+
+    const freight =
+      freightPercent > 0
+        ? (subtotal * freightPercent) / 100
+        : freightAmount > 0
+          ? freightAmount
+          : 0;
+
+    // Step 4: Grand Total
+    const grandTotal = subtotal + tax + platform + freight;
+
+    return {
+      subtotal,
+      tax,
+      taxPercent,
+      taxAmount,
+      platform,
+      platformPercent,
+      platformAmount,
+      freight,
+      freightPercent,
+      freightAmount,
+      grandTotal,
+    };
+  };
+
+
+  const {
+    subtotal,
+    tax,
+    taxPercent,
+    taxAmount,
+    platform,
+    platformPercent,
+    platformAmount,
+    freight,
+    freightPercent,
+    freightAmount,
+    grandTotal,
+  } = calculateCartBreakdown(cart_products);
   useEffect(() => {
     // Recalculate cart hash on every cart change 
     const newCartHash = getCartHash(unpricedItems);
@@ -41,17 +112,40 @@ const CartArea = () => {
         clearInterval(priceIntervalRef.current);
     };
   }, [cart_products]);
+
   const refreshCartPrices = async (cartItems) => {
     try {
-      const requests = cartItems.map((item) => axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getSingleSample/${item.id}`));
+      const requests = cartItems.map((item) =>
+        axios.get(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getSingleSample/${item.id}`
+        )
+      );
+
       const responses = await Promise.all(requests);
+
       const updatedItems = cartItems.map((item, idx) => {
-        const updated = responses[idx]?.data; if (!updated || typeof updated.price === "undefined")
-          return item; return { ...item, price: updated.price, SamplePriceCurrency: updated.SamplePriceCurrency, };
+        const updated = responses[idx]?.data;
+
+        if (!updated || typeof updated.price === "undefined") return item;
+
+        return {
+          ...item,
+          price: updated.price,
+          SamplePriceCurrency: updated.SamplePriceCurrency,
+          tax_amount: updated.tax_amount,
+          tax_percent: updated.tax_percent,
+          platform_amount: updated.platform_amount,
+          platform_percent: updated.platform_percent,
+          freight_amount: updated.freight_amount,
+          freight_percent: updated.freight_percent,
+        };
       });
       dispatch(set_cart_products(updatedItems));
-    } catch (err) { console.error("Error updating prices", err); }
-  }; // 🔁 Auto-trigger after login
+    } catch (err) {
+      console.error("Error updating prices", err);
+    }
+  };
+
   useEffect(() => {
     const triggerFromQuery = router.query.triggerCheckout === "true";
     const triggerFromStorage = sessionStorage.getItem("triggerCheckoutAfterLogin") === "true";
@@ -205,6 +299,8 @@ const CartArea = () => {
                           </tr>
                         ))}
                       </tbody>
+
+
                     </table>
                   </div>
                 </div>
@@ -239,13 +335,53 @@ const CartArea = () => {
                           : "---"}
                       </span>
                     </li>
+
+                    {/* Tax */}
+                    {(taxPercent > 0 || taxAmount > 0) && (
+                      <li className="list-group-item d-flex justify-content-between fw-semibold">
+                        <span>
+                          <i className="fas fa-receipt me-2 text-danger"></i>{" "}
+                          Tax ({taxPercent > 0 ? `${taxPercent}%` : taxAmount})
+                        </span>
+                        <span>
+                          {tax.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
+                        </span>
+                      </li>
+                    )}
+
+                    {/* Platform */}
+                    {(platformPercent > 0 || platformAmount > 0) && (
+                      <li className="list-group-item d-flex justify-content-between fw-semibold">
+                        <span>
+                          <i className="fas fa-receipt me-2 text-danger"></i>{" "}
+                          Platform Charges ({platformPercent > 0 ? `${platformPercent}%` : platformAmount})
+                        </span>
+                        <span>
+                          {platform.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
+                        </span>
+                      </li>
+                    )}
+
+                    {/* Freight */}
+                    {(freightPercent > 0 || freightAmount > 0) && (
+                      <li className="list-group-item d-flex justify-content-between fw-semibold">
+                        <span>
+                          <i className="fas fa-receipt me-2 text-danger"></i>{" "}
+                          Freight Charges ({freightPercent > 0 ? `${freightPercent}%` : freightAmount})
+                        </span>
+                        <span>
+                          {freight.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
+                        </span>
+                      </li>
+                    )}
+
                   </ul>
 
                   <div className="d-flex justify-content-between fw-bold fs-5 mb-3">
                     <span>Total ({displayCurrency})</span>
                     <span>
-                      {subtotal && subtotal > 0
-                        ? `${subtotal.toLocaleString("en-PK", {
+                      {grandTotal && grandTotal > 0
+                        ? `${grandTotal.toLocaleString("en-PK", {
                           minimumFractionDigits: 2,
                         })}`
                         : "---"}

@@ -121,14 +121,15 @@ const getBiobankVisibilitySamples = (req, res) => {
 // Controller to add price and price currency of a sample
 const postSamplePrice = (req, res) => {
   const sampleData = req.body;
+  console.log("📩 Received sampleData:", sampleData);
 
   BioBankModel.postSamplePrice(sampleData, (err, result) => {
     if (err) {
-      console.error('Error adding price of a sample:', err);
+      console.error("❌ Error adding price of a sample:", err);
       return res.status(500).json({ error: "Error adding price of a sample" });
     }
 
-    res.status(201).json({ message: "Sample price added successfully", id: result.insertId });
+    res.status(201).json({ message: "Sample price & charges added successfully", id: result.id });
   });
 };
 

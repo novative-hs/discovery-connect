@@ -13,7 +13,40 @@ const QuoteRequestTable = () => {
   const [currencyOptions, setCurrencyOptions] = useState([]);
   const [isReadOnly, setIsReadOnly] = useState(false);
 
-const [currencyError, setCurrencyError] = useState("");
+  const [currencyError, setCurrencyError] = useState("");
+  const [charges, setCharges] = useState({
+    tax: { value: "", type: "amount" },
+    platform: { value: "", type: "amount" },
+    freight: { value: "", type: "amount" }
+  });
+
+  // Calculate subtotal (sum of all entered prices)
+  // Safe subtotal calculation
+  // Subtotal calculation
+  const subtotal = Array.isArray(selectedQuote)
+    ? selectedQuote.reduce((sum, sample) => {
+      const price = parseFloat(priceInputs[sample.sample_id] || sample.price || 0);
+      return sum + price;
+    }, 0)
+    : 0;
+
+  // Helper function
+  const calculateCharge = (charge, baseAmount) => {
+    if (!charge?.value) return 0;
+    return charge.type === "percent"
+      ? (baseAmount * parseFloat(charge.value)) / 100
+      : parseFloat(charge.value);
+  };
+
+  // Individual charges
+  const taxAmount = calculateCharge(charges.tax, subtotal);
+  const platformAmount = calculateCharge(charges.platform, subtotal);
+  const freightAmount = calculateCharge(charges.freight, subtotal);
+
+  // Final total
+  const grandTotal = subtotal + taxAmount + platformAmount + freightAmount;
+
+
   // Fetch currency options
   useEffect(() => {
     const fetchCurrencies = async () => {
@@ -38,7 +71,7 @@ const [currencyError, setCurrencyError] = useState("");
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getPriceCount`
         );
-        
+
         setSamples(response.data);
       } catch (error) {
         console.error("Error fetching quote requests:", error);
@@ -69,17 +102,22 @@ const [currencyError, setCurrencyError] = useState("");
 
 
   // Submit price for one sample
-  const submitSamplePrice = async (sampleId, currency) => {
+  const submitSamplePrice = async (sampleId, currency, charges) => {
     const price = priceInputs[sampleId];
     if (!price || !currency) return;
 
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/postprice/${sampleId}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/postprice`,
         {
           sampleId,
           price,
           SamplePriceCurrency: currency,
+          charges: {
+            tax: charges.tax,
+            platform: charges.platform,
+            freight: charges.freight,
+          },
         }
       );
     } catch (error) {
@@ -88,7 +126,7 @@ const [currencyError, setCurrencyError] = useState("");
   };
 
   // Submit all samples in selected quote
- const handleSubmitAll = async () => {
+  const handleSubmitAll = async () => {
     if (!selectedQuote || selectedQuote.length === 0) return;
 
     // Validate currency selection
@@ -102,23 +140,28 @@ const [currencyError, setCurrencyError] = useState("");
         const sampleId = sample.sample_id;
         const price = priceInputs[sampleId];
 
-        // Skip if no price entered for this sample
         if (!price) continue;
 
-        await submitSamplePrice(sampleId, groupCurrency);
+        await submitSamplePrice(sampleId, groupCurrency, charges);
       }
 
-      alert("All prices updated successfully!");
+      alert("All prices and charges updated successfully!");
       setShowCartModal(false);
       setSelectedQuote(null);
       setPriceInputs({});
       setGroupCurrency("");
-      setCurrencyError(""); // Clear error on success
+      setCharges({   // clear charges
+        tax: { value: "", type: "percent" },
+        platform: { value: "", type: "percent" },
+        freight: { value: "", type: "percent" },
+      });
+      setCurrencyError("");
     } catch (error) {
       console.error("Error submitting prices:", error);
       alert("Failed to update prices. Please try again.");
     }
   };
+
 
 
   return (
@@ -159,12 +202,29 @@ const [currencyError, setCurrencyError] = useState("");
                     <button
                       className="btn btn-sm btn-secondary"
                       onClick={() => {
-                        
                         setSelectedQuote(samples);
                         setShowCartModal(true);
-                        setIsReadOnly(true);
+                        setIsReadOnly(true); // or false depending
+
                         setGroupCurrency(samples[0]?.SamplePriceCurrency || "");
+
+                        // ✅ Pre-fill charges if available in API response
+                        setCharges({
+                          tax: {
+                            value: samples[0]?.tax_percent || samples[0]?.tax_amount || "",
+                            type: samples[0]?.tax_percent ? "percent" : (samples[0]?.tax_amount ? "amount" : "amount"),
+                          },
+                          platform: {
+                            value: samples[0]?.platform_percent || samples[0]?.platform_amount || "",
+                            type: samples[0]?.platform_percent ? "percent" : (samples[0]?.platform_amount ? "amount" : "amount"),
+                          },
+                          freight: {
+                            value: samples[0]?.freight_percent || samples[0]?.freight_amount || "",
+                            type: samples[0]?.freight_percent ? "percent" : (samples[0]?.freight_amount ? "amount" : "amount"),
+                          }
+                        });
                       }}
+
                     >
                       View Details
                     </button>
@@ -207,9 +267,10 @@ const [currencyError, setCurrencyError] = useState("");
                   className="form-select form-select-sm"
                   style={{ width: "160px" }}
                   value={groupCurrency}
-                  onChange={(e) =>{
-                     setGroupCurrency(e.target.value)
-                     setCurrencyError("")}}
+                  onChange={(e) => {
+                    setGroupCurrency(e.target.value)
+                    setCurrencyError("")
+                  }}
                 >
                   <option value="">Select</option>
                   {currencyOptions.map((currency, index) => (
@@ -227,26 +288,31 @@ const [currencyError, setCurrencyError] = useState("");
               <span className="mb-0 fs-5 fw-bold">{groupCurrency || "Not Selected"}</span>
             </div>
             <table className="table table-bordered">
-
-              <thead>
+              {/* Items Header */}
+              <thead className="table-light">
                 <tr>
                   <th>Sample ID</th>
                   <th>Analyte</th>
                   <th>Quantity X Volume</th>
                   <th>Test Result</th>
-                  <th>Price</th>
+                  <th className="text-end">Price</th>
                 </tr>
               </thead>
+
+              {/* Items */}
               <tbody>
                 {selectedQuote.map((sample) => (
                   <tr key={sample.sample_id}>
                     <td>{sample.masterID}</td>
                     <td>{sample.analyte}</td>
-                    <td>{sample.quantity} X {sample.volume}{sample.VolumeUnit}</td>
+                    <td>
+                      {sample.quantity} X {sample.volume}
+                      {sample.VolumeUnit}
+                    </td>
                     <td>
                       {sample.TestResult} {sample.TestResultUnit}
                     </td>
-                    <td>
+                    <td className="text-end">
                       {isReadOnly ? (
                         <input
                           type="text"
@@ -272,9 +338,156 @@ const [currencyError, setCurrencyError] = useState("");
                         />
                       )}
                     </td>
-
                   </tr>
                 ))}
+              </tbody>
+              <thead className="table-light">
+                <tr>
+                  <th colSpan="2"></th>
+                  <th></th>
+                  <th className="text-center">Subtotal</th>
+                  <th className="text-end">{subtotal.toLocaleString()}</th>
+                </tr>
+              </thead>
+              {/* Charges Section */}
+              <thead className="table-light">
+                <tr>
+                  <th colSpan=""></th>
+                  <th>Charges</th>
+                  <th colSpan="3" className="text-center">Values</th>
+                  
+                </tr>
+              </thead>
+              <tbody>
+                {/* Tax */}
+                <tr>
+                  <td></td>
+                  <th>Tax</th>
+                  <td>
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="Enter value"
+                      value={charges.tax.value}
+                      onChange={(e) =>
+                        setCharges({
+                          ...charges,
+                          tax: { ...charges.tax, value: e.target.value }
+                        })
+                      }
+                      readOnly={isReadOnly}
+                    />
+                  </td>
+                  <td>
+                    <select
+                      className="form-select"
+                      value={charges.tax.type}
+                      onChange={(e) =>
+                        setCharges({
+                          ...charges,
+                          tax: { ...charges.tax, type: e.target.value }
+                        })
+                      }
+                      disabled={isReadOnly}
+                    >
+                      <option value="percent">% of Quoted Price</option>
+                      <option value="amount">Amount</option>
+                    </select>
+                  </td>
+                  <td className="text-end">
+                    {taxAmount.toLocaleString()}
+                  </td>
+                </tr>
+
+
+                {/* Platform */}
+                <tr>
+                  <td></td>
+                  <th>Platform Charges</th>
+                  <td>
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="Enter value"
+                      value={charges.platform.value}
+                      onChange={(e) =>
+                        setCharges({
+                          ...charges,
+                          platform: { ...charges.platform, value: e.target.value }
+                        })
+                      }
+                      readOnly={isReadOnly}
+                    />
+                  </td>
+                  <td>
+                    <select
+                      className="form-select"
+                      value={charges.platform.type}
+                      onChange={(e) =>
+                        setCharges({
+                          ...charges,
+                          platform: { ...charges.platform, type: e.target.value }
+                        })
+                      }
+                      disabled={isReadOnly}
+                    >
+                      <option value="percent">% of Quoted Price</option>
+                      <option value="amount">Amount</option>
+                    </select>
+                  </td>
+                  <td className="text-end">
+                    {platformAmount.toLocaleString()}
+                  </td>
+                </tr>
+
+
+                {/* Freight */}
+                <tr>
+                  <td></td>
+                  <th>Freight Charges</th>
+                  <td>
+                    <input
+                      type="number"
+                      className="form-control"
+                      placeholder="Enter value"
+                      value={charges.freight.value}
+                      onChange={(e) =>
+                        setCharges({
+                          ...charges,
+                          freight: { ...charges.freight, value: e.target.value }
+                        })
+                      }
+                      readOnly={isReadOnly}
+                    />
+                  </td>
+                  <td>
+                    <select
+                      className="form-select"
+                      value={charges.freight.type}
+                      onChange={(e) =>
+                        setCharges({
+                          ...charges,
+                          freight: { ...charges.freight, type: e.target.value }
+                        })
+                      }
+                      disabled={isReadOnly}
+                    >
+                      <option value="percent">% of Quoted Price</option>
+                      <option value="amount">Amount</option>
+                    </select>
+                  </td>
+                  <td className="text-end">{freightAmount.toLocaleString()}</td>
+                </tr>
+
+
+
+                {/* Total */}
+                <tr className="table-light fw-bold">
+                  <td colSpan="3"></td>
+                  <td>Total</td>
+                  <td className="text-end">{grandTotal.toLocaleString()}</td>
+                </tr>
+
               </tbody>
             </table>
 
@@ -291,8 +504,9 @@ const [currencyError, setCurrencyError] = useState("");
             )}
           </Modal.Body>
         </Modal>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 

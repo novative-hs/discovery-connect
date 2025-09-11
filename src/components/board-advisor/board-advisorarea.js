@@ -357,86 +357,130 @@ const boardMembers = [
 ];
 
 const BoardAdvisoryArea = () => {
+  const chairman = boardMembers.find((m) => m.name === "Dr. Shahid Baig");
+  const otherMembers = boardMembers.filter((m) => m.name !== "Dr. Shahid Baig");
+
+  const renderCard = (member, large = false) => (
+    <div className="col-md-6 col-lg-4 mb-4" key={member.name}>
+      <div
+        className={`card shadow-sm border h-100 text-center p-4 hover-scale`}
+      >
+
+        {/* Profile Image */}
+        <div className="mb-3">
+          <img
+            src={member.picture}
+            alt={member.name}
+            className={`rounded-circle border border-3 border-primary ${large ? "chairman-img" : ""}`}
+            style={{
+              width: large ? "160px" : "120px",
+              height: large ? "160px" : "120px",
+              objectFit: "cover",
+            }}
+          />
+        </div>
+
+        {/* Name & Designation */}
+        <div className="mb-2">
+          <h4 className="fw-bold text-dark mb-1">{member.name}</h4>
+          <small className="text-primary fw-semibold">{member.designation}</small>
+        </div>
+
+        {/* University & Location */}
+        {(member.university || member.city || member.country) && (
+          <div className="mb-2 text-muted">
+            {member.university && <p className="mb-0">{member.university}</p>}
+            {(member.city || member.country) && (
+              <p className="mb-0">
+                {member.city}
+                {member.city && member.country ? ", " : ""}
+                {member.country}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Contact Info */}
+        {(member.contact && member.contact !== "-") || (member.email && member.email !== "-") ? (
+          <div className="mb-3 text-secondary">
+            {member.contact && member.contact !== "-" && (
+              <p className="mb-1">
+                <i className="fas fa-phone-alt me-2"></i>
+                {member.contact}
+              </p>
+            )}
+            {member.email && member.email !== "-" && (
+              <p className="mb-0">
+                <i className="fas fa-envelope me-2"></i>
+                {member.email}
+              </p>
+            )}
+          </div>
+        ) : null}
+
+        {/* Comments */}
+        {member.comments && member.comments !== "-" && (
+          <div className="card-body bg-light rounded">
+            <p className="fst-italic text-muted mb-0">
+              <i className="fas fa-quote-left text-warning me-1"></i>
+              {member.comments}
+              <i className="fas fa-quote-right text-warning ms-1"></i>
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <section className="board-advisory py-5 bg-light">
       <div className="container">
-        <h2 className="text-center mb-5 text-uppercase fw-bold text-primary">
-          Board Advisory Members
+        {/* Main Heading */}
+        <h2
+          className="text-start text-uppercase fw-bold text-primary"
+          style={{ marginBottom: "3rem" }}
+        >
+          Board of Advisor (BOA)
         </h2>
-        <div className="row">
-          {boardMembers.map((member, index) => (
-            <div className="col-md-6 col-lg-4 mb-4" key={index}>
-              <div className="card shadow-sm border-0 h-100 text-center p-3 hover-scale">
 
-                {/* Profile Image */}
-                <div className="mb-3">
-                  <img
-                    src={member.picture}
-                    alt={member.name}
-                    className="rounded-circle border border-3 border-primary"
-                    style={{ width: "120px", height: "120px", objectFit: "cover" }}
-                  />
-                </div>
-
-                {/* Name & Designation */}
-                <div className="mb-2">
-                  <h5 className="fw-bold text-dark mb-1">{member.name}</h5>
-                  <small className="text-primary fw-semibold">{member.designation}</small>
-                </div>
-
-                {/* University & Location */}
-                {/* University & Location */}
-                {(member.university || member.city || member.country) && (
-                  <div className="mb-2 text-muted">
-                    {member.university && <p className="mb-0">{member.university}</p>}
-                    {(member.city || member.country) && (
-                      <p className="mb-0">
-                        {member.city}{member.city && member.country ? ", " : ""}{member.country}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Contact Info */}
-                {(member.contact && member.contact !== "-") || (member.email && member.email !== "-") ? (
-                  <div className="mb-3 text-secondary">
-                    {member.contact && member.contact !== "-" && (
-                      <p className="mb-1">
-                        <i className="fas fa-phone-alt me-2"></i>{member.contact}
-                      </p>
-                    )}
-                    {member.email && member.email !== "-" && (
-                      <p className="mb-0">
-                        <i className="fas fa-envelope me-2"></i>{member.email}
-                      </p>
-                    )}
-                  </div>
-                ) : null}
-
-                {/* Comments / Quotes */}
-                {member.comments && member.comments !== "-" && (
-                  <div className="card-body bg-light rounded">
-                    <p className="fst-italic text-muted mb-0">
-                      <i className="fas fa-quote-left text-warning me-1"></i>
-                      {member.comments}
-                      <i className="fas fa-quote-right text-warning ms-1"></i>
-                    </p>
-                  </div>
-                )}
-
-              </div>
-            </div>
-          ))}
+        {/* Chairman Section */}
+        <h3
+          className="text-success fw-bold"
+          style={{ marginBottom: "3rem" }}
+        >
+          Chairman
+        </h3>
+        <div className="row justify-content-center">
+          {chairman && renderCard(chairman, true)}
         </div>
+
+        {/* Nominee Members Section */}
+        <h3
+          className="text-success fw-bold"
+          style={{ marginBottom: "4rem", marginTop: "4rem" }}
+        >
+          Nominee Members of BOA
+        </h3>
+        <div className="row g-4">{otherMembers.map((m) => renderCard(m))}</div>
       </div>
 
-      {/* Extra CSS for hover effect */}
+
+
+
+      {/* Extra CSS */}
       <style jsx>{`
         .hover-scale {
           transition: transform 0.3s;
         }
         .hover-scale:hover {
           transform: translateY(-5px) scale(1.03);
+        }
+        .highlight-chairman {
+          border: 2px solid #0d6efd;
+          background: #f8f9fa;
+        }
+        .chairman-img {
+          box-shadow: 0 0 15px rgba(13, 110, 253, 0.5);
         }
       `}</style>
     </section>

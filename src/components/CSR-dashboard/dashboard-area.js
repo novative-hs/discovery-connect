@@ -8,6 +8,7 @@ import OrderInfo from "./order-info";
 import PendingSampleArea from "./pendingorder";
 import DispatchSampleArea from "./dispatchedorder";
 import CompletedSampleArea from "./completedorder";
+import CollectionsiteList from "./collectionsitelist";
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("order-info"); // Default to "order-info"
   const router = useRouter();
@@ -50,6 +51,8 @@ const DashboardArea = () => {
         return <CompletedSampleArea />;
       case "change-password":
         return <ChangePassword />;
+        case "collectionsitelist":
+        return <CollectionsiteList />;
       default:
         return <OrderInfo setActiveTab={setActiveTab} />;
     }

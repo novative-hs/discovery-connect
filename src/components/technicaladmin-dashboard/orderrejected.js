@@ -701,8 +701,11 @@ const OrderPage = () => {
                                 borderLeft: "4px solid #0d6efd",
                               }}
                             >
+                               <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
+                                {formatDT(ta.Technicaladmindate)}
+                              </h6>
                               <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
-                                The order referred to the Technical Admin at {formatDT(ta.Technicaladmindate)}
+                                The order referred to the Technical Admin 
                               </h6>
                             </div>
                           ) : null
@@ -739,6 +742,7 @@ const OrderPage = () => {
 
                                 {/* Referred line (committee_created_at) */}
                                 {approval.committee_created_at && (
+
                                   <div
                                     style={{
                                       fontWeight: "500",
@@ -746,16 +750,27 @@ const OrderPage = () => {
                                       marginBottom: approval.committee_approval_date ? "0.35rem" : 0,
                                     }}
                                   >
-                                    The order referred to the committee member at{" "}
+                                     <div
+                                    style={{
+                                      fontWeight: "500",
+                                      color: "#495057",
+                                      marginBottom: approval.committee_approval_date ? "0.35rem" : 0,
+                                    }}
+                                  >
                                     {formatDT(approval.committee_created_at)}
+                                  </div>
+                                    The order referred to the committee member
                                   </div>
                                 )}
 
                                 {/* Approved line (committee_approval_date) */}
                                 {approval.committee_approval_date && (
                                   <div style={{ fontWeight: "500", color: approval.committee_status === "Refused" ? "#dc3545" : "#198754" }}>
-                                    The order has been {approval.committee_status?.toLowerCase()} by the committee member at{" "}
+                                   
+                                    <div style={{ fontWeight: "500", color: approval.committee_status === "Refused" ? "#dc3545" : "#198754" }}>
                                     {formatDT(approval.committee_approval_date)}
+                                  </div>
+                                    The order has been {approval.committee_status?.toLowerCase()} by the committee member
                                   </div>
                                 )}
 
@@ -789,9 +804,12 @@ const OrderPage = () => {
                                 }}
                                 title={`${doc.uploaded_by_role} uploaded ${Array.isArray(doc.files) ? doc.files.join(', ') : ''} documents at ${formatDT(doc.created_at)}`}
                               >
+                                <div>
+                                     {formatDT(doc.created_at)}
+                                </div>
                                 {doc.uploaded_by_role} uploaded "
-                                {Array.isArray(doc.files) ? doc.files.join(", ") : ""}" documents at{" "}
-                                {formatDT(doc.created_at)}
+                                {Array.isArray(doc.files) ? doc.files.join(", ") : ""}" documents
+                               
                               </h6>
                             ))}
                           </div>
@@ -810,9 +828,11 @@ const OrderPage = () => {
                                 borderLeft: "4px solid #0d6efd",
                               }}
                             >
-                              <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
-                                The order {ta.technical_admin_status} by the Technical Admin at{" "}
+                                <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
                                 {formatDT(ta.TechnicaladminApproval_date)}
+                              </h6>
+                              <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
+                                The order {ta.technical_admin_status} by the Technical Admin at
                               </h6>
                             </div>
                           ) : null
