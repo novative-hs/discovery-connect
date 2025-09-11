@@ -13,13 +13,13 @@ const About = () => {
       <Header style_2={true} />
       <SectionTop
         title="ABOUT US"
+        subtitle="Learn more about our mission and values"
+        backgroundImage="/assets/img/about/aboutus.jpg"
       />
       <AboutArea />
-    
       <Footer />
     </Wrapper>
   );
 };
 
 export default About;
-
