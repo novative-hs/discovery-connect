@@ -227,11 +227,13 @@ const SampleArea = () => {
                           USD: "$",
                           INR: "₹",
                         }[order.samples[0].SamplePriceCurrency] || order.samples.SamplePriceCurrency}{" "}
-                        {order.totalpayment.toLocaleString("en-IN", {
+                        {Number(order.totalpayment).toLocaleString("en-US", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
+
                       </td>
+
                       <td>{order.BankName || "---"}</td>
                       <td>{order.payment_type || "----"}</td>
                       <td>
@@ -328,7 +330,13 @@ const SampleArea = () => {
                 <tr>
                   <th colSpan="5"></th>
                   <th>Subtotal</th>
-                  <td className="text-end">{selectedSample.samples[0].subtotal}</td>
+                  <td className="text-end">
+                   {Number(selectedSample.samples[0].subtotal).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                  </td>
+
                 </tr>
                 <tr>
                   <th colSpan="5"></th>
@@ -344,7 +352,10 @@ const SampleArea = () => {
                       ? (selectedSample.samples[0].subtotal *
                         selectedSample.samples[0].tax_value) /
                       100
-                      : Number(selectedSample.samples[0].tax_value)}
+                      : Number(selectedSample.samples[0].tax_value).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                   </td>
                 </tr>
 
@@ -361,7 +372,10 @@ const SampleArea = () => {
                       ? (selectedSample.samples[0].subtotal *
                         selectedSample.samples[0].platform_value) /
                       100
-                      : Number(selectedSample.samples[0].platform_value)}
+                      : Number(selectedSample.samples[0].platform_value).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                   </td>
                 </tr>
                 <tr>
@@ -377,13 +391,21 @@ const SampleArea = () => {
                       ? (selectedSample.samples[0].subtotal *
                         selectedSample.samples[0].freight_value) /
                       100
-                      : Number(selectedSample.samples[0].freight_value)}
+                      : Number(selectedSample.samples[0].freight_value).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                   </td>
                 </tr>
                 <tr>
                   <th colSpan="5"></th>
                   <th>Total ({selectedSample.samples[0].SamplePriceCurrency})</th>
-                  <td className="text-end">{selectedSample.samples[0].totalpayment}</td>
+                  <td className="text-end">
+                     {Number(selectedSample.samples[0].totalpayment).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                  </td>
                 </tr>
               </thead>
             </table>

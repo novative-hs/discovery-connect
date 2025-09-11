@@ -103,7 +103,7 @@ const OrderPage = () => {
     setLoading(true);
     try {
       const { searchField, searchValue } = filters;
-       let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/technicalapproval/getOrderbyTechnical?page=${page}&pageSize=${pageSize}&status=Accepted`;
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/technicalapproval/getOrderbyTechnical?page=${page}&pageSize=${pageSize}&status=Accepted`;
 
       if (searchField && searchValue) {
         url += `&searchField=${searchField}&searchValue=${encodeURIComponent(searchValue)}`;
@@ -168,30 +168,30 @@ const OrderPage = () => {
 
 
   const handleHistory = useCallback(async (orderGroup) => {
-  console.log(orderGroup);
-  setShowHistoryModal(true);
-  setLoadingHistory(true);
+    console.log(orderGroup);
+    setShowHistoryModal(true);
+    setLoadingHistory(true);
 
-  try {
-    const response = await axios.get(   // ✅ await here
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/technicalapproval/getHistory`,
-      {
-        params: {
-          tracking_id: orderGroup.tracking_id,
-          status: "Pending",
-        },
-      }
-    );
+    try {
+      const response = await axios.get(   // ✅ await here
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/technicalapproval/getHistory`,
+        {
+          params: {
+            tracking_id: orderGroup.tracking_id,
+            status: "Pending",
+          },
+        }
+      );
 
-    console.log(response.data.results);
-    setSelectedHistory(response.data.results || []);
-  } catch (error) {
-    console.error(error);
-    setShowHistoryModal(false);
-  } finally {
-    setLoadingHistory(false);
-  }
-}, []);
+      console.log(response.data.results);
+      setSelectedHistory(response.data.results || []);
+    } catch (error) {
+      console.error(error);
+      setShowHistoryModal(false);
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, []);
 
   const formatDT = (date) =>
     date
@@ -701,11 +701,11 @@ const OrderPage = () => {
                                 borderLeft: "4px solid #0d6efd",
                               }}
                             >
-                               <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
+                              <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
                                 {formatDT(ta.Technicaladmindate)}
                               </h6>
                               <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
-                                The order referred to the Technical Admin 
+                                The order referred to the Technical Admin
                               </h6>
                             </div>
                           ) : null
@@ -726,6 +726,15 @@ const OrderPage = () => {
                                 }}
                               >
                                 {/* Header: "Scientific Committee Member – Sana Committee" */}
+                                <div
+                                  style={{
+                                    fontWeight: "500",
+                                    color: "#495057",
+                                    marginBottom: approval.committee_approval_date ? "0.35rem" : 0,
+                                  }}
+                                >
+                                  {formatDT(approval.committee_created_at)}
+                                </div>
                                 <div
                                   style={{
                                     fontWeight: "600",
@@ -750,15 +759,7 @@ const OrderPage = () => {
                                       marginBottom: approval.committee_approval_date ? "0.35rem" : 0,
                                     }}
                                   >
-                                     <div
-                                    style={{
-                                      fontWeight: "500",
-                                      color: "#495057",
-                                      marginBottom: approval.committee_approval_date ? "0.35rem" : 0,
-                                    }}
-                                  >
-                                    {formatDT(approval.committee_created_at)}
-                                  </div>
+
                                     The order referred to the committee member
                                   </div>
                                 )}
@@ -766,10 +767,10 @@ const OrderPage = () => {
                                 {/* Approved line (committee_approval_date) */}
                                 {approval.committee_approval_date && (
                                   <div style={{ fontWeight: "500", color: approval.committee_status === "Refused" ? "#dc3545" : "#198754" }}>
-                                   
+
                                     <div style={{ fontWeight: "500", color: approval.committee_status === "Refused" ? "#dc3545" : "#198754" }}>
-                                    {formatDT(approval.committee_approval_date)}
-                                  </div>
+                                      {formatDT(approval.committee_approval_date)}
+                                    </div>
                                     The order has been {approval.committee_status?.toLowerCase()} by the committee member
                                   </div>
                                 )}
@@ -805,11 +806,11 @@ const OrderPage = () => {
                                 title={`${doc.uploaded_by_role} uploaded ${Array.isArray(doc.files) ? doc.files.join(', ') : ''} documents at ${formatDT(doc.created_at)}`}
                               >
                                 <div>
-                                     {formatDT(doc.created_at)}
+                                  {formatDT(doc.created_at)}
                                 </div>
                                 {doc.uploaded_by_role} uploaded "
                                 {Array.isArray(doc.files) ? doc.files.join(", ") : ""}" documents
-                               
+
                               </h6>
                             ))}
                           </div>
@@ -828,7 +829,7 @@ const OrderPage = () => {
                                 borderLeft: "4px solid #0d6efd",
                               }}
                             >
-                                <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
+                              <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
                                 {formatDT(ta.TechnicaladminApproval_date)}
                               </h6>
                               <h6 style={{ margin: 0, fontWeight: "600", color: "#0d6efd" }}>
