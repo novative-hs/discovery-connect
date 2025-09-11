@@ -1064,7 +1064,7 @@ const sendEmailForOrder = async (req, callback) => {
     const researcherEmailText = `
      <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
   <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-    <p style="font-size: 16px; color: #333;">Dear {{researcherName}},</p>
+     <p style="font-size: 16px; color: #333;">Dear ${researcherName},</p>
 
     <p style="font-size: 15px; color: #555;">Thank you for your submission.</p>
 
