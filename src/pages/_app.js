@@ -7,6 +7,8 @@ import { store } from "src/redux/store";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "aos/dist/aos.css"; // AOS CSS
 import "../styles/index.scss";
+import "bootstrap/dist/css/bootstrap.min.css";
+// import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
 import AOS from "aos"; // AOS import
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

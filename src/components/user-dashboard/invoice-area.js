@@ -6,6 +6,15 @@ const InvoicePage = () => {
   const { cart_products } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
   const invoiceRef = useRef(null);
+  const itemSubtotals = cart_products.map(item => {
+    const price = Number(item.price) || 0;
+    const quantity = Number(item.orderQuantity) || 1;
+    return price * quantity;
+  });
+
+  const subtotal = itemSubtotals.reduce((acc, val) => acc + val, 0);
+
+
   useEffect(() => {
     const user = sessionStorage.getItem("userdetail");
     if (user) {
@@ -109,7 +118,6 @@ const InvoicePage = () => {
             <th>Test Result /Unit</th>
             <th>Quantity</th>
             <th className="text-right">Price</th>
-            <th className="text-right">Sub Total</th>
           </tr>
         </thead>
 
@@ -132,22 +140,13 @@ const InvoicePage = () => {
                       {{
                         PKR: "Rs",
                         USD: "$"
-                      }[item.SamplePriceCurrency] || item.SamplePriceCurrency}
+                      }[item.SamplePriceCurrency] || item.SamplePriceCurrency} {" "}
                       {price.toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2
                       })}
                     </td>
 
-                    <td className="text-end pe-3"> {/* Right-aligned with padding */}
-                      {{
-                        PKR: "Rs",
-                        USD: "$"
-                      }[item.SamplePriceCurrency] || item.SamplePriceCurrency}{subTotal.toLocaleString("en-IN", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                      })}
-                    </td>
                   </tr>
                 );
               })}
@@ -156,18 +155,41 @@ const InvoicePage = () => {
           <p className="mb-1">Cash</p>
           <p className="mb-1">Not Paid</p> */}
 
+              <tr>
+                <td colSpan="4"></td>
+                <td className="text-end pe-3 fw-semibold">Subtotal</td>
+                <td className="text-end pe-3">
+                  {subtotal}
+                </td>
+
+              </tr>
+              {/* Tax */}
+              <tr>
+                <td colSpan="4"></td>
+                <td className="text-end pe-3 fw-semibold">Tax</td>
+                <td className="text-end pe-3">
+                  0
+                </td>
+              </tr>
               {/* Platform Charges Row */}
               <tr>
-                <td colSpan="5"></td>
+                <td colSpan="4"></td>
                 <td className="text-end pe-3 fw-semibold">Platform Charges</td>
                 <td className="text-end pe-3">
                   0
                 </td>
               </tr>
-
+              {/* freight Charges */}
+              <tr>
+                <td colSpan="4"></td>
+                <td className="text-end pe-3 fw-semibold">freight Charges</td>
+                <td className="text-end pe-3">
+                  0
+                </td>
+              </tr>
               {/* Total Row */}
               <tr className="total-row">
-                <td colSpan="5"></td>
+                <td colSpan="4"></td>
                 <td className="text-end fw-bold pe-3">Total</td>
                 <td className="text-end fw-bold" style={{ paddingRight: '16px' }}>
                   {(function () {

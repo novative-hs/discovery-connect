@@ -112,6 +112,12 @@ const createPriceRequest = () => {
       researcher_id INT,
       sample_id VARCHAR(36),
       quantity FLOAT,
+      tax_amount DECIMAL(10,2) DEFAULT 0,
+      tax_percent INT DEFAULT 0,
+      platform_amount DECIMAL(10,2) DEFAULT 0,
+      platform_percent INT DEFAULT 0,
+      freight_amount DECIMAL(10,2) DEFAULT 0,
+      freight_percent INT DEFAULT 0,
       status ENUM('pending', 'priced') DEFAULT 'pending',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
@@ -542,7 +548,20 @@ const updateReservedSample = (sampleId, status, callback) => {
 
 
 const getsingleSamples = (sampleId, callback) => {
-  const query = 'SELECT * FROM sample WHERE id = ?';
+  const query = `
+    SELECT 
+      s.*, 
+      q.tax_amount, 
+      q.tax_percent, 
+      q.platform_amount, 
+      q.platform_percent, 
+      q.freight_amount, 
+      q.freight_percent
+    FROM sample s
+    LEFT JOIN quote_requests q 
+      ON s.id = q.sample_id
+    WHERE s.id = ?;
+  `;
 
   mysqlConnection.query(query, [sampleId], (err, results) => {
     if (err) {
@@ -561,8 +580,6 @@ const getsingleSamples = (sampleId, callback) => {
       try {
         sample.masterID = decryptAndShort(sample.masterID);
       } catch (decryptionErr) {
-        // console.error("Master ID Decryption Error:", decryptionErr);
-        // You can optionally still return encrypted master_id or null
         sample.masterID = null;
       }
     }
@@ -570,6 +587,7 @@ const getsingleSamples = (sampleId, callback) => {
     callback(null, sample);
   });
 };
+
 
 
 
@@ -853,7 +871,7 @@ const updateSample = (id, data, file, callback) => {
 
   // Start with fields and values
   const fields = [
-    'PatientName = ?','MRNumber=?', 'FinalConcentration=?', 'samplemode=?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
+    'PatientName = ?', 'MRNumber=?', 'FinalConcentration=?', 'samplemode=?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
     'Analyte = ?', 'age = ?', 'phoneNumber = ?', 'gender = ?', 'ethnicity = ?',
     'samplecondition = ?', 'storagetemp = ?', 'ContainerType = ?', 'CountryOfCollection = ?',
     'quantity = ?', 'VolumeUnit = ?', 'SampleTypeMatrix = ?', 'SmokingStatus = ?',
@@ -864,7 +882,7 @@ const updateSample = (id, data, file, callback) => {
   ];
 
   const values = [
-    data.patientname, data.MRNumber,data.finalConcentration, data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.samplepdf
+    data.patientname, data.MRNumber, data.finalConcentration, data.mode, data.patientlocation, room_number, freezer_id, box_id, volume, data.Analyte, age, data.phoneNumber, data.gender, data.ethnicity, data.samplecondition, data.storagetemp, data.ContainerType, data.CountryOfCollection, data.quantity, data.VolumeUnit, data.SampleTypeMatrix, data.SmokingStatus, data.AlcoholOrDrugAbuse, data.InfectiousDiseaseTesting, data.InfectiousDiseaseResult, data.FreezeThawCycles, data.DateOfSampling, data.ConcurrentMedicalConditions, data.ConcurrentMedications, data.TestResult, data.TestResultUnit, data.TestMethod, data.TestKitManufacturer, data.TestSystem, data.TestSystemManufacturer, data.status, data.samplepdf
   ];
 
   // Add logo file if available
@@ -1099,6 +1117,7 @@ module.exports = {
   getFilteredSamples,
   createSampleTable,
   createPoolSampleTable,
+  createPriceRequest,
   getSamples,
   getAllSamples,
   getAllCSSamples,
@@ -1112,7 +1131,6 @@ module.exports = {
   getAllSampleinIndex,
   getPoolSampleDetails,
   updatetestResultandUnit,
-  createPriceRequest,
   getsingleSamples,
   updateReservedSample,
 };

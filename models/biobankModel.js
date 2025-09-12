@@ -39,7 +39,7 @@ const getBiobankSamples = (
 
   const paramsShared = [];
   const paramsOwn = [];
-  
+
   // const likeValue = `%${filters?.toLowerCase()}%`;
 
   // Price filter
@@ -140,7 +140,7 @@ const getBiobankSamples = (
       baseWhereOwn += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
       paramsShared.push(likeValue, likeValue, likeValue);
       paramsOwn.push(likeValue, likeValue, likeValue);
-      
+
     }
     else if (field === "visibility") {
       baseWhereShared += ` AND LOWER(sample.sample_visibility) = ?`;
@@ -433,8 +433,7 @@ const getBiobankSamplesPooled = (
 };
 
 
-// Function to add price and sample price currency from biobank
-const postSamplePrice = (data, callback) => {
+const postSamplePrice = (sampleData, callback) => {
   const updateQuery = `
     UPDATE sample 
     SET price = ?, SamplePriceCurrency = ?
@@ -443,7 +442,7 @@ const postSamplePrice = (data, callback) => {
 
   mysqlConnection.query(
     updateQuery,
-    [data.price, data.SamplePriceCurrency, data.sampleId],
+    [sampleData.price, sampleData.SamplePriceCurrency, sampleData.sampleId],
     (err) => {
       if (err) {
         console.error("❌ Error updating sample:", err);
@@ -455,7 +454,7 @@ const postSamplePrice = (data, callback) => {
         INSERT INTO sample_history (sample_id, action_type)
         VALUES (?, ?)
       `;
-      mysqlConnection.query(historyQuery, [data.sampleId, 'update'], (err) => {
+      mysqlConnection.query(historyQuery, [sampleData.sampleId, "update"], (err) => {
         if (err) {
           console.error("❌ Error inserting into sample_history:", err);
           return callback(err, null);
@@ -473,26 +472,64 @@ const postSamplePrice = (data, callback) => {
           WHERE qr.sample_id = ? AND qr.status = 'pending'
         `;
 
-        mysqlConnection.query(checkQuoteQuery, [data.sampleId], async (err, quoteResults) => {
+        mysqlConnection.query(checkQuoteQuery, [sampleData.sampleId], async (err, quoteResults) => {
           if (err) {
             console.error("❌ Error checking quote_requests:", err);
             return callback(err, null);
           }
 
           if (quoteResults.length > 0) {
-            const quoteIds = quoteResults.map(q => q.quote_id);
+            const quoteIds = quoteResults.map((q) => q.quote_id);
 
-            // Update all pending quotes to 'priced'
+            // Build dynamic update fields
+            let updateFields = [];
+            let updateValues = [];
+
+            // ✅ Tax
+            if (sampleData.charges?.tax?.type === "percent") {
+              updateFields.push("tax_percent = ?");
+              updateValues.push(sampleData.charges.tax.value);
+            } else if (sampleData.charges?.tax?.type === "amount") {
+              updateFields.push("tax_amount = ?");
+              updateValues.push(sampleData.charges.tax.value);
+            }
+
+            // ✅ Platform
+            if (sampleData.charges?.platform?.type === "percent") {
+              updateFields.push("platform_percent = ?");
+              updateValues.push(sampleData.charges.platform.value);
+            } else if (sampleData.charges?.platform?.type === "amount") {
+              updateFields.push("platform_amount = ?");
+              updateValues.push(sampleData.charges.platform.value);
+            }
+
+            // ✅ Freight
+            if (sampleData.charges?.freight?.type === "percent") {
+              updateFields.push("freight_percent = ?");
+              updateValues.push(sampleData.charges.freight.value);
+            } else if (sampleData.charges?.freight?.type === "amount") {
+              updateFields.push("freight_amount = ?");
+              updateValues.push(sampleData.charges.freight.value);
+            }
+
+            // Always update status
+            updateFields.push("status = 'priced'");
+
             const updateQuoteStatus = `
-              UPDATE quote_requests SET status = 'priced' WHERE id IN (?)
+              UPDATE quote_requests 
+              SET ${updateFields.join(", ")} 
+              WHERE id IN (?)
             `;
-            mysqlConnection.query(updateQuoteStatus, [quoteIds], async (err) => {
+
+            updateValues.push(quoteIds);
+
+            mysqlConnection.query(updateQuoteStatus, updateValues, async (err) => {
               if (err) {
                 console.error("❌ Error updating quote_requests:", err);
                 return callback(err, null);
               }
 
-              // ✅ Send only one email to the first researcher
+              // ✅ Send only one email
               const firstQuote = quoteResults[0];
               const emailBody = `
                 <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
@@ -518,17 +555,18 @@ const postSamplePrice = (data, callback) => {
                 console.error("❌ Error sending email:", emailErr);
               }
 
-              return callback(null, { sampleId: data.sampleId });
+              return callback(null, { id: sampleData.sampleId });
             });
           } else {
-            // No pending quotes, just finish
-            return callback(null, { sampleId: data.sampleId });
+            // No pending quotes
+            return callback(null, { id: sampleData.sampleId });
           }
         });
       });
     }
   );
 };
+
 
 
 const UpdateSampleStatus = (id, status, callback) => {
@@ -579,6 +617,12 @@ const getPriceRequest = (callback) => {
 SELECT 
       qr.id AS quote_request_id,
       qr.sample_id,
+      qr.tax_amount,
+      qr.tax_percent,
+      qr.platform_amount,
+      qr.platform_percent,
+      qr.freight_amount,
+      qr.freight_percent,
       qr.status,
       qr.quantity,
       s.masterID,
@@ -613,13 +657,15 @@ SELECT
   `;
 
   mysqlConnection.query(query, (err, results) => {
-    if (err) return callback(err, null);
+    if (err){
+      console.log(err)
+    return callback(err, null);
+    }
 
     const transformedResults = results.map(sample => ({
       ...sample,
       masterID: decryptAndShort(sample.masterID)  // Apply your transformation
     }));
-
     return callback(null, transformedResults);
   });
 };
