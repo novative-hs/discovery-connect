@@ -60,7 +60,19 @@ function generateTrackingId() {
   return Math.floor(10000 + Math.random() * 90000).toString();
 }
 
-const createOrder = (data, callback) => {
+const queryAsync = (sql, params) => {
+  return new Promise((resolve, reject) => {
+    mysqlConnection.query(sql, params, (err, results) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
+
+const createOrder = async (data, callback) => {
   const {
     researcher_id,
     cart_items,
@@ -71,218 +83,167 @@ const createOrder = (data, callback) => {
     nbc_file,
     totalpayment,
     subtotal,
-      // ✅ Tax
-      tax_value,
-      tax_type,
-
-      // ✅ Platform
-      platform_value,
-      platform_type,
-
-      // ✅ Freight
-      freight_value,
-      freight_type
+    // ✅ Tax
+    tax_value,
+    tax_type,
+    // ✅ Platform
+    platform_value,
+    platform_type,
+    // ✅ Freight
+    freight_value,
+    freight_type
   } = data;
 
-  if (!researcher_id || !cart_items || !payment_id || !study_copy || !reporting_mechanism || !irb_file) {
-    return callback(new Error("Missing required fields (Payment ID, Study Copy, Reporting Mechanism, and IRB File are required)"));
+  if (
+    !researcher_id ||
+    !cart_items ||
+    !payment_id ||
+    !study_copy ||
+    !reporting_mechanism ||
+    !irb_file
+  ) {
+    return callback(
+      new Error(
+        "Missing required fields (Payment ID, Study Copy, Reporting Mechanism, and IRB File are required)"
+      )
+    );
   }
 
   const tracking_id = generateTrackingId();
-  // 1️⃣ Insert order
-  mysqlConnection.query(
-    `INSERT INTO orders (tracking_id, user_id, subtotal,tax_value,tax_type,platform_value,platform_type,freight_value,freight_type,totalpayment, payment_id) VALUES (?, ?, ?, ?,?,?,?,?,?,?,?)`,
-    [tracking_id, researcher_id, subtotal,tax_value,tax_type,platform_value,platform_type,freight_value,freight_type,totalpayment, payment_id],
-    (err, orderResult) => {
-      if (err) return callback(err);
 
-      const orderId = orderResult.insertId;
+  try {
+    // 🚀 Start transaction
+    console.log("START TRANSACTION");
 
-      // 2️⃣ Insert cart items and update stock
-      const itemTasks = cart_items.map((item) => {
-        return new Promise((resolve, reject) => {
-          mysqlConnection.query(
-            `INSERT INTO cart (order_id, sample_id, price, quantity, volume, VolumeUnit) VALUES (?, ?, ?, ?, ?, ?)`,
-            [orderId, item.sample_id, item.price, item.samplequantity, item.volume, item.VolumeUnit],
-            (err) => {
-              if (err) return reject(err);
+    // 1️⃣ Insert order
+    const orderResult = await queryAsync(
+      `INSERT INTO orders (tracking_id, user_id, subtotal, tax_value, tax_type, platform_value, platform_type, freight_value, freight_type, totalpayment, payment_id) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        tracking_id,
+        researcher_id,
+        subtotal,
+        tax_value,
+        tax_type,
+        platform_value,
+        platform_type,
+        freight_value,
+        freight_type,
+        totalpayment,
+        payment_id,
+      ]
+    );
+    const orderId = orderResult.insertId;
 
-              mysqlConnection.query(
-                `UPDATE sample SET quantity = quantity - ?, quantity_allocated = IFNULL(quantity_allocated,0) + ? WHERE id = ? AND quantity >= ?`,
-                [item.samplequantity, item.samplequantity, item.sample_id, item.samplequantity],
-                (err) => {
-                  if (err) return reject(err);
-                  resolve();
-                }
-              );
-            }
-          );
-        });
-      });
+    // 2️⃣ Bulk insert cart items
+    const cartValues = cart_items.map((item) => [
+      orderId,
+      item.sample_id,
+      item.price,
+      item.samplequantity,
+      item.volume,
+      item.VolumeUnit,
+    ]);
 
-      // 3️⃣ Get Technical Admin ID
-      mysqlConnection.query(
-        `SELECT id FROM user_account WHERE accountType = 'TechnicalAdmin' LIMIT 1`,
-        async (err, adminResults) => {
-          if (err) return callback(err);
-          if (!adminResults.length) return callback(new Error("No Technical Admin found"));
+    await queryAsync(
+      `INSERT INTO cart (order_id, sample_id, price, quantity, volume, VolumeUnit) VALUES ?`,
+      [cartValues]
+    );
 
-          const technicalAdminId = adminResults[0].id;
+    // 3️⃣ Batch update stock using CASE
+    const updateCasesQty = cart_items
+      .map(
+        (item) =>
+          `WHEN '${item.sample_id}' THEN quantity - ${mysqlConnection.escape(item.samplequantity)}`
+      )
+      .join(" ");
 
-          mysqlConnection.query(
-            `INSERT INTO technicaladminsampleapproval (order_id, technical_admin_id, technical_admin_status) VALUES (?, ?, 'pending')`,
-            [orderId, technicalAdminId],
-            async (err) => {
-              if (err) return callback(err);
+    const updateCasesAlloc = cart_items
+      .map(
+        (item) =>
+          `WHEN '${item.sample_id}' THEN IFNULL(quantity_allocated,0) + ${mysqlConnection.escape(item.samplequantity)}`
+      )
+      .join(" ");
 
-              // Wait for all cart item inserts
-              try {
-                await Promise.all(itemTasks);
-
-                // 4️⃣ Insert documents
-                mysqlConnection.query(
-                  `INSERT INTO sampledocuments (order_id, study_copy, reporting_mechanism, irb_file, nbc_file, added_by, role)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                  [orderId, study_copy, reporting_mechanism, irb_file, nbc_file || null, researcher_id, "Researcher"],
-                  (err) => {
-                    if (err) return callback(err);
-
-                    // 5️⃣ Fetch created_at
-                    mysqlConnection.query(
-                      `SELECT created_at FROM orders WHERE id = ?`,
-                      [orderId],
-                      (err, orderData) => {
-                        if (err) return callback(err);
-
-                        const created_at = orderData[0].created_at;
-
-                        // 6️⃣ Send email
-                        mysqlConnection.query(
-                          `SELECT email FROM user_account WHERE id = ?`,
-                          [researcher_id],
-                          async (err, user) => {
-                            if (err) return callback(err);
-
-                            if (user.length) {
-                              const subject = "✨ Sample Request Created - Discovery Connect";
-                              const emailMessage = `
-  <!DOCTYPE html>
-  <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-        background-color: #f4f6f8;
-      }
-      .container {
-        max-width: 600px;
-        margin: 30px auto;
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0px 4px 10px rgba(0,0,0,0.08);
-      }
-      .header {
-        text-align: center;
-        padding-bottom: 15px;
-        border-bottom: 1px solid #eee;
-      }
-      .header h2 {
-        color: #0d6efd;
-        margin: 0;
-      }
-      .content {
-        padding: 20px 0;
-        font-size: 15px;
-        color: #444;
-        line-height: 1.6;
-      }
-      .highlight {
-        background: #e8f3ff;
-        color: #0d6efd;
-        padding: 10px 15px;
-        border-radius: 8px;
-        font-size: 16px;
-        text-align: center;
-        font-weight: bold;
-        margin: 15px 0;
-      }
-      .btn {
-        display: inline-block;
-        background: #0d6efd;
-        color: #fff !important;
-        text-decoration: none;
-        padding: 12px 20px;
-        border-radius: 8px;
-        font-size: 15px;
-        margin-top: 15px;
-      }
-      .footer {
-        margin-top: 25px;
-        font-size: 12px;
-        text-align: center;
-        color: #888;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="header">
-        <h2>Discovery Connect</h2>
-      </div>
-      <div class="content">
-        <p>Dear User,</p>
-        <p>We are excited to let you know that your <b>sample request</b> has been created successfully.</p>
-        <div class="highlight">
-          Tracking ID: ${tracking_id}
-        </div>
-        <p>You can track the status of your request by visiting your dashboard.</p>
-        <p style="text-align:center;">
-          <a href="https://discovery-connect.com" class="btn">View My Requests</a>
-        </p>
-        <p>Thank you for choosing <b>Discovery Connect</b>.<br/>We’re here to support your journey!</p>
-      </div>
-      <div class="footer">
-        © ${new Date().getFullYear()} Discovery Connect. All rights reserved.
-      </div>
-    </div>
-  </body>
-  </html>
-  `;
-                              try {
-                                await sendEmail(user[0].email, subject, emailMessage);
-                              } catch (emailErr) {
-                                console.error("Failed to send email:", emailErr);
-                              }
-                            }
+    // Wrap IDs in quotes
+    const ids = cart_items.map((item) => `'${item.sample_id}'`).join(",");
 
 
-                            // ✅ Final callback
-                            return callback(null, {
-                              message: "Order created successfully",
-                              order_id: orderId,
-                              tracking_id,
-                              created_at,
-                            });
-                          }
-                        );
-                      }
-                    );
-                  }
-                );
-              } catch (promiseErr) {
-                return callback(promiseErr);
-              }
-            }
-          );
-        }
-      );
+    await queryAsync(
+      `UPDATE sample 
+       SET quantity = CASE id ${updateCasesQty} END,
+           quantity_allocated = CASE id ${updateCasesAlloc} END
+       WHERE id IN (${ids})`
+    );
+
+    // 4️⃣ Get Technical Admin
+    const adminResults = await queryAsync(
+      `SELECT id FROM user_account WHERE accountType = 'TechnicalAdmin' LIMIT 1`
+    );
+    if (!adminResults.length)
+      throw new Error("No Technical Admin found");
+
+    const technicalAdminId = adminResults[0].id;
+    await queryAsync(
+      `INSERT INTO technicaladminsampleapproval (order_id, technical_admin_id, technical_admin_status) 
+       VALUES (?, ?, 'pending')`,
+      [orderId, technicalAdminId]
+    );
+
+    // 5️⃣ Insert documents
+    await queryAsync(
+      `INSERT INTO sampledocuments (order_id, study_copy, reporting_mechanism, irb_file, nbc_file, added_by, role)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        orderId,
+        study_copy,
+        reporting_mechanism,
+        irb_file,
+        nbc_file || null,
+        researcher_id,
+        "Researcher",
+      ]
+    );
+
+    // 6️⃣ Fetch created_at + researcher email in parallel
+    const [orderData, user] = await Promise.all([
+      queryAsync(`SELECT created_at FROM orders WHERE id = ?`, [orderId]),
+      queryAsync(`SELECT email FROM user_account WHERE id = ?`, [researcher_id]),
+    ]);
+
+    const created_at = orderData[0].created_at;
+    const researcherEmail = user.length ? user[0].email : null;
+
+    // 🚀 Commit transaction
+    await queryAsync("COMMIT");
+
+    // 7️⃣ Send email asynchronously (don’t block response)
+    if (researcherEmail) {
+      const subject = "✨ Sample Request Created - Discovery Connect";
+      const emailMessage = `
+        <html>
+          <body>
+            <p>Dear User,</p>
+            <p>Your <b>sample request</b> has been created successfully.</p>
+            <p><b>Tracking ID:</b> ${tracking_id}</p>
+            <p>Thank you for choosing <b>Discovery Connect</b>.</p>
+          </body>
+        </html>`;
+      sendEmail(researcherEmail, subject, emailMessage).catch(console.error);
     }
-  );
+
+    // ✅ Final callback
+    return callback(null, {
+      message: "Order created successfully",
+      order_id: orderId,
+      tracking_id,
+      created_at,
+    });
+  } catch (err) {
+    // ❌ Rollback if error
+    await queryAsync("ROLLBACK");
+    return callback(err);
+  }
 };
 
 
@@ -451,17 +412,7 @@ const getOrderByCSR = (csrUserId, staffAction, callback) => {
   });
 };
 
-const queryAsync = (sql, params) => {
-  return new Promise((resolve, reject) => {
-    mysqlConnection.query(sql, params, (err, results) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(results);
-      }
-    });
-  });
-};
+
 
 const updateCartStatusbyCSR = async (req, dispatchSlip, callback) => {
   try {
