@@ -171,9 +171,6 @@ export const cartSlice = createSlice({
     },
     update_cart_product: (state, { payload }) => {
       const { sampleId, price, SamplePriceCurrency, ...charges } = payload;
-      console.log("Looking for sampleId:", sampleId);
-      console.log("Cart items:", state.cart_products.map(i => i.id));
-
       const product = state.cart_products.find((item) => item.id === sampleId);
 
       if (product) {

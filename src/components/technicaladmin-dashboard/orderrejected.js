@@ -168,7 +168,6 @@ const OrderPage = () => {
 
 
   const handleHistory = useCallback(async (orderGroup) => {
-    console.log(orderGroup);
     setShowHistoryModal(true);
     setLoadingHistory(true);
 
@@ -183,7 +182,6 @@ const OrderPage = () => {
         }
       );
 
-      console.log(response.data.results);
       setSelectedHistory(response.data.results || []);
     } catch (error) {
       console.error(error);

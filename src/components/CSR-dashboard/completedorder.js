@@ -89,7 +89,6 @@ const CompletedSampleArea = () => {
 
   // Group filtered samples by tracking_id
   const groupedData = getGroupedData(filteredSamples);
-console.log(groupedData)
   // Paginate grouped data
   const currentData = groupedData.slice(
     currentPage * itemsPerPage,

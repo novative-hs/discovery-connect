@@ -827,7 +827,6 @@ const BioBankSampleArea = () => {
       setPoolMode(true)
       setSelectedSampleName(sample.Analyte)
     }
-    console.log(sample)
     setFormData({
       patientname: sample.PatientName,
       finalConcentration: sample.finalConcentration,

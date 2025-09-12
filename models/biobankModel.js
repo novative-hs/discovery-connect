@@ -658,7 +658,6 @@ SELECT
 
   mysqlConnection.query(query, (err, results) => {
     if (err){
-      console.log(err)
     return callback(err, null);
     }
 

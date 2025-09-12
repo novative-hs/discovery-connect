@@ -42,12 +42,12 @@ const baseCommitteeStatus = (committeeType) => `
             SELECT 1 
             FROM committeesampleapproval ca
             JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-            WHERE ca.order_id = c.id AND cm.committeetype = '${committeeType}'
+            WHERE ca.order_id = o.id AND cm.committeetype = '${committeeType}'
         ) AND EXISTS (
             SELECT 1 
             FROM committeesampleapproval ca
             JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-            WHERE ca.order_id = c.id AND cm.committeetype = '${committeeType === 'Scientific' ? 'Ethical' : 'Scientific'}'
+            WHERE ca.order_id = o.id AND cm.committeetype = '${committeeType === 'Scientific' ? 'Ethical' : 'Scientific'}'
         ) THEN 'Not Sent'
         WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'Refused') > 0 THEN 'Refused'
         WHEN COUNT(*) > 0 AND SUM(ca.committee_status = 'UnderReview') > 0 THEN 'UnderReview'
@@ -56,18 +56,31 @@ const baseCommitteeStatus = (committeeType) => `
       END
     FROM committeesampleapproval ca 
     JOIN committee_member cm ON cm.user_account_id = ca.committee_member_id
-    WHERE ca.order_id = c.id AND cm.committeetype = '${committeeType}'
+    WHERE ca.order_id = o.id AND cm.committeetype = '${committeeType}'
   )
 `;
+
 
 const fetchOrderHistory = (researcherId, callback) => {
   const query = `
     SELECT 
       r.ResearcherName AS researcher_name,
       s.Analyte,
+      s.age,s.gender,s.Volume,s.VolumeUnit,s.TestResult,s.TestResultUnit,s.SamplePriceCurrency,
       c.quantity,
       o.totalpayment,
       c.price,
+      0.tracking_id,
+      o.totalpayment,
+      o.subtotal,
+
+      o.tax_type,
+      o.tax_value,
+      o.platform_type,
+      o.platform_value,
+      o.freight_type,
+      o.freight_value,
+
       o.order_status,
       ta.technical_admin_status AS technicaladmin_status,  -- Technical Admin status
       ${baseCommitteeStatus('Scientific')} AS scientific_committee_status,  -- Scientific committee status
@@ -88,7 +101,6 @@ const fetchOrderHistory = (researcherId, callback) => {
       console.error("Error fetching researcher order history:", err);
       return callback(err, null);
     }
-
     callback(null, results);
   });
 };

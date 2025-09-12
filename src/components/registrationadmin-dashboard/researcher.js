@@ -820,12 +820,40 @@ const ResearcherArea = () => {
                       <>
                         {/* Researcher Name Styling */}
                         <div className="mb-4 text-center">
-                          <span className="h5 fw-bold text-primary">
-                            Researcher:{" "}
-                          </span>
+                          <span className="h5 fw-bold text-primary">Researcher: </span>
                           <span className="h5 text-dark">
                             {orderhistoryData[0]?.researcher_name}
                           </span>
+                        </div>
+
+                        <div className="mb-4 text-center d-flex justify-content-center gap-5 flex-wrap">
+                          <div>
+                            <span className="h6 fw-bold text-primary">Order Status: </span>
+                            <span className="h6 text-dark">
+                              {orderhistoryData[0]?.order_status}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="h6 fw-bold text-primary">Technical Admin Status: </span>
+                            <span className="h6 text-dark">
+                              {orderhistoryData[0]?.technicaladmin_status}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="h6 fw-bold text-primary">Scientific Committee Status: </span>
+                            <span className="h6 text-dark">
+                              {orderhistoryData[0]?.scientific_committee_status}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="h6 fw-bold text-primary">Ethical Committee Status: </span>
+                            <span className="h6 text-dark">
+                              {orderhistoryData[0]?.ethical_committee_status}
+                            </span>
+                          </div>
                         </div>
 
                         {/* Table with modern styling */}
@@ -834,29 +862,112 @@ const ResearcherArea = () => {
                             <thead className="table-dark">
                               <tr>
                                 <th>Analyte</th>
-                                <th>Price</th>
-                                <th>Quantity</th>
-                                <th>Total</th>
-                                <th>Order Status</th>
-                                <th>Technical Admin Status</th>
-                                <th>Scientific CommitteeMember Status</th>
-                                <th>Ethical CommitteeMember Status</th>
+                                <th>Gender</th>
+                                <th>Quantity X Volume</th>
+                                <th>TestResult & Unit</th>
+                                <th className="text-end">Price ({orderhistoryData[0].SamplePriceCurrency})</th>
+
+
                               </tr>
                             </thead>
                             <tbody>
                               {orderhistoryData.map((order, index) => (
                                 <tr key={index}>
                                   <td>{order.Analyte}</td>
-                                  <td>{order.price}</td>
-                                  <td>{order.quantity}</td>
-                                  <td>{order.totalpayment}</td>
-                                  <td>{order.order_status}</td>
-                                  <td>{order.technicaladmin_status}</td>
-                                  <td>{order.scientific_committee_status}</td>
-                                  <td>{order.ethical_committee_status}</td>
+                                  <td>{`${order.age} year | ${order.gender}`}</td>
+                                  <td>{`${order.quantity} X ${order.Volume}${order.VolumeUnit}`}</td>
+                                  <td>{order.TestResult}{order.TestResultUnit}</td>
+                                  <td className="text-end">{order.price?.toLocaleString()}</td>
+
+
                                 </tr>
                               ))}
                             </tbody>
+                            <thead className="table-light">
+                              <tr>
+                                <th colSpan="3"></th>
+                                <th>Subtotal</th>
+                                <th className="text-end">{Number(orderhistoryData[0]?.subtotal).toLocaleString()}</th>
+                              </tr>
+                            </thead>
+                            <thead className="table-light">
+                              <tr>
+                                <th colSpan="3"></th>
+                                <th>Tax ({Number(orderhistoryData[0]?.tax_value).toLocaleString()}{orderhistoryData[0]?.tax_type === "percent" ? "%" : ""})</th>
+                                <th className="text-end">
+                                  {orderhistoryData[0]?.tax_type === "percent"
+                                    ? (
+                                      (orderhistoryData[0]?.subtotal * orderhistoryData[0]?.tax_value) / 100
+                                    ).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                    : Number(orderhistoryData[0]?.tax_value || 0).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}</th>
+                              </tr>
+                            </thead>
+                            <thead className="table-light">
+                              <tr>
+                                <th colSpan="3"></th>
+                                <th>Paltform Charges ({Number(orderhistoryData[0]?.platform_value).toLocaleString()}{orderhistoryData[0]?.platform_type === "percent" ? "%" : ""})</th>
+                                <th className="text-end">
+                                  {orderhistoryData[0]?.tax_type === "percent"
+                                    ? (
+                                      (orderhistoryData[0]?.subtotal * orderhistoryData[0]?.platform_value) / 100
+                                    ).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                    : Number(orderhistoryData[0]?.platform_value || 0).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}
+                                </th>
+                              </tr>
+                            </thead>
+                            <thead className="table-light">
+                              <tr>
+                                <th colSpan="3"></th>
+                                <th>
+                                  Freight Charges (
+                                  {Number(orderhistoryData[0]?.freight_value).toLocaleString()}
+                                  {orderhistoryData[0]?.freight_type === "percent" ? "%" : ""}
+                                  )
+                                </th>
+                                <th className="text-end">
+                                  {orderhistoryData[0]?.freight_type === "percent"
+                                    ? (
+                                      (orderhistoryData[0]?.subtotal * orderhistoryData[0]?.freight_value) / 100
+                                    ).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                    : Number(orderhistoryData[0]?.freight_value || 0).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}
+                                </th>
+                              </tr>
+                            </thead>
+
+                            <thead className="table-light">
+                              <tr>
+                                <th colSpan="3"></th>
+                                <th>Total</th>
+                                <th className="text-end">
+                                  {orderhistoryData[0]?.totalpayment
+                                    ? orderhistoryData[0].totalpayment.toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                    : ""}
+                                </th>
+
+
+                              </tr>
+                            </thead>
                           </table>
                         </div>
                       </>

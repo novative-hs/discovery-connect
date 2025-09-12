@@ -9,7 +9,6 @@ import Link from "next/link";
 const OrderConfirmation = () => {
   const router = useRouter();
   const { id, created_at, orderStatus, technical_admin_status, committee_status } = router.query;
-  console.log(orderStatus, technical_admin_status, committee_status)
   const [progressWidth, setProgressWidth] = useState("10%");
   const [steps, setSteps] = useState(Array(7).fill("secondary"));
 

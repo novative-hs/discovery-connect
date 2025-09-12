@@ -56,9 +56,6 @@ const OrderInfo = ({ setActiveTab }) => {
           params: { csrUserId: id, staffAction: staffAction },
         }
       );
-      console.log("API Response:", data);
-
-
       // Get unique tracking IDs for each status
       const dispatch = new Set(
         data.filter(item => item.order_status === "Dispatched").map(item => item.tracking_id)

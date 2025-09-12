@@ -85,7 +85,6 @@ const PendingSampleArea = () => {
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
-  console.log(groupedSamples)
 
   useEffect(() => {
     if (id) {
