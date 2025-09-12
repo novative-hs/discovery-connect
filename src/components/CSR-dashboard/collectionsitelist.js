@@ -41,8 +41,8 @@ const CollectionsiteList = () => {
                     )) &&
                 (!filters.phoneNumber ||
                     site.phoneNumber?.toString().includes(filters.phoneNumber)) &&
-                (!filters.status ||
-                    site.status?.toLowerCase().includes(filters.status.toLowerCase()))
+                (!filters.fullAddress ||
+                    site.fullAddress?.toLowerCase().includes(filters.fullAddress.toLowerCase()))
             );
         });
 
@@ -90,7 +90,7 @@ const CollectionsiteList = () => {
         { label: "Collection Site Name", key: "CollectionSiteName" },
         { label: "Type", key: "CollectionSiteType" },
         { label: "Contact", key: "phoneNumber" },
-        { label: "Status", key: "status" }
+        { label: "full Address", key: "fullAddress" }
     ];
 
     // Paginated data
@@ -143,7 +143,7 @@ const CollectionsiteList = () => {
                                         <td>{site.CollectionSiteName || "----"}</td>
                                         <td>{site.CollectionSiteType || "----"}</td>
                                         <td>{site.phoneNumber || "----"}</td>
-                                        <td>{site.status || "----"}</td>
+                                        <td>{site.fullAddress || ""},{site.city || ""},{site.district || ""},{site.country || ""}</td>
                                     </tr>
                                 ))
                             ) : (
