@@ -14,7 +14,7 @@ const boardMembers = [
   },
   {
     name: "Dr. Mattiurrehman",
-    designation: "Instructor - Patient Safety And Quality of Care (DPSQOC)",
+    designation: "Dean of Allied Health Sciences and HOD of Patient Safety QOC and Lung diseases",
     university: "Health Services Academy (HSA)",
     city: "Islamabad",
     country: "Pakistan",
