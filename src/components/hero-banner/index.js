@@ -1,5 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+// import { Link } from "react-router-dom";
+import Link from "next/link";
+
 
 const HeroBanner = () => {
   const videoRef = useRef(null);
@@ -74,9 +76,13 @@ const HeroBanner = () => {
             biospecimens directly from donors, enabling faster and more
             accessible scientific studies.
           </p>
-          <a href="/register" className="btn btn-lg text-white p-3" style={{ backgroundColor: "#003366" }}>
-            Register Yourself Now
-          </a>
+          <Link href="/register" passHref legacyBehavior>
+            <a className="btn btn-lg text-white p-3" style={{ backgroundColor: "#003366" }}>
+              Register Yourself Now
+            </a>
+          </Link>
+
+
 
         </div>
       </div>
