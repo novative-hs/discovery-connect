@@ -7,7 +7,7 @@ const TextArea = () => {
       <div className="container">
         <AboutCard
           title="Who we are?"
-          image="/assets/img/about/aboutus2.jpeg"
+          image="/assets/img/about/about4.jpeg"
           text={
             <>
               <strong style={{ color: "#2d3958" }}>
@@ -38,7 +38,7 @@ const TextArea = () => {
 
         <AboutCard
           title="Join Us Today!"
-          image="/assets/img/about/about4.jpeg"
+          image="/assets/img/about/aboutus2.jpeg"
           text="Be part of a trusted platform dedicated to advancing product development. Sign up now and start discovering the right samples for your study!"
         />
       </div>
