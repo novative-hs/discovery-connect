@@ -27,7 +27,7 @@ const PendingSampleArea = () => {
   const [dispatchSlip, setDispatchSlip] = useState(null);
   const fileInputRef = useRef(null);
   const [currency, setCurrency] = useState(null)
-  if (id === null) return <div>Loading...</div>;
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -175,7 +175,7 @@ const PendingSampleArea = () => {
       fileInputRef.current.value = "";
     }
   };
-
+  if (id === null) return <div>Loading...</div>;
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
@@ -242,7 +242,7 @@ const PendingSampleArea = () => {
                     <td>{records[0].researcher_name}</td>
                     <td>{records[0].user_email} | {records[0].phoneNumber}</td>
                     <td>{records[0].city_name}</td>
-                    <td>{records[0].fullAddress} ,{records[0].district_name} District,{records[0].city_name},{records[0].country_name}</td>
+                    <td>{records[0].fullAddress}, {records[0].city_name}, {records[0].country_name}</td>
                     {/* <td>{records[0].order_status}</td> */}
                     <td>
                       <button

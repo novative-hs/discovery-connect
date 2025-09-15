@@ -74,7 +74,7 @@ const boardMembers = [
     city: "Faisalabad",
     country: "Pakistan",
     email: "mfarooq@gcuf.edu.pk",
-    contact: "-",
+    contact: "0310-7099456",
     comments: "Research expertise in bioinformatics and biotechnology.",
     picture: "/assets/img/board-advisory/dr muhammad farooq.jpg"
   },
@@ -145,7 +145,7 @@ const boardMembers = [
     contact: "0300-5740568",
     comments:
       "Focuses on translational genomics, biomedical informatics, and personalized genomics with training experience at Harvard Medical School, UCL, CEMB, and South Korea.",
-    picture: "/assets/img/board-advisory/userimage.png",
+    picture: "/assets/img/board-advisory/Muhammad ilyas.png",
   },
   {
     name: "Dr. Hamid Mukhtar",
