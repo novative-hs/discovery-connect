@@ -1159,7 +1159,7 @@ const OrderPage = () => {
                               >
                                 <div
                                   style={{
-                                    fontSize: "0.8rem",
+                                    fontSize: "1rem",
                                     color: "#6b7280",
                                     marginBottom: "0.35rem",
                                     fontWeight: "500",
@@ -1170,7 +1170,7 @@ const OrderPage = () => {
                                 <div
                                   style={{ fontSize: "0.95rem", color: "#1f2937" }}
                                 >
-                                  <strong>Order referred</strong> to Technical Admin
+                                  <strong>The Order referred to Technical Admin</strong> 
                                 </div>
                               </div>
                             </div>
@@ -1219,7 +1219,7 @@ const OrderPage = () => {
                             >
                               <div
                                 style={{
-                                  fontSize: "0.8rem",
+                                  fontSize: "1rem",
                                   color: "#6b7280",
                                   marginBottom: "0.35rem",
                                   fontWeight: "500",
@@ -1229,12 +1229,13 @@ const OrderPage = () => {
                                 {approval.committee_created_at && (
                                   <div style={{ marginBottom: "0.6rem" }}>
                                     {formatDT(approval.committee_created_at)}
-                                    <div style={{ fontSize: "0.95rem", color: "#1f2937" }}>
-                                      <FaClock
+                                    <div style={{ fontSize: "1rem", color: "#1f2937" }}>
+                                      {/* <FaClock
                                         style={{ marginRight: "5px", color: "#6c757d" }}
-                                      />
-                                      Order Referred to {approval.committeetype} Committee –{" "}
+                                      /> */}
+                                    <strong>  The Order Referred to {approval.committeetype} Committee –{" "}
                                       {approval.CommitteeMemberName}
+                                      </strong>
                                     </div>
                                   </div>
                                 )}
@@ -1243,22 +1244,23 @@ const OrderPage = () => {
                                 {approval.committee_approval_date && (
                                   <div>
                                     {formatDT(approval.committee_approval_date)}
-                                    <div style={{ fontSize: "0.95rem", color: "#1f2937" }}>
+                                    <div style={{ fontSize: "1rem", color: "#1f2937" }}>
                                       {approval.committee_status === "Refused" ? (
                                         <>
-                                          <FaTimesCircle
+                                          {/* <FaTimesCircle
                                             style={{ marginRight: "5px", color: "#dc3545" }}
-                                          />
-                                          Order Refused by {approval.committeetype} Committee –{" "}
+                                          /> */}
+                                         <strong>The Order Refused by {approval.committeetype} Committee –{" "}
                                           {approval.CommitteeMemberName}
+                                          </strong>
                                         </>
                                       ) : (
                                         <>
-                                          <FaCheckCircle
+                                          {/* <FaCheckCircle
                                             style={{ marginRight: "5px", color: "#198754" }}
-                                          />
-                                          Order Approved by {approval.committeetype} Committee –{" "}
-                                          {approval.CommitteeMemberName}
+                                          /> */}
+                                          <strong>The Order Approved by {approval.committeetype} Committee –{" "}
+                                          {approval.CommitteeMemberName}</strong>
                                         </>
                                       )}
                                     </div>
@@ -1307,7 +1309,7 @@ const OrderPage = () => {
                             >
                               <div
                                 style={{
-                                  fontSize: "0.8rem",
+                                  fontSize: "1rem",
                                   color: "#6b7280",
                                   marginBottom: "0.35rem",
                                   fontWeight: "500",
@@ -1370,7 +1372,7 @@ const OrderPage = () => {
                               >
                                 <div
                                   style={{
-                                    fontSize: "0.8rem",
+                                    fontSize: "1rem",
                                     color: "#6b7280",
                                     marginBottom: "0.35rem",
                                     fontWeight: "500",
@@ -1378,7 +1380,7 @@ const OrderPage = () => {
                                 >
                                   {formatDT(ta.TechnicaladminApproval_date)}
                                 </div>
-                                <div style={{ fontSize: "0.95rem", color: "#1f2937" }}>
+                                <div style={{ fontSize: "1rem", color: "#1f2937" }}>
                                   Order{" "}
                                   <b>{ta.technical_admin_status.toLowerCase()}</b> by
                                   Technical Admin
