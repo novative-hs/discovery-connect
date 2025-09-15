@@ -1,113 +1,109 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { Modal, Button, Form } from "react-bootstrap";
 import Pagination from "@ui/Pagination";
-import { notifySuccess,notifyError } from "@utils/toast";
+import { notifySuccess, notifyError } from "@utils/toast";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faFileInvoice } from "@fortawesome/free-solid-svg-icons";
 
 const CompletedSampleArea = () => {
-  const [staffAction, setStaffAction] = useState("");
+  const id = sessionStorage.getItem("userID");
+
+  const [staffAction, setStaffAction] = useState(() => sessionStorage.getItem("staffAction") || "");
   const [samples, setSamples] = useState([]);
-  const [filteredSamples, setFilteredSamples] = useState([]);
+  const [filteredSamplename, setFilteredSamplename] = useState([]);
+  const [showOrderStatusModal, setShowOrderStatusModal] = useState(false);
+  const [orderStatus, setOrderStatus] = useState("Dispatched");
   const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
-  const [expandedId, setExpandedId] = useState(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [selectedCartId, setSelectedCartId] = useState(null);
-  const [isReceived, setIsReceived] = useState(false);
-  const [receiptSlip, setReceiptSlip] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedUserSamples, setSelectedUserSamples] = useState([]);
+  const [selectedUserName, setSelectedUserName] = useState("");
+  const [showOrderStatusError, setShowOrderStatusError] = useState(false);
   const [deliveryDate, setDeliveryDate] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
-  const id = typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dispatchVia, setDispatchVia] = useState("");
+  const [dispatchSlip, setDispatchSlip] = useState(null);
+  const fileInputRef = useRef(null);
+  const [currency, setCurrency] = useState(null)
 
-  // Fetch staffAction only once when component mounts
-  useEffect(() => {
-    const action = sessionStorage.getItem("staffAction") || "";
-    setStaffAction(action);
-  }, []);
 
-  // Fetch samples on first render & when staffAction changes
-  useEffect(() => {
-    if (id && staffAction) {
-      fetchSamples(staffAction);
-    }
-  }, [id, staffAction]);
-
-  const fetchSamples = async (staffAction) => {
-    try {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/getOrderbyCSR`,
-        {
-          params: { csrUserId: id, staffAction },
-        }
-      );
-
-      const shippingSamples = response.data.filter(
-        (sample) => sample.order_status === "Completed"
-      );
-
-      setSamples(shippingSamples);
-      setFilteredSamples(shippingSamples);
-    } catch (error) {
-      console.error("Error fetching samples:", error);
-    }
-  };
-
-  // Group by tracking_id helper
-  const getGroupedData = (data) => {
-    const grouped = Object.values(
-      data.reduce((acc, sample) => {
-        if (!acc[sample.tracking_id]) {
-          acc[sample.tracking_id] = { ...sample, analytes: [] };
-        }
-        acc[sample.tracking_id].analytes.push(sample.Analyte);
-        return acc;
-      }, {})
-    );
-    return grouped;
-  };
-
-  // Update pagination whenever filteredSamples or currentPage changes
-  useEffect(() => {
-    const pages = Math.max(1, Math.ceil(filteredSamples.length / 10));
-    setTotalPages(pages);
-
-    if (currentPage >= pages) {
-      setCurrentPage(0);
-    }
-  }, [filteredSamples, currentPage]);
-
-  const tableHeaders = [
-    { label: "Order ID", key: "tracking_id" },
-    { label: "User Name", key: "researcher_name" },
-    { label: "Analyte", key: "Analyte" },
-    { label: "Order Date", key: "created_at" },
-    { label: "Status", key: "order_status" },
-    // { label: "Action", key: "action" },
-  ];
-
-  const itemsPerPage = 10;
-
-  // Group filtered samples by tracking_id
-  const groupedData = getGroupedData(filteredSamples);
-  // Paginate grouped data
-  const currentData = groupedData.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
-  const handlePageChange = (event) => {
-    setCurrentPage(event.selected);
-    setExpandedId(null); // Collapse any open details when page changes
-  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === "DeliveryDate") setDeliveryDate(value);
     if (name === "DeliveryTime") setDeliveryTime(value);
   };
 
-  // Filter samples by field and value; filters original samples, not grouped data
+  const tableHeaders = [
+    { label: "Order ID", key: "tracking_id" },
+    { label: "Order Date", key: "created_at" },
+    { label: "Product Location", key: "source_name" },
+    { label: "Customer Name", key: "researcher_name" },
+    // { label: "Customer Contact", key: "user_email" },
+    { label: "Customer City", key: "city_name" },
+    // { label: "Customer Adress", key: "fullAddress" },
+    // { label: "Order Status", key: "order_status" },
+  ];
+
+  const fetchSamples = async (action = staffAction) => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/getOrderbyCSR`,
+        {
+          params: {
+            csrUserId: id,
+            staffAction: action,
+          },
+        }
+      );
+      const shippingSamples = response.data.filter(
+        (sample) => sample.order_status === "Completed"
+      );
+      setSamples(shippingSamples);
+      setFilteredSamplename(shippingSamples);
+    } catch (error) {
+      console.error("Error fetching samples:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (filteredSamplename.length > 0) {
+      setCurrency(filteredSamplename[0].SamplePriceCurrency || "PKR");
+    } else {
+      setCurrency("PKR");
+    }
+  }, [filteredSamplename]);
+  const groupedSamples = filteredSamplename.reduce((acc, sample) => {
+    const key = sample.tracking_id;
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(sample);
+    return acc;
+  }, {});
+
+  const groupedList = Object.entries(groupedSamples).slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
+
+  useEffect(() => {
+    if (id) {
+      fetchSamples(staffAction);
+    }
+  }, [staffAction, id]);
+
+  useEffect(() => {
+    const pages = Math.max(1, Math.ceil(Object.keys(groupedSamples).length / itemsPerPage));
+    setTotalPages(pages);
+    if (currentPage >= pages) setCurrentPage(0);
+  }, [filteredSamplename]);
+
+  const handlePageChange = (event) => {
+    setCurrentPage(event.selected);
+  };
+
   const handleFilterChange = (field, value) => {
     let filtered = [];
-
     if (value.trim() === "") {
       filtered = samples;
     } else {
@@ -115,109 +111,159 @@ const CompletedSampleArea = () => {
         sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
       );
     }
-
-    setFilteredSamples(filtered);
+    setFilteredSamplename(filtered);
     setCurrentPage(0);
-    setExpandedId(null); // Collapse details on filter change
   };
 
+  const handleOrderStatusSubmit = async () => {
+    setIsSubmitting(true);
 
-  const handleCompleteOrder = async () => {
-    if (!deliveryDate || !deliveryTime) {
+    // // Validation
+    if (!deliveryDate || !deliveryTime || !dispatchVia || !dispatchSlip) {
       notifyError("Please select all the details.");
       return setIsSubmitting(false);
     }
-    setIsSubmitting(true);
+
     try {
       const formData = new FormData();
-      formData.append("orderid", selectedCartId); // sends as string
-      formData.append("cartStatus", "Completed");
+      formData.append("orderid", selectedUserSamples[0].id);
+      formData.append("cartStatus", orderStatus);
       formData.append("deliveryDate", deliveryDate);
       formData.append("deliveryTime", deliveryTime);
-      if (receiptSlip) formData.append("dispatchSlip", receiptSlip);
-      await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/updateOrderStatus`,
+      formData.append("dispatchVia", dispatchVia);
+      if (dispatchSlip) formData.append("dispatchSlip", dispatchSlip);
+
+      const res = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/updatestatusbyCSR`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
-      notifySuccess("Order Successfully Completed")
-      setShowConfirmModal(false);
+
+      notifySuccess(res.data.message);
+      setShowOrderStatusModal(false);
+      setShowOrderStatusError(false);
       fetchSamples();
-    } catch (err) {
-      console.error("Error completing order:", err);
+    } catch (error) {
+      console.error("Error updating order status:", error);
+      notifyError("Failed to update order status.");
     } finally {
       setIsSubmitting(false);
+      setOrderStatus("Dispatched");
+      setDispatchSlip(null);
+      setDispatchVia("");
+      setDeliveryDate("");
+      setDeliveryTime("");
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+  const handleCancelModal = () => {
+    setShowOrderStatusModal(false);
+    setOrderStatus("Dispatched");
+    setDispatchSlip(null);
+    setDispatchVia("");
+    setDeliveryDate("");
+    setDeliveryTime("");
+
+    // clear actual file input field
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
-
+  if (id === null) return <div>Loading...</div>;
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
-        <h4 className="text-center text-dark fw-bold mb-4">Completed Ordered</h4>
-
-        {/* Table */}
+        <h6 className="text-start text-danger fw-bold mb-4">
+          Note: Only orders that have been completed are shown here.
+        </h6>
+        <h4 className="text-center text-dark fw-bold mb-4">
+          Completed Orders
+        </h4>
         <div className="table-responsive w-100">
           <table className="table table-bordered table-hover text-center align-middle table-sm shadow-sm rounded">
             <thead className="table-primary text-white">
               <tr>
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="col-md-1 px-2">
-                    {key !== "action" ? (
-                      <div className="d-flex flex-column align-items-center">
-                        <input
-                          type="text"
-                          className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                          placeholder={`Search ${label}`}
-                          onChange={(e) => handleFilterChange(key, e.target.value)}
-                          style={{ minWidth: "150px" }}
-                        />
-                        <span className="fw-bold mt-1 d-block text-wrap fs-6">{label}</span>
-                      </div>
-                    ) : (
-                      <span className="fw-bold mt-1 d-block text-wrap fs-6">{label}</span>
-                    )}
+                    <div className="d-flex flex-column align-items-center">
+                      <input
+                        type="text"
+                        className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                        placeholder={`Search ${label}`}
+                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        style={{ minWidth: "150px" }}
+                      />
+                      <span className="fw-bold mt-1 d-block text-wrap fs-6">
+                        {label}
+                        {label === "Unit Price" && groupedList.length > 0
+                          ? ` (${currency || "PKR"})`
+                          : ""}
+                        {label === "Total" && groupedList.length > 0
+                          ? ` (${currency || "PKR"})`
+                          : ""}
+                      </span>
+                    </div>
                   </th>
                 ))}
+                <th className="p-2 text-center" style={{ width: "1%", whiteSpace: "nowrap" }}>
+                  Action
+                </th>
               </tr>
             </thead>
-            <tbody className="table-light">
-              {currentData.length > 0 ? (
-                currentData.map((sample) => (
-                  <React.Fragment key={sample.tracking_id}>
-                    <tr>
-                      <td>{sample.tracking_id || "----"}</td>
-                      <td>{sample.researcher_name}</td>
-                      <td>
-                        {expandedId === sample.tracking_id ? (
-                          <ul style={{ textAlign: "left", paddingLeft: "20px", margin: 0 }}>
-                            {sample.analytes.map((analyte, i) => (
-                              <li key={i}>{analyte}</li>
-                            ))}
-                          </ul>
-                        ) : (
-                          `${sample.analytes.length} item(s)`
-                        )}
-                      </td>
 
-                      <td>
-                        {new Date(sample.created_at)
-                          .toLocaleDateString("en-GB", {
-                            day: "numeric",
-                            month: "short",
-                            year: "2-digit",
-                          })
-                          .replace(/ /g, "-")}
-                      </td>
-                      <td>{sample.order_status}</td>
-                     
-                    </tr>
-                  </React.Fragment>
+            <tbody className="bg-light">
+              {groupedList.length > 0 ? (
+                groupedList.map(([researcher, records]) => (
+                  <tr key={researcher}>
+                    <td>{records[0].tracking_id || "---"}</td>
+                    <td>{new Date(records[0].created_at).toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: '2-digit'
+                    }).replace(/ /g, '-')}</td>
+                    <td>
+                      {records && records.length > 0
+                        ? [...new Set(
+                          records.map(
+                            (rec) => rec.BiobankName || rec.CollectionSiteName || "---"
+                          )
+                        )].join(", ")
+                        : "---"}
+                    </td>
+
+
+
+                    <td>{records[0].researcher_name}</td>
+                    {/* <td>{records[0].user_email} | {records[0].phoneNumber}</td> */}
+                    <td>{records[0].city_name}</td>
+                    {/* <td>{records[0].fullAddress} ,{records[0].district_name} District,{records[0].city_name},{records[0].country_name}</td> */}
+                    {/* <td>{records[0].order_status}</td> */}
+                    <td>
+                      <button
+                        className="btn btn-outline-success btn-sm d-flex justify-content-center align-items-center gap-2  rounded-pill shadow"
+                        onClick={() => {
+                          setSelectedUserSamples(records);
+                          setSelectedUserName(researcher);
+                          setShowOrderStatusModal(true);
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faFileInvoice} />
+                        View
+                      </button>
+                    </td>
+                  </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={tableHeaders.length} className="text-center">
+                  <td colSpan="6" className="text-center">
                     No samples available
                   </td>
                 </tr>
@@ -226,93 +272,180 @@ const CompletedSampleArea = () => {
           </table>
         </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <Pagination
-            handlePageClick={handlePageChange}
-            pageCount={totalPages}
-            focusPage={currentPage}
-          />
-        )}
-        {showConfirmModal && (
-          <div
-            className="modal fade show d-block"
-            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        <Pagination pageCount={totalPages} onPageChange={handlePageChange} />
+
+        {showOrderStatusModal && (
+          <Modal
+            show
+            onHide={() => setShowOrderStatusModal(false)}
+            size="lg"
+            centered
+            scrollable // makes modal body scrollable when content is too tall
           >
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content p-3 rounded-3 shadow-lg border-0">
-                {/* Header */}
-                <div className="modal-header border-0">
-                  <h5 className="modal-title fw-bold text-dark">Confirm Order</h5>
-                  <button
-                    className="btn-close"
-                    style={{ filter: "invert(0.5)" }}
-                    onClick={() => setShowConfirmModal(false)}
-                  ></button>
-                </div>
+            <Modal.Header closeButton>
+              <Modal.Title>
+                Order Detail - {selectedUserName}
+              </Modal.Title>
+            </Modal.Header>
+            <Modal.Body
+              className="p-4 bg-light rounded-3 shadow-sm"
+              style={{ maxHeight: "80vh", overflowY: "auto" }} // max height & scroll
+            >
 
-                {/* Body */}
-                <div className="modal-body">
-                  <div className="mt-3">
-                    <label className="form-label fw-semibold">Dispatch Date</label>
-                    <input
-                      type="date"
-                      className="form-control border rounded-2 shadow-sm"
-                      name="DeliveryDate"
-                      value={deliveryDate}
-                      max={new Date().toISOString().split("T")[0]}  // 👈 disables future dates
-                      onChange={handleInputChange}
-                    />
-                  </div>
+              <div className="table-responsive">
+                <table className="table table-bordered table-hover text-center table-sm align-middle bg-white rounded shadow-sm">
+                  <thead className="table-success text-dark">
+                    <tr>
+                      <th>Item</th>
+                      <th>Qty X Volume</th>
+
+                      <th>
+                        Unit Price ({selectedUserSamples[0]?.SamplePriceCurrency || '$'})
+                      </th>
+
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedUserSamples.map((sample, i) => (
+                      <tr key={i}>
+                        <td className="text-start">
+                          <div>
+                            <div className="fw-semibold">{sample.Analyte}</div>
+                            <div className="text-muted small">
+                              {/* Gender and Age */}
+                              {(sample.gender || sample.age) && (
+                                <>
+                                  {sample.gender}
+                                  {sample.age ? `${sample.gender ? ', ' : ''}${sample.age} years` : ''}
+                                </>
+                              )}
+
+                              {/* Separator + TestResult */}
+                              {(sample.TestResult || sample.TestResultUnit) && (sample.gender || sample.age) && ' | '}
+                              {(sample.TestResult || sample.TestResultUnit) && (
+                                <>
+                                  {sample.TestResult ?? ''} {sample.TestResultUnit ?? ''}
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+
+                        <td>
+                          {sample.quantity || 0} × {sample.volume || 0}{sample.volumeUnit || ''}
+                        </td>
 
 
-                  <div className="mt-3">
-                    <label className="form-label fw-semibold">Dispatch Time</label>
-                    <input
-                      type="time"
-                      className="form-control border rounded-2 shadow-sm"
-                      name="DeliveryTime"
-                      value={deliveryTime}
-                      onChange={handleInputChange}
-                    />
-                  </div>
+                        <td style={{ textAlign: "right" }}>
+                          {sample.price
+                            ? `${Number(sample.price).toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })}`
+                            : "-"}
+                        </td>
 
-                  <div className="mt-3">
-                    <label className="form-label fw-semibold">Upload Receipt (Optional)</label>
-                    <input
-                      type="file"
-                      className="form-control border rounded-2 shadow-sm"
-                      onChange={(e) => setReceiptSlip(e.target.files[0])}
-                    />
-                  </div>
-                </div>
+                        {/* <td style={{ textAlign: "right" }}>
+                          {sample.totalpayment
+                            ? `${Number(sample.totalpayment).toLocaleString("en-US", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2
+                            })}`
+                            : "-"}
+                        </td> */}
 
-                {/* Footer */}
-                <div className="modal-footer border-0">
-                  <button
-                    className="btn px-4 py-2 text-white fw-semibold"
-                    style={{
-                      backgroundColor: isSubmitting ? "#6c757d" : "#28a745", // green instead of blue
-                      borderRadius: "8px",
-                      boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
-                      cursor: isSubmitting ? "not-allowed" : "pointer",
-                    }}
-                    disabled={isSubmitting}
-                    onClick={handleCompleteOrder}
-                  >
-                    {isSubmitting ? "Processing..." : "Order Complete"}
-                  </button>
-                </div>
+
+
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-light">
+                    <tr>
+                      <td colSpan="2" className="text-end fw-bold">
+                        Sub Total ({selectedUserSamples[0]?.SamplePriceCurrency || ""})
+                      </td>
+                      <td
+                        className="fw-bold text-success"
+                        style={{ textAlign: "right" }}
+                      >
+                        {selectedUserSamples[0].subtotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                    {/* tax */}
+                    <tr>
+                      <td colSpan="2" className="text-end fw-bold">
+                        Tax (
+                        {selectedUserSamples[0].tax_value.toString().replace(/\.00$/, "")}
+                        {selectedUserSamples[0]?.tax_type === "percent" ? "%" : ""}
+                        )
+                      </td>
+                      <td
+                        className="fw-bold text-success"
+                        style={{ textAlign: "right" }}
+                      >
+                        {selectedUserSamples[0].tax_type === "percent"
+                          ? (selectedUserSamples[0].subtotal *
+                            selectedUserSamples[0].tax_value) /
+                          100
+                          : Number(selectedUserSamples[0].tax_value).toLocaleString()}
+                      </td>
+                    </tr>
+
+                    {/* Paltform charges */}
+                    <tr>
+                      <td colSpan="2" className="text-end fw-bold">
+                        Platform Charges ({selectedUserSamples[0].platform_value.toString().replace(/\.00$/, "")}{selectedUserSamples[0]?.platform_type === "percent" ? "%" : ""})
+                      </td>
+                      <td
+                        className="fw-bold text-success"
+                        style={{ textAlign: "right" }}
+                      >
+                        {selectedUserSamples[0].platform_type === "percent"
+                          ? (selectedUserSamples[0].subtotal *
+                            selectedUserSamples[0].platform_value) /
+                          100
+                          : Number(selectedUserSamples[0].platform_value).toLocaleString()}
+                      </td>
+                    </tr>
+                    {/* freight charges */}
+                    <tr>
+                      <td colSpan="2" className="text-end fw-bold">
+                        Freight Charges ({selectedUserSamples[0].freight_value.toString().replace(/\.00$/, "")}{selectedUserSamples[0]?.freight_type === "percent" ? "%" : ""})
+                      </td>
+                      <td
+                        className="fw-bold text-success"
+                        style={{ textAlign: "right" }}
+                      >
+                        {selectedUserSamples[0].freight_type === "percent"
+                          ? (selectedUserSamples[0].subtotal *
+                            selectedUserSamples[0].freight_value) /
+                          100
+                          : Number(selectedUserSamples[0].freight_value).toLocaleString()}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan="2" className="text-end fw-bold">
+                        Total ({selectedUserSamples[0]?.SamplePriceCurrency || ""})
+                      </td>
+                      <td
+                        className="fw-bold text-success"
+                        style={{ textAlign: "right" }}
+                      >
+                        {selectedUserSamples[0].totalpayment.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  </tfoot>
+
+                </table>
               </div>
-            </div>
-          </div>
+
+            </Modal.Body>
+          </Modal>
         )}
-
-
-
       </div>
     </section>
   );
 };
 
 export default CompletedSampleArea;
+

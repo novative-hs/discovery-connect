@@ -208,7 +208,7 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
     const connection = mysqlConnection.promise();
 
     let whereClause = `WHERE 1=1`; 
-    const params = [id]; // committee_member_id
+    const params = [id]; // committee_member_id 
 
     if (searchField && searchValue) {
       let dbField;
@@ -305,31 +305,30 @@ const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback)
 
   // Optimized SQL using CTE + ROW_NUMBER()
   const sqlQuery = `
-    WITH latest_docs AS (
-      SELECT
-        sd.order_id,
-        sd.study_copy,
-        sd.irb_file,
-        sd.nbc_file,
-        sd.reporting_mechanism,
-        ROW_NUMBER() OVER (
-          PARTITION BY sd.order_id
-          ORDER BY COALESCE(sd.updated_at, sd.created_at) DESC
-        ) AS rn
-      FROM sampledocuments sd
-    )
-    SELECT 
-      o.id AS order_id,
-      ld.study_copy,
-      ld.irb_file,
-      ld.nbc_file,
-      ld.reporting_mechanism
-    FROM orders o
-    JOIN committeesampleapproval csa ON o.id = csa.order_id
-    LEFT JOIN latest_docs ld ON o.id = ld.order_id AND ld.rn = 1
-    ${whereClause}
-    ORDER BY o.created_at ASC
-    LIMIT ? OFFSET ?;
+ SELECT 
+  o.id AS order_id,
+  (SELECT d.study_copy 
+   FROM sampledocuments d 
+   WHERE d.order_id = o.id AND d.study_copy IS NOT NULL
+   ORDER BY COALESCE(d.updated_at, d.created_at) DESC LIMIT 1) AS study_copy,
+  (SELECT d.irb_file 
+   FROM sampledocuments d 
+   WHERE d.order_id = o.id AND d.irb_file IS NOT NULL
+   ORDER BY COALESCE(d.updated_at, d.created_at) DESC LIMIT 1) AS irb_file,
+  (SELECT d.nbc_file 
+   FROM sampledocuments d 
+   WHERE d.order_id = o.id AND d.nbc_file IS NOT NULL
+   ORDER BY COALESCE(d.updated_at, d.created_at) DESC LIMIT 1) AS nbc_file,
+  (SELECT d.reporting_mechanism 
+   FROM sampledocuments d 
+   WHERE d.order_id = o.id AND d.reporting_mechanism IS NOT NULL
+   ORDER BY COALESCE(d.updated_at, d.created_at) DESC LIMIT 1) AS reporting_mechanism
+FROM orders o
+JOIN committeesampleapproval csa ON o.id = csa.order_id
+${whereClause}
+ORDER BY o.created_at ASC
+LIMIT ? OFFSET ?;
+
   `;
 
   const queryParams = [...params, pageSize, offset];

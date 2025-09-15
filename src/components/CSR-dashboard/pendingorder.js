@@ -242,7 +242,7 @@ const PendingSampleArea = () => {
                     <td>{records[0].researcher_name}</td>
                     <td>{records[0].user_email} | {records[0].phoneNumber}</td>
                     <td>{records[0].city_name}</td>
-                    <td>{records[0].fullAddress} ,{records[0].district_name} District,{records[0].city_name},{records[0].country_name}</td>
+                    <td>{records[0].fullAddress}, {records[0].city_name}, {records[0].country_name}</td>
                     {/* <td>{records[0].order_status}</td> */}
                     <td>
                       <button
