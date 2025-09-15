@@ -173,8 +173,32 @@ const VolumeUnitArea = () => {
       const response = await axios.get(
         `${url}/samplefields/get-samplefields/infectiousdiseasetesting`
       );
-      setFilteredinfectiousdiseasename(response.data);
-      setinfectiousdiseasename(response.data);
+         const existinginfectiousdisease = infectiousdiseasename.find(
+        (c) => c.id === selectedinfectiousdiseasenameId
+      );
+
+      // Build the updated city correctly
+      const updatedinfectiousdisease = {
+        id: selectedinfectiousdiseasenameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existinginfectiousdisease?.added_by || "Registration Admin",
+        created_at: existinginfectiousdisease?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setinfectiousdiseasename((prev) =>
+        prev.map((infectiousdisease) =>
+          infectiousdisease.id === selectedinfectiousdiseasenameId ? updatedinfectiousdisease : infectiousdisease
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredinfectiousdiseasename((prev) =>
+        prev.map((infectiousdisease) =>
+          infectiousdisease.id === selectedinfectiousdiseasenameId ? updatedinfectiousdisease : infectiousdisease
+        )
+      );
       setSuccessMessage("Infectious Disease Name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

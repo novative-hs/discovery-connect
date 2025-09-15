@@ -297,8 +297,37 @@ const CollectionSiteStaffArea = () => {
         formData,
       );
 
+      // Find existing record (to keep fields like created_at etc.)
+      const existingcollectionsitestaff = allcollectionsitesstaff.find(
+        (collectionsitesstaff) => collectionsitesstaff.id === selectedCollectionsiteStaffId
+      );
+
+      // Build updated record locally
+      const updatedcollectionsitestaff = {
+        ...existingcollectionsitestaff, // keep old unchanged fields
+        collectionsitesid: formData.collectionsitesid,
+        staffName: formData.staffName,
+        email: formData.email,
+        password: formData.password,
+        permission: formData.permission,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Replace in collectionsitesstaff
+      setAllCollectionsitesstaff((prev) =>
+        prev.map((collectionsitestaff) =>
+          collectionsitestaff.id === selectedCollectionsiteStaffId ? updatedcollectionsitestaff : collectionsitestaff
+        )
+      );
+
+      // Replace in filtered collectionsitesstaff
+      setCollectionsitesstaff((prev) =>
+        prev.map((collectionsitestaff) =>
+          collectionsitestaff.id === selectedCollectionsiteStaffId ? updatedcollectionsitestaff : collectionsitestaff
+        )
+      );
       notifySuccess("Collection Site Staff Updated Successfully");
-      fetchCollectionsiteStaff();
+
       setSelectedCollectionSiteStaffId("");
       setEditCollectionsiteStaff("");
       setShowEditModal(false);
@@ -319,7 +348,6 @@ const CollectionSiteStaffArea = () => {
 
   // Handle status update
   const handleStatusClick = async (id, option) => {
-
     try {
       // Send status update request to backend
       const response = await axios.put(
@@ -328,14 +356,30 @@ const CollectionSiteStaffArea = () => {
         { headers: { "Content-Type": "application/json" } }
       );
 
-      // Assuming the response is successful, set success message and hide the dropdown
+      // Assuming the response is successful, set success message
       setSuccessMessage(response.data.message);
-
-      // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
 
-      // Refresh the collectionsite list
-      fetchCollectionsiteStaff();
+      // Find the existing record
+      const existing = allcollectionsitesstaff.find(
+        (item) => item.id === id
+      );
+
+      // Build updated record
+      const updated = {
+        ...existing,
+        status: option,
+      };
+
+      // Update in allcollectionsitesstaff
+      setAllCollectionsitesstaff((prev) =>
+        prev.map((item) => (item.id === id ? updated : item))
+      );
+
+      // Update in filtered collectionsitestaff
+      setCollectionsitesstaff((prev) =>
+        prev.map((item) => (item.id === id ? updated : item))
+      );
 
       // Close the dropdown after status change
       setStatusOptionsVisibility((prev) => ({
@@ -346,6 +390,7 @@ const CollectionSiteStaffArea = () => {
       console.error("Error updating status:", error);
     }
   };
+
 
   useEffect(() => {
     const anyModalOpen = showAddModal || showDeleteModal || showEditModal || showHistoryModal;
@@ -1045,18 +1090,25 @@ const CollectionSiteStaffArea = () => {
             <div className="p-3">
               <div className="row g-3">
                 {fieldsToShowInOrder.map(({ field, label }) => {
-                  const value = selectedCollectionSite[field];
+                  let value = selectedCollectionSite[field];
+
                   if (value === undefined) return null;
+
+                  // Format date fields
+                  if (field.includes("date") || field.includes("at")) {
+                    value = formatDate(value);
+                  }
 
                   return (
                     <div className="col-md-6" key={field}>
                       <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
                         <span className="text-muted small fw-bold mb-1">{label}</span>
-                        <span className="fs-6 text-dark">{value?.toString() || "----"}</span>
+                        <span className="fs-6 text-dark">{value || "----"}</span>
                       </div>
                     </div>
                   );
                 })}
+
               </div>
             </div>
           ) : (

@@ -142,8 +142,35 @@ const handleEditClick = (countryname) => {
       try {
         await axios.put(`${url}/country/put-country/${selectedcountrynameId}`, formData);
         const response = await axios.get(`${url}/country/get-country`);
-        setFilteredCountryname(response.data);
-        setCountryname(response.data);
+       
+            // Get the existing city from state
+      const existingCountry = countryname.find(
+        (c) => c.id === selectedcountrynameId
+      );
+
+      // Build the updated city correctly
+      const updatedCountry = {
+        id: selectedcountrynameId,
+        name: formData.countryname,   // map formData.cityname → name
+        added_by: existingCountry?.added_by || "Registration Admin",
+        created_at: existingCountry?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setCountryname((prev) =>
+        prev.map((countries) =>
+          countries.id === selectedcountrynameId ? updatedCountry : countries
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredCountryname((prev) =>
+        prev.map((countries) =>
+          countries.id === selectedcountrynameId ? updatedCountry : countries
+        )
+      );
+
         setSuccessMessage("Country updated successfully.");
         setTimeout(() => setSuccessMessage(""), 3000);
         resetFormData();

@@ -158,8 +158,34 @@ const ConcurrentMedicalConditionsArea = () => {
     try {
       await axios.put(`${url}/samplefields/put-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/concurrentmedicalconditions`);
-      setFilteredMedicalConditionname(response.data);
-      setConcurrentMedicalname(response.data);
+      
+      const existingconcurrentmedical = concurrentmedicalname.find(
+        (c) => c.id === selectedConcurrentMedicalnameId
+      );
+
+      // Build the updated concurrentmedicalname correctly
+      const updatedconcurrentmedicalname = {
+        id: selectedConcurrentMedicalnameId,
+        name: formData.name,
+        added_by: existingconcurrentmedical?.added_by || "Registration Admin",
+        created_at: existingconcurrentmedical?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in concurrentmedicalname
+      setConcurrentMedicalname((prev) =>
+        prev.map((concurrentmedical) =>
+          concurrentmedical.id === selectedConcurrentMedicalnameId ? updatedconcurrentmedicalname : concurrentmedical
+        )
+      );
+
+      // Update in filteredconcurrentmedicalname
+      setFilteredMedicalConditionname((prev) =>
+        prev.map((concurrentmedical) =>
+          concurrentmedical.id === selectedConcurrentMedicalnameId ? updatedconcurrentmedicalname : concurrentmedical
+        )
+      );
+
        setSuccessMessage("Concurrent Medical Conditions Name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

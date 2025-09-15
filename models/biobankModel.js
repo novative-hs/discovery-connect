@@ -2,7 +2,7 @@ const mysqlConnection = require("../config/db");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 const { sendEmail } = require("../config/email");
-const { decryptAndShort } = require("../config/encryptdecrptUtils");
+const { decryptAndShort,encrypt } = require("../config/encryptdecrptUtils");
 
 const create_biobankTable = () => {
   const create_biobankTable = `
@@ -36,7 +36,7 @@ const getBiobankSamples = (
 
   let baseWhereShared = `sample.status = "In Stock" AND sample.is_deleted = FALSE`;
   let baseWhereOwn = `sample.status = "In Stock" AND sample.is_deleted = FALSE`;
-
+  let masterid = 0;
   const paramsShared = [];
   const paramsOwn = [];
 
@@ -71,8 +71,6 @@ const getBiobankSamples = (
         paramsShared.push(likeValue);
         paramsOwn.push(likeValue);
         break;
-
-
 
       case "gender":
         if (!isNaN(value)) {
@@ -141,6 +139,13 @@ const getBiobankSamples = (
       paramsShared.push(likeValue, likeValue, likeValue);
       paramsOwn.push(likeValue, likeValue, likeValue);
 
+    }
+    else if (field === "masterID") {
+      masterid = encrypt(likeValue)
+      baseWhereShared += ` AND sample.masterID = ?`;
+      baseWhereOwn += ` AND sample.masterID = ?`;
+      paramsShared.push(masterid);
+      paramsOwn.push(masterid);
     }
     else if (field === "visibility") {
       baseWhereShared += ` AND LOWER(sample.sample_visibility) = ?`;
@@ -662,8 +667,8 @@ SELECT
   `;
 
   mysqlConnection.query(query, (err, results) => {
-    if (err){
-    return callback(err, null);
+    if (err) {
+      return callback(err, null);
     }
 
     const transformedResults = results.map(sample => ({

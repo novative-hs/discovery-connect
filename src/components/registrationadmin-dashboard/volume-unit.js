@@ -167,11 +167,32 @@ const VolumeUnitArea = () => {
         `${url}/samplefields/put-samplefields/volumeunit/${selectedvolumeunitnameId}`,
         formData
       );
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/volumeunit`
+         const existingvolumeUnit = volumeunitname.find(
+        (c) => c.id === selectedvolumeunitnameId
       );
-      setFilteredVolumeunitname(response.data);
-      setvolumeunitname(response.data);
+
+      // Build the updated city correctly
+      const updatedvolumeUnit = {
+        id: selectedvolumeunitnameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingvolumeUnit?.added_by || "Registration Admin",
+        created_at: existingvolumeUnit?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setvolumeunitname((prev) =>
+        prev.map((volumeUnit) =>
+          volumeUnit.id === selectedvolumeunitnameId ? updatedvolumeUnit : volumeUnit
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredVolumeunitname((prev) =>
+        prev.map((volumeUnit) =>
+          volumeUnit.id === selectedvolumeunitnameId ? updatedvolumeUnit : volumeUnit
+        )
+      );
       setSuccessMessage("Volume Unit Name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

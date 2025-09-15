@@ -124,9 +124,32 @@ const TestSystemArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/samplefields/put-samplefields/testsystem/${selectedTestSystemnameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/testsystem`);
-      setFilteredTestSystemname(response.data);
-      setTestSystemname(response.data);
+        const existingTestSystem = testsystemname.find(
+        (c) => c.id === selectedTestSystemnameId
+      );
+
+      // Build the updated city correctly
+      const updatedTestSystem = {
+        id: selectedTestSystemnameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingTestSystem?.added_by || "Registration Admin",
+        created_at: existingTestSystem?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setTestSystemname((prev) =>
+        prev.map((TestSystem) =>
+          TestSystem.id === selectedTestSystemnameId ? updatedTestSystem : TestSystem
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredTestSystemname((prev) =>
+        prev.map((TestSystem) =>
+          TestSystem.id === selectedTestSystemnameId ? updatedTestSystem : TestSystem
+        )
+      );
       setSuccessMessage("Test System updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

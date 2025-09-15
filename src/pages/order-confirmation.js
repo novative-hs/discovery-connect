@@ -10,7 +10,7 @@ const OrderConfirmation = () => {
   const router = useRouter();
   const { id, created_at, orderStatus, technical_admin_status, committee_status } = router.query;
   const [progressWidth, setProgressWidth] = useState("10%");
-  const [steps, setSteps] = useState(Array(7).fill("secondary"));
+  const [steps, setSteps] = useState(Array(5).fill("secondary"));
 
   useEffect(() => {
     const committeeStatus = (committee_status || "").toLowerCase();
@@ -18,7 +18,7 @@ const OrderConfirmation = () => {
     const orderStatusLower = (orderStatus || "").toLowerCase();
 
     let width = "10%";
-    let stepColors = Array(6).fill("secondary");
+    let stepColors = Array(5).fill("secondary");
 
     // Step 0: Placed
     stepColors[0] = "success";
@@ -46,7 +46,7 @@ const OrderConfirmation = () => {
         width = "40%";
       } else if (technicalAdminStatus === "accepted") {
         stepColors[2] = "success";
-        width = "50%";
+        width = "60%";
       }
     }
 
@@ -54,15 +54,11 @@ const OrderConfirmation = () => {
     if (technicalAdminStatus === "accepted") {
       if (orderStatusLower === "dispatched") {
         stepColors[3] = "success";
-        width = "65%";
-      } else if (orderStatusLower === "shipped") {
-        stepColors[3] = "success";
-        stepColors[4] = "success";
-        width = "85%";
+        width = "80%";
+    
       } else if (orderStatusLower === "completed") {
         stepColors[3] = "success";
         stepColors[4] = "success";
-        stepColors[5] = "success";
         width = "100%";
       }
     }
@@ -115,7 +111,7 @@ const OrderConfirmation = () => {
           {/* Progress Bar */}
           <div
             className="position-relative d-flex align-items-center justify-content-between px-4"
-            style={{ width: "100%", maxWidth: "1150px", margin: "auto" }}
+            style={{ width: "100%", maxWidth: "1100px", margin: "auto" }}
           >
             <div
               className="position-absolute w-100 bg-white border progress"
@@ -158,7 +154,7 @@ const OrderConfirmation = () => {
                   <div
                     key={idx}
                     className={`rounded-circle bg-${stepColor} text-white d-flex align-items-center justify-content-center fw-bold shadow`}
-                    style={{ width: "40px", height: "40px", zIndex: "1" }}
+                    style={{marginleft:"100px", width: "40px", height: "40px", zIndex: "2" }}
                   >
                     {icon}
                   </div>
@@ -175,7 +171,6 @@ const OrderConfirmation = () => {
               "Committee Approval",
               "Admin Approval",
               "Dispatched",
-              "Shipped",
               "Completed",
             ].map((label, idx) => (
               <Col key={idx} className={`fw-bold text-${steps[idx]} w-100`}>
@@ -184,8 +179,7 @@ const OrderConfirmation = () => {
                   {idx === 1 && <i className="bi bi-person-badge"></i>}
                   {idx === 2 && <i className="bi bi-clipboard-check"></i>}
                   {idx === 3 && <i className="bi bi-box-arrow-up"></i>}
-                  {idx === 4 && <i className="bi bi-truck"></i>}
-                  {idx === 5 && <i className="bi bi-check2-circle"></i>}
+                  {idx === 4 && <i className="bi bi-check2-circle"></i>}
                 </div>
                 <div>{label}</div>
               </Col>

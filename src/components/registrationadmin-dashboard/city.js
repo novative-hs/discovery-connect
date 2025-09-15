@@ -144,10 +144,39 @@ const CityArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${url}/city/put-city/${selectedcitynameId}`, formData);
-      const response = await axios.get(`${url}/city/get-city`);
-      setFilteredCityname(response.data);
-      setcityname(response.data);
+      await axios.put(
+        `${url}/city/put-city/${selectedcitynameId}`,
+        formData
+      );
+
+      // Get the existing city from state
+      const existingCity = cityname.find(
+        (c) => c.id === selectedcitynameId
+      );
+
+      // Build the updated city correctly
+      const updatedCity = {
+        id: selectedcitynameId,
+        name: formData.cityname,   // map formData.cityname → name
+        added_by: existingCity?.added_by || "Registration Admin",
+        created_at: existingCity?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in cityname
+      setcityname((prev) =>
+        prev.map((city) =>
+          city.id === selectedcitynameId ? updatedCity : city
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredCityname((prev) =>
+        prev.map((city) =>
+          city.id === selectedcitynameId ? updatedCity : city
+        )
+      );
+
       setSuccessMessage("City updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -201,7 +230,7 @@ const CityArea = () => {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
       const payload = data.map((row) => ({ name: row.Name, added_by: id }));
-      
+
       try {
         await axios.post(`${url}/city/post-city`, { bulkData: payload });
         const response = await axios.get(`${url}/city/get-city`);

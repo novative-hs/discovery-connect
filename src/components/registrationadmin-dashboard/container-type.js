@@ -144,8 +144,32 @@ const ContainerTypeArea = () => {
     try {
       await axios.put(`${url}/samplefields/put-samplefields/containertype/${selectedContainerTypenameId}`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/containertype`);
-      setFilteredContainertypename(response.data);
-      setContainerTypename(response.data);
+       const existingcontainertype = containertypename.find(
+        (c) => c.id === selectedContainerTypenameId
+      );
+
+      // Build the updated city correctly
+      const updatedcontainertype = {
+        id: selectedContainerTypenameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingcontainertype?.added_by || "Registration Admin",
+        created_at: existingcontainertype?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setContainerTypename((prev) =>
+        prev.map((containertype) =>
+          containertype.id === selectedContainerTypenameId ? updatedcontainertype : containertype
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredContainertypename((prev) =>
+        prev.map((containertype) =>
+          containertype.id === selectedContainerTypenameId ? updatedcontainertype : containertype
+        )
+      );
       setSuccessMessage("Container Type updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

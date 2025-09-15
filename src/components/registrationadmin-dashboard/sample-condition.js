@@ -152,8 +152,32 @@ const [showAddModal, setShowAddModal] = useState(false);
     try {
       await axios.put(`${url}/samplefields/put-samplefields/samplecondition/${selectedSampleConditionnameId}`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/samplecondition`);
-      setFilteredSampleconditionname(response.data);
-      setSampleConditionname(response.data);
+      const existingSamplecondition = sampleconditionname.find(
+        (c) => c.id === selectedSampleConditionnameId
+      );
+
+      // Build the updated city correctly
+      const updatedSamplecondition = {
+        id: selectedSampleConditionnameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingSamplecondition?.added_by || "Registration Admin",
+        created_at: existingSamplecondition?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setSampleConditionname((prev) =>
+        prev.map((samplecondition) =>
+          samplecondition.id === selectedSampleConditionnameId ? updatedSamplecondition : samplecondition
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredSampleconditionname((prev) =>
+        prev.map((samplecondition) =>
+          samplecondition.id === selectedSampleConditionnameId ? updatedSamplecondition : samplecondition
+        )
+      );
       setSuccessMessage("Sample Condition Name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

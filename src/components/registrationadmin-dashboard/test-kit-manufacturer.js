@@ -156,11 +156,32 @@ useEffect(() => {
         `${url}/samplefields/put-samplefields/testkitmanufacturer/${selectedTestKitManufacturernameId}`,
         formData
       );
-      const response = await axios.get(
-        `${url}/samplefields/get-samplefields/testkitmanufacturer`
+        const existingtestkitmanufacturer = testKitManufacturername.find(
+        (c) => c.id === selectedTestKitManufacturernameId
       );
-      setFilteredTestkitmanufacturername(response.data);
-      setFilteredTestkitmanufacturername(response.data);
+
+      // Build the updated city correctly
+      const updatedtestkitmanufacturer = {
+        id: selectedTestKitManufacturernameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingtestkitmanufacturer?.added_by || "Registration Admin",
+        created_at: existingtestkitmanufacturer?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setTestKitManufacturername((prev) =>
+        prev.map((testkitmanufacturer) =>
+          testkitmanufacturer.id === selectedTestKitManufacturernameId ? updatedtestkitmanufacturer : testkitmanufacturer
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredTestkitmanufacturername((prev) =>
+        prev.map((testkitmanufacturer) =>
+          testkitmanufacturer.id === selectedTestKitManufacturernameId ? updatedtestkitmanufacturer : testkitmanufacturer
+        )
+      );
       setSuccessMessage("Test Kit Manufactuere name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

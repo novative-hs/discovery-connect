@@ -136,9 +136,32 @@ const TestMethodArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/samplefields/put-samplefields/testmethod/${selectedTestMethodnameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/testmethod`);
-      setFilteredTestMethodname(response.data);
-      setTestMethodname(response.data);
+         const existingtestmethod = testmethodname.find(
+        (c) => c.id === selectedTestMethodnameId
+      );
+
+      // Build the updated city correctly
+      const updatedtestmethod = {
+        id: selectedTestMethodnameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingtestmethod?.added_by || "Registration Admin",
+        created_at: existingtestmethod?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setTestMethodname((prev) =>
+        prev.map((testmethod) =>
+          testmethod.id === selectedTestMethodnameId ? updatedtestmethod : testmethod
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredTestMethodname((prev) =>
+        prev.map((testmethod) =>
+          testmethod.id === selectedTestMethodnameId ? updatedtestmethod : testmethod
+        )
+      );
       setSuccessMessage("Test Method name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

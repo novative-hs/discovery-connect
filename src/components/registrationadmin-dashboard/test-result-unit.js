@@ -135,9 +135,32 @@ const TestResultUnitArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/samplefields/put-samplefields/testresultunit/${selectedTestResultUnitnameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/testresultunit`);
-      setFilteredTestResultunitname(response.data);
-      setTestResultUnitname(response.data);
+       const existingtestresultunit = testResultUnitname.find(
+        (c) => c.id === selectedTestResultUnitnameId
+      );
+
+      // Build the updated city correctly
+      const updatedtestresultunit = {
+        id: selectedTestResultUnitnameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingtestresultunit?.added_by || "Registration Admin",
+        created_at: existingtestresultunit?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setTestResultUnitname((prev) =>
+        prev.map((testresultunit) =>
+          testresultunit.id === selectedTestResultUnitnameId ? updatedtestresultunit : testresultunit
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredTestResultunitname((prev) =>
+        prev.map((testresultunit) =>
+          testresultunit.id === selectedTestResultUnitnameId ? updatedtestresultunit : testresultunit
+        )
+      );
       setSuccessMessage("Test Result Unit updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

@@ -136,9 +136,32 @@ const SampleTypeMatrixArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/sampletypematrix`);
-      setFilteredSampletypematrixname(response.data);
-      setSampleTypeMatrixname(response.data);
+         const existingsampletypematrix = sampletypematrixname.find(
+        (c) => c.id === selectedSampleTypeMatrixnameId
+      );
+
+      // Build the updated city correctly
+      const updatedsampletypematrix = {
+        id: selectedSampleTypeMatrixnameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingsampletypematrix?.added_by || "Registration Admin",
+        created_at: existingsampletypematrix?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setSampleTypeMatrixname((prev) =>
+        prev.map((sampletypematrix) =>
+          sampletypematrix.id === selectedSampleTypeMatrixnameId ? updatedsampletypematrix : sampletypematrix
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredSampletypematrixname((prev) =>
+        prev.map((sampletypematrix) =>
+          sampletypematrix.id === selectedSampleTypeMatrixnameId ? updatedsampletypematrix : sampletypematrix
+        )
+      );
       setSuccessMessage("Sample type matrix updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

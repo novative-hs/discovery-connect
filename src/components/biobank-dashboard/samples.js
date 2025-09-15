@@ -1763,14 +1763,14 @@ const BioBankSampleArea = () => {
                               </button>
                             </li>
                           )}
-                          <li>
-                            <button
+                          
+                            {/* <button
                               className="dropdown-item"
                               onClick={() => handlePriceCurrencyClick(sample)}
                             >
                               <FontAwesomeIcon icon={faDollarSign} className="me-2" /> Set Price & Currency
-                            </button>
-                          </li>
+                            </button> */}
+                          
                           <li>
                             <button
                               className="dropdown-item text-danger"

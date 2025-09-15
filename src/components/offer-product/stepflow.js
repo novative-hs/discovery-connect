@@ -18,13 +18,21 @@ const StepFlow = () => {
 
   const steps = [
     { title: "Search", icon: faSearch, description: "Search for samples" },
-    { title: "Register", icon: faCreditCard, description: "Create login, upload required documents, and make payment to place order" },
+    {
+      title: "Register",
+      icon: faCreditCard,
+      description:
+        "Create login, upload required documents, and make payment to place order",
+    },
     { title: "Acknowledgment", icon: faUserCheck, description: "Order Acknowledgment" },
-    { title: "Review", icon: faUsers, description: "Scientific and Ethical Committee review approval" },
+    {
+      title: "Review",
+      icon: faUsers,
+      description: "Scientific and Ethical Committee review approval",
+    },
     { title: "Dispatch", icon: faShippingFast, description: "Order Dispatch" },
   ];
 
-  // Split steps
   const firstRow = steps.slice(0, 2);
   const secondRow = steps.slice(2);
 
@@ -35,23 +43,38 @@ const StepFlow = () => {
       </h4>
 
       {/* First Row */}
-      <div className="d-flex justify-content-center flex-wrap mb-4" style={{ gap: "1rem" }}>
+      <div
+        className="d-flex justify-content-center flex-wrap mb-4"
+        style={{ gap: "1rem" }}
+      >
         {firstRow.map((step, index) => (
-          <StepCard key={index} step={step} index={index} isLast={index === firstRow.length - 1} />
+          <StepCard
+            key={index}
+            step={step}
+            index={index}
+            isLast={index === firstRow.length - 1}
+          />
         ))}
       </div>
 
       {/* Second Row */}
-      <div className="d-flex justify-content-center flex-wrap" style={{ gap: "1rem" }}>
+      <div
+        className="d-flex justify-content-center flex-wrap"
+        style={{ gap: "1rem" }}
+      >
         {secondRow.map((step, index) => (
-          <StepCard key={index} step={step} index={index + 2} isLast={index === secondRow.length - 1} />
+          <StepCard
+            key={index}
+            step={step}
+            index={index + 2}
+            isLast={index === secondRow.length - 1}
+          />
         ))}
       </div>
     </div>
   );
 };
 
-// Extracted Card Component for reusability
 const StepCard = ({ step, index, isLast }) => (
   <>
     <div
@@ -62,7 +85,13 @@ const StepCard = ({ step, index, isLast }) => (
     >
       <div
         className="mb-3 mx-auto rounded-circle d-flex justify-content-center align-items-center"
-        style={{ width: "60px", height: "60px", backgroundColor: "#2b2c7f", color: "white", fontSize: "24px" }}
+        style={{
+          width: "60px",
+          height: "60px",
+          backgroundColor: "#2b2c7f",
+          color: "white",
+          fontSize: "24px",
+        }}
       >
         <FontAwesomeIcon icon={step.icon} />
       </div>
@@ -77,11 +106,13 @@ const StepCard = ({ step, index, isLast }) => (
         data-aos="fade-right"
         data-aos-delay={index * 150 + 100}
       >
-        <FontAwesomeIcon icon={faArrowRight} style={{ fontSize: "40px", color: "#2b2c7f" }} />
+        <FontAwesomeIcon
+          icon={faArrowRight}
+          style={{ fontSize: "40px", color: "#2b2c7f" }}
+        />
       </div>
     )}
   </>
 );
-
 
 export default StepFlow;

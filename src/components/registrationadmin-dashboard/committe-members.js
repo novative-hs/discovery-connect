@@ -92,34 +92,34 @@ const CommitteeMemberArea = () => {
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // Fetch Committee Members from backend when component loads
- useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const response1 = await axios.get(`${url}/committeemember/get`);
-      setCommitteemembers(response1.data);
-      setFilteredCommitteemembers(response1.data);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response1 = await axios.get(`${url}/committeemember/get`);
+        setCommitteemembers(response1.data);
+        setFilteredCommitteemembers(response1.data);
 
-      const response2 = await axios.get(`${url}/city/get-city`);
-      setcityname(response2.data);
+        const response2 = await axios.get(`${url}/city/get-city`);
+        setcityname(response2.data);
 
-      const response3 = await axios.get(`${url}/district/get-district`);
-      setdistrictname(response3.data);
+        const response3 = await axios.get(`${url}/district/get-district`);
+        setdistrictname(response3.data);
 
-      const response4 = await axios.get(`${url}/country/get-country`);
-      setCountryname(response4.data);
+        const response4 = await axios.get(`${url}/country/get-country`);
+        setCountryname(response4.data);
 
-      const response5 = await axios.get(`${url}/admin/organization/get`);
-      const approvedOrganizations = response5.data.filter(
-        (org) => org.status === "active"
-      );
-      setOrganization(approvedOrganizations);
-    } catch (error) {
-      console.error("Error fetching data:", error);
-    }
-  };
+        const response5 = await axios.get(`${url}/admin/organization/get`);
+        const approvedOrganizations = response5.data.filter(
+          (org) => org.status === "active"
+        );
+        setOrganization(approvedOrganizations);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
 
-  fetchData();
-}, [url]);
+    fetchData();
+  }, [url]);
 
 
   const fetchCommitteemembers = async () => {
@@ -142,7 +142,7 @@ const CommitteeMemberArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredCommitteemembers,currentPage]);
+  }, [filteredCommitteemembers, currentPage]);
   const handleInputChange = (e) => {
 
     setFormData({
@@ -192,7 +192,7 @@ const CommitteeMemberArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/committeemember/orderhistory/${id}`
       );
       const data = await response.json();
-      
+
       setOrderHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -267,7 +267,18 @@ const CommitteeMemberArea = () => {
       );
 
 
-      fetchCommitteemembers();
+      setCommitteemembers((prev) =>
+        prev.map((member) =>
+          member.id === selectedCommitteememberId ? { ...member, ...formData } : member
+        )
+      );
+
+      setFilteredCommitteemembers((prev) =>
+        prev.map((member) =>
+          member.id === selectedCommitteememberId ? { ...member, ...formData } : member
+        )
+      );
+
       setShowEditModal(false);
       setSuccessMessage("Committeemember updated successfully.");
 
@@ -328,7 +339,6 @@ const CommitteeMemberArea = () => {
         ...prev,
         [committeememberId]: false,
       }));
-      fetchCommitteemembers();
       setSuccessMessage("Committe Member Type Updated successfully");
       setTimeout(() => {
         setSuccessMessage("");
@@ -608,7 +618,7 @@ const CommitteeMemberArea = () => {
                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                           placeholder={`Search ${label}`}
                           onChange={(e) => handleFilterChange(field, e.target.value)}
-                          style={{ minWidth: "170px", maxWidth: "200px"}}
+                          style={{ minWidth: "170px", maxWidth: "200px" }}
                         />
                         <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                           {label}
@@ -776,523 +786,568 @@ const CommitteeMemberArea = () => {
           </div>
 
           {/* Pagination */}
-          
 
-         <h6 className="text-danger small">Note: Handle &rsquo;Status&rsquo; and &rsquo;Committee Type&rsquo; through Action Icons</h6>
-</div>
-{totalPages >= 0 && (
-            <Pagination
-              handlePageClick={handlePageChange}
-              pageCount={totalPages}
-              focusPage={currentPage}
-            />
-          )}
-          {/* Modal for Adding/Editing Committee members */}
-          {(showAddModal || showEditModal) && (
-            <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
 
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog" role="document">
-                  <div className="modal-content">
-                    <div className="modal-header">
-                      <h5 className="modal-title">
-                        {showAddModal
-                          ? "Add Committee Member"
-                          : "Edit Committee Member"}
-                      </h5>
-                      <button
-                        type="button"
-                        className="close"
-                        onClick={() => {
-                          setShowAddModal(false);
-                          setShowEditModal(false);
-                          resetFormData();
-                        }}
-                        style={{
-                          fontSize: "1.5rem",
-                          position: "absolute",
-                          right: "10px",
-                          top: "10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <span>&times;</span>
-                      </button>
-                    </div>
+          <h6 className="text-danger small">Note: Handle &rsquo;Status&rsquo; and &rsquo;Committee Type&rsquo; through Action Icons</h6>
+        </div>
+        {totalPages >= 0 && (
+          <Pagination
+            handlePageClick={handlePageChange}
+            pageCount={totalPages}
+            focusPage={currentPage}
+          />
+        )}
+        {/* Modal for Adding/Editing Committee members */}
+        {(showAddModal || showEditModal) && (
+          <>
+            {/* Bootstrap Backdrop with Blur */}
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(5px)" }}
+            ></div>
 
-                    <form onSubmit={showAddModal ? handleSubmit : handleUpdate}>
-                      <div
-                        className="modal-body"
-                        style={{ maxHeight: "400px", overflowY: "auto" }}
-                      >
-                        <div className="form-group">
-                          <label>Name</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Enter Name"
-                            name="CommitteeMemberName"
-                            value={formData.CommitteeMemberName}
-                            onChange={handleInputChange}
-                            pattern="^[A-Za-z\s]+$"
-                            title="Only letters and spaces are allowed."
-                            required
-                          />
-                          {!/^[A-Za-z\s]*$/.test(
-                            formData.CommitteeMemberName
-                          ) && (
-                              <small className="text-danger">
-                                Only letters and spaces are allowed.
-                              </small>
-                            )}
-                        </div>
-
-                        <div className="form-group">
-                          <label>Email</label>
-                          <input
-                            type="email"
-                            className="form-control"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="Enter Email"
-                            required
-                          />
-                        </div>
-                        <div className="col-md-12">
-                          <label className="form-label">Password</label>
-                          <div className="input-group input-group-sm">
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              className="form-control"
-                              name="password"
-                              placeholder="Enter Password"
-                              value={formData.password}
-                              onChange={handleInputChange}
-                              pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
-                              title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
-                              required
-                            />
-                            <span
-                              className="input-group-text"
-                              style={{ cursor: "pointer" }}
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              <i
-                                className={
-                                  showPassword
-                                    ? "fa-regular fa-eye"
-                                    : "fa-regular fa-eye-slash"
-                                }
-                              ></i>
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="form-group">
-                          <label>Phone Number</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="phoneNumber"
-                            value={formData.phoneNumber}
-                            onChange={handleInputChange}
-                            required
-                            pattern="^\d{4}-\d{7}$"
-                            placeholder="XXXX-XXXXXXX"
-                            title="Phone number must be in the format e.g. 0332-4567890"
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <label>CNIC</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="cnic"
-                            placeholder="XXXXX-XXXXXXX-X"
-                            value={formData.cnic}
-                            onChange={handleInputChange}
-                            pattern="^\d{5}-\d{7}-\d{1}$"
-                            title="CNIC must be in the format 34765-5676554-3."
-                            required
-                          />
-                        </div>
-
-                        <div className="form-group">
-                          <label>Full Address</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="fullAddress"
-                            placeholder="Enter Full Address"
-                            value={formData.fullAddress}
-                            onChange={handleInputChange}
-                            required
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label>City</label>
-                          <select
-                            className="form-control p-2"
-                            name="city"
-                            value={formData.city} // Store the selected city ID in formData
-                            onChange={handleInputChange} // Handle change to update formData
-                            required
-                          >
-                            <option value="" disabled>
-                              Select City
-                            </option>
-                            {cityname.map((city) => (
-                              <option key={city.id} value={city.id}>
-                                {city.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label>District</label>
-                          <select
-                            className="form-control  p-2"
-                            name="district"
-                            value={formData.district}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="" disabled>
-                              Select District
-                            </option>
-                            {districtname.map((district) => (
-                              <option key={district.id} value={district.id}>
-                                {district.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label>Country</label>
-                          <select
-                            className="form-control p-2"
-                            name="country"
-                            value={formData.country}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="" disabled>
-                              Select Country
-                            </option>
-                            {countryname.map((country) => (
-                              <option key={country.id} value={country.id}>
-                                {country.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label>Organization</label>
-                          <select
-                            className="form-control  p-2"
-                            name="organization"
-                            value={formData.organization}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="" disabled>
-                              Select Organization
-                            </option>
-                            {organization.map((organization) => (
-                              <option
-                                key={organization.id}
-                                value={organization.id}
-                              >
-                                {organization.OrganizationName}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="modal-footer">
-                        <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update"}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {/* Modal for Deleting Committeemembers */}
-          {showDeleteModal && (
-            <>
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
-
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  top: "120px",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog" role="document">
-                  <div className="modal-content">
-                    <div className="modal-header">
-                      <h5 className="modal-title">Delete Committee member</h5>
-
-                      <button
-                        type="button"
-                        className="close"
-                        onClick={() => setShowDeleteModal(false)}
-                        style={{
-                          // background: 'none',
-                          // border: 'none',
-                          fontSize: "1.5rem",
-                          position: "absolute",
-                          right: "10px",
-                          top: "10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <span>&times;</span>
-                      </button>
-                    </div>
-                    <div className="modal-body">
-                      <p>
-                        Are you sure you want to delete this committee member?
-                      </p>
-                    </div>
-                    <div className="modal-footer">
-                      <button className="btn btn-danger" onClick={handleDelete}>
-                        Delete
-                      </button>
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => setShowDeleteModal(false)}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {showHistoryModal && (
-            <>
-              {/* Backdrop */}
-              <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
-
-              {/* Modal */}
-              <div className="modal show d-block" role="dialog" style={{ zIndex: 1050, left: "50%", transform: "translateX(-50%)" }}>
-                <div className="modal-dialog modal-md">
-                  <div className="modal-content">
-                    {/* Header */}
-                    <div className="modal-header">
-                      <h5 className="modal-title">History</h5>
-                      <button type="button" className="close" onClick={() => setShowHistoryModal(false)} style={{ fontSize: "1.5rem", position: "absolute", right: "10px", cursor: "pointer" }}>
-                        &times;
-                      </button>
-                    </div>
-
-                    {/* Body */}
-                    <div className="modal-body" style={{ maxHeight: "500px", overflowY: "auto", backgroundColor: "#e5ddd5", padding: "15px", borderRadius: "10px" }}>
-                      {historyData?.length ? historyData.map(({ CommitteeMemberName, phoneNumber, cnic, fullAddress, city_name, district_name, country_name, organization_name, created_at, updated_at, status }, index) => (
-                        <div key={index} style={{ marginBottom: "10px" }}>
-                          {/* History Message */}
-                          <div style={{
-                            padding: "10px 15px",
-                            borderRadius: "15px",
-                            backgroundColor: status === "added" ? "#ffffff" : "#dcf8c6",
-                            boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                            maxWidth: "75%",
-                            fontSize: "14px",
-                          }}>
-                            <b>Committee Member:</b> {CommitteeMemberName} was <b>{status}</b> by Registration Admin at {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
-                            <br />
-                            {cnic && <><b>CNIC:</b> {cnic} <br /></>}
-                            {phoneNumber && <><b>Phone:</b> {phoneNumber} <br /></>}
-                            {organization_name && <><b>Organization:</b> {organization_name} <br /></>}
-                            {fullAddress && <><b>Address:</b> {fullAddress}, {city_name}, {district_name}, {country_name} <br /></>}
-                          </div>
-                        </div>
-                      )) : <p className="text-left">No history available.</p>}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {showOrderHistoryModal && (
-            <div className="modal show d-block" style={{ zIndex: 1050, left: "50%", transform: "translateX(-50%)" }} role="dialog">
-              <div className="modal-dialog modal-xl" role="document">
-                <div className="modal-content shadow-lg">
-                  <div className="modal-header bg-primary text-white">
-                    <h5 className="modal-title">Order History</h5>
+            {/* Modal Content */}
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
+              style={{
+                zIndex: 1050,
+                position: "fixed",
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+            >
+              <div className="modal-dialog" role="document">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      {showAddModal
+                        ? "Add Committee Member"
+                        : "Edit Committee Member"}
+                    </h5>
                     <button
                       type="button"
-                      className="btn-close btn-close-white"
-                      onClick={() => setShowOrderHistoryModal(false)}
-                    ></button>
+                      className="close"
+                      onClick={() => {
+                        setShowAddModal(false);
+                        setShowEditModal(false);
+                        resetFormData();
+                      }}
+                      style={{
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span>&times;</span>
+                    </button>
                   </div>
 
-                  <div className="modal-body">
-                    {orderhistoryData.length === 0 ? (
-                      <div className="alert alert-info text-center">No order history found.</div>
-                    ) : (
-                      <div className="table-responsive">
-                        <table className="table table-hover table-striped align-middle">
-                          <thead className="table-dark">
-                            <tr>
-                              <th>Researcher Name</th>
-                              <th>Analyte</th>
-                              <th>Quantity</th>
-                              <th>Comments</th>
-                              <th>Documents</th>
-                              <th>Additional Mechanism</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {orderhistoryData.map((order, index) => (
-                              <React.Fragment key={index}>
-                                <tr>
-                                  <td>{order.researcher_name}</td>
-                                  <td>{order.Analyte}</td>
-                                  <td>{order.quantity}</td>
-
-                                  <td>
-                                    <button
-                                      className="btn btn-sm btn-outline-info"
-                                      onClick={() =>
-                                        setVisibleCommentIndex(visibleCommentIndex === index ? null : index)
-                                      }
-                                    >
-                                      {visibleCommentIndex === index ? "Hide" : "View"}
-                                    </button>
-                                  </td>
-                                  <td>
-                                    {/* IRB File Download Button */}
-                                    {order.irb_file && order.irb_file.data && (
-                                      <button
-                                        className="btn btn-sm btn-outline-success me-1 mb-1"
-                                        onClick={() => {
-                                          const byteArray = new Uint8Array(order.irb_file.data);
-                                          const blob = new Blob([byteArray], { type: 'application/pdf' }); // adjust MIME if needed
-                                          const url = URL.createObjectURL(blob);
-
-                                          const link = document.createElement('a');
-                                          link.href = url;
-                                          link.download = 'IRB_File.pdf'; // or dynamically name it
-                                          document.body.appendChild(link);
-                                          link.click();
-                                          document.body.removeChild(link);
-                                          URL.revokeObjectURL(url);
-                                        }}
-                                      >
-                                        Download IRB
-                                      </button>
-                                    )}
-
-                                    {/* NBC File (null in your data, so just check if exists) */}
-                                    {order.nbc_file && order.nbc_file.data && (
-                                      <button
-                                        className="btn btn-sm btn-outline-warning me-1 mb-1"
-                                        onClick={() => {
-                                          const byteArray = new Uint8Array(order.nbc_file.data);
-                                          const blob = new Blob([byteArray], { type: 'application/pdf' }); // change if needed
-                                          const url = URL.createObjectURL(blob);
-
-                                          const link = document.createElement('a');
-                                          link.href = url;
-                                          link.download = 'NBC_File.pdf';
-                                          document.body.appendChild(link);
-                                          link.click();
-                                          document.body.removeChild(link);
-                                          URL.revokeObjectURL(url);
-                                        }}
-                                      >
-                                        Download NBC
-                                      </button>
-                                    )}
-                                  </td>
-                                  <td>
-                                    <button
-                                      className="btn btn-sm btn-outline-primary mb-2"
-                                      onClick={() =>
-                                        setExpandedRowIndex(expandedRowIndex === index ? null : index)
-                                      }
-                                    >
-                                      {expandedRowIndex === index ? "Hide Reporting" : "View Reporting"}
-                                    </button>
-
-                                    {expandedRowIndex === index && (
-                                      <div
-                                        className="border rounded p-2 bg-light text-dark shadow-sm"
-                                        style={{ whiteSpace: "pre-wrap", maxWidth: "300px", marginTop: "5px" }}
-                                      >
-                                        <strong>Additional Info:</strong>
-                                        <div>{order.reporting_mechanism}</div>
-                                      </div>
-                                    )}
-                                  </td>
-
-
-
-                                </tr>
-
-                                {visibleCommentIndex === index && (
-                                  <tr>
-                                    <td colSpan="6">
-                                      <div className="alert alert-secondary mb-0">
-                                        <strong>Comment:</strong> {order.committee_comments || "No comments available."}
-                                      </div>
-                                    </td>
-                                  </tr>
-                                )}
-                              </React.Fragment>
-                            ))}
-
-                          </tbody>
-                        </table>
+                  <form onSubmit={showAddModal ? handleSubmit : handleUpdate}>
+                    <div
+                      className="modal-body"
+                      style={{ maxHeight: "400px", overflowY: "auto" }}
+                    >
+                      <div className="form-group">
+                        <label>Name</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Enter Name"
+                          name="CommitteeMemberName"
+                          value={formData.CommitteeMemberName}
+                          onChange={handleInputChange}
+                          pattern="^[A-Za-z\s]+$"
+                          title="Only letters and spaces are allowed."
+                          required
+                        />
+                        {!/^[A-Za-z\s]*$/.test(
+                          formData.CommitteeMemberName
+                        ) && (
+                            <small className="text-danger">
+                              Only letters and spaces are allowed.
+                            </small>
+                          )}
                       </div>
-                    )}
-                  </div>
 
+                      <div className="form-group">
+                        <label>Email</label>
+                        <input
+                          type="email"
+                          className="form-control"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          placeholder="Enter Email"
+                          required
+                        />
+                      </div>
+                      <div className="col-md-12">
+                        <label className="form-label">Password</label>
+                        <div className="input-group input-group-sm">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            className="form-control"
+                            name="password"
+                            placeholder="Enter Password"
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
+                            title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
+                            required
+                          />
+                          <span
+                            className="input-group-text"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            <i
+                              className={
+                                showPassword
+                                  ? "fa-regular fa-eye"
+                                  : "fa-regular fa-eye-slash"
+                              }
+                            ></i>
+                          </span>
+                        </div>
+                      </div>
 
+                      <div className="form-group">
+                        <label>Phone Number</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="phoneNumber"
+                          value={formData.phoneNumber}
+                          onChange={handleInputChange}
+                          required
+                          pattern="^\d{4}-\d{7}$"
+                          placeholder="XXXX-XXXXXXX"
+                          title="Phone number must be in the format e.g. 0332-4567890"
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label>CNIC</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="cnic"
+                          placeholder="XXXXX-XXXXXXX-X"
+                          value={formData.cnic}
+                          onChange={handleInputChange}
+                          pattern="^\d{5}-\d{7}-\d{1}$"
+                          title="CNIC must be in the format 34765-5676554-3."
+                          required
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label>Full Address</label>
+                        <input
+                          type="text"
+                          className="form-control"
+                          name="fullAddress"
+                          placeholder="Enter Full Address"
+                          value={formData.fullAddress}
+                          onChange={handleInputChange}
+                          required
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>City</label>
+                        <select
+                          className="form-control p-2"
+                          name="city"
+                          value={formData.city} // Store the selected city ID in formData
+                          onChange={handleInputChange} // Handle change to update formData
+                          required
+                        >
+                          <option value="" disabled>
+                            Select City
+                          </option>
+                          {cityname.map((city) => (
+                            <option key={city.id} value={city.id}>
+                              {city.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>District</label>
+                        <select
+                          className="form-control  p-2"
+                          name="district"
+                          value={formData.district}
+                          onChange={handleInputChange}
+                          required
+                        >
+                          <option value="" disabled>
+                            Select District
+                          </option>
+                          {districtname.map((district) => (
+                            <option key={district.id} value={district.id}>
+                              {district.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Country</label>
+                        <select
+                          className="form-control p-2"
+                          name="country"
+                          value={formData.country}
+                          onChange={handleInputChange}
+                          required
+                        >
+                          <option value="" disabled>
+                            Select Country
+                          </option>
+                          {countryname.map((country) => (
+                            <option key={country.id} value={country.id}>
+                              {country.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Organization</label>
+                        <select
+                          className="form-control  p-2"
+                          name="organization"
+                          value={formData.organization}
+                          onChange={handleInputChange}
+                          required
+                        >
+                          <option value="" disabled>
+                            Select Organization
+                          </option>
+                          {organization.map((organization) => (
+                            <option
+                              key={organization.id}
+                              value={organization.id}
+                            >
+                              {organization.OrganizationName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="modal-footer">
+                      <button type="submit" className="btn btn-primary">
+                        {showAddModal ? "Save" : "Update"}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             </div>
-          )}
-        </div>
-      
+          </>
+        )}
+
+        {/* Modal for Deleting Committeemembers */}
+        {showDeleteModal && (
+          <>
+            <div
+              className="modal-backdrop fade show"
+              style={{ backdropFilter: "blur(5px)" }}
+            ></div>
+
+            {/* Modal Content */}
+            <div
+              className="modal show d-block"
+              tabIndex="-1"
+              role="dialog"
+              style={{
+                zIndex: 1050,
+                position: "fixed",
+                top: "120px",
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+            >
+              <div className="modal-dialog" role="document">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">Delete Committee member</h5>
+
+                    <button
+                      type="button"
+                      className="close"
+                      onClick={() => setShowDeleteModal(false)}
+                      style={{
+                        // background: 'none',
+                        // border: 'none',
+                        fontSize: "1.5rem",
+                        position: "absolute",
+                        right: "10px",
+                        top: "10px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span>&times;</span>
+                    </button>
+                  </div>
+                  <div className="modal-body">
+                    <p>
+                      Are you sure you want to delete this committee member?
+                    </p>
+                  </div>
+                  <div className="modal-footer">
+                    <button className="btn btn-danger" onClick={handleDelete}>
+                      Delete
+                    </button>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => setShowDeleteModal(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {showHistoryModal && (
+          <>
+            {/* Backdrop */}
+            <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
+
+            {/* Modal */}
+            <div className="modal show d-block" role="dialog" style={{ zIndex: 1050, left: "50%", transform: "translateX(-50%)" }}>
+              <div className="modal-dialog modal-md">
+                <div className="modal-content">
+                  {/* Header */}
+                  <div className="modal-header">
+                    <h5 className="modal-title">History</h5>
+                    <button type="button" className="close" onClick={() => setShowHistoryModal(false)} style={{ fontSize: "1.5rem", position: "absolute", right: "10px", cursor: "pointer" }}>
+                      &times;
+                    </button>
+                  </div>
+
+                  {/* Body */}
+                  <div className="modal-body" style={{ maxHeight: "500px", overflowY: "auto", backgroundColor: "#e5ddd5", padding: "15px", borderRadius: "10px" }}>
+                    {historyData?.length ? historyData.map(({ CommitteeMemberName, phoneNumber, cnic, fullAddress, city_name, district_name, country_name, organization_name, created_at, updated_at, status }, index) => (
+                      <div key={index} style={{ marginBottom: "10px" }}>
+                        {/* History Message */}
+                        <div style={{
+                          padding: "10px 15px",
+                          borderRadius: "15px",
+                          backgroundColor: status === "added" ? "#ffffff" : "#dcf8c6",
+                          boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                          maxWidth: "75%",
+                          fontSize: "14px",
+                        }}>
+                          <b>Committee Member:</b> {CommitteeMemberName} was <b>{status}</b> by Registration Admin at {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
+                          <br />
+                          {cnic && <><b>CNIC:</b> {cnic} <br /></>}
+                          {phoneNumber && <><b>Phone:</b> {phoneNumber} <br /></>}
+                          {organization_name && <><b>Organization:</b> {organization_name} <br /></>}
+                          {fullAddress && <><b>Address:</b> {fullAddress}, {city_name}, {district_name}, {country_name} <br /></>}
+                        </div>
+                      </div>
+                    )) : <p className="text-left">No history available.</p>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+
+        {showOrderHistoryModal && (
+          <div className="modal show d-block" style={{ zIndex: 1050, left: "50%", transform: "translateX(-50%)" }} role="dialog">
+            <div className="modal-dialog modal-xl" role="document">
+              <div className="modal-content shadow-lg">
+                <div className="modal-header bg-primary text-white">
+                  <h5 className="modal-title">Order History</h5>
+                  <button
+                    type="button"
+                    className="btn-close btn-close-white"
+                    onClick={() => setShowOrderHistoryModal(false)}
+                  ></button>
+                </div>
+
+                <div className="modal-body">
+                  {orderhistoryData.length === 0 ? (
+                    <div className="alert alert-info text-center">No order history found.</div>
+                  ) : (
+                    <div className="table-responsive">
+                      <table className="table table-hover table-striped align-middle">
+                        <thead className="table-dark">
+                          <tr>
+                            <th>Researcher Name</th>
+                            <th>Analyte</th>
+                            <th>Quantity</th>
+                            <th>Comments</th>
+                            <th>Study_Copy</th>
+                            <th>IRB_File</th>
+                            <th>Additional Mechanism</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {orderhistoryData.map((order, index) => (
+                            <React.Fragment key={index}>
+                              <tr>
+                                <td>{order.researcher_name}</td>
+                                <td>{order.Analyte}</td>
+                                <td>{order.quantity}</td>
+
+                                <td>
+                                  <button
+                                    className="btn btn-sm btn-outline-info"
+                                    onClick={() =>
+                                      setVisibleCommentIndex(visibleCommentIndex === index ? null : index)
+                                    }
+                                  >
+                                    {visibleCommentIndex === index ? "Hide" : "View"}
+                                  </button>
+                                </td>
+                                <td>
+                                  {/* IRB File Download Button */}
+                                  {order.study_copy && order.study_copy.data && (
+                                    <button
+                                      className="btn btn-sm btn-outline-success me-1 mb-1"
+                                      onClick={() => {
+                                        const byteArray = new Uint8Array(order.study_copy.data);
+                                        const blob = new Blob([byteArray], { type: 'application/pdf' }); // adjust MIME if needed
+                                        const url = URL.createObjectURL(blob);
+
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.download = 'Study_Copy.pdf'; // or dynamically name it
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                        URL.revokeObjectURL(url);
+                                      }}
+                                    >
+                                      Download study_copy
+                                    </button>
+                                  )}
+
+                                  {/* NBC File (null in your data, so just check if exists) */}
+                                  {order.nbc_file && order.nbc_file.data && (
+                                    <button
+                                      className="btn btn-sm btn-outline-warning me-1 mb-1"
+                                      onClick={() => {
+                                        const byteArray = new Uint8Array(order.nbc_file.data);
+                                        const blob = new Blob([byteArray], { type: 'application/pdf' }); // change if needed
+                                        const url = URL.createObjectURL(blob);
+
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.download = 'NBC_File.pdf';
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                        URL.revokeObjectURL(url);
+                                      }}
+                                    >
+                                      Download NBC
+                                    </button>
+                                  )}
+                                </td>
+                                <td>
+                                  {/* IRB File Download Button */}
+                                  {order.irb_file && order.irb_file.data && (
+                                    <button
+                                      className="btn btn-sm btn-outline-success me-1 mb-1"
+                                      onClick={() => {
+                                        const byteArray = new Uint8Array(order.irb_file.data);
+                                        const blob = new Blob([byteArray], { type: 'application/pdf' }); // adjust MIME if needed
+                                        const url = URL.createObjectURL(blob);
+
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.download = 'IRB_File.pdf'; // or dynamically name it
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                        URL.revokeObjectURL(url);
+                                      }}
+                                    >
+                                      Download IRB
+                                    </button>
+                                  )}
+
+                                  {/* NBC File (null in your data, so just check if exists) */}
+                                  {order.nbc_file && order.nbc_file.data && (
+                                    <button
+                                      className="btn btn-sm btn-outline-warning me-1 mb-1"
+                                      onClick={() => {
+                                        const byteArray = new Uint8Array(order.nbc_file.data);
+                                        const blob = new Blob([byteArray], { type: 'application/pdf' }); // change if needed
+                                        const url = URL.createObjectURL(blob);
+
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.download = 'NBC_File.pdf';
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
+                                        URL.revokeObjectURL(url);
+                                      }}
+                                    >
+                                      Download NBC
+                                    </button>
+                                  )}
+                                </td>
+                                <td>
+                                  <button
+                                    className="btn btn-sm btn-outline-primary mb-2"
+                                    onClick={() =>
+                                      setExpandedRowIndex(expandedRowIndex === index ? null : index)
+                                    }
+                                  >
+                                    {expandedRowIndex === index ? "Hide Reporting" : "View Reporting"}
+                                  </button>
+
+                                  {expandedRowIndex === index && (
+                                    <div
+                                      className="border rounded p-2 bg-light text-dark shadow-sm"
+                                      style={{ whiteSpace: "pre-wrap", maxWidth: "300px", marginTop: "5px" }}
+                                    >
+                                      <strong>Additional Info:</strong>
+                                      <div>{order.reporting_mechanism}</div>
+                                    </div>
+                                  )}
+                                </td>
+
+
+
+                              </tr>
+
+                              {visibleCommentIndex === index && (
+                                <tr>
+                                  <td colSpan="6">
+                                    <div className="alert alert-secondary mb-0">
+                                      <strong>Comment:</strong> {order.committee_comments || "No comments available."}
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          ))}
+
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <Modal show={showModal}
         onHide={closeModal}
         size="lg"
@@ -1310,7 +1365,11 @@ const CommitteeMemberArea = () => {
                 {fieldsToShowInOrder.map(({ field, label }) => {
                   const value = selectedCommitteMember[field];
                   if (value === undefined) return null;
-
+                  console.log(value)
+                  // Format date fields
+                  if (field.includes("date") || field.includes("at")) {
+                    value = formatDate(value);
+                  }
                   return (
                     <div className="col-md-6" key={field}>
                       <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">

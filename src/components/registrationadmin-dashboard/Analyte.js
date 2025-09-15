@@ -291,6 +291,33 @@ const AnalyteArea = () => {
         }
       );
 
+  const existingAnalyte = Analytename.find(
+      (c) => c.id === selectedAnalyteId
+    );
+
+    // Build the updated city correctly
+    const updatedAnalyte = {
+      id: selectedAnalyteId,
+      name: formData.name,   // map formData.cityname → name
+      testresultunit_id:formData.testresultunit_id,
+      status:existingAnalyte?.status || "",
+      added_by: existingAnalyte?.added_by || "Registration Admin",
+      created_at: existingAnalyte?.created_at,  // keep original
+      updated_at: new Date().toISOString(),  // update timestamp
+    };
+
+      // Replace analyte in state
+      setAnalytename((prev) =>
+        prev.map((item) =>
+          item.id === selectedAnalyteId ? updatedAnalyte : item
+        )
+      );
+
+      setFilteredAnalytename((prev) =>
+        prev.map((item) =>
+          item.id === selectedAnalyteId ? updatedAnalyte : item
+        )
+      );
 
       setShowEditModal(false);
       setSuccessMessage("Analyte updated successfully.");
@@ -307,6 +334,7 @@ const AnalyteArea = () => {
       console.error(`Error updating Analyte with ID ${selectedAnalyteId}:`, error);
     }
   };
+
 
 
 

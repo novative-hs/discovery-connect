@@ -147,15 +147,30 @@ const BankArea = () => {
     try {
       await axios.put(`${url}/update-bank/${selectedbanknameId}`, formData);
       
-      // ✅ update arrays using the correct key from DB
-      setbankname(prev =>
-        prev.map(b =>
-          b.id === selectedbanknameId ? { ...b, ...formData } : b
+     const existingBank = bankname.find(
+        (c) => c.id === selectedbanknameId
+      );
+
+      // Build the updated city correctly
+      const updatedBank = {
+        id: selectedbanknameId,
+        name: formData.bankname,   // map formData.cityname → name
+        added_by: existingBank?.added_by || "Registration Admin",
+        created_at: existingBank?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setbankname((prev) =>
+        prev.map((bank) =>
+          bank.id === selectedbanknameId ? updatedBank : bank
         )
       );
-      setFilteredBankname(prev =>
-        prev.map(b =>
-          b.id === selectedbanknameId ? { ...b, ...formData } : b
+
+      // Update in filteredCityname
+      setFilteredBankname((prev) =>
+        prev.map((bank) =>
+          bank.id === selectedbanknameId ? updatedBank : bank
         )
       );
 

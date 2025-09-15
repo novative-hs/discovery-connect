@@ -133,9 +133,32 @@ const TestSystemManufacturerArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/samplefields/put-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`, formData);
-      const response = await axios.get(`${url}/samplefields/get-samplefields/testsystemmanufacturer`);
-      setFilteredTestSystemmanufacturername(response.data);
-      setTestSystemManufacturername(response.data);
+     const existingtestsystemmanufacturer = testsystemmanufacturername.find(
+        (c) => c.id === selectedTestSystemManufacturernameId
+      );
+
+      // Build the updated city correctly
+      const updatedtestsystemmanufacturer = {
+        id: selectedTestSystemManufacturernameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingtestsystemmanufacturer?.added_by || "Registration Admin",
+        created_at: existingtestsystemmanufacturer?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setTestSystemManufacturername((prev) =>
+        prev.map((testsystemmanufacturer) =>
+          testsystemmanufacturer.id === selectedTestSystemManufacturernameId ? updatedtestsystemmanufacturer : testsystemmanufacturer
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredTestSystemmanufacturername((prev) =>
+        prev.map((testsystemmanufacturer) =>
+          testsystemmanufacturer.id === selectedTestSystemManufacturernameId ? updatedtestsystemmanufacturer : testsystemmanufacturer
+        )
+      );
       setSuccessMessage("Test System Manufacturer updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

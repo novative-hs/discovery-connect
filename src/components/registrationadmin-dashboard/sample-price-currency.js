@@ -136,8 +136,32 @@ const SamplePriceCurrencyArea = () => {
     try {
       await axios.put(`${url}/samplefields/put-samplefields/samplepricecurrency/${selectedSamplePriceCurrencynameId}`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/samplepricecurrency`);
-      setFilteredSamplepricecurrencyname(response.data);
-      setSamplePriceCurrencyname(response.data);
+          const existingsamplepricecurrency = samplepricecurrencyname.find(
+        (c) => c.id === selectedSamplePriceCurrencynameId
+      );
+
+      // Build the updated city correctly
+      const updatedsamplepricecurrency = {
+        id: selectedSamplePriceCurrencynameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingsamplepricecurrency?.added_by || "Registration Admin",
+        created_at: existingsamplepricecurrency?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setSamplePriceCurrencyname((prev) =>
+        prev.map((samplepricecurrency) =>
+          samplepricecurrency.id === selectedSamplePriceCurrencynameId ? updatedsamplepricecurrency : samplepricecurrency
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredSamplepricecurrencyname((prev) =>
+        prev.map((samplepricecurrency) =>
+          samplepricecurrency.id === selectedSamplePriceCurrencynameId ? updatedsamplepricecurrency : samplepricecurrency
+        )
+      );
       setSuccessMessage("Sample Price Currency updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

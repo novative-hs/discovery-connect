@@ -5,7 +5,6 @@ const TextArea = () => {
   return (
     <section className="about-area py-5" style={{ background: "#f5f8ff" }}>
       <div className="container">
-
         <AboutCard
           title="Who we are?"
           image="/assets/img/about/aboutus2.jpeg"
@@ -42,7 +41,6 @@ const TextArea = () => {
           image="/assets/img/about/about4.jpeg"
           text="Be part of a trusted platform dedicated to advancing product development. Sign up now and start discovering the right samples for your study!"
         />
-
       </div>
     </section>
   );

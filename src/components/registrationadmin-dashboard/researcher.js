@@ -830,28 +830,28 @@ const ResearcherArea = () => {
                           <div>
                             <span className="h6 fw-bold text-primary">Order Status: </span>
                             <span className="h6 text-dark">
-                              {orderhistoryData[0]?.order_status}
+                              {orderhistoryData[0]?.order_status || "---"}
                             </span>
                           </div>
 
                           <div>
                             <span className="h6 fw-bold text-primary">Technical Admin Status: </span>
                             <span className="h6 text-dark">
-                              {orderhistoryData[0]?.technicaladmin_status}
+                              {orderhistoryData[0]?.technicaladmin_status || "---"}
                             </span>
                           </div>
 
                           <div>
                             <span className="h6 fw-bold text-primary">Scientific Committee Status: </span>
                             <span className="h6 text-dark">
-                              {orderhistoryData[0]?.scientific_committee_status}
+                              {orderhistoryData[0]?.scientific_committee_status || "---"}
                             </span>
                           </div>
 
                           <div>
                             <span className="h6 fw-bold text-primary">Ethical Committee Status: </span>
                             <span className="h6 text-dark">
-                              {orderhistoryData[0]?.ethical_committee_status}
+                              {orderhistoryData[0]?.ethical_committee_status || "---"}
                             </span>
                           </div>
                         </div>
@@ -874,7 +874,7 @@ const ResearcherArea = () => {
                               {orderhistoryData.map((order, index) => (
                                 <tr key={index}>
                                   <td>{order.Analyte}</td>
-                                  <td>{`${order.age} year | ${order.gender}`}</td>
+                                  <td>{`${order.age || ""}  | ${order.gender}`}</td>
                                   <td>{`${order.quantity} X ${order.Volume}${order.VolumeUnit}`}</td>
                                   <td>{order.TestResult}{order.TestResultUnit}</td>
                                   <td className="text-end">{order.price?.toLocaleString()}</td>

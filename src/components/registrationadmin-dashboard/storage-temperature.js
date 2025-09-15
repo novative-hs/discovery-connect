@@ -135,8 +135,32 @@ const StorageTemperatureArea = () => {
     try {
       await axios.put(`${url}/samplefields/put-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/storagetemperature`);
-      setFilteredStoragetemperaturename(response.data);
-      setStoragetemperaturename(response.data);
+          const existingstoragetemp = storagetemperaturename.find(
+        (c) => c.id === selectedstoragetemperaturenameId
+      );
+
+      // Build the updated city correctly
+      const updatedstoragetemp = {
+        id: selectedstoragetemperaturenameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingstoragetemp?.added_by || "Registration Admin",
+        created_at: existingstoragetemp?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in countriesname
+      setStoragetemperaturename((prev) =>
+        prev.map((storagetemp) =>
+          storagetemp.id === selectedstoragetemperaturenameId ? updatedstoragetemp : storagetemp
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredStoragetemperaturename((prev) =>
+        prev.map((storagetemp) =>
+          storagetemp.id === selectedstoragetemperaturenameId ? updatedstoragetemp : storagetemp
+        )
+      );
       setSuccessMessage("storage temperature name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();

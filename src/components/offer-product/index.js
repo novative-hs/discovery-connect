@@ -10,11 +10,12 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { useDispatch } from "react-redux";
 import { setProduct } from "src/redux/features/productSlice";
-import { useRouter } from "next/router";
+import { useRouter } from "next/router";   // ✅ useRouter instead of useNavigate
 import { skipToken } from "@reduxjs/toolkit/query";
 
 const OfferPopularProduct = () => {
   const [page, setPage] = useState(1);
+
   const { data: categories, isLoading, isError } = useGetAllSamplesQuery({
     limit: 20,
     offset: (page - 1) * 20,
@@ -27,14 +28,13 @@ const OfferPopularProduct = () => {
     isError: sampleFieldsError,
   } = useGetSampleFieldsQuery(sampleType || skipToken);
 
-  const router = useRouter();
+  const router = useRouter();   // ✅ useRouter hook
   const [visible, setVisible] = useState({});
   const productRefs = useRef([]);
   const dispatch = useDispatch();
 
   const sampleList = categories?.data || [];
- const displayedCategories = sampleList.slice(0, 6);
-
+  const displayedCategories = sampleList.slice(0, 6);
 
   useEffect(() => {
     AOS.init({ duration: 500 });
@@ -73,6 +73,7 @@ const OfferPopularProduct = () => {
 
   const handleQuickView = (product) => {
     dispatch(setProduct(product));
+    router.push(`/product/${product.id}`);   // ✅ router.push instead of navigate()
   };
 
   return (
@@ -99,7 +100,11 @@ const OfferPopularProduct = () => {
                 transition: "opacity 0.8s ease-out, transform 0.8s ease-out",
               }}
             >
-              <div className="card border-0 shadow-lg p-3 h-100 text-center rounded-3">
+              <div
+                className="card border-0 shadow-lg p-3 h-100 text-center rounded-3"
+                onClick={() => handleQuickView(category)}
+                style={{ cursor: "pointer" }}
+              >
                 <div className="product-image mb-2 m-2">
                   <img
                     src={category.imageUrl || ""}
@@ -113,17 +118,6 @@ const OfferPopularProduct = () => {
                   />
                 </div>
                 <h5 className="fw-bold text-primary mb-2">{category.Analyte}</h5>
-                {/* <p className="fs-5 text-dark fw-semibold">
-                  {category.price
-                    ? `${category.price} ${category.SamplePriceCurrency || ""}`
-                    : "Price not available"}
-                </p> */}
-                {/* <button
-                  className="btn btn-outline-danger mt-2 w-100 fw-bold"
-                  onClick={() => handleQuickView(category)}
-                >
-                  View
-                </button> */}
               </div>
             </div>
           ))}
@@ -132,7 +126,7 @@ const OfferPopularProduct = () => {
         <div className="row text-center mt-4">
           <div className="col">
             <Link
-              href="/shop"
+              href="/shop"   // ✅ Next.js Link uses `href` not `to`
               className="fw-bold px-4 py-2 text-white text-decoration-none"
               style={{ backgroundColor: "#003366" }}
             >
