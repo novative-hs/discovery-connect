@@ -6,6 +6,14 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faDownload
 } from "@fortawesome/free-solid-svg-icons";
+import {
+  FaUserTie,
+  FaUsers,
+  FaFileAlt,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaClock,
+} from "react-icons/fa";
 import { notifyError, notifySuccess } from "@utils/toast";
 
 const OrderPage = () => {
@@ -330,7 +338,6 @@ const OrderPage = () => {
   };
 
   const handleHistory = useCallback(async (orderGroup) => {
-    console.log(orderGroup);
     setShowHistoryModal(true);
     setLoadingHistory(true);
 
@@ -345,7 +352,6 @@ const OrderPage = () => {
         }
       );
 
-      console.log(response.data.results);
       setSelectedHistory(response.data.results || []);
     } catch (error) {
       console.error(error);
@@ -1044,12 +1050,12 @@ const OrderPage = () => {
             <Modal.Header
               closeButton
               style={{
-                background: "linear-gradient(90deg, #007bff, #0056b3)",
+                background: "linear-gradient(135deg, #2563eb, #1e40af)",
                 color: "#fff",
                 borderBottom: "none",
                 padding: "1.2rem",
-                borderTopLeftRadius: "8px",
-                borderTopRightRadius: "8px",
+                borderTopLeftRadius: "10px",
+                borderTopRightRadius: "10px",
               }}
             >
               <Modal.Title style={{ fontWeight: "700", fontSize: "1.6rem" }}>
@@ -1060,12 +1066,12 @@ const OrderPage = () => {
             {/* Body */}
             <Modal.Body
               style={{
-                maxHeight: "65vh",
+                maxHeight: "70vh",
                 overflowY: "auto",
                 padding: "2rem",
-                backgroundColor: "#f8fafc",
-                borderBottomLeftRadius: "8px",
-                borderBottomRightRadius: "8px",
+                backgroundColor: "#f9fafb",
+                borderBottomLeftRadius: "10px",
+                borderBottomRightRadius: "10px",
               }}
             >
               {loadingHistory ? (
@@ -1082,155 +1088,315 @@ const OrderPage = () => {
                   <div
                     key={idx}
                     style={{
-                      background: "#fff",
+                      background: "#ffffff",
                       borderRadius: "12px",
                       padding: "1.5rem",
-                      marginBottom: "1.8rem",
-                      border: "1px solid #e9ecef",
-                      position: "relative",
+                      boxShadow: "0 6px 16px rgba(0,0,0,0.08)",
+                      marginBottom: "2rem",
+                      border: "1px solid #e5e7eb",
                     }}
                   >
                     <h5
                       style={{
-                        color: "#007bff",
+                        color: "#2563eb",
                         fontWeight: "700",
-                        marginBottom: "1.2rem",
+                        textAlign: "center",
+                        marginBottom: "1.5rem",
                         fontSize: "1.25rem",
-                        borderBottom: "2px solid #e9ecef",
-                        paddingBottom: "0.5rem",
                       }}
                     >
-                      Review #{idx + 1}
+                      Review
                     </h5>
 
-                    {/* Technical Admin - Referred */}
-                    {(history.technicalAdminHistory || []).map(
-                      (ta, taIdx) =>
-                        ta.Technicaladmindate && (
-                          <div
-                            key={`ta-ref-${taIdx}`}
-                            style={{
-                              backgroundColor: "#eef5ff",
-                              padding: "1rem",
-                              borderRadius: "6px",
-                              marginBottom: "1rem",
-                              borderLeft: "4px solid #0d6efd",
-                            }}
-                          >
-                            <strong style={{ color: "#0d6efd" }}>
-                              📌 {formatDT(ta.Technicaladmindate)}
-                            </strong>
-                            <p className="mb-0">The order was referred to the Technical Admin</p>
-                          </div>
-                        )
-                    )}
-
-                    {/* Committee Approvals */}
-                    {Array.isArray(history.approvals) &&
-                      history.approvals.length > 0 &&
-                      history.approvals.map((approval, i) => (
-                        <div
-                          key={i}
-                          style={{
-                            background: "#fdfdfd",
-                            padding: "1rem",
-                            borderRadius: "8px",
-                            marginBottom: "1rem",
-                            border: "1px solid #e9ecef",
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                          }}
-                        >
-                          <h6
-                            style={{
-                              fontWeight: "600",
-                              color: "#0d6efd",
-                              marginBottom: "0.5rem",
-                            }}
-                          >
-                            👤 {approval.committeetype} Committee – {approval.CommitteeMemberName}
-                          </h6>
-
-                          {approval.committee_created_at && (
-                            <p className="mb-1 text-muted">
-                              ⏳ {formatDT(approval.committee_created_at)} – referred to member
-                            </p>
-                          )}
-
-                          {approval.committee_approval_date && (
-                            <p
-                              className="mb-0"
+                    {/* Timeline wrapper */}
+                    <div
+                      style={{
+                        position: "relative",
+                        marginLeft: "1.5rem",
+                        paddingLeft: "1rem",
+                        borderLeft: "2px solid #e5e7eb",
+                      }}
+                    >
+                      {/* Technical Admin referred */}
+                      {(history.technicalAdminHistory || []).map(
+                        (ta, taIdx) =>
+                          ta.Technicaladmindate && (
+                            <div
+                              key={`ta-ref-${taIdx}`}
                               style={{
-                                color:
+                                display: "flex",
+                                alignItems: "flex-start",
+                                marginBottom: "1.5rem",
+                              }}
+                            >
+                              {/* Icon */}
+                              <div
+                                style={{
+                                  width: "34px",
+                                  height: "34px",
+                                  borderRadius: "50%",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  marginLeft: "-2.2rem",
+                                  marginRight: "0.8rem",
+                                  backgroundColor: "#0d6efd",
+                                  boxShadow: "0 3px 6px rgba(0, 0, 0, 0.15)",
+                                }}
+                              >
+                                <FaUserTie color="white" />
+                              </div>
+
+                              {/* Content */}
+                              <div
+                                style={{
+                                  background: "#ffffff",
+                                  padding: "1rem 1.2rem",
+                                  borderRadius: "10px",
+                                  border: "1px solid #e2e8f0",
+                                  width: "100%",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontSize: "0.8rem",
+                                    color: "#6b7280",
+                                    marginBottom: "0.35rem",
+                                    fontWeight: "500",
+                                  }}
+                                >
+                                  {formatDT(ta.Technicaladmindate)}
+                                </div>
+                                <div
+                                  style={{ fontSize: "0.95rem", color: "#1f2937" }}
+                                >
+                                  <strong>Order referred</strong> to Technical Admin
+                                </div>
+                              </div>
+                            </div>
+                          )
+                      )}
+
+                      {/* Committee Approvals */}
+                      {Array.isArray(history.approvals) &&
+                        history.approvals.map((approval, i) => (
+                          <div
+                            key={i}
+                            style={{
+                              display: "flex",
+                              alignItems: "flex-start",
+                              marginBottom: "1.5rem",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "34px",
+                                height: "34px",
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginLeft: "-2.2rem",
+                                marginRight: "0.8rem",
+                                backgroundColor:
                                   approval.committee_status === "Refused"
                                     ? "#dc3545"
                                     : "#198754",
-                                fontWeight: "500",
+                                boxShadow: "0 3px 6px rgba(0, 0, 0, 0.15)",
                               }}
                             >
-                              {approval.committee_status === "Refused" ? "❌" : "✅"}{" "}
-                              {formatDT(approval.committee_approval_date)} –{" "}
-                              {approval.committee_status} by member
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                              <FaUsers color="white" />
+                            </div>
 
-                    {/* Uploaded Documents */}
-                    {Array.isArray(history.documents) && history.documents.length > 0 && (
-                      history.documents.map((doc, dIdx) => (
-                        <div
-                          key={dIdx}
-                          style={{
-                            backgroundColor: "#fff",
-                            padding: "1rem",
-                            borderRadius: "6px",
-                            marginBottom: "0.8rem",
-                            border: "1px solid #e9ecef",
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-                          }}
-                        >
-                          <strong style={{ color: "#0d6efd" }}>📂 {formatDT(doc.created_at)}</strong>
-                          <p className="mb-0" style={{ color: "#495057" }}>
-                            {doc.uploaded_by_role} uploaded{" "}
-                            <strong>{Array.isArray(doc.files) ? doc.files.join(", ") : ""}</strong>
-                          </p>
-                        </div>
-                      ))
-                    )}
+                            <div
+                              style={{
+                                background: "#ffffff",
+                                padding: "1rem 1.2rem",
+                                borderRadius: "10px",
+                                border: "1px solid #e2e8f0",
+                                width: "100%",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#6b7280",
+                                  marginBottom: "0.35rem",
+                                  fontWeight: "500",
+                                }}
+                              >
+                                {/* Referred date */}
+                                {approval.committee_created_at && (
+                                  <div style={{ marginBottom: "0.6rem" }}>
+                                    {formatDT(approval.committee_created_at)}
+                                    <div style={{ fontSize: "0.95rem", color: "#1f2937" }}>
+                                      <FaClock
+                                        style={{ marginRight: "5px", color: "#6c757d" }}
+                                      />
+                                      Order Referred to {approval.committeetype} Committee –{" "}
+                                      {approval.CommitteeMemberName}
+                                    </div>
+                                  </div>
+                                )}
 
+                                {/* Approval/Refusal date */}
+                                {approval.committee_approval_date && (
+                                  <div>
+                                    {formatDT(approval.committee_approval_date)}
+                                    <div style={{ fontSize: "0.95rem", color: "#1f2937" }}>
+                                      {approval.committee_status === "Refused" ? (
+                                        <>
+                                          <FaTimesCircle
+                                            style={{ marginRight: "5px", color: "#dc3545" }}
+                                          />
+                                          Order Refused by {approval.committeetype} Committee –{" "}
+                                          {approval.CommitteeMemberName}
+                                        </>
+                                      ) : (
+                                        <>
+                                          <FaCheckCircle
+                                            style={{ marginRight: "5px", color: "#198754" }}
+                                          />
+                                          Order Approved by {approval.committeetype} Committee –{" "}
+                                          {approval.CommitteeMemberName}
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
 
-                    {/* Technical Admin - Approval */}
-                    {(history.technicalAdminHistory || []).map(
-                      (ta, taIdx) =>
-                        ta.TechnicaladminApproval_date && (
+                      {/* Uploaded Documents */}
+                      {Array.isArray(history.documents) &&
+                        history.documents.map((doc, dIdx) => (
                           <div
-                            key={`ta-appr-${taIdx}`}
+                            key={dIdx}
                             style={{
-                              backgroundColor: "#eef5ff",
-                              padding: "1rem",
-                              borderRadius: "6px",
-                              borderLeft: "4px solid #0d6efd",
+                              display: "flex",
+                              alignItems: "flex-start",
+                              marginBottom: "1.5rem",
                             }}
                           >
-                            <strong style={{ color: "#0d6efd" }}>
-                              🏷 {formatDT(ta.TechnicaladminApproval_date)}
-                            </strong>
-                            <p className="mb-0">
-                              The order was{" "}
-                              <span style={{ fontWeight: "600" }}>{ta.technical_admin_status}</span>{" "}
-                              by Technical Admin
-                            </p>
+                            <div
+                              style={{
+                                width: "34px",
+                                height: "34px",
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginLeft: "-2.2rem",
+                                marginRight: "0.8rem",
+                                backgroundColor: "#0dcaf0",
+                                boxShadow: "0 3px 6px rgba(0, 0, 0, 0.15)",
+                              }}
+                            >
+                              <FaFileAlt color="white" />
+                            </div>
+                            <div
+                              style={{
+                                background: "#ffffff",
+                                padding: "1rem 1.2rem",
+                                borderRadius: "10px",
+                                border: "1px solid #e2e8f0",
+                                width: "100%",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "0.8rem",
+                                  color: "#6b7280",
+                                  marginBottom: "0.35rem",
+                                  fontWeight: "500",
+                                }}
+                              >
+                                {formatDT(doc.created_at)}
+                              </div>
+                              <div style={{ fontSize: "0.95rem", color: "#1f2937" }}>
+                                <strong>{doc.uploaded_by_role}</strong> uploaded:{" "}
+                                <em>
+                                  {Array.isArray(doc.files)
+                                    ? doc.files.join(", ")
+                                    : ""}
+                                </em>
+                              </div>
+                            </div>
                           </div>
-                        )
-                    )}
+                        ))}
+
+                      {/* Technical Admin approval */}
+                      {(history.technicalAdminHistory || []).map(
+                        (ta, taIdx) =>
+                          ta.TechnicaladminApproval_date && (
+                            <div
+                              key={`ta-appr-${taIdx}`}
+                              style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                marginBottom: "1.5rem",
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: "34px",
+                                  height: "34px",
+                                  borderRadius: "50%",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  marginLeft: "-2.2rem",
+                                  marginRight: "0.8rem",
+                                  backgroundColor:
+                                    ta.technical_admin_status === "Approved"
+                                      ? "#198754"
+                                      : "#dc3545",
+                                  boxShadow: "0 3px 6px rgba(0, 0, 0, 0.15)",
+                                }}
+                              >
+                                <FaUserTie color="white" />
+                              </div>
+
+                              <div
+                                style={{
+                                  background: "#ffffff",
+                                  padding: "1rem 1.2rem",
+                                  borderRadius: "10px",
+                                  border: "1px solid #e2e8f0",
+                                  width: "100%",
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    fontSize: "0.8rem",
+                                    color: "#6b7280",
+                                    marginBottom: "0.35rem",
+                                    fontWeight: "500",
+                                  }}
+                                >
+                                  {formatDT(ta.TechnicaladminApproval_date)}
+                                </div>
+                                <div style={{ fontSize: "0.95rem", color: "#1f2937" }}>
+                                  Order{" "}
+                                  <b>{ta.technical_admin_status.toLowerCase()}</b> by
+                                  Technical Admin
+                                </div>
+                              </div>
+                            </div>
+                          )
+                      )}
+                    </div>
                   </div>
                 ))
               ) : (
-                <div style={{ color: "#6c757d" }}>⚠ No history available</div>
+                <div style={{ color: "#6c757d", textAlign: "center" }}>
+                  ⚠ No history available
+                </div>
               )}
             </Modal.Body>
           </Modal>
-
 
           {/* Admin Approval Modal */}
           {showModal && (

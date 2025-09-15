@@ -80,6 +80,6 @@ function Database() {
   samplefieldsModel.createConcurrentMedicalConditionsTable();
   historyModel.registrationadmin_history();
 
-  // newtablefieldModel.createOrUpdateTables();
+   newtablefieldModel.createOrUpdateTables();
 }
 Database();

@@ -184,9 +184,8 @@ const SampleDispatchArea = () => {
           return combinedPrice.includes(lowerValue);
         }
 
-        if (field === "gender_age") {
-          const combinedagegender = `${sample.gender ?? ""} ${sample.age ?? ""}`.toLowerCase();
-          return combinedagegender.includes(lowerValue);
+        if (field === "gender") {
+          return sample.gender?.toLowerCase().startsWith(lowerValue); // safe partial match
         }
         if (field === "sample_visibility") {
           return sample.sample_visibility?.toLowerCase().startsWith(lowerValue); // safe partial match
@@ -620,27 +619,30 @@ const SampleDispatchArea = () => {
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+        <Modal.Body
+          style={{ maxHeight: "500px", overflowY: "auto" }}
+          className="bg-light rounded"
+        >
           {selectedSample ? (
             <div className="p-3">
               <div className="row g-3">
-                {fieldsToShowInOrder
-                  .filter(({ key }) => {
-                    const value = selectedSample[key];
-                    return value !== undefined && value !== null && value !== "";
-                  })
-                  .map(({ key, label }) => (
+                {fieldsToShowInOrder.map(({ key, label }) => {
+                  const value = selectedSample[key];
+                  if (value === undefined) return null;
+
+                  return (
                     <div className="col-md-6" key={key}>
                       <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
                         <span className="text-muted small fw-bold mb-1">
                           {label}
                         </span>
                         <span className="fs-6 text-dark">
-                          {selectedSample[key]?.toString() || "----"}
+                          {value?.toString() || "----"}
                         </span>
                       </div>
                     </div>
-                  ))}
+                  );
+                })}
               </div>
             </div>
           ) : (

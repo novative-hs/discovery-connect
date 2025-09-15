@@ -14,7 +14,7 @@ const About = () => {
       <SectionTop
         title="ABOUT US"
         subtitle="Learn more about our mission and values"
-        backgroundImage="/assets/img/about/good.jpg"
+        backgroundImage="/assets/img/about/aboutus.jpg"
       />
       <AboutArea />
       <Footer />

@@ -11,7 +11,6 @@ import {
 import * as XLSX from "xlsx";
 import Pagination from "@ui/Pagination";
 import moment from "moment";
-
 const ConcurrentMedicalConditionsArea = () => {
   const id = sessionStorage.getItem("userID");
 
@@ -21,43 +20,40 @@ const ConcurrentMedicalConditionsArea = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [selectedConcurrentMedicalnameId, setSelectedConcurrentMedicalnameId] =
-    useState(null);
+    useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [filters, setFilters] = useState({
-    name: "",
-    added_by: "",
-    created_at: "",
-    updated_at: ""
-  });
   const [editConcurrentMedicalname, setEditConcurrentMedicalname] =
-    useState(null);
-  const [concurrentmedicalname, setConcurrentMedicalname] = useState([]);
+    useState(null); // State for selected ConcurrentMedical to edit
+  const [concurrentmedicalname, setConcurrentMedicalname] = useState([]); // State to hold fetched TestKitManufacturer
   const [successMessage, setSuccessMessage] = useState("");
   const [filteredMedicalConditionname, setFilteredMedicalConditionname] =
-    useState([]);
+    useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
+  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // Fetch TestMethod from backend when component loads
   useEffect(() => {
-    const fetchConcurrentMedicalname = async () => {
-      try {
-        const response = await axios.get(
-          `${url}/samplefields/get-samplefields/concurrentmedicalconditions`
-        );
-        setFilteredMedicalConditionname(response.data);
-        setConcurrentMedicalname(response.data);
-      } catch (error) {
-        console.error("Error fetching Concurrent Medical Conditions :", error);
-      }
-    };
-    fetchConcurrentMedicalname();
+      const fetchConcurrentMedicalname = async () => {
+    try {
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/concurrentmedicalconditions`
+      );
+      setFilteredMedicalConditionname(response.data);
+      setConcurrentMedicalname(response.data); // Store fetched TestMethod in state
+    } catch (error) {
+      console.error("Error fetching Concurrent Medical Conditions :", error);
+    }
+  };
+    fetchConcurrentMedicalname(); // Call the function when the component mounts
   }, [url]);
+
 
   useEffect(() => {
     const pages = Math.max(
@@ -67,9 +63,9 @@ const ConcurrentMedicalConditionsArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0);
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredMedicalConditionname, currentPage]);
+  }, [filteredMedicalConditionname,currentPage]);
 
   const currentData = filteredMedicalConditionname.slice(
     currentPage * itemsPerPage,
@@ -81,26 +77,27 @@ const ConcurrentMedicalConditionsArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    // Update filters state
-    const newFilters = { ...filters, [field]: value };
-    setFilters(newFilters);
+    let filtered = [];
 
-    // Apply all active filters
-    const filtered = concurrentmedicalname.filter((concurrentmedicalconditions) => {
-      return Object.entries(newFilters).every(([filterField, filterValue]) => {
-        if (!filterValue.trim()) return true;
-
-        if (filterField === "added_by") {
-          return "registration admin".includes(filterValue.toLowerCase());
-        }
-
-        return concurrentmedicalconditions[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-      });
-    });
+    if (value.trim() === "") {
+      filtered = concurrentmedicalname; // Show all if filter is empty
+    } else {
+      filtered = concurrentmedicalname.filter((concurrentmedicalconditions) =>
+      {
+        if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
+        return concurrentmedicalconditions[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase())
+      }
+      );
+    }
 
     setFilteredMedicalConditionname(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    setCurrentPage(0);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
   };
 
   const fetchHistory = async (filterType, id) => {
@@ -115,11 +112,11 @@ const ConcurrentMedicalConditionsArea = () => {
     }
   };
 
+  // Call this function when opening the modal
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevFormData) => ({
@@ -128,35 +125,16 @@ const ConcurrentMedicalConditionsArea = () => {
     }));
   };
 
-  const resetFormData = () => {
-    setFormData({ name: "", added_by: id });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${url}/samplefields/post-samplefields/concurrentmedicalconditions`, formData);
-      const newItem = response.data;
-
-      // Add new item to both datasets
-      const updatedConcurrentMedicalname = [...concurrentmedicalname, newItem];
-      setConcurrentMedicalname(updatedConcurrentMedicalname);
-
-      // Apply current filters to the updated dataset
-      const filtered = updatedConcurrentMedicalname.filter((concurrentmedicalconditions) => {
-        return Object.entries(filters).every(([filterField, filterValue]) => {
-          if (!filterValue.trim()) return true;
-
-          if (filterField === "added_by") {
-            return "registration admin".includes(filterValue.toLowerCase());
-          }
-
-          return concurrentmedicalconditions[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-        });
-      });
-
-      setFilteredMedicalConditionname(filtered);
-      setSuccessMessage("Concurrent Medical Conditions Name added successfully.");
+      await axios.post(`${url}/samplefields/post-samplefields/concurrentmedicalconditions`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/concurrentmedicalconditions`);
+      setFilteredMedicalConditionname(response.data);
+      setConcurrentMedicalname(response.data);
+       setSuccessMessage(
+        "Concurrent Medical Conditions Name added successfully."
+      );
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
       setShowAddModal(false);
@@ -165,7 +143,7 @@ const ConcurrentMedicalConditionsArea = () => {
     }
   };
 
-  const handleEditClick = (concurrentmedicalname) => {
+ const handleEditClick = (concurrentmedicalname) => {
     setSelectedConcurrentMedicalnameId(concurrentmedicalname.id);
     setEditConcurrentMedicalname(concurrentmedicalname);
     setFormData({
@@ -175,35 +153,40 @@ const ConcurrentMedicalConditionsArea = () => {
     setShowEditModal(true);
   };
 
-  const handleUpdate = async (e) => {
+ const handleUpdate = async (e) => {
     e.preventDefault();
     try {
       await axios.put(`${url}/samplefields/put-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`, formData);
-
-      // Instead of using response.data, manually update the item with the form data
-      const updatedConcurrentMedicalname = concurrentmedicalname.map(item =>
-        item.id === selectedConcurrentMedicalnameId
-          ? { ...item, name: formData.name, updated_at: new Date().toISOString() }
-          : item
+      const response = await axios.get(`${url}/samplefields/get-samplefields/concurrentmedicalconditions`);
+      
+      const existingconcurrentmedical = concurrentmedicalname.find(
+        (c) => c.id === selectedConcurrentMedicalnameId
       );
 
-      setConcurrentMedicalname(updatedConcurrentMedicalname);
+      // Build the updated concurrentmedicalname correctly
+      const updatedconcurrentmedicalname = {
+        id: selectedConcurrentMedicalnameId,
+        name: formData.name,
+        added_by: existingconcurrentmedical?.added_by || "Registration Admin",
+        created_at: existingconcurrentmedical?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
 
-      // Apply current filters to the updated dataset
-      const filtered = updatedConcurrentMedicalname.filter((concurrentmedicalconditions) => {
-        return Object.entries(filters).every(([filterField, filterValue]) => {
-          if (!filterValue.trim()) return true;
+      // Update in concurrentmedicalname
+      setConcurrentMedicalname((prev) =>
+        prev.map((concurrentmedical) =>
+          concurrentmedical.id === selectedConcurrentMedicalnameId ? updatedconcurrentmedicalname : concurrentmedical
+        )
+      );
 
-          if (filterField === "added_by") {
-            return "registration admin".includes(filterValue.toLowerCase());
-          }
+      // Update in filteredconcurrentmedicalname
+      setFilteredMedicalConditionname((prev) =>
+        prev.map((concurrentmedical) =>
+          concurrentmedical.id === selectedConcurrentMedicalnameId ? updatedconcurrentmedicalname : concurrentmedical
+        )
+      );
 
-          return concurrentmedicalconditions[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-        });
-      });
-
-      setFilteredMedicalConditionname(filtered);
-      setSuccessMessage("Concurrent Medical Conditions Name updated successfully.");
+       setSuccessMessage("Concurrent Medical Conditions Name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
       setShowEditModal(false);
@@ -215,39 +198,25 @@ const ConcurrentMedicalConditionsArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`${url}/samplefields/delete-samplefields/concurrentmedicalconditions/${selectedConcurrentMedicalnameId}`);
-
-      // Remove item from both datasets
-      const updatedConcurrentMedicalname = concurrentmedicalname.filter(item => item.id !== selectedConcurrentMedicalnameId);
-      setConcurrentMedicalname(updatedConcurrentMedicalname);
-
-      // Apply current filters to the updated dataset
-      const filtered = updatedConcurrentMedicalname.filter((concurrentmedicalconditions) => {
-        return Object.entries(filters).every(([filterField, filterValue]) => {
-          if (!filterValue.trim()) return true;
-
-          if (filterField === "added_by") {
-            return "registration admin".includes(filterValue.toLowerCase());
-          }
-
-          return concurrentmedicalconditions[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-        });
-      });
-
-      setFilteredMedicalConditionname(filtered);
-      setSuccessMessage("Concurrent Medical Conditions Name deleted successfully.");
+      const response = await axios.get(`${url}/samplefields/get-samplefields/concurrentmedicalconditions`);
+      setFilteredMedicalConditionname(response.data);
+      setConcurrentMedicalname(response.data);
+    setSuccessMessage("Concurrent Medical Conditions Name deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
-      setSelectedConcurrentMedicalnameId(null);
+      setSelectedTestSystemnameId(null);
     } catch (error) {
       console.error("Error deleting Concurrent Medical Conditions", error);
     }
   };
 
-  useEffect(() => {
-    const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
-    document.body.style.overflow = isModalOpen ? "hidden" : "auto";
-    document.body.classList.toggle("modal-open", isModalOpen);
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+ useEffect(() => {
+     const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+     document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+     document.body.classList.toggle("modal-open", isModalOpen);
+   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+ 
+
 
   const formatDate = (date) => {
     const options = { year: "2-digit", month: "short", day: "2-digit" };
@@ -261,7 +230,7 @@ const ConcurrentMedicalConditionsArea = () => {
     return `${day}-${formattedMonth}-${year}`;
   };
 
-  const handleFileUpload = async (e) => {
+   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -270,7 +239,7 @@ const ConcurrentMedicalConditionsArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/concurrentmedicalconditions`, { bulkData: payload });
@@ -284,14 +253,14 @@ const ConcurrentMedicalConditionsArea = () => {
     };
     reader.readAsBinaryString(file);
   };
-  // const resetFormData = () => {
-  //   setFormData({
-  //     name: "",
-  //     added_by: id,
-  //   });
-  // };
+  const resetFormData = () => {
+    setFormData({
+      name: "",
+      added_by: id,
+    });
+  };
 
-
+ 
   const handleExportToExcel = () => {
     const dataToExport = filteredMedicalConditionname.map((item) => ({
       Name: item.name ?? "", // Fallback to empty string
@@ -299,7 +268,7 @@ const ConcurrentMedicalConditionsArea = () => {
       "Created At": item.created_at ? formatDate(item.created_at) : "",
       "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
     }));
-
+  
     // Add an empty row with all headers if filteredCityname is empty (optional)
     if (dataToExport.length === 0) {
       dataToExport.push({
@@ -309,14 +278,14 @@ const ConcurrentMedicalConditionsArea = () => {
         "Updated At": "",
       });
     }
-
+  
     const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Concurrent Medical Conditions");
-
+  
     XLSX.writeFile(workbook, "Concurrent-Medical-Conditions-List.xlsx");
   };
-  if (id === null) {
+ if (id === null) {
     return <div>Loading...</div>; // Or redirect to login
   }
   return (

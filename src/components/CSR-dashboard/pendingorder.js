@@ -27,7 +27,7 @@ const PendingSampleArea = () => {
   const [dispatchSlip, setDispatchSlip] = useState(null);
   const fileInputRef = useRef(null);
   const [currency, setCurrency] = useState(null)
-
+  if (id === null) return <div>Loading...</div>;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -43,7 +43,7 @@ const PendingSampleArea = () => {
     { label: "Customer Contact", key: "user_email" },
     { label: "Customer City", key: "city_name" },
     { label: "Customer Adress", key: "fullAddress" },
-    { label: "Order Status", key: "order_status" },
+    // { label: "Order Status", key: "order_status" },
   ];
 
   const fetchSamples = async (action = staffAction) => {
@@ -85,7 +85,6 @@ const PendingSampleArea = () => {
     currentPage * itemsPerPage,
     (currentPage + 1) * itemsPerPage
   );
-  console.log(groupedSamples)
 
   useEffect(() => {
     if (id) {
@@ -230,18 +229,21 @@ const PendingSampleArea = () => {
                     }).replace(/ /g, '-')}</td>
                     <td>
                       {records && records.length > 0
-                        ? records
-                          .map((rec) => rec.BiobankName || rec.CollectionSiteName || "---")
-                          .join(", ")
+                        ? [...new Set(
+                          records.map(
+                            (rec) => rec.BiobankName || rec.CollectionSiteName || "---"
+                          )
+                        )].join(", ")
                         : "---"}
                     </td>
+
 
 
                     <td>{records[0].researcher_name}</td>
                     <td>{records[0].user_email} | {records[0].phoneNumber}</td>
                     <td>{records[0].city_name}</td>
                     <td>{records[0].fullAddress} ,{records[0].district_name} District,{records[0].city_name},{records[0].country_name}</td>
-                    <td>{records[0].order_status}</td>
+                    {/* <td>{records[0].order_status}</td> */}
                     <td>
                       <button
                         className="btn btn-outline-success btn-sm d-flex justify-content-center align-items-center gap-2  rounded-pill shadow"
@@ -278,17 +280,23 @@ const PendingSampleArea = () => {
             centered
             scrollable // makes modal body scrollable when content is too tall
           >
+            <Modal.Header closeButton>
+              <Modal.Title>
+                Order Detail - {selectedUserName}
+              </Modal.Title>
+            </Modal.Header>
             <Modal.Body
               className="p-4 bg-light rounded-3 shadow-sm"
               style={{ maxHeight: "80vh", overflowY: "auto" }} // max height & scroll
             >
+
               <div className="table-responsive">
                 <table className="table table-bordered table-hover text-center table-sm align-middle bg-white rounded shadow-sm">
                   <thead className="table-success text-dark">
                     <tr>
                       <th>Item</th>
                       <th>Qty X Volume</th>
-                    
+
                       <th>
                         Unit Price ({selectedUserSamples[0]?.SamplePriceCurrency || '$'})
                       </th>
@@ -324,8 +332,8 @@ const PendingSampleArea = () => {
                         <td>
                           {sample.quantity || 0} × {sample.volume || 0}{sample.volumeUnit || ''}
                         </td>
-                        
-                        
+
+
                         <td style={{ textAlign: "right" }}>
                           {sample.price
                             ? `${Number(sample.price).toLocaleString("en-US", {
@@ -352,15 +360,76 @@ const PendingSampleArea = () => {
                   <tfoot className="bg-light">
                     <tr>
                       <td colSpan="2" className="text-end fw-bold">
+                        Sub Total ({selectedUserSamples[0]?.SamplePriceCurrency || ""})
+                      </td>
+                      <td
+                        className="fw-bold text-success"
+                        style={{ textAlign: "right" }}
+                      >
+                        {selectedUserSamples[0].subtotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                    {/* tax */}
+                    <tr>
+                      <td colSpan="2" className="text-end fw-bold">
+                        Tax (
+                        {selectedUserSamples[0].tax_value.toString().replace(/\.00$/, "")}
+                        {selectedUserSamples[0]?.tax_type === "percent" ? "%" : ""}
+                        )
+                      </td>
+                      <td
+                        className="fw-bold text-success"
+                        style={{ textAlign: "right" }}
+                      >
+                        {selectedUserSamples[0].tax_type === "percent"
+                          ? (selectedUserSamples[0].subtotal *
+                            selectedUserSamples[0].tax_value) /
+                          100
+                          : Number(selectedUserSamples[0].tax_value).toLocaleString()}
+                      </td>
+                    </tr>
+
+                    {/* Paltform charges */}
+                    <tr>
+                      <td colSpan="2" className="text-end fw-bold">
+                        Platform Charges ({selectedUserSamples[0].platform_value.toString().replace(/\.00$/, "")}{selectedUserSamples[0]?.platform_type === "percent" ? "%" : ""})
+                      </td>
+                      <td
+                        className="fw-bold text-success"
+                        style={{ textAlign: "right" }}
+                      >
+                        {selectedUserSamples[0].platform_type === "percent"
+                          ? (selectedUserSamples[0].subtotal *
+                            selectedUserSamples[0].platform_value) /
+                          100
+                          : Number(selectedUserSamples[0].platform_value).toLocaleString()}
+                      </td>
+                    </tr>
+                    {/* freight charges */}
+                    <tr>
+                      <td colSpan="2" className="text-end fw-bold">
+                        Freight Charges ({selectedUserSamples[0].freight_value.toString().replace(/\.00$/, "")}{selectedUserSamples[0]?.freight_type === "percent" ? "%" : ""})
+                      </td>
+                      <td
+                        className="fw-bold text-success"
+                        style={{ textAlign: "right" }}
+                      >
+                        {selectedUserSamples[0].freight_type === "percent"
+                          ? (selectedUserSamples[0].subtotal *
+                            selectedUserSamples[0].freight_value) /
+                          100
+                          : Number(selectedUserSamples[0].freight_value).toLocaleString()}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan="2" className="text-end fw-bold">
                         Total ({selectedUserSamples[0]?.SamplePriceCurrency || ""})
                       </td>
                       <td
                         className="fw-bold text-success"
                         style={{ textAlign: "right" }}
                       >
-                        {`${selectedUserSamples
-                          .reduce((sum, s) => sum + Number(s.totalpayment || 0), 0)
-                          .toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                        {selectedUserSamples[0].totalpayment.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
                   </tfoot>
@@ -438,4 +507,3 @@ const PendingSampleArea = () => {
 };
 
 export default PendingSampleArea;
-

@@ -78,9 +78,9 @@ const DispatchSampleArea = () => {
 
   const tableHeaders = [
     { label: "Order ID", key: "tracking_id" },
-    { label: "User Name", key: "researcher_name" },
-    { label: "Analyte", key: "Analyte" },
     { label: "Order Date", key: "created_at" },
+    { label: "User Name", key: "researcher_name" },
+    { label: "Order Item", key: "Analyte" },
     { label: "Status", key: "order_status" },
     { label: "Action", key: "action" },
   ];
@@ -89,7 +89,6 @@ const DispatchSampleArea = () => {
 
   // Group filtered samples by tracking_id
   const groupedData = getGroupedData(filteredSamples);
-console.log(groupedData)
   // Paginate grouped data
   const currentData = groupedData.slice(
     currentPage * itemsPerPage,
@@ -189,6 +188,15 @@ console.log(groupedData)
                   <React.Fragment key={sample.tracking_id}>
                     <tr>
                       <td>{sample.tracking_id || "----"}</td>
+                        <td>
+                        {new Date(sample.created_at)
+                          .toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "short",
+                            year: "2-digit",
+                          })
+                          .replace(/ /g, "-")}
+                      </td>
                       <td>{sample.researcher_name}</td>
                       <td>
                         {expandedId === sample.tracking_id ? (
@@ -202,15 +210,7 @@ console.log(groupedData)
                         )}
                       </td>
 
-                      <td>
-                        {new Date(sample.created_at)
-                          .toLocaleDateString("en-GB", {
-                            day: "numeric",
-                            month: "short",
-                            year: "2-digit",
-                          })
-                          .replace(/ /g, "-")}
-                      </td>
+                    
                       <td>{sample.order_status}</td>
                       <td>
                         <button

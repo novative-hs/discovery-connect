@@ -7,18 +7,17 @@ const mysqlPool = require("../config/db");
 const create_AnalyteTable = () => {
   const AnalyteTable = `
   CREATE TABLE IF NOT EXISTS analyte (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  testresultunit_id INT,
-  image VARCHAR(500) DEFAULT NULL,
-  added_by INT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  status ENUM('active', 'inactive') DEFAULT 'active',
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
-  FOREIGN KEY (testresultunit_id) REFERENCES testresultunit(id) ON DELETE CASCADE
-)
-`;
+    id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(255) NOT NULL UNIQUE,
+      testresultunit_id INT,
+      image VARCHAR(500) DEFAULT NULL,
+      added_by INT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      status ENUM('active', 'inactive') DEFAULT 'active',
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE,
+      FOREIGN KEY (testresultunit) REFERENCES testresultunit(id) ON DELETE CASCADE
+)`;
   mysqlConnection.query(AnalyteTable, (err, result) => {
     if (err) {
       console.error("Error creating Analyte table: ", err);
@@ -27,8 +26,8 @@ const create_AnalyteTable = () => {
     }
   });
 };
-const create_infectiousdiseaseTable = () => {
-  const createInfectiousdiseaseTable = `
+const create_infectiousdiseaseTable=()=>{
+     const createInfectiousdiseaseTable = `
     CREATE TABLE IF NOT EXISTS infectiousdiseasetesting (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL UNIQUE,
@@ -38,7 +37,7 @@ const create_infectiousdiseaseTable = () => {
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (added_by) REFERENCES user_account(id) ON DELETE CASCADE
     )`;
-  mysqlConnection.query(createInfectiousdiseaseTable, (err, results) => {
+    mysqlConnection.query(createInfectiousdiseaseTable, (err, results) => {
     if (err) {
       console.error("Error creating infectious disease table: ", err);
     }
@@ -342,8 +341,8 @@ const getAllSampleFields = (tableName, callback) => {
   });
 };
 
-const getAnalyteName = (callback) => {
-  const query = `SELECT 
+const getAnalyteName=(callback)=>{
+ const query = `SELECT 
     analyte.*,
     testresultunit.id AS testresultunit_id,
     testresultunit.name AS testresultunit
@@ -365,33 +364,11 @@ const getAnalyteName = (callback) => {
   });
 }
 
-const createAnalyte = (tableName, data, callback) => {
+const createAnalyte = (tableName,data, callback) => {
   const { bulkData, name, added_by, testresultunit_id, image } = data || {};
 
-  // Set default added_by if not provided
-  const DEFAULT_ADMIN_ID = process.env.DEFAULT_ADMIN_ID || 1;
-  const effectiveAddedBy = added_by || DEFAULT_ADMIN_ID;
-
-  // Validate bulk data
-  if (bulkData) {
-    if (!Array.isArray(bulkData)) {
-      return callback(new Error("Bulk data must be an array"));
-    }
-    if (bulkData.length === 0) {
-      return callback(new Error("Bulk data cannot be empty"));
-    }
-
-    // Check if at least one item has a name
-    const hasValidNames = bulkData.some(item =>
-      item.name && typeof item.name === 'string' && item.name.trim()
-    );
-    if (!hasValidNames) {
-      return callback(new Error("No valid analyte names found in bulk data"));
-    }
-  }
-  // Validate single insert
-  else if (!name) {
-    return callback(new Error("Name is a required field"));
+  if (!added_by) {
+    return callback(new Error("Missing 'added_by' field."));
   }
 
   mysqlPool.getConnection((err, connection) => {
@@ -404,18 +381,13 @@ const createAnalyte = (tableName, data, callback) => {
       }
 
       try {
-        // BULK INSERT PROCESSING
-        if (bulkData) {
-          // Process and validate names
+        // ✅ BULK INSERT: only `name` is required
+        if (bulkData && Array.isArray(bulkData) && bulkData.length > 0) {
           const uniqueNames = Array.from(
             new Set(
               bulkData
-                .map(item => {
-                  // Handle multiple possible name fields
-                  const analyteName = item.name || item.analyte || item.parameter || item['Test Parameter'];
-                  return typeof analyteName === "string" ? analyteName.trim() : null;
-                })
-                .filter(name => !!name)
+                .map((item) => (typeof item.name === "string" ? item.name.trim() : null))
+                .filter((name) => !!name)
             )
           );
 
@@ -423,8 +395,7 @@ const createAnalyte = (tableName, data, callback) => {
             throw new Error("No valid analyte names provided in bulk.");
           }
 
-          // Insert with effectiveAddedBy
-          const insertValues = uniqueNames.map(name => [name, effectiveAddedBy]);
+          const insertValues = uniqueNames.map((name) => [name, added_by]);
 
           const insertQuery = `
             INSERT IGNORE INTO analyte (name, added_by)
@@ -432,15 +403,12 @@ const createAnalyte = (tableName, data, callback) => {
           `;
           await connection.promise().query(insertQuery, [insertValues]);
 
-          // Get inserted records for history
           const [rows] = await connection.promise().query(
             `SELECT id, name FROM analyte WHERE name IN (?)`,
             [uniqueNames]
           );
 
-          // Create history records
-          const historyValues = rows.map(({ id, name }) =>
-            [name, effectiveAddedBy, id, "active"]);
+          const historyValues = rows.map(({ id, name }) => [name, added_by, id, "active"]);
 
           const historyQuery = `
             INSERT INTO registrationadmin_history
@@ -451,43 +419,35 @@ const createAnalyte = (tableName, data, callback) => {
         }
 
         // ✅ SINGLE INSERT: name, added_by, testresultunit_id are required
-        else if (name && added_by) {
+        else if (name && added_by ) {
           const safeImage = typeof image === "string" && image.length > 0 ? image : null;
 
           const insertQuery = `
             INSERT INTO analyte (name, added_by, testresultunit_id, image)
-            VALUES (?, ?, ?, ?)
+            VALUES (?, ?, ?, ?);
           `;
-          const insertParams = [
-            name.trim(),
-            effectiveAddedBy,
-            testresultunit_id || null,
-            image || null
-          ];
+          const [result] = await connection.promise().query(
+            insertQuery,
+            [name.trim(), added_by, testresultunit_id, safeImage]
+          );
 
-          const [result] = await connection.promise().query(insertQuery, insertParams);
-
-          // History record
           const historyQuery = `
-            INSERT INTO registrationadmin_history 
-            (created_name, added_by, analyte_id, status) 
-            VALUES (?, ?, ?, ?)
+            INSERT INTO registrationadmin_history
+            (created_name, added_by, analyte_id, status)
+            VALUES (?, ?, ?, ?);
           `;
-          await connection.promise().query(historyQuery, [
-            name,
-            effectiveAddedBy,
-            result.insertId,
-            "active"
-          ]);
+          await connection.promise().query(historyQuery, [name, added_by, result.insertId, "active"]);
+        }
+
+        // ❌ INVALID INPUT
+        else {
+          throw new Error("Invalid analyte data or missing required fields.");
         }
 
         connection.commit();
-        callback(null, {
-          success: true,
-          count: bulkData ? bulkData.length : 1
-        });
-      }
-      catch (err) {
+        callback(null, { success: true });
+      } catch (err) {
+        console.error("❌ Error during createAnalyte:", err.message, err.stack);
         connection.rollback();
         callback(err);
       } finally {
@@ -566,7 +526,7 @@ const createSampleFields = (tableName, data, callback) => {
 
 // Function to update a record dynamically
 const updateSampleFields = (tableName, id, data, callback) => {
-  const { name, added_by, testresultunit_id, image } = data;
+  const { name, added_by, testresultunit_id,image } = data;
 
   if (!/^[a-zA-Z_]+$/.test(tableName)) {
     return callback(new Error("Invalid table name"), null);
@@ -588,16 +548,16 @@ const updateSampleFields = (tableName, id, data, callback) => {
 
     // If table is analyte, also include testresultunit_id
     if (tableName === "analyte") {
-      if (testresultunit_id) {
-        updateQuery += `, testresultunit_id = ?`;
-        updateParams.push(testresultunit_id);
-      }
-      if (image) {
-        updateQuery += `, image = ?`;
-        updateParams.push(image);
-      }
+  if (testresultunit_id) {
+    updateQuery += `, testresultunit_id = ?`;
+    updateParams.push(testresultunit_id);
+  }
+if (image) {
+  updateQuery += `, image = ?`;
+  updateParams.push(image);
+}
 
-    }
+}
 
 
     updateQuery += ` WHERE id = ?`;

@@ -134,7 +134,7 @@ function updateResearcher(req, res) {
   }
 
   const data = { userID, ResearcherName, phoneNumber, nameofOrganization, fullAddress, city, district, country, logo };
-
+  
   researcherModel.updateResearcher(id, data, (err, result) => {
     if (err) {
       return res.status(500).json({ error: 'Error updating researcher' });

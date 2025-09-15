@@ -2,7 +2,7 @@ const mysqlConnection = require("../config/db");
 const crypto = require("crypto");
 const { v4: uuidv4 } = require("uuid");
 const { sendEmail } = require("../config/email");
-const { decryptAndShort } = require("../config/encryptdecrptUtils");
+const { decryptAndShort,encrypt } = require("../config/encryptdecrptUtils");
 
 const create_biobankTable = () => {
   const create_biobankTable = `
@@ -36,7 +36,7 @@ const getBiobankSamples = (
 
   let baseWhereShared = `sample.status = "In Stock" AND sample.is_deleted = FALSE`;
   let baseWhereOwn = `sample.status = "In Stock" AND sample.is_deleted = FALSE`;
-
+  let masterid = 0;
   const paramsShared = [];
   const paramsOwn = [];
 
@@ -71,8 +71,6 @@ const getBiobankSamples = (
         paramsShared.push(likeValue);
         paramsOwn.push(likeValue);
         break;
-
-
 
       case "gender":
         if (!isNaN(value)) {
@@ -141,6 +139,13 @@ const getBiobankSamples = (
       paramsShared.push(likeValue, likeValue, likeValue);
       paramsOwn.push(likeValue, likeValue, likeValue);
 
+    }
+    else if (field === "masterID") {
+      masterid = encrypt(likeValue)
+      baseWhereShared += ` AND sample.masterID = ?`;
+      baseWhereOwn += ` AND sample.masterID = ?`;
+      paramsShared.push(masterid);
+      paramsOwn.push(masterid);
     }
     else if (field === "visibility") {
       baseWhereShared += ` AND LOWER(sample.sample_visibility) = ?`;
@@ -432,139 +437,144 @@ const getBiobankSamplesPooled = (
   });
 };
 
+// Helper to use async/await with MySQL
+function queryAsync(conn, sql, params) {
+  return new Promise((resolve, reject) => {
+    conn.query(sql, params, (err, results) => {
+      if (err) reject(err);
+      else resolve(results);
+    });
+  });
+}
 
 const postSamplePrice = (sampleData, callback) => {
-  const updateQuery = `
-    UPDATE sample 
-    SET price = ?, SamplePriceCurrency = ?
-    WHERE id = ?
-  `;
+  mysqlConnection.getConnection((err, connection) => {
+    if (err) return callback(err, null);
 
-  mysqlConnection.query(
-    updateQuery,
-    [sampleData.price, sampleData.SamplePriceCurrency, sampleData.sampleId],
-    (err) => {
+    connection.beginTransaction(async (err) => {
       if (err) {
-        console.error("❌ Error updating sample:", err);
+        connection.release();
         return callback(err, null);
       }
 
-      // Insert into sample_history
-      const historyQuery = `
-        INSERT INTO sample_history (sample_id, action_type)
-        VALUES (?, ?)
-      `;
-      mysqlConnection.query(historyQuery, [sampleData.sampleId, "update"], (err) => {
-        if (err) {
-          console.error("❌ Error inserting into sample_history:", err);
-          return callback(err, null);
-        }
+      try {
+        // 1. Update sample
+        await queryAsync(
+          connection,
+          `UPDATE sample SET price = ?, SamplePriceCurrency = ? WHERE id = ?`,
+          [sampleData.price, sampleData.SamplePriceCurrency, sampleData.sampleId]
+        );
 
-        // Check for pending quote requests
-        const checkQuoteQuery = `
-          SELECT 
-            qr.id AS quote_id,
-            ua.email, 
-            r.ResearcherName
+        // 2. Insert into sample_history
+        await queryAsync(
+          connection,
+          `INSERT INTO sample_history (sample_id, action_type) VALUES (?, 'update')`,
+          [sampleData.sampleId]
+        );
+
+        // 3. Check pending quotes
+        const quoteResults = await queryAsync(
+          connection,
+          `
+          SELECT qr.id AS quote_id, ua.email, r.ResearcherName
           FROM quote_requests qr
           JOIN researcher r ON qr.researcher_id = r.user_account_id
           JOIN user_account ua ON ua.id = r.user_account_id
           WHERE qr.sample_id = ? AND qr.status = 'pending'
-        `;
+          `,
+          [sampleData.sampleId]
+        );
 
-        mysqlConnection.query(checkQuoteQuery, [sampleData.sampleId], async (err, quoteResults) => {
-          if (err) {
-            console.error("❌ Error checking quote_requests:", err);
-            return callback(err, null);
-          }
+        if (quoteResults.length > 0) {
+          const quoteIds = quoteResults.map((q) => q.quote_id);
 
-          if (quoteResults.length > 0) {
-            const quoteIds = quoteResults.map((q) => q.quote_id);
+          // Build dynamic fields
+          let updateFields = [];
+          let updateValues = [];
 
-            // Build dynamic update fields
-            let updateFields = [];
-            let updateValues = [];
-
-            // ✅ Tax
-            if (sampleData.charges?.tax?.type === "percent") {
+          if (sampleData.charges?.tax) {
+            if (sampleData.charges.tax.type === "percent") {
               updateFields.push("tax_percent = ?");
-              updateValues.push(sampleData.charges.tax.value);
-            } else if (sampleData.charges?.tax?.type === "amount") {
+            } else {
               updateFields.push("tax_amount = ?");
-              updateValues.push(sampleData.charges.tax.value);
             }
-
-            // ✅ Platform
-            if (sampleData.charges?.platform?.type === "percent") {
-              updateFields.push("platform_percent = ?");
-              updateValues.push(sampleData.charges.platform.value);
-            } else if (sampleData.charges?.platform?.type === "amount") {
-              updateFields.push("platform_amount = ?");
-              updateValues.push(sampleData.charges.platform.value);
-            }
-
-            // ✅ Freight
-            if (sampleData.charges?.freight?.type === "percent") {
-              updateFields.push("freight_percent = ?");
-              updateValues.push(sampleData.charges.freight.value);
-            } else if (sampleData.charges?.freight?.type === "amount") {
-              updateFields.push("freight_amount = ?");
-              updateValues.push(sampleData.charges.freight.value);
-            }
-
-            // Always update status
-            updateFields.push("status = 'priced'");
-
-            const updateQuoteStatus = `
-              UPDATE quote_requests 
-              SET ${updateFields.join(", ")} 
-              WHERE id IN (?)
-            `;
-
-            updateValues.push(quoteIds);
-
-            mysqlConnection.query(updateQuoteStatus, updateValues, async (err) => {
-              if (err) {
-                console.error("❌ Error updating quote_requests:", err);
-                return callback(err, null);
-              }
-
-              // ✅ Send only one email
-              const firstQuote = quoteResults[0];
-              const emailBody = `
-                <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
-                  <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <p style="font-size: 16px; color: #333;">Dear ${firstQuote.ResearcherName},</p>
-                    <p style="font-size: 15px; color: #555;">
-                      The price for one of your requested samples has been updated.
-                    </p>
-                    <p style="font-size: 15px; color: #555;">
-                      You can now proceed to order this sample from your dashboard.
-                    </p>
-                    <p style="font-size: 15px; color: #333; margin-top: 20px;">
-                      Regards,<br>
-                      <strong>Biobank Team</strong>
-                    </p>
-                  </div>
-                </div>
-              `;
-
-              try {
-                await sendEmail(firstQuote.email, "Sample Price Updated - Ready to Order", emailBody);
-              } catch (emailErr) {
-                console.error("❌ Error sending email:", emailErr);
-              }
-
-              return callback(null, { id: sampleData.sampleId });
-            });
-          } else {
-            // No pending quotes
-            return callback(null, { id: sampleData.sampleId });
+            updateValues.push(sampleData.charges.tax.value);
           }
+
+          if (sampleData.charges?.platform) {
+            if (sampleData.charges.platform.type === "percent") {
+              updateFields.push("platform_percent = ?");
+            } else {
+              updateFields.push("platform_amount = ?");
+            }
+            updateValues.push(sampleData.charges.platform.value);
+          }
+
+          if (sampleData.charges?.freight) {
+            if (sampleData.charges.freight.type === "percent") {
+              updateFields.push("freight_percent = ?");
+            } else {
+              updateFields.push("freight_amount = ?");
+            }
+            updateValues.push(sampleData.charges.freight.value);
+          }
+
+          // Always update status
+          updateFields.push("status = 'priced'");
+          updateValues.push(quoteIds);
+
+          await queryAsync(
+            connection,
+            `UPDATE quote_requests SET ${updateFields.join(", ")} WHERE id IN (?)`,
+            updateValues
+          );
+
+          // ✅ Commit transaction (DB done)
+          await queryAsync(connection, "COMMIT");
+          connection.release();
+
+          // ✅ Handle email asynchronously (doesn't block API)
+          const firstQuote = quoteResults[0];
+          const emailBody = `
+            <div style="font-family: Arial, sans-serif; background-color: #f8f9fa; padding: 30px;">
+              <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <p style="font-size: 16px; color: #333;">Dear ${firstQuote.ResearcherName},</p>
+                <p style="font-size: 15px; color: #555;">
+                  The price for one of your requested samples has been updated.
+                </p>
+                <p style="font-size: 15px; color: #555;">
+                  You can now proceed to order this sample from your dashboard.
+                </p>
+                <p style="font-size: 15px; color: #333; margin-top: 20px;">
+                  Regards,<br>
+                  <strong>Biobank Team</strong>
+                </p>
+              </div>
+            </div>
+          `;
+
+          // fire-and-forget email
+          setImmediate(() => {
+            sendEmail(firstQuote.email, "Sample Price Updated - Ready to Order", emailBody)
+              .then(() => console.log("✅ Email sent"))
+              .catch((e) => console.error("❌ Email failed:", e));
+          });
+
+          return callback(null, { id: sampleData.sampleId });
+        } else {
+          // ✅ No pending quotes
+          await queryAsync(connection, "COMMIT");
+          connection.release();
+          return callback(null, { id: sampleData.sampleId });
+        }
+      } catch (err) {
+        connection.rollback(() => {
+          connection.release();
+          callback(err, null);
         });
-      });
-    }
-  );
+      }
+    });
+  });
 };
 
 
@@ -657,9 +667,8 @@ SELECT
   `;
 
   mysqlConnection.query(query, (err, results) => {
-    if (err){
-      console.log(err)
-    return callback(err, null);
+    if (err) {
+      return callback(err, null);
     }
 
     const transformedResults = results.map(sample => ({

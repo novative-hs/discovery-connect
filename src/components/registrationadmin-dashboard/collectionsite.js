@@ -310,19 +310,16 @@ const CollectionSiteArea = () => {
     newformData.append("CollectionSiteType", formData.CollectionSiteType);
     newformData.append("phoneNumber", formData.phoneNumber);
     newformData.append("fullAddress", formData.fullAddress);
-    newformData.append("city", formData.city);
-    newformData.append("district", formData.district);
-    newformData.append("country", formData.country);
-    newformData.append("status", formData.status);
+    newformData.append("cityid", formData.city);
+    newformData.append("districtid", formData.district);
+    newformData.append("countryid", formData.country);
+    newformData.append("status", "inactive");
 
     if (formData.logo) {
       newformData.append("logo", formData.logo);
     }
 
-    // Debug: Log FormData contents
-    for (let [key, value] of newformData.entries()) {
-      console.log(key, value);
-    }
+    // Debugging: log the FormData
 
 
     try {
@@ -336,9 +333,40 @@ const CollectionSiteArea = () => {
         }
       );
 
+      // Find existing record (to keep fields like created_at etc.)
+      const existingcollectionsite = allcollectionsites.find(
+        (org) => org.id === selectedCollectionsiteId
+      );
+
+      // Build updated record locally
+      const updatedcollectionsite = {
+        ...existingcollectionsite, // keep old unchanged fields
+        CollectionSiteName: formData.CollectionSiteName,
+        phoneNumber: formData.phoneNumber,
+        CollectionSiteType: formData.CollectionSiteType,
+        fullAddress: formData.fullAddress,
+        city: formData.city,
+        district: formData.district,
+        country: formData.country,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Replace in allorganizations
+      setAllCollectionsites((prev) =>
+        prev.map((collectionsite) =>
+          collectionsite.id === selectedCollectionsiteId ? updatedcollectionsite : collectionsite
+        )
+      );
+
+      // Replace in filtered organizations
+      setCollectionsites((prev) =>
+        prev.map((collectionsite) =>
+          collectionsite.id === selectedCollectionsiteId ? updatedcollectionsite : collectionsite
+        )
+      );
       notifySuccess("Update collection site successfully");
       setShowEditModal(false);
-      fetchCollectionsites();
+
       resetFormData();
     } catch (error) {
       console.error("Update error:", error);
@@ -373,7 +401,29 @@ const CollectionSiteArea = () => {
       setTimeout(() => setSuccessMessage(""), 3000);
 
       // Refresh the collectionsite list
-      fetchCollectionsites();
+      const existingcollectionsite = allcollectionsites.find(
+        (org) => org.id === selectedCollectionsiteId
+      );
+
+      // Build updated record locally
+      const updatedcollectionsite = {
+        ...existingcollectionsite, // keep old unchanged fields
+        status: option
+      };
+
+      // Replace in allorganizations
+      setAllCollectionsites((prev) =>
+        prev.map((collectionsite) =>
+          collectionsite.id === selectedCollectionsiteId ? updatedcollectionsite : collectionsite
+        )
+      );
+
+      // Replace in filtered organizations
+      setCollectionsites((prev) =>
+        prev.map((collectionsite) =>
+          collectionsite.id === selectedCollectionsiteId ? updatedcollectionsite : collectionsite
+        )
+      );
 
       // Close the dropdown after status change
       setStatusOptionsVisibility((prev) => ({

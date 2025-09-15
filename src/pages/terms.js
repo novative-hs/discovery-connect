@@ -13,7 +13,7 @@ export default function Terms() {
       <SectionTop
         title="Terms and Conditions"
         subtitle="Please read our terms carefully"
-        backgroundImage="/assets/img/about/good.jpg"
+        backgroundImage="/assets/img/about/aboutus.jpg"
       />
 
       <TermsArea />

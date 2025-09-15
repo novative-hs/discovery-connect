@@ -14,44 +14,43 @@ import moment from "moment";
 const TestSystemManufacturerArea = () => {
   const id = sessionStorage.getItem("userID");
 
-  const [showAddModal, setShowAddModal] = useState(false);
+  // ✅ HOOKS MUST ALWAYS BE CALLED FIRST
+ 
+
+ const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState();
-  const [selectedTestSystemManufacturernameId, setSelectedTestSystemManufacturernameId,] = useState(null);
+  const [ selectedTestSystemManufacturernameId, setSelectedTestSystemManufacturernameId,] = useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [filters, setFilters] = useState({
-    name: "",
-    added_by: "",
-    created_at: "",
-    updated_at: ""
-  });
-  const [editTestSystemManufacturername, setEditTestSystemManufacturername] = useState(null);
-  const [testsystemmanufacturername, setTestSystemManufacturername] = useState([]);
+  const [editTestSystemManufacturername, setEditTestSystemManufacturername] = useState(null); // State for selected City to edit
+  const [testsystemmanufacturername, setTestSystemManufacturername] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredTestSystemmanufacturername, setFilteredTestSystemmanufacturername] = useState([]);
+  const [filteredTestSystemmanufacturername, setFilteredTestSystemmanufacturername] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
+  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-    const fetchTestSystemManufacturername = async () => {
-      try {
-        const response = await axios.get(
-          `${url}/samplefields/get-samplefields/testsystemmanufacturer`
-        );
-        setFilteredTestSystemmanufacturername(response.data);
-        setTestSystemManufacturername(response.data);
-      } catch (error) {
-        console.error("Error fetching Test System :", error);
-      }
-    };
+      const fetchTestSystemManufacturername = async () => {
+    try {
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/testsystemmanufacturer`
+      );
+      setFilteredTestSystemmanufacturername(response.data);
+      setTestSystemManufacturername(response.data); // Store fetched TestMethod in state
+    } catch (error) {
+      console.error("Error fetching Test System :", error);
+    }
+  };
     fetchTestSystemManufacturername();
   }, [url]);
 
@@ -62,7 +61,7 @@ const TestSystemManufacturerArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0);
     }
-  }, [filteredTestSystemmanufacturername, currentPage]);
+  }, [filteredTestSystemmanufacturername, currentPage]); // ✅ added currentPage to dependencies
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -78,23 +77,13 @@ const TestSystemManufacturerArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    // Update filters state
-    const newFilters = { ...filters, [field]: value };
-    setFilters(newFilters);
-
-    // Apply all active filters
-    const filtered = testsystemmanufacturername.filter((testsystemmanufacturer) => {
-      return Object.entries(newFilters).every(([filterField, filterValue]) => {
-        if (!filterValue.trim()) return true;
-
-        if (filterField === "added_by") {
-          return "registration admin".includes(filterValue.toLowerCase());
-        }
-
-        return testsystemmanufacturer[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-      });
-    });
-
+    const filtered = value.trim()
+      ? testsystemmanufacturername.filter((testsystemmanufacturer) =>
+          field === "added_by"
+            ? "registration admin".includes(value.toLowerCase())
+            : testsystemmanufacturer[field]?.toString().toLowerCase().includes(value.toLowerCase())
+        )
+      : testsystemmanufacturername;
     setFilteredTestSystemmanufacturername(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     setCurrentPage(0);
@@ -127,27 +116,10 @@ const TestSystemManufacturerArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${url}/samplefields/post-samplefields/testsystemmanufacturer`, formData);
-      const newItem = response.data;
-
-      // Add new item to both datasets
-      const updatedTestSystemManufacturername = [...testsystemmanufacturername, newItem];
-      setTestSystemManufacturername(updatedTestSystemManufacturername);
-
-      // Apply current filters to the updated dataset
-      const filtered = updatedTestSystemManufacturername.filter((testsystemmanufacturer) => {
-        return Object.entries(filters).every(([filterField, filterValue]) => {
-          if (!filterValue.trim()) return true;
-
-          if (filterField === "added_by") {
-            return "registration admin".includes(filterValue.toLowerCase());
-          }
-
-          return testsystemmanufacturer[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-        });
-      });
-
-      setFilteredTestSystemmanufacturername(filtered);
+      await axios.post(`${url}/samplefields/post-samplefields/testsystemmanufacturer`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testsystemmanufacturer`);
+      setFilteredTestSystemmanufacturername(response.data);
+      setTestSystemManufacturername(response.data);
       setSuccessMessage("Test System Manufacturer Name added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -161,65 +133,51 @@ const TestSystemManufacturerArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/samplefields/put-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`, formData);
-
-      // Instead of using response.data, manually update the item with the form data
-      const updatedTestSystemManufacturername = testsystemmanufacturername.map(item =>
-        item.id === selectedTestSystemManufacturernameId
-          ? { ...item, name: formData.name, updated_at: new Date().toISOString() }
-          : item
+     const existingtestsystemmanufacturer = testsystemmanufacturername.find(
+        (c) => c.id === selectedTestSystemManufacturernameId
       );
 
-      setTestSystemManufacturername(updatedTestSystemManufacturername);
+      // Build the updated city correctly
+      const updatedtestsystemmanufacturer = {
+        id: selectedTestSystemManufacturernameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingtestsystemmanufacturer?.added_by || "Registration Admin",
+        created_at: existingtestsystemmanufacturer?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
 
-      // Apply current filters to the updated dataset
-      const filtered = updatedTestSystemManufacturername.filter((testsystemmanufacturer) => {
-        return Object.entries(filters).every(([filterField, filterValue]) => {
-          if (!filterValue.trim()) return true;
+      // Update in countriesname
+      setTestSystemManufacturername((prev) =>
+        prev.map((testsystemmanufacturer) =>
+          testsystemmanufacturer.id === selectedTestSystemManufacturernameId ? updatedtestsystemmanufacturer : testsystemmanufacturer
+        )
+      );
 
-          if (filterField === "added_by") {
-            return "registration admin".includes(filterValue.toLowerCase());
-          }
-
-          return testsystemmanufacturer[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-        });
-      });
-
-      setFilteredTestSystemmanufacturername(filtered);
+      // Update in filteredCityname
+      setFilteredTestSystemmanufacturername((prev) =>
+        prev.map((testsystemmanufacturer) =>
+          testsystemmanufacturer.id === selectedTestSystemManufacturernameId ? updatedtestsystemmanufacturer : testsystemmanufacturer
+        )
+      );
       setSuccessMessage("Test System Manufacturer updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
       setShowEditModal(false);
     } catch (error) {
-      console.error(`Error updating Test System Manufacturer: ${selectedTestSystemManufacturernameId}`, error);
+      console.error(`Error updating Test System Maunfacturer: ${selectedTestSystemManufacturernameId}`, error);
     }
   };
 
   const handleDelete = async () => {
     try {
       await axios.delete(`${url}/samplefields/delete-samplefields/testsystemmanufacturer/${selectedTestSystemManufacturernameId}`);
-
-      // Remove item from both datasets
-      const updatedTestSystemManufacturername = testsystemmanufacturername.filter(item => item.id !== selectedTestSystemManufacturernameId);
-      setTestSystemManufacturername(updatedTestSystemManufacturername);
-
-      // Apply current filters to the updated dataset
-      const filtered = updatedTestSystemManufacturername.filter((testsystemmanufacturer) => {
-        return Object.entries(filters).every(([filterField, filterValue]) => {
-          if (!filterValue.trim()) return true;
-
-          if (filterField === "added_by") {
-            return "registration admin".includes(filterValue.toLowerCase());
-          }
-
-          return testsystemmanufacturer[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-        });
-      });
-
-      setFilteredTestSystemmanufacturername(filtered);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testsystemmanufacturer`);
+      setFilteredTestSystemmanufacturername(response.data);
+      setTestSystemManufacturername(response.data);
       setSuccessMessage("Test System Manufacturer deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
-      setSelectedTestSystemManufacturernameId(null);
+      setSelectedTestSystemnameId(null);
     } catch (error) {
       console.error(`Error deleting Test System Manufacturer: ${selectedTestSystemManufacturernameId}`, error);
     }
@@ -241,7 +199,7 @@ const TestSystemManufacturerArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/testsystemmanufacturer`, { bulkData: payload });
@@ -282,10 +240,10 @@ const TestSystemManufacturerArea = () => {
     XLSX.writeFile(workbook, "Test_System_Manufacturer_List.xlsx");
   };
 
-
+  
   if (!id) return <div>Loading...</div>;
 
-  return (
+    return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">

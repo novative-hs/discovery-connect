@@ -11,26 +11,11 @@ const SampleLost = () => {
   const [filteredSamples, setFilteredSamples] = useState([]);
   const [filtertotal, setfiltertotal] = useState(null);
 
-  const [showCommentModal, setShowCommentModal] = useState(false);
-  const [currentComment, setCurrentComment] = useState('');
-
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
   const [totalPages, setTotalPages] = useState(0);
   const [selectedSample, setSelectedSample] = useState(null);
   const [showModal, setShowModal] = useState(false);
-
-  // Open comment modal
-  const openCommentModal = (comment) => {
-    setCurrentComment(comment || 'No comments available');
-    setShowCommentModal(true);
-  };
-
-  // Close comment modal
-  const closeCommentModal = () => {
-    setShowCommentModal(false);
-    setCurrentComment('');
-  };
 
   useEffect(() => {
     const storedId = sessionStorage.getItem("userID");
@@ -236,28 +221,11 @@ const SampleLost = () => {
                         )}
                       </td>
                     ))}
-                    <td className="text-center">
-                      <button
-                        onClick={() => openCommentModal(sample.Reason)}
-                        className={`btn btn-sm ${sample.Reason ? "btn-info text-white" : "btn-outline-secondary"}`}
-                        disabled={!sample.Reason}
-                        style={{
-                          minWidth: "120px",
-                          fontWeight: "500",
-                          backgroundColor: "brown",
-                          border: "brown",
-                          ...(!sample.Reason && { cursor: "not-allowed" })
-                        }}
-                      >
-                        {sample.Reason ? "View Comments" : "No Comments"}
-                      </button>
-                    </td>
-
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center">
+                  <td colSpan="8" className="text-center">
                     No samples available
                   </td>
                 </tr>
@@ -289,27 +257,30 @@ const SampleLost = () => {
             </Modal.Title>
           </Modal.Header>
 
-          <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+          <Modal.Body
+            style={{ maxHeight: "500px", overflowY: "auto" }}
+            className="bg-light rounded"
+          >
             {selectedSample ? (
               <div className="p-3">
                 <div className="row g-3">
-                  {fieldsToShowInOrder
-                    .filter(({ key }) => {
-                      const value = selectedSample[key];
-                      return value !== undefined && value !== null && value !== "";
-                    })
-                    .map(({ key, label }) => (
+                  {fieldsToShowInOrder.map(({ key, label }) => {
+                    const value = selectedSample[key];
+                    if (value === undefined) return null;
+
+                    return (
                       <div className="col-md-6" key={key}>
                         <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
                           <span className="text-muted small fw-bold mb-1">
                             {label}
                           </span>
                           <span className="fs-6 text-dark">
-                            {selectedSample[key]?.toString() || "----"}
+                            {value?.toString() || "----"}
                           </span>
                         </div>
                       </div>
-                    ))}
+                    );
+                  })}
                 </div>
               </div>
             ) : (
@@ -318,27 +289,6 @@ const SampleLost = () => {
           </Modal.Body>
 
           <Modal.Footer className="border-0"></Modal.Footer>
-        </Modal>
-        <Modal
-          show={showCommentModal}
-          onHide={closeCommentModal}
-          size="md"
-          centered
-          className="comment-modal"
-        >
-          <Modal.Header closeButton className="border-0">
-            <Modal.Title className="fw-bold text-danger">
-              <i className="fas fa-comment me-2"></i>
-              Sample Comments
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body className="p-4 bg-light" >
-            <div className="p-3 rounded border">
-              <p className="mb-0 text-dark" style={{ fontSize: "1.1rem" }}>
-                {currentComment}
-              </p>
-            </div>
-          </Modal.Body>
         </Modal>
       </div>
     </section>

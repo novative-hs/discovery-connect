@@ -14,38 +14,44 @@ import moment from "moment";
 const SampleConditionArea = () => {
   const id = sessionStorage.getItem("userID");
 
-  const [showAddModal, setShowAddModal] = useState(false);
+ 
+
+const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedSampleConditionnameId, setSelectedSampleConditionnameId] = useState(null);
+
+  const [selectedSampleConditionnameId, setSelectedSampleConditionnameId] =
+    useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editSampleConditionname, setEditSampleConditionname] = useState(null);
-  const [sampleconditionname, setSampleConditionname] = useState([]);
+  const [editSampleConditionname, setEditSampleConditionname] = useState(null); // State for selected City to edit
+  const [sampleconditionname, setSampleConditionname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredSampleconditionname, setFilteredSampleconditionname] = useState([]);
+  const [filteredSampleconditionname, setFilteredSampleconditionname] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
+  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
     const fetchSampleConditionname = async () => {
-      try {
-        const response = await axios.get(
-          `${url}/samplefields/get-samplefields/samplecondition`
-        );
-        setFilteredSampleconditionname(response.data);
-        setSampleConditionname(response.data);
-      } catch (error) {
-        console.error("Error fetching Sample Condition", error);
-      }
-    };
+    try {
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/samplecondition`
+      );
+      setFilteredSampleconditionname(response.data); // Initialize filtered list
+      setSampleConditionname(response.data); // Store fetched City in state
+    } catch (error) {
+      console.error("Error fetching Sample Condition", error);
+    }
+  };
 
     fetchSampleConditionname();
   }, [url]);
@@ -59,9 +65,10 @@ const SampleConditionArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0);
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredSampleconditionname, currentPage]);
+  }, [filteredSampleconditionname,currentPage]);
+
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -70,37 +77,35 @@ const SampleConditionArea = () => {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const currentData = filteredSampleconditionname.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  const currentData = filteredSampleconditionname.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
   };
 
   const handleFilterChange = (field, value) => {
-    let filtered = [];
+  let filtered = [];
 
-    if (value.trim() === "") {
-      filtered = sampleconditionname;
-    } else {
-      filtered = sampleconditionname.filter((sample) => {
-        if (field === "added_by") {
-          return "registration admin".includes(value.toLowerCase());
-        }
+  if (value.trim() === "") {
+    filtered = sampleconditionname;
+  } else {
+    filtered = sampleconditionname.filter((sample) => {
+      if (field === "added_by") {
+        return "registration admin".includes(value.toLowerCase());
+      }
 
-        return sample[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase());
-      });
-    }
+      return sample[field]
+        ?.toString()
+        .toLowerCase()
+        .includes(value.toLowerCase());
+    });
+  }
 
-    setFilteredSampleconditionname(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    setCurrentPage(0);
-  };
+  setFilteredSampleconditionname(filtered);
+  setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+  setCurrentPage(0);
+};
+
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -129,7 +134,6 @@ const SampleConditionArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // For creation, we need to refetch to get the complete object with all fields
       await axios.post(`${url}/samplefields/post-samplefields/samplecondition`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/samplecondition`);
       setFilteredSampleconditionname(response.data);
@@ -146,35 +150,34 @@ const SampleConditionArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      // First get the current item to preserve all fields
-      const currentItem = sampleconditionname.find(item => item.id === selectedSampleConditionnameId);
-
       await axios.put(`${url}/samplefields/put-samplefields/samplecondition/${selectedSampleConditionnameId}`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/samplecondition`);
+      const existingSamplecondition = sampleconditionname.find(
+        (c) => c.id === selectedSampleConditionnameId
+      );
 
-      // Update the item while preserving all existing fields
-      const updatedItem = {
-        ...currentItem,
-        name: formData.name,
-        // Preserve all other fields including timestamps
-        updated_at: new Date().toISOString() // Update the timestamp
+      // Build the updated city correctly
+      const updatedSamplecondition = {
+        id: selectedSampleConditionnameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingSamplecondition?.added_by || "Registration Admin",
+        created_at: existingSamplecondition?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
       };
 
-      // Update both lists without refetching
-      setSampleConditionname(prev =>
-        prev.map(item =>
-          item.id === selectedSampleConditionnameId
-            ? updatedItem
-            : item
-        )
-      );
-      setFilteredSampleconditionname(prev =>
-        prev.map(item =>
-          item.id === selectedSampleConditionnameId
-            ? updatedItem
-            : item
+      // Update in countriesname
+      setSampleConditionname((prev) =>
+        prev.map((samplecondition) =>
+          samplecondition.id === selectedSampleConditionnameId ? updatedSamplecondition : samplecondition
         )
       );
 
+      // Update in filteredCityname
+      setFilteredSampleconditionname((prev) =>
+        prev.map((samplecondition) =>
+          samplecondition.id === selectedSampleConditionnameId ? updatedSamplecondition : samplecondition
+        )
+      );
       setSuccessMessage("Sample Condition Name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -187,15 +190,9 @@ const SampleConditionArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`${url}/samplefields/delete-samplefields/samplecondition/${selectedSampleConditionnameId}`);
-
-      // Update both lists without refetching
-      setSampleConditionname(prev =>
-        prev.filter(item => item.id !== selectedSampleConditionnameId)
-      );
-      setFilteredSampleconditionname(prev =>
-        prev.filter(item => item.id !== selectedSampleConditionnameId)
-      );
-
+      const response = await axios.get(`${url}/samplefields/get-samplefields/samplecondition`);
+      setFilteredSampleconditionname(response.data);
+      setSampleConditionname(response.data);
       setSuccessMessage("Sample Condition Name deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
@@ -205,15 +202,21 @@ const SampleConditionArea = () => {
     }
   };
 
-  const handleEditClick = (sampleconditionname) => {
+   const handleEditClick = (sampleconditionname) => {
+
+
     setSelectedSampleConditionnameId(sampleconditionname.id);
     setEditSampleConditionname(sampleconditionname);
+
     setFormData({
       name: sampleconditionname.name,
       added_by: id,
     });
+
     setShowEditModal(true);
   };
+
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -223,7 +226,7 @@ const SampleConditionArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/samplecondition`, { bulkData: payload });
@@ -249,35 +252,35 @@ const SampleConditionArea = () => {
     return `${day}-${month.charAt(0).toUpperCase() + month.slice(1)}-${year}`;
   };
 
-  const handleExportToExcel = () => {
-    const dataToExport = filteredSampleconditionname.map((item) => ({
-      Name: item.name ?? "", // Fallback to empty string
-      "Added By": "Registration Admin",
-      "Created At": item.created_at ? formatDate(item.created_at) : "",
-      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-    }));
+     const handleExportToExcel = () => {
+      const dataToExport = filteredSampleconditionname.map((item) => ({
+        Name: item.name ?? "", // Fallback to empty string
+        "Added By": "Registration Admin",
+        "Created At": item.created_at ? formatDate(item.created_at) : "",
+        "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+      }));
+    
+      // Add an empty row with all headers if filteredCityname is empty (optional)
+      if (dataToExport.length === 0) {
+        dataToExport.push({
+          Name: "",
+          "Added By": "",
+          "Created At": "",
+          "Updated At": "",
+        });
+      }
+    
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sample Condition");
+    
+      XLSX.writeFile(workbook, "Sample_Condition_List.xlsx");
+    };
 
-    // Add an empty row with all headers if filteredCityname is empty (optional)
-    if (dataToExport.length === 0) {
-      dataToExport.push({
-        Name: "",
-        "Added By": "",
-        "Created At": "",
-        "Updated At": "",
-      });
-    }
-
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Sample Condition");
-
-    XLSX.writeFile(workbook, "Sample_Condition_List.xlsx");
-  };
-
-
+  
   if (!id) return <div>Loading...</div>;
 
-  return (
+   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">

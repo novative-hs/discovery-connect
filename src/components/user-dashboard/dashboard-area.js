@@ -34,9 +34,9 @@ const DashboardArea = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-
+     
     } else {
-
+      
       router.push("/login");
     }
   }, [router]);
@@ -60,11 +60,11 @@ const DashboardArea = () => {
         return <Shop setActiveTab={setActiveTab} />;
       case "Cart":
         return <Cart setActiveTab={setActiveTab} />;
-      case "invoice-area":
+         case "invoice-area":
         return <InvoicePage setActiveTab={setActiveTab} />;
       case "Checkout":
-        return <Checkout setActiveTab={setActiveTab} />;
-      case "filter-samples":
+          return <Checkout setActiveTab={setActiveTab} />;
+           case "filter-samples":
         return <FilterProductArea setActiveTab={setActiveTab} />;
       case "samples":
         return <SampleArea setActiveTab={setActiveTab} />;
@@ -86,10 +86,10 @@ const DashboardArea = () => {
         <div className="container-fluid profile__inner position-relative">
           <div className="row justify-content-center">
             <div className="col-xl-12 col-lg-10 col-md-9 col-sm-10 col-12">
-              <div
-                className="profile__tab-content mx-auto p-3 my-1 h-auto"
-                style={{ maxWidth: "95%", width: "100%" }}
-              >
+             <div
+  className="profile__tab-content mx-auto p-3 my-1 h-auto"
+  style={{ maxWidth: "95%", width: "100%" }}
+>
                 {renderContent()}
               </div>
             </div>

@@ -13,43 +13,48 @@ import moment from "moment";
 
 const SampleTypeMatrixArea = () => {
   const id = sessionStorage.getItem("userID");
-  const [showAddModal, setShowAddModal] = useState(false);
+
+ const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedSampleTypeMatrixnameId, setSelectedSampleTypeMatrixnameId] = useState(null);
+  const [selectedSampleTypeMatrixnameId, setSelectedSampleTypeMatrixnameId] =
+    useState(null); // Store ID of Plasma to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editSampleTypeMatrixname, setEditSampleTypeMatrixname] = useState(null);
-  const [sampletypematrixname, setSampleTypeMatrixname] = useState([]);
+  const [editSampleTypeMatrixname, setEditSampleTypeMatrixname] = useState(null); // State for selected City to edit
+  const [sampletypematrixname, setSampleTypeMatrixname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredSampletypematrixname, setFilteredSampletypematrixname] = useState([]);
+  const [filteredSampletypematrixname, setFilteredSampletypematrixname] =
+    useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
+  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-    const fetchSampleTypeMatrixname = async () => {
-      try {
-        const response = await axios.get(
-          `${url}/samplefields/get-samplefields/sampletypematrix`
-        );
-        setFilteredSampletypematrixname(response.data);
-        setSampleTypeMatrixname(response.data);
-      } catch (error) {
-        console.error("Error fetching Sample Type Matrix :", error);
-      }
-    };
+   const fetchSampleTypeMatrixname = async () => {
+    try {
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/sampletypematrix`
+      );
+      setFilteredSampletypematrixname(response.data); // Initialize filtered list
+      setSampleTypeMatrixname(response.data); // Store fetched SampleTypeMatrix in state
+    } catch (error) {
+      console.error("Error fetching Sample Type Matrix :", error);
+    }
+  };
     fetchSampleTypeMatrixname();
   }, [url]);
 
   // ✅ UPDATE PAGINATION TOTAL PAGES
-  useEffect(() => {
+ useEffect(() => {
     const pages = Math.max(
       1,
       Math.ceil(filteredSampletypematrixname.length / itemsPerPage)
@@ -57,9 +62,9 @@ const SampleTypeMatrixArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0);
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredSampletypematrixname, currentPage]);
+  }, [filteredSampletypematrixname,currentPage]);
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -68,10 +73,7 @@ const SampleTypeMatrixArea = () => {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const currentData = filteredSampletypematrixname.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  const currentData = filteredSampletypematrixname.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
@@ -80,10 +82,10 @@ const SampleTypeMatrixArea = () => {
   const handleFilterChange = (field, value) => {
     const filtered = value.trim()
       ? sampletypematrixname.filter((sampletypematrix) =>
-        field === "added_by"
-          ? "registration admin".includes(value.toLowerCase())
-          : sampletypematrix[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      )
+          field === "added_by"
+            ? "registration admin".includes(value.toLowerCase())
+            : sampletypematrix[field]?.toString().toLowerCase().includes(value.toLowerCase())
+        )
       : sampletypematrixname;
     setFilteredSampletypematrixname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
@@ -117,7 +119,6 @@ const SampleTypeMatrixArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // For creation, we need to refetch to get the complete object with all fields
       await axios.post(`${url}/samplefields/post-samplefields/sampletypematrix`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/sampletypematrix`);
       setFilteredSampletypematrixname(response.data);
@@ -134,38 +135,33 @@ const SampleTypeMatrixArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      // First get the current item to preserve all fields
-      const currentItem = sampletypematrixname.find(item => item.id === selectedSampleTypeMatrixnameId);
-
-      await axios.put(
-        `${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`,
-        formData
+      await axios.put(`${url}/samplefields/put-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`, formData);
+         const existingsampletypematrix = sampletypematrixname.find(
+        (c) => c.id === selectedSampleTypeMatrixnameId
       );
 
-      // Update the item while preserving all existing fields
-      const updatedItem = {
-        ...currentItem,
-        name: formData.name,
-        // Preserve all other fields including timestamps
-        updated_at: new Date().toISOString() // Update the timestamp
+      // Build the updated city correctly
+      const updatedsampletypematrix = {
+        id: selectedSampleTypeMatrixnameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingsampletypematrix?.added_by || "Registration Admin",
+        created_at: existingsampletypematrix?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
       };
 
-      // Update both lists without refetching
-      setSampleTypeMatrixname(prev =>
-        prev.map(item =>
-          item.id === selectedSampleTypeMatrixnameId
-            ? updatedItem
-            : item
-        )
-      );
-      setFilteredSampletypematrixname(prev =>
-        prev.map(item =>
-          item.id === selectedSampleTypeMatrixnameId
-            ? updatedItem
-            : item
+      // Update in countriesname
+      setSampleTypeMatrixname((prev) =>
+        prev.map((sampletypematrix) =>
+          sampletypematrix.id === selectedSampleTypeMatrixnameId ? updatedsampletypematrix : sampletypematrix
         )
       );
 
+      // Update in filteredCityname
+      setFilteredSampletypematrixname((prev) =>
+        prev.map((sampletypematrix) =>
+          sampletypematrix.id === selectedSampleTypeMatrixnameId ? updatedsampletypematrix : sampletypematrix
+        )
+      );
       setSuccessMessage("Sample type matrix updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -177,28 +173,25 @@ const SampleTypeMatrixArea = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(
-        `${url}/samplefields/delete-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`
-      );
-
-      // Update both lists without refetching
-      setSampleTypeMatrixname(prev =>
-        prev.filter(item => item.id !== selectedSampleTypeMatrixnameId)
-      );
-      setFilteredSampletypematrixname(prev =>
-        prev.filter(item => item.id !== selectedSampleTypeMatrixnameId)
-      );
-
+      await axios.delete(`${url}/samplefields/delete-samplefields/sampletypematrix/${selectedSampleTypeMatrixnameId}`);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/sampletypematrix`);
+      setFilteredSampletypematrixname(response.data);
+      setSampleTypeMatrixname(response.data);
       setSuccessMessage("Sample Type Matrix deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
-      setSelectedSampleTypeMatrixnameId(null);
+      setSelectedTestSystemnameId(null);
     } catch (error) {
       console.error(`Error deleting sample type matrix: ${selectedSampleTypeMatrixnameId}`, error);
     }
   };
 
-  const handleEditClick = (sampletypematrix) => {
+  
+
+
+
+
+const handleEditClick = (sampletypematrix) => {
     setSelectedSampleTypeMatrixnameId(sampletypematrix.id);
     setEditSampleTypeMatrixname(sampletypematrix);
     setFormData({
@@ -217,7 +210,7 @@ const SampleTypeMatrixArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/sampletypematrix`, { bulkData: payload });
@@ -243,34 +236,34 @@ const SampleTypeMatrixArea = () => {
   };
 
   const handleExportToExcel = () => {
-    const dataToExport = filteredSampletypematrixname.map((item) => ({
-      Name: item.name ?? "", // Fallback to empty string
-      "Added By": "Registration Admin",
-      "Created At": item.created_at ? formatDate(item.created_at) : "",
-      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-    }));
+      const dataToExport = filteredSampletypematrixname.map((item) => ({
+        Name: item.name ?? "", // Fallback to empty string
+        "Added By": "Registration Admin",
+        "Created At": item.created_at ? formatDate(item.created_at) : "",
+        "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+      }));
+    
+      // Add an empty row with all headers if filteredCityname is empty (optional)
+      if (dataToExport.length === 0) {
+        dataToExport.push({
+          Name: "",
+          "Added By": "",
+          "Created At": "",
+          "Updated At": "",
+        });
+      }
+    
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Sample Type Matrix");
+    
+      XLSX.writeFile(workbook, "Sample_Type_Matrix_List.xlsx");
+    };
 
-    // Add an empty row with all headers if filteredCityname is empty (optional)
-    if (dataToExport.length === 0) {
-      dataToExport.push({
-        Name: "",
-        "Added By": "",
-        "Created At": "",
-        "Updated At": "",
-      });
-    }
-
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Sample Type Matrix");
-
-    XLSX.writeFile(workbook, "Sample_Type_Matrix_List.xlsx");
-  };
-
-
+  
   if (!id) return <div>Loading...</div>;
 
-  return (
+   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">

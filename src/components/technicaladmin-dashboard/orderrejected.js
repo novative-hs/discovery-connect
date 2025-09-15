@@ -2,6 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
 import { Modal, Button, Form, Table } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faDownload
+} from "@fortawesome/free-solid-svg-icons";
 import {
   FaUserTie,
   FaUsers,
@@ -10,10 +14,6 @@ import {
   FaTimesCircle,
   FaClock,
 } from "react-icons/fa";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faDownload
-} from "@fortawesome/free-solid-svg-icons";
 import { notifyError, notifySuccess } from "@utils/toast";
 
 const OrderPage = () => {
@@ -176,7 +176,6 @@ const OrderPage = () => {
 
 
   const handleHistory = useCallback(async (orderGroup) => {
-    console.log(orderGroup);
     setShowHistoryModal(true);
     setLoadingHistory(true);
 
@@ -191,7 +190,6 @@ const OrderPage = () => {
         }
       );
 
-      console.log(response.data.results);
       setSelectedHistory(response.data.results || []);
     } catch (error) {
       console.error(error);
@@ -689,7 +687,7 @@ const OrderPage = () => {
                         fontSize: "1.25rem",
                       }}
                     >
-                      Review Timeline
+                      Review
                     </h5>
 
                     {/* Timeline wrapper */}
@@ -809,51 +807,44 @@ const OrderPage = () => {
                                   fontWeight: "500",
                                 }}
                               >
-                                {approval.committee_created_at
-                                  ? formatDT(approval.committee_created_at)
-                                  : formatDT(approval.committee_approval_date)}
-                              </div>
-                              <div style={{ fontSize: "0.95rem", color: "#1f2937" }}>
-                                <strong>
-                                  {approval.committeetype} Committee –{" "}
-                                  {approval.CommitteeMemberName}
-                                </strong>
-                                <br />
+                                {/* Referred date */}
                                 {approval.committee_created_at && (
-                                  <span>
-                                    <FaClock
-                                      style={{
-                                        marginRight: "5px",
-                                        color: "#6c757d",
-                                      }}
-                                    />
-                                    Order referred to committee
-                                  </span>
+                                  <div style={{ marginBottom: "0.6rem" }}>
+                                    {formatDT(approval.committee_created_at)}
+                                    <div style={{ fontSize: "0.95rem", color: "#1f2937" }}>
+                                      <FaClock
+                                        style={{ marginRight: "5px", color: "#6c757d" }}
+                                      />
+                                      Order Referred to {approval.committeetype} Committee –{" "}
+                                      {approval.CommitteeMemberName}
+                                    </div>
+                                  </div>
                                 )}
+
+                                {/* Approval/Refusal date */}
                                 {approval.committee_approval_date && (
-                                  <span>
-                                    {approval.committee_status === "Refused" ? (
-                                      <>
-                                        <FaTimesCircle
-                                          style={{
-                                            marginRight: "5px",
-                                            color: "#dc3545",
-                                          }}
-                                        />
-                                        Order refused
-                                      </>
-                                    ) : (
-                                      <>
-                                        <FaCheckCircle
-                                          style={{
-                                            marginRight: "5px",
-                                            color: "#198754",
-                                          }}
-                                        />
-                                        Order approved
-                                      </>
-                                    )}
-                                  </span>
+                                  <div>
+                                    {formatDT(approval.committee_approval_date)}
+                                    <div style={{ fontSize: "0.95rem", color: "#1f2937" }}>
+                                      {approval.committee_status === "Refused" ? (
+                                        <>
+                                          <FaTimesCircle
+                                            style={{ marginRight: "5px", color: "#dc3545" }}
+                                          />
+                                          Order Refused by {approval.committeetype} Committee –{" "}
+                                          {approval.CommitteeMemberName}
+                                        </>
+                                      ) : (
+                                        <>
+                                          <FaCheckCircle
+                                            style={{ marginRight: "5px", color: "#198754" }}
+                                          />
+                                          Order Approved by {approval.committeetype} Committee –{" "}
+                                          {approval.CommitteeMemberName}
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
                                 )}
                               </div>
                             </div>
@@ -1167,4 +1158,3 @@ const OrderPage = () => {
 };
 
 export default OrderPage;
-

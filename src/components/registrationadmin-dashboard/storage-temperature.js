@@ -18,45 +18,51 @@ const StorageTemperatureArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedstoragetemperaturenameId, setSelectedStoragetemperaturenameId] = useState(null);
+  const [selectedstoragetemperaturenameId, setSelectedStoragetemperaturenameId] = useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editStoragetemperaturename, setEditStoragetemperaturename] = useState(null);
-  const [storagetemperaturename, setStoragetemperaturename] = useState([]);
+  const [editStoragetemperaturename, setEditStoragetemperaturename] = useState(null); // State for selected City to edit
+  const [storagetemperaturename, setStoragetemperaturename] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredStoragetemperaturename, setFilteredStoragetemperaturename] = useState([]);
+  const [filteredStoragetemperaturename, setFilteredStoragetemperaturename] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
+  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
 
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
     const fetchStoragetemperaturename = async () => {
-      try {
-        const response = await axios.get(
-          `${url}/samplefields/get-samplefields/storagetemperature`
-        );
-        setFilteredStoragetemperaturename(response.data);
-        setStoragetemperaturename(response.data);
-      } catch (error) {
-        console.error("Error fetching Storage Temperature:", error);
-      }
-    };
+    try {
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/storagetemperature`
+      );
+      setFilteredStoragetemperaturename(response.data); // Initialize filtered list
+      setStoragetemperaturename(response.data); // Store fetched City in state
+    } catch (error) {
+      console.error("Error fetching Storage Temperature:", error);
+    }
+  };
     fetchStoragetemperaturename();
   }, [url]);
 
   // ✅ UPDATE PAGINATION TOTAL PAGES
-  useEffect(() => {
+ 
+
+ useEffect(() => {
     const pages = Math.max(1, Math.ceil(filteredStoragetemperaturename.length / itemsPerPage));
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0);
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredStoragetemperaturename, currentPage]);
+  }, [filteredStoragetemperaturename,currentPage]); 
+
+
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -65,10 +71,7 @@ const StorageTemperatureArea = () => {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const currentData = filteredStoragetemperaturename.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  const currentData = filteredStoragetemperaturename.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
@@ -77,10 +80,10 @@ const StorageTemperatureArea = () => {
   const handleFilterChange = (field, value) => {
     const filtered = value.trim()
       ? storagetemperaturename.filter((storagetemperature) =>
-        field === "added_by"
-          ? "registration admin".includes(value.toLowerCase())
-          : storagetemperature[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      )
+          field === "added_by"
+            ? "registration admin".includes(value.toLowerCase())
+            : storagetemperature[field]?.toString().toLowerCase().includes(value.toLowerCase())
+        )
       : storagetemperaturename;
     setFilteredStoragetemperaturename(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
@@ -114,7 +117,6 @@ const StorageTemperatureArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // For creation, we need to refetch to get the complete object with all fields
       await axios.post(`${url}/samplefields/post-samplefields/storagetemperature`, formData);
       const response = await axios.get(`${url}/samplefields/get-samplefields/storagetemperature`);
       setFilteredStoragetemperaturename(response.data);
@@ -131,38 +133,34 @@ const StorageTemperatureArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      // First get the current item to preserve all fields
-      const currentItem = storagetemperaturename.find(item => item.id === selectedstoragetemperaturenameId);
-
-      await axios.put(
-        `${url}/samplefields/put-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`,
-        formData
+      await axios.put(`${url}/samplefields/put-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/storagetemperature`);
+          const existingstoragetemp = storagetemperaturename.find(
+        (c) => c.id === selectedstoragetemperaturenameId
       );
 
-      // Update the item while preserving all existing fields
-      const updatedItem = {
-        ...currentItem,
-        name: formData.name,
-        // Preserve all other fields including timestamps
-        updated_at: new Date().toISOString() // Update the timestamp
+      // Build the updated city correctly
+      const updatedstoragetemp = {
+        id: selectedstoragetemperaturenameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingstoragetemp?.added_by || "Registration Admin",
+        created_at: existingstoragetemp?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
       };
 
-      // Update both lists without refetching
-      setStoragetemperaturename(prev =>
-        prev.map(item =>
-          item.id === selectedstoragetemperaturenameId
-            ? updatedItem
-            : item
-        )
-      );
-      setFilteredStoragetemperaturename(prev =>
-        prev.map(item =>
-          item.id === selectedstoragetemperaturenameId
-            ? updatedItem
-            : item
+      // Update in countriesname
+      setStoragetemperaturename((prev) =>
+        prev.map((storagetemp) =>
+          storagetemp.id === selectedstoragetemperaturenameId ? updatedstoragetemp : storagetemp
         )
       );
 
+      // Update in filteredCityname
+      setFilteredStoragetemperaturename((prev) =>
+        prev.map((storagetemp) =>
+          storagetemp.id === selectedstoragetemperaturenameId ? updatedstoragetemp : storagetemp
+        )
+      );
       setSuccessMessage("storage temperature name updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -174,18 +172,10 @@ const StorageTemperatureArea = () => {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(
-        `${url}/samplefields/delete-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`
-      );
-
-      // Update both lists without refetching
-      setStoragetemperaturename(prev =>
-        prev.filter(item => item.id !== selectedstoragetemperaturenameId)
-      );
-      setFilteredStoragetemperaturename(prev =>
-        prev.filter(item => item.id !== selectedstoragetemperaturenameId)
-      );
-
+      await axios.delete(`${url}/samplefields/delete-samplefields/storagetemperature/${selectedstoragetemperaturenameId}`);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/storagetemperature`);
+      setFilteredStoragetemperaturename(response.data);
+      setStoragetemperaturename(response.data);
       setSuccessMessage("Storage temperature name deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
@@ -194,14 +184,17 @@ const StorageTemperatureArea = () => {
       console.error(`Error deleting storage temperature: ${selectedstoragetemperaturenameId}`, error);
     }
   };
+const handleEditClick = (storagetemperaturename) => {
 
-  const handleEditClick = (storagetemperaturename) => {
+
     setSelectedStoragetemperaturenameId(storagetemperaturename.id);
     setEditStoragetemperaturename(storagetemperaturename);
+
     setFormData({
       name: storagetemperaturename.name,
       added_by: id,
     });
+
     setShowEditModal(true);
   };
   const handleFileUpload = async (e) => {
@@ -213,7 +206,7 @@ const StorageTemperatureArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/storagetemperature`, { bulkData: payload });
@@ -239,31 +232,31 @@ const StorageTemperatureArea = () => {
   };
 
 
-  const handleExportToExcel = () => {
-    const dataToExport = filteredStoragetemperaturename.map((item) => ({
-      Name: item.name ?? "", // Fallback to empty string
-      "Added By": "Registration Admin",
-      "Created At": item.created_at ? formatDate(item.created_at) : "",
-      "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
-    }));
-
-    // Add an empty row with all headers if filteredCityname is empty (optional)
-    if (dataToExport.length === 0) {
-      dataToExport.push({
-        Name: "",
-        "Added By": "",
-        "Created At": "",
-        "Updated At": "",
-      });
-    }
-
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Storage Temperature");
-
-    XLSX.writeFile(workbook, "Storage_Temperature_List.xlsx");
-  };
-
+   const handleExportToExcel = () => {
+       const dataToExport = filteredStoragetemperaturename.map((item) => ({
+         Name: item.name ?? "", // Fallback to empty string
+         "Added By": "Registration Admin",
+         "Created At": item.created_at ? formatDate(item.created_at) : "",
+         "Updated At": item.updated_at ? formatDate(item.updated_at) : "",
+       }));
+     
+       // Add an empty row with all headers if filteredCityname is empty (optional)
+       if (dataToExport.length === 0) {
+         dataToExport.push({
+           Name: "",
+           "Added By": "",
+           "Created At": "",
+           "Updated At": "",
+         });
+       }
+     
+       const worksheet = XLSX.utils.json_to_sheet(dataToExport, { header: ["Name", "Added By", "Created At", "Updated At"] });
+       const workbook = XLSX.utils.book_new();
+       XLSX.utils.book_append_sheet(workbook, worksheet, "Storage Temperature");
+     
+       XLSX.writeFile(workbook, "Storage_Temperature_List.xlsx");
+     };
+  
   if (!id) return <div>Loading...</div>;
 
   return (

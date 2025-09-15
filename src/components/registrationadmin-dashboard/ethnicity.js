@@ -15,23 +15,26 @@ const EthnicityArea = () => {
   const id = sessionStorage.getItem("userID");
 
   // ✅ HOOKS MUST ALWAYS BE CALLED FIRST
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyData, setHistoryData] = useState([]);
-  const [selectedethnicitynameId, setSelectedethnicitynameId] = useState(null);
+  const [selectedethnicitynameId, setSelectedethnicitynameId] = useState(null); // Store ID of City to delete
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
   });
-  const [editethnicityname, setEditethnicityname] = useState(null);
-  const [ethnicityname, setethnicityname] = useState([]);
+  const [editethnicityname, setEditethnicityname] = useState(null); // State for selected City to edit
+  const [ethnicityname, setethnicityname] = useState([]); // State to hold fetched City
   const [successMessage, setSuccessMessage] = useState("");
-  const [filteredEthnicityname, setFilteredEthnicityname] = useState([]);
+  const [filteredEthnicityname, setFilteredEthnicityname] = useState([]); // Store filtered cities
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 10;
+  // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
+  // Api Path
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
 
   // ✅ FETCH DATA ON LOAD
@@ -41,8 +44,8 @@ const EthnicityArea = () => {
         const response = await axios.get(
           `${url}/samplefields/get-samplefields/ethnicity`
         );
-        setFilteredEthnicityname(response.data);
-        setethnicityname(response.data);
+        setFilteredEthnicityname(response.data); // Initialize filtered list
+        setethnicityname(response.data); // Store fetched City in state
       } catch (error) {
         console.error("Error fetching Ethnicity:", error);
       }
@@ -58,10 +61,9 @@ const EthnicityArea = () => {
     setTotalPages(pages);
 
     if (currentPage >= pages) {
-      setCurrentPage(0);
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
   }, [filteredEthnicityname, currentPage]);
-
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
     const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
@@ -69,10 +71,7 @@ const EthnicityArea = () => {
     document.body.classList.toggle("modal-open", isModalOpen);
   }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
 
-  const currentData = filteredEthnicityname.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+  const currentData = filteredEthnicityname.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
@@ -82,19 +81,21 @@ const EthnicityArea = () => {
     let filtered = [];
 
     if (value.trim() === "") {
-      filtered = ethnicityname;
+      filtered = ethnicityname; // Show all if filter is empty
     } else {
       filtered = ethnicityname.filter((ethnicity) => {
         if (field === "added_by") {
           return "registration admin".includes(value.toLowerCase());
         }
         return ethnicity[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      });
+      }
+
+      );
     }
 
     setFilteredEthnicityname(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    setCurrentPage(0);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
   };
 
   const fetchHistory = async (filterType, id) => {
@@ -124,14 +125,10 @@ const EthnicityArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // First get the current item to preserve all fields
-      const response = await axios.post(`${url}/samplefields/post-samplefields/ethnicity`, formData);
-
-      // After successful creation, refetch to get the complete data with all fields
-      const refreshResponse = await axios.get(`${url}/samplefields/get-samplefields/ethnicity`);
-      setethnicityname(refreshResponse.data);
-      setFilteredEthnicityname(refreshResponse.data);
-
+      await axios.post(`${url}/samplefields/post-samplefields/ethnicity`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/ethnicity`);
+      setFilteredEthnicityname(response.data);
+      setethnicityname(response.data);
       setSuccessMessage("Ethnicity added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -144,35 +141,34 @@ const EthnicityArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      // First get the current item to preserve all fields
-      const currentItem = ethnicityname.find(item => item.id === selectedethnicitynameId);
-
       await axios.put(`${url}/samplefields/put-samplefields/ethnicity/${selectedethnicitynameId}`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/ethnicity`);
+      const existingEthnicity = ethnicityname.find(
+        (c) => c.id === selectedethnicitynameId
+      );
 
-      // Update the item while preserving all existing fields
-      const updatedItem = {
-        ...currentItem,
-        name: formData.name,
-        // Add other fields that might be updated
-        updated_at: new Date().toISOString() // Update the timestamp
+      // Build the updated city correctly
+      const updatedEthnicity = {
+        id: selectedethnicitynameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingEthnicity?.added_by || "Registration Admin",
+        created_at: existingEthnicity?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
       };
 
-      // Update both lists
-      setethnicityname(prev =>
-        prev.map(item =>
-          item.id === selectedethnicitynameId
-            ? updatedItem
-            : item
-        )
-      );
-      setFilteredEthnicityname(prev =>
-        prev.map(item =>
-          item.id === selectedethnicitynameId
-            ? updatedItem
-            : item
+      // Update in countriesname
+      setethnicityname((prev) =>
+        prev.map((ethnicity) =>
+          ethnicity.id === selectedethnicitynameId ? updatedEthnicity : ethnicity
         )
       );
 
+      // Update in filteredCityname
+      setFilteredEthnicityname((prev) =>
+        prev.map((ethnicity) =>
+          ethnicity.id === selectedethnicitynameId ? updatedEthnicity : ethnicity
+        )
+      );
       setSuccessMessage("Ethnicity updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -185,15 +181,9 @@ const EthnicityArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`${url}/samplefields/delete-samplefields/ethnicity/${selectedethnicitynameId}`);
-
-      // Update both lists
-      setethnicityname(prev =>
-        prev.filter(item => item.id !== selectedethnicitynameId)
-      );
-      setFilteredEthnicityname(prev =>
-        prev.filter(item => item.id !== selectedethnicitynameId)
-      );
-
+      const response = await axios.get(`${url}/samplefields/get-samplefields/ethnicity`);
+      setFilteredEthnicityname(response.data);
+      setethnicityname(response.data);
       setSuccessMessage("Ethnicity deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
@@ -206,10 +196,12 @@ const EthnicityArea = () => {
   const handleEditClick = (ethnicityname) => {
     setSelectedethnicitynameId(ethnicityname.id);
     setEditethnicityname(ethnicityname);
+
     setFormData({
       name: ethnicityname.name,
       added_by: id,
     });
+
     setShowEditModal(true);
   };
 
@@ -222,7 +214,7 @@ const EthnicityArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/ethnicity`, { bulkData: payload });

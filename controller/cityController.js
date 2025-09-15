@@ -8,33 +8,33 @@ const createCityTable = (req, res) => {
 
 // Controller to get all committee members
 const getAllCities = (req, res) => {
-  cityModel.getAllCities((err, results) => {
+ cityModel.getAllCities((err, results) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching city list" });
     }
     res.status(200).json(results);
   });
 };
-const getCount = (req, res) => {
-  cityModel.getCount((err, result) => {
-    if (err) {
-      return res.status(500).json({ error: "Error Geting All Counts" })
+const getCount=(req,res)=>{
+  cityModel.getCount((err,result)=>{
+    if(err){
+      return res.status(500).json({error:"Error Geting All Counts"})
     }
     res.status(200).json(result);
   })
 }
 // Controller to create a committee member
 const createCity = (req, res) => {
-  const newCityData = req.body;
-  console.log(newCityData)
-
-  // Pass the newCityData directly to the model
-  cityModel.createCity(newCityData, (err, result) => {
-    if (err) {
-      return res.status(500).json({ error: "Error creating City" });
-    }
-    res.status(201).json({ message: "City added successfully", id: result.insertId });
-  });
+    const newCityData = req.body;
+    
+  
+    // Pass the newCityData directly to the model
+    cityModel.createCity(newCityData, (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: "Error creating City" });
+      }
+      res.status(201).json({ message: "City added successfully", id: result.insertId });
+    });
 };
 
 const updateCity = (req, res) => {

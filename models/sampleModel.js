@@ -12,7 +12,7 @@ const createSampleTable = () => {
     CREATE TABLE IF NOT EXISTS sample (
         id VARCHAR(36) PRIMARY KEY,
         MRNumber VARCHAR(50),
-        masterID VARCHAR(255),  
+        masterID VARCHAR(36),
         user_account_id INT,
         PatientName VARCHAR(100),
         PatientLocation VARCHAR(100),
@@ -67,24 +67,9 @@ const createSampleTable = () => {
       console.error("Error creating sample table: ", err);
     } else {
       console.log("Sample table created or already exists");
-      // Add this to modify existing tables if needed
-      modifyExistingTable();
     }
   });
 };
-
-const modifyExistingTable = () => {
-  const alterQuery = `ALTER TABLE sample MODIFY COLUMN masterID VARCHAR(255)`;
-
-  mysqlConnection.query(alterQuery, (err, results) => {
-    if (err) {
-      console.error("Error altering sample table (may be fine if column already correct):", err);
-    } else {
-      console.log("Successfully updated masterID column size");
-    }
-  });
-};
-
 const createPoolSampleTable = () => {
   const poolsampleTable = `
     CREATE TABLE IF NOT EXISTS poolsample (
@@ -125,7 +110,7 @@ const createPriceRequest = () => {
 
   mysqlConnection.query(createrequesttable, (err, results) => {
     if (err) {
-      console.error("Error creating Quote Request table: ", err);
+      console.error("❌ Error creating request table:", err);
     } else {
       console.log("✅ Request table ready (created if it did not exist)");
     }
@@ -856,7 +841,8 @@ const updateSample = (id, data, file, callback) => {
     room_number = parts[0] && parts[0].toLowerCase() !== 'null' ? parts[0] : null;
     freezer_id = parts[1] && parts[1].toLowerCase() !== 'null' ? parts[1] : null;
     box_id = parts[2] && parts[2].toLowerCase() !== 'null' ? parts[2] : null;
-  };
+  }
+
 
   const volume = data.volume === '' ? '' : data.volume;
   let age = data.age;
@@ -868,7 +854,6 @@ const updateSample = (id, data, file, callback) => {
       age = null;
     }
   }
-
   // Start with fields and values
   const fields = [
     'PatientName = ?', 'MRNumber=?', 'FinalConcentration=?', 'samplemode=?', 'PatientLocation = ?', 'room_number = ?', 'freezer_id = ?', 'box_id = ?', 'volume = ?',
@@ -908,66 +893,19 @@ const updateSample = (id, data, file, callback) => {
 
     if (result.affectedRows === 0) {
       console.warn('⚠️ No rows updated. Check if the sample ID exists.');
-      return callback(null, { message: 'No rows updated', result });
     }
 
-    // Get the search parameters from the data object
-    const searchParams = data.searchParams || {};
+    const historyQuery = `
+      INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
+      VALUES (?, ?, 'update', ?)
+    `;
 
-    // Build the query to fetch updated results with the same filters
-    let fetchQuery = 'SELECT * FROM sample WHERE id = ?';
-    const fetchValues = [id];
-
-    // If search parameters exist, modify the query to maintain the filtered view
-    if (Object.keys(searchParams).length > 0) {
-      fetchQuery = `
-        SELECT * FROM sample 
-        WHERE 
-          (PatientName LIKE ? OR Analyte LIKE ? OR MRNumber LIKE ?)
-          ${searchParams.age ? ' AND age = ?' : ''}
-          ${searchParams.gender ? ' AND gender = ?' : ''}
-          ${searchParams.status ? ' AND status = ?' : ''}
-          AND id = ?
-      `;
-
-      fetchValues.unshift(
-        `%${searchParams.searchTerm || ''}%`,
-        `%${searchParams.searchTerm || ''}%`,
-        `%${searchParams.searchTerm || ''}%`
-      );
-
-      if (searchParams.age) fetchValues.push(searchParams.age);
-      if (searchParams.gender) fetchValues.push(searchParams.gender);
-      if (searchParams.status) fetchValues.push(searchParams.status);
-    }
-
-    mysqlConnection.query(fetchQuery, fetchValues, (fetchErr, updatedResults) => {
-      if (fetchErr) {
-        console.error('Error fetching updated sample:', fetchErr);
-        return callback(fetchErr, null);
+    mysqlConnection.query(historyQuery, [id, data.user_account_id || null, data.Analyte || null], (err, historyResults) => {
+      if (err) {
+        console.error('Error inserting into sample_history:', err);
+        return callback(err, null);
       }
-
-      const historyQuery = `
-        INSERT INTO sample_history (sample_id, user_account_id, action_type, updated_name)
-        VALUES (?, ?, 'update', ?)
-      `;
-
-      mysqlConnection.query(historyQuery,
-        [id, data.user_account_id || null, data.Analyte || null],
-        (historyErr, historyResults) => {
-          if (historyErr) {
-            console.error('Error inserting into sample_history:', historyErr);
-            return callback(historyErr, null);
-          }
-
-          // Return both the update result and the filtered results
-          callback(null, {
-            updateResult: result,
-            updatedSample: updatedResults[0],
-            filteredResults: updatedResults
-          });
-        }
-      );
+      callback(null, result);
     });
   });
 };

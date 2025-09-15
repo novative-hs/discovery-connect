@@ -1,5 +1,3 @@
-
-
 import React from "react";
 import AboutCard from "./AboutCard";
 
@@ -7,10 +5,9 @@ const TextArea = () => {
   return (
     <section className="about-area py-5" style={{ background: "#f5f8ff" }}>
       <div className="container">
-
         <AboutCard
           title="Who we are?"
-          image="/assets/img/about/aaaa.jpg"
+          image="/assets/img/about/aboutus2.jpeg"
           text={
             <>
               <strong style={{ color: "#2d3958" }}>
@@ -33,7 +30,7 @@ const TextArea = () => {
 
         <AboutCard
           title="Our Mission"
-          image="/assets/img/about/about.jpg"
+          image="/assets/img/about/about3.jpeg"
           text="This initiative aims to enhance the availability of high-quality human biological samples. Facilitate advancements in diagnostic, therapeutic, and preventive measures and supply normal Human serum and plasma for the IVD Product manufacturer."
           reverse
           animation="fade-left"
@@ -41,10 +38,9 @@ const TextArea = () => {
 
         <AboutCard
           title="Join Us Today!"
-          image="/assets/img/about/sample.jpg"
+          image="/assets/img/about/about4.jpeg"
           text="Be part of a trusted platform dedicated to advancing product development. Sign up now and start discovering the right samples for your study!"
         />
-
       </div>
     </section>
   );

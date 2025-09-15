@@ -5,7 +5,7 @@ import { notifyError, notifySuccess } from "@utils/toast";
 import visa from "@assets/img/slider/13/visacard.png";
 import master from "@assets/img/slider/13/mastercard.png";
 
-const PaymentCardElement = ({ handleSubmit }) => {
+const PaymentCardElement = ({ handleSubmit, validateDocuments }) => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [bankname, setbankname] = useState()
@@ -91,10 +91,10 @@ const PaymentCardElement = ({ handleSubmit }) => {
     e.preventDefault();
     if (loading) return; // 🔒 Prevent double-click
     setLoading(true);
-    // if (!validateDocuments()) {
-    //   setLoading(false);
-    //   return;
-    // }
+    if (!validateDocuments()) {
+      setLoading(false);
+      return;
+    }
 
     if (!validateFields()) {
       setLoading(false);

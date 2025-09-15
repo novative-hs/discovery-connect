@@ -14,7 +14,6 @@ import Pagination from "@ui/Pagination";
 const CountryArea = () => {
   const id = sessionStorage.getItem("userID");
 
-  const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -37,18 +36,18 @@ const CountryArea = () => {
 
   // Fetch Country from backend when component loads
   useEffect(() => {
-    const fetchcountryname = async () => {
-      try {
-        const response = await axios.get(`${url}/country/get-country`);
-        setFilteredCountryname(response.data);
-        setCountryname(response.data); // Store fetched Country in state
-      } catch (error) {
-        console.error("Error fetching Country:", error);
-      }
-    };
+     const fetchcountryname = async () => {
+    try {
+      const response = await axios.get(`${url}/country/get-country`);
+      setFilteredCountryname(response.data);
+      setCountryname(response.data); // Store fetched Country in state
+    } catch (error) {
+      console.error("Error fetching Country:", error);
+    }
+  };
     fetchcountryname(); // Call the function when the component mounts
   }, [url]);
-
+ 
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -59,7 +58,7 @@ const CountryArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredCountryname, currentPage]);
+  }, [filteredCountryname,currentPage]);
 
   const currentData = filteredCountryname.slice(
     currentPage * itemsPerPage,
@@ -69,18 +68,25 @@ const CountryArea = () => {
     setCurrentPage(event.selected); // React Paginate uses 0-based index
   };
   const handleFilterChange = (field, value) => {
-    setSearchTerm(value); // Store the search term
+    let filtered = [];
 
-    let filtered = countryname;
-    if (value.trim() !== "") {
-      filtered = countryname.filter(country =>
-        country[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      );
+    if (value.trim() === "") {
+      filtered = countryname; // Show all if filter is empty
+    } else {
+      filtered = countryname.filter((country) => {
+        if (field === "added_by") {
+          return "registration admin".includes(value.toLowerCase());
+        }
+        return country[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase());
+      });
     }
 
     setFilteredCountryname(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    setCurrentPage(0);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
   };
 
   const handleInputChange = (e) => {
@@ -106,22 +112,22 @@ const CountryArea = () => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
   };
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(`${url}/country/post-country`, formData);
-      const response = await axios.get(`${url}/country/get-country`);
-      setFilteredCountryname(response.data);
-      setCountryname(response.data);
-      setSuccessMessage("Country added successfully.");
-      setTimeout(() => setSuccessMessage(""), 3000);
-      resetFormData();
-      setShowAddModal(false);
-    } catch (error) {
-      console.error("Error adding Country", error);
-    }
-  };
-  const handleEditClick = (countryname) => {
+ const handleSubmit = async (e) => {
+      e.preventDefault();
+      try {
+        await axios.post(`${url}/country/post-country`, formData);
+        const response = await axios.get(`${url}/country/get-country`);
+        setFilteredCountryname(response.data);
+        setCountryname(response.data);
+        setSuccessMessage("Country added successfully.");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        resetFormData();
+        setShowAddModal(false);
+      } catch (error) {
+        console.error("Error adding Country", error);
+      }
+    };
+const handleEditClick = (countryname) => {
     setselectedcountrynameId(countryname.id);
     setEditCountryname(countryname); // Store the Country data to edit
     setShowEditModal(true); // Show the edit modal
@@ -132,31 +138,49 @@ const CountryArea = () => {
   };
 
   const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(`${url}/country/put-country/${selectedcountrynameId}`, formData);
-
-      // Update the country in the state while preserving search
-      const updatedCountries = countryname.map(country =>
-        country.id === selectedcountrynameId ? { ...country, name: formData.countryname } : country
+      e.preventDefault();
+      try {
+        await axios.put(`${url}/country/put-country/${selectedcountrynameId}`, formData);
+        const response = await axios.get(`${url}/country/get-country`);
+       
+            // Get the existing city from state
+      const existingCountry = countryname.find(
+        (c) => c.id === selectedcountrynameId
       );
 
-      setCountryname(updatedCountries);
-      setFilteredCountryname(updatedCountries.filter(country =>
-        country.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ));
+      // Build the updated city correctly
+      const updatedCountry = {
+        id: selectedcountrynameId,
+        name: formData.countryname,   // map formData.cityname → name
+        added_by: existingCountry?.added_by || "Registration Admin",
+        created_at: existingCountry?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
 
-      setSuccessMessage("Country updated successfully.");
-      setTimeout(() => setSuccessMessage(""), 3000);
-      resetFormData();
-      setShowEditModal(false);
-    } catch (error) {
-      console.error(`Error updating Country: ${selectedcountrynameId}`, error);
-    }
-  };
+      // Update in countriesname
+      setCountryname((prev) =>
+        prev.map((countries) =>
+          countries.id === selectedcountrynameId ? updatedCountry : countries
+        )
+      );
 
+      // Update in filteredCityname
+      setFilteredCountryname((prev) =>
+        prev.map((countries) =>
+          countries.id === selectedcountrynameId ? updatedCountry : countries
+        )
+      );
 
-  const handleDelete = async () => {
+        setSuccessMessage("Country updated successfully.");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        resetFormData();
+        setShowEditModal(false);
+      } catch (error) {
+        console.error(`Error updating Country: ${selectedcountrynameId}`, error);
+      }
+    };
+
+ const handleDelete = async () => {
     try {
       await axios.delete(`${url}/country/delete-country/${selectedcountrynameId}`);
       const response = await axios.get(`${url}/country/get-country`);
@@ -170,12 +194,12 @@ const CountryArea = () => {
       console.error(`Error deleting Country: ${selectedcountrynameId}`, error);
     }
   };
-  useEffect(() => {
-    const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
-    document.body.style.overflow = isModalOpen ? "hidden" : "auto";
-    document.body.classList.toggle("modal-open", isModalOpen);
-  }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
-
+    useEffect(() => {
+      const isModalOpen = showDeleteModal || showAddModal || showEditModal || showHistoryModal;
+      document.body.style.overflow = isModalOpen ? "hidden" : "auto";
+      document.body.classList.toggle("modal-open", isModalOpen);
+    }, [showDeleteModal, showAddModal, showEditModal, showHistoryModal]);
+   
 
   const formatDate = (date) => {
     const options = { year: "2-digit", month: "short", day: "2-digit" };
@@ -192,7 +216,7 @@ const CountryArea = () => {
     setFormData({ countryname: "", added_by: id }); // Reset to empty state
   };
 
-  const handleFileUpload = async (e) => {
+   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 

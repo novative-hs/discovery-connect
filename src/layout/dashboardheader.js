@@ -146,7 +146,6 @@ const Header = ({ setActiveTab, activeTab }) => {
     router.push("/");
   };
 
-
   const menuItems =
     userType == "researcher"
       ? [
@@ -223,7 +222,7 @@ const Header = ({ setActiveTab, activeTab }) => {
                     { label: "Pending Orders", tab: "pendingorder" },
                     { label: "Dispatched Orders", tab: "dispatchedorder" },
                     { label: "Completed Orders", tab: "completedorder" },
-                    { label: "Collection Site", tab: "collectionsitelist" },
+                    { label: "Collection Sites", tab: "collectionsitelist" },
                   ]
                   : [];
 

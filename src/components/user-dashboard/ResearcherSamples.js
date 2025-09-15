@@ -71,17 +71,9 @@ const SampleArea = () => {
         const grouped = groupSamplesByOrder(response.data);
         setSamples(response.data);
         setOrders(grouped);
-
-        // ✅ Correct: Sum total payments from all individual samples
-        const total = response.data.reduce((sum, sample) => {
-          const payment = parseFloat(sample.totalpayment);
-          return sum + (payment || 0);
-        }, 0);
-        setTotalOrderPayment(total);
       }
     } catch (error) {
       setError("An error occurred while fetching the samples.");
-      setTotalOrderPayment(0);
     } finally {
       setLoading(false);
     }
@@ -91,6 +83,7 @@ const SampleArea = () => {
 
   const groupSamplesByOrder = (samples) => {
     const grouped = {};
+
     samples.forEach((sample) => {
       const key = sample.tracking_id;
       if (!grouped[key]) {
@@ -102,15 +95,20 @@ const SampleArea = () => {
           payment_status: sample.payment_status,
           BankName: sample.BankName,
           samples: [],
-          totalpayment: 0,
+          totalpayment: sample.totalpayment,
+          subtotal: sample.subtotal,
+          tax_value: sample.tax_value,
+          tax_type: sample.tax_type,
+          platform_value: sample.platform_value,
+          platform_type: sample.platform_type,
+          freight_value: sample.freight_value,
+          freight_type: sample.freight_type,
+
         };
       }
       grouped[key].samples.push(sample);
 
-      const price = parseFloat(sample.totalpayment);
-      if (!isNaN(price)) {
-        grouped[key].totalpayment += price;
-      }
+
     });
 
     // ✅ Sort by created_at ASC (oldest order first)
@@ -118,6 +116,24 @@ const SampleArea = () => {
   };
 
 
+  const formatCharge = (label, subtotal, type, value) => {
+    if (!type || value == null) return `${label}: Not Applied`;
+
+    let total;
+    let display;
+
+    if (type === "amount") {
+      total = subtotal + value;
+      display = `${label} (${value}) = ${total}`;
+    } else if (type === "percent") {
+      total = subtotal + (subtotal * value / 100);
+      display = `${label} (${value}%) = ${total}`;
+    } else {
+      display = `${label}: Unknown Type`;
+    }
+
+    return display;
+  };
 
   // Fetch samples from backend when component loads
   useEffect(() => {
@@ -173,7 +189,7 @@ const SampleArea = () => {
         <h7 className="text-danger fw-bold mb-3">Click on Analyte to get detail about sample.</h7>
         <div className="row justify-content-center">
           <div className="table-responsive w-100">
-             <table className="table table-bordered table-hover table-sm text-center align-middle">
+            <table className="table table-bordered table-hover table-sm text-center align-middle">
               <thead className="table-primary text-dark">
                 <tr>
                   {tableHeaders.map(({ label, key }, index) => (
@@ -211,18 +227,20 @@ const SampleArea = () => {
                           USD: "$",
                           INR: "₹",
                         }[order.samples[0].SamplePriceCurrency] || order.samples.SamplePriceCurrency}{" "}
-                        {order.totalpayment.toLocaleString("en-IN", {
+                        {Number(order.totalpayment).toLocaleString("en-US", {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                         })}
+
                       </td>
+
                       <td>{order.BankName || "---"}</td>
                       <td>{order.payment_type || "----"}</td>
                       <td>
                         <span
                           className={`badge px-3 py-2 ${order.payment_status === "Paid"
-                              ? "bg-success"
-                              : "bg-warning text-dark"
+                            ? "bg-success"
+                            : "bg-warning text-dark"
                             }`}
                         >
                           {order.payment_status}
@@ -232,10 +250,10 @@ const SampleArea = () => {
                       <td>
                         <span
                           className={`badge px-3 py-2 ${order.samples[0].order_status === "Pending"
-                              ? "bg-warning text-dark"
-                              : order.samples[0].order_status === "Rejected"
-                                ? "bg-danger"
-                                : "bg-success"
+                            ? "bg-warning text-dark"
+                            : order.samples[0].order_status === "Rejected"
+                              ? "bg-danger"
+                              : "bg-success"
                             }`}
                         >
                           {order.samples[0].order_status}
@@ -289,8 +307,8 @@ const SampleArea = () => {
                   <th>Gender</th>
                   <th>Volume</th>
                   <th>Test Result</th>
-                  <th>Price</th>
                   <th>Quantity</th>
+                  <th>Price ({selectedSample.samples[0].SamplePriceCurrency})</th>
 
                 </tr>
               </thead>
@@ -302,11 +320,94 @@ const SampleArea = () => {
                     <td>{s.gender || "----"}</td>
                     <td>{s.volume ? `${s.volume} ${s.VolumeUnit || ""}` : "----"}</td>
                     <td>{s.TestResult ? `${s.TestResult} ${s.TestResultUnit || ""}` : "----"}</td>
-                    <td className="text-end">{s.SamplePriceCurrency}{s.price.toLocaleString()}</td>
                     <td>{s.quantity || "----"}</td>
+                    <td className="text-end">{s.price.toLocaleString()}</td>
+
                   </tr>
                 ))}
               </tbody>
+              <thead>
+                <tr>
+                  <th colSpan="5"></th>
+                  <th>Subtotal</th>
+                  <td className="text-end">
+                   {Number(selectedSample.samples[0].subtotal).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                  </td>
+
+                </tr>
+                <tr>
+                  <th colSpan="5"></th>
+                  <th>
+                    Tax (
+                    {Number(selectedSample.samples[0].tax_value).toString().replace(/\.00$/, "")}
+                    {selectedSample.samples[0].tax_type === "percent" ? "%" : ""}
+                    )
+                  </th>
+
+                  <td className="text-end">
+                    {selectedSample.samples[0].tax_type === "percent"
+                      ? (selectedSample.samples[0].subtotal *
+                        selectedSample.samples[0].tax_value) /
+                      100
+                      : Number(selectedSample.samples[0].tax_value).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                  </td>
+                </tr>
+
+                <tr>
+                  <th colSpan="5"></th>
+                  <th>
+                    Platform Charges (
+                    {Number(selectedSample.samples[0].platform_value).toString().replace(/\.00$/, "")}
+                    {selectedSample.samples[0].platform_type === "percent" ? "%" : ""}
+                    )
+                  </th>
+                  <td className="text-end">
+                    {selectedSample.samples[0].platform_type === "percent"
+                      ? (selectedSample.samples[0].subtotal *
+                        selectedSample.samples[0].platform_value) /
+                      100
+                      : Number(selectedSample.samples[0].platform_value).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                  </td>
+                </tr>
+                <tr>
+                  <th colSpan="5"></th>
+                  <th>
+                    Freight Charges (
+                    {Number(selectedSample.samples[0].freight_value).toString().replace(/\.00$/, "")}
+                    {selectedSample.samples[0].freight_type === "percent" ? "%" : ""}
+                    )
+                  </th>
+                  <td className="text-end">
+                    {selectedSample.samples[0].freight_type === "percent"
+                      ? (selectedSample.samples[0].subtotal *
+                        selectedSample.samples[0].freight_value) /
+                      100
+                      : Number(selectedSample.samples[0].freight_value).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                  </td>
+                </tr>
+                <tr>
+                  <th colSpan="5"></th>
+                  <th>Total ({selectedSample.samples[0].SamplePriceCurrency})</th>
+                  <td className="text-end">
+                     {Number(selectedSample.samples[0].totalpayment).toLocaleString("en-US", {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                  </td>
+                </tr>
+              </thead>
             </table>
           ) : (
             <p>No samples available for this order.</p>
@@ -316,16 +417,18 @@ const SampleArea = () => {
         <Modal.Footer className="d-flex justify-content-end">
           <Button
             variant="primary"
-            onClick={() => {
-              // Store all order details in localStorage
-              localStorage.setItem("tracking_id", selectedSample.tracking_id);
-              localStorage.setItem("created_at", selectedSample.created_at);
-              localStorage.setItem("order_status", selectedSample.samples[0]?.order_status || "Placed");
-              localStorage.setItem("technical_admin_status", selectedSample.samples[0]?.technical_admin_status || "Pending");
-              localStorage.setItem("committee_status", selectedSample.samples[0]?.committee_status || "Pending");
-
-              router.push("/order-confirmation");
-            }}
+            onClick={() =>
+              router.push({
+                pathname: "/order-confirmation",
+                query: {
+                  id: selectedSample.tracking_id,
+                  created_at: selectedSample.created_at,
+                  orderStatus: selectedSample.samples[0]?.order_status || "Placed",
+                  technical_admin_status: selectedSample.samples[0]?.technical_admin_status,
+                  committee_status: selectedSample.samples[0]?.committee_status,
+                },
+              })
+            }
           >
             Track Order
           </Button>

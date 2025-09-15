@@ -42,7 +42,7 @@ const getAllCities = (callback) => {
 const createCity = (data, callback) => {
 
   const { bulkData, cityname, added_by } = data || {};
-  console.log(data)
+
   mysqlPool.getConnection((err, connection) => {
     if (err) return callback(err, null);
 

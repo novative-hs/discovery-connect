@@ -36,14 +36,6 @@ const ResearcherArea = () => {
     status: "",
     // logo: ""
   });
-  const [currentFilters, setCurrentFilters] = useState({
-    ResearcherName: '',
-    email: '',
-    phoneNumber: '',
-    OrganizationName: '',
-    created_at: '',
-    status: ''
-  });
 
   useEffect(() => {
     fetchResearchers();
@@ -62,10 +54,6 @@ const ResearcherArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    setCurrentFilters(prev => ({
-      ...prev,
-      [field]: value
-    }));
     setSearchTerm(value);
 
     if (!value) {
@@ -139,51 +127,27 @@ const ResearcherArea = () => {
     e.preventDefault();
 
     try {
-      await axios.put(
+      const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researchers/edit/${selectedResearcherId}`,
         formData
       );
 
-      // Fetch fresh data
-      const response = await axios.get(
+      const newResponse = await axios.get(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/get`
       );
-
-      // Ensure we have an array
-      const freshData = Array.isArray(response.data) ? response.data : [];
-
-      // Update main data
-      setAllResearchers(freshData);
-
-      // Start with all data or empty array if undefined
-      let filtered = [...freshData];
-
-      // Apply search term filters only if we have filters and data
-      if (filtered.length > 0 && currentFilters) {
-        Object.entries(currentFilters).forEach(([field, value]) => {
-          if (value && value.trim() !== "") {
-            filtered = filtered.filter((researcher) =>
-              researcher[field]?.toString().toLowerCase().includes(value.toLowerCase())
-            );
-          }
-        });
-      }
-
-      // Apply status filter if active
-      if (statusFilter && filtered.length > 0) {
-        filtered = filtered.filter(researcher =>
-          researcher.status?.toLowerCase() === statusFilter.toLowerCase()
-        );
-      }
-
-      setResearchers(filtered);
-      setFilteredResearchers(filtered);
+      setResearchers(newResponse.data);
 
       setShowEditModal(false);
       setSuccessMessage("Researcher updated successfully.");
-      setTimeout(() => setSuccessMessage(""), 3000);
+
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
     } catch (error) {
-      console.error(`Error updating researcher with ID ${selectedResearcherId}:`, error);
+      console.error(
+        `Error updating researcher with ID ${selectedResearcherId}:`,
+        error
+      );
     }
   };
   const fetchHistory = async (filterType, id) => {
@@ -203,7 +167,6 @@ const ResearcherArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/orderhistory/${id}`
       );
       const data = await response.json();
-      console.log("Order History API Response:", data);
       setOrderHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -235,22 +198,19 @@ const ResearcherArea = () => {
     }
   }, [showDeleteModal, showEditModal, showHistoryModal]);
   const formatDate = (date) => {
-    if (!date) return "---";
-
-    // MySQL datetime ko ISO me convert (space ko 'T' se replace)
-    const isoDate = date.replace(" ", "T");
-
     const options = {
       year: "2-digit",
       month: "short",
       day: "2-digit",
+      // hour: "2-digit",
+      // minute: "2-digit",
+      // hour12: true,
+      // timeZone: "Asia/Karachi", // optional: ensures correct timezone if needed
     };
 
-    const formatted = new Date(isoDate).toLocaleString("en-GB", options);
+    const formatted = new Date(date).toLocaleString("en-GB", options);
 
-    if (formatted === "Invalid Date") return date; // fallback
-
-    const [datePart] = formatted.split(", ");
+    const [datePart, timePart] = formatted.split(", ");
     const [day, month, year] = datePart.split(" ");
 
     const formattedMonth =
@@ -258,7 +218,6 @@ const ResearcherArea = () => {
 
     return `${day}-${formattedMonth}-${year}`;
   };
-
   const handleExportToExcel = () => {
 
     const dataToExport = filteredResearchers.map((item) => ({
@@ -861,12 +820,40 @@ const ResearcherArea = () => {
                       <>
                         {/* Researcher Name Styling */}
                         <div className="mb-4 text-center">
-                          <span className="h5 fw-bold text-primary">
-                            Researcher:{" "}
-                          </span>
+                          <span className="h5 fw-bold text-primary">Researcher: </span>
                           <span className="h5 text-dark">
                             {orderhistoryData[0]?.researcher_name}
                           </span>
+                        </div>
+
+                        <div className="mb-4 text-center d-flex justify-content-center gap-5 flex-wrap">
+                          <div>
+                            <span className="h6 fw-bold text-primary">Order Status: </span>
+                            <span className="h6 text-dark">
+                              {orderhistoryData[0]?.order_status || "---"}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="h6 fw-bold text-primary">Technical Admin Status: </span>
+                            <span className="h6 text-dark">
+                              {orderhistoryData[0]?.technicaladmin_status || "---"}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="h6 fw-bold text-primary">Scientific Committee Status: </span>
+                            <span className="h6 text-dark">
+                              {orderhistoryData[0]?.scientific_committee_status || "---"}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="h6 fw-bold text-primary">Ethical Committee Status: </span>
+                            <span className="h6 text-dark">
+                              {orderhistoryData[0]?.ethical_committee_status || "---"}
+                            </span>
+                          </div>
                         </div>
 
                         {/* Table with modern styling */}
@@ -875,36 +862,112 @@ const ResearcherArea = () => {
                             <thead className="table-dark">
                               <tr>
                                 <th>Analyte</th>
-                                <th>Price</th>
-                                <th>Quantity</th>
-                                <th>Total</th>
-                                <th>Order Date</th>
-                                <th>Order Status</th>
-                                <th>Technical Admin Status</th>
-                                <th>Scientific CommitteeMember Status</th>
-                                <th>Ethical CommitteeMember Status</th>
+                                <th>Gender</th>
+                                <th>Quantity X Volume</th>
+                                <th>TestResult & Unit</th>
+                                <th className="text-end">Price ({orderhistoryData[0].SamplePriceCurrency})</th>
+
+
                               </tr>
                             </thead>
                             <tbody>
-                              {orderhistoryData.map((order, index) => {
-                                console.log("Order object:", order);
+                              {orderhistoryData.map((order, index) => (
+                                <tr key={index}>
+                                  <td>{order.Analyte}</td>
+                                  <td>{`${order.age || ""}  | ${order.gender}`}</td>
+                                  <td>{`${order.quantity} X ${order.Volume}${order.VolumeUnit}`}</td>
+                                  <td>{order.TestResult}{order.TestResultUnit}</td>
+                                  <td className="text-end">{order.price?.toLocaleString()}</td>
 
-                                return (
-                                  <tr key={index}>
-                                    <td>{order.Analyte || "---"}</td>
-                                    <td>{order.price || "---"}</td>
-                                    <td>{order.quantity || "---"}</td>
-                                    <td>{order.totalpayment || "---"}</td>
-                                    <td>{formatDate(order.orderdate || "---")}</td>
-                                    <td>{order.order_status || "---"}</td>
-                                    <td>{order.technicaladmin_status || "---"}</td>
-                                    <td>{order.scientific_committee_status || "---"}</td>
-                                    <td>{order.ethical_committee_status || "---"}</td>
-                                  </tr>
-                                );
-                              })}
+
+                                </tr>
+                              ))}
                             </tbody>
+                            <thead className="table-light">
+                              <tr>
+                                <th colSpan="3"></th>
+                                <th>Subtotal</th>
+                                <th className="text-end">{Number(orderhistoryData[0]?.subtotal).toLocaleString()}</th>
+                              </tr>
+                            </thead>
+                            <thead className="table-light">
+                              <tr>
+                                <th colSpan="3"></th>
+                                <th>Tax ({Number(orderhistoryData[0]?.tax_value).toLocaleString()}{orderhistoryData[0]?.tax_type === "percent" ? "%" : ""})</th>
+                                <th className="text-end">
+                                  {orderhistoryData[0]?.tax_type === "percent"
+                                    ? (
+                                      (orderhistoryData[0]?.subtotal * orderhistoryData[0]?.tax_value) / 100
+                                    ).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                    : Number(orderhistoryData[0]?.tax_value || 0).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}</th>
+                              </tr>
+                            </thead>
+                            <thead className="table-light">
+                              <tr>
+                                <th colSpan="3"></th>
+                                <th>Paltform Charges ({Number(orderhistoryData[0]?.platform_value).toLocaleString()}{orderhistoryData[0]?.platform_type === "percent" ? "%" : ""})</th>
+                                <th className="text-end">
+                                  {orderhistoryData[0]?.tax_type === "percent"
+                                    ? (
+                                      (orderhistoryData[0]?.subtotal * orderhistoryData[0]?.platform_value) / 100
+                                    ).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                    : Number(orderhistoryData[0]?.platform_value || 0).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}
+                                </th>
+                              </tr>
+                            </thead>
+                            <thead className="table-light">
+                              <tr>
+                                <th colSpan="3"></th>
+                                <th>
+                                  Freight Charges (
+                                  {Number(orderhistoryData[0]?.freight_value).toLocaleString()}
+                                  {orderhistoryData[0]?.freight_type === "percent" ? "%" : ""}
+                                  )
+                                </th>
+                                <th className="text-end">
+                                  {orderhistoryData[0]?.freight_type === "percent"
+                                    ? (
+                                      (orderhistoryData[0]?.subtotal * orderhistoryData[0]?.freight_value) / 100
+                                    ).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                    : Number(orderhistoryData[0]?.freight_value || 0).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })}
+                                </th>
+                              </tr>
+                            </thead>
 
+                            <thead className="table-light">
+                              <tr>
+                                <th colSpan="3"></th>
+                                <th>Total</th>
+                                <th className="text-end">
+                                  {orderhistoryData[0]?.totalpayment
+                                    ? orderhistoryData[0].totalpayment.toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                      maximumFractionDigits: 2,
+                                    })
+                                    : ""}
+                                </th>
+
+
+                              </tr>
+                            </thead>
                           </table>
                         </div>
                       </>

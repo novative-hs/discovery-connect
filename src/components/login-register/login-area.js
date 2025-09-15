@@ -34,7 +34,7 @@ const LoginArea = () => {
             <div className="bg-dark bg-opacity-75 p-4 p-md-5 rounded shadow text-white">
               <div className="text-center mb-4">
                 <h3 className="fw-bold text-white">Login</h3>
-
+                
               </div>
 
               {/* Login Form */}

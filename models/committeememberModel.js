@@ -34,57 +34,37 @@ const createCommitteeMemberTable = () => {
   });
 };
 const fetchCommitteeOrderHistory = (committeeMemberId, callback) => {
-  const getUserAccountIdQuery = `
-    SELECT user_account_id 
-    FROM committee_member 
-    WHERE id = ?
+  const query = `
+    SELECT 
+      o.id AS order_id,
+      cm.committee_status,
+      cm.comments AS committee_comments,
+      r.ResearcherName AS researcher_name,
+      m.CommitteeMemberName AS committee_member_name,
+      s.Analyte,
+      c.quantity,
+      sd.study_copy,
+      sd.irb_file,
+      sd.nbc_file,
+      sd.reporting_mechanism
+    FROM committeesampleapproval cm
+    JOIN orders o ON cm.order_id = o.id
+    JOIN cart c ON o.id = c.order_id
+    JOIN user_account ua ON o.user_id = ua.id
+    JOIN researcher r ON ua.id = r.user_account_id
+    JOIN sample s ON c.sample_id = s.id
+    LEFT JOIN sampledocuments sd ON o.id = sd.order_id
+    JOIN committee_member m ON m.id = cm.committee_member_id
+    WHERE cm.committee_member_id = ?
+    ORDER BY cm.id DESC
   `;
 
-  mysqlConnection.query(getUserAccountIdQuery, [committeeMemberId], (err, results) => {
+  mysqlConnection.query(query, [committeeMemberId], (err, results) => {
     if (err) {
-      console.error("Error fetching user_account_id:", err);
+      console.error("Error fetching committee order history:", err);
       return callback(err, null);
     }
-
-    if (results.length === 0) {
-      console.warn("No user_account_id found for given committee_member.id");
-      return callback(null, []);
-    }
-
-    const userAccountId = results[0].user_account_id;
-
-    const query = `
-      SELECT 
-        c.id AS cart_id,
-        cm.committee_status,
-        cm.comments AS committee_comments,
-        r.ResearcherName AS researcher_name,
-        m.CommitteeMemberName AS committee_member_name,
-        s.Analyte,
-        c.quantity,
-        sd.study_copy,
-        sd.irb_file,
-        sd.nbc_file,
-        sd.reporting_mechanism
-      FROM committeesampleapproval cm
-      JOIN cart c ON cm.cart_id = c.id
-      JOIN user_account ua ON c.user_id = ua.id
-      JOIN researcher r ON ua.id = r.user_account_id
-      JOIN sample s ON c.sample_id = s.id
-      LEFT JOIN sampledocuments sd ON c.id = sd.cart_id
-      JOIN committee_member m ON m.user_account_id = cm.committee_member_id
-      WHERE cm.committee_member_id = ?
-      ORDER BY cm.id DESC
-    `;
-
-    mysqlConnection.query(query, [userAccountId], (err, results) => {
-      if (err) {
-        console.error("Error fetching committee order history:", err);
-        return callback(err, null);
-      }
-
-      callback(null, results);
-    });
+    callback(null, results);
   });
 };
 

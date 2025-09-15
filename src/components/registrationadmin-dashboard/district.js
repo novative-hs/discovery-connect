@@ -14,7 +14,6 @@ import Pagination from "@ui/Pagination";
 const DistrictArea = () => {
   const id = sessionStorage.getItem("userID");
 
-  const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -69,18 +68,24 @@ const DistrictArea = () => {
     setCurrentPage(event.selected); // React Paginate uses 0-based index
   };
   const handleFilterChange = (field, value) => {
-    setSearchTerm(value); // Store the search term
+    let filtered = [];
 
-    let filtered = districtname;
-    if (value.trim() !== "") {
-      filtered = districtname.filter(district =>
-        district[field]?.toString().toLowerCase().includes(value.toLowerCase())
+    if (value.trim() === "") {
+      filtered = districtname; // Show all if filter is empty
+    } else {
+      filtered = districtname.filter((district) => {
+        if (field === "added_by") {
+          return "registration admin".includes(value.toLowerCase());
+        }
+        return district[field]?.toString().toLowerCase().includes(value.toLowerCase())
+      }
+
       );
     }
 
     setFilteredDistrictname(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    setCurrentPage(0);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage)); // Update total pages
+    setCurrentPage(0); // Reset to first page after filtering
   };
 
   const handleInputChange = (e) => {
@@ -140,26 +145,44 @@ const DistrictArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/district/put-district/${selecteddistrictnameId}`, formData);
-
-      // Update the country in the state while preserving search
-      const updatedDistricts = districtname.map(district =>
-        district.id === selecteddistrictnameId ? { ...district, name: formData.districtname } : district
+      const response = await axios.get(`${url}/district/get-district`);
+      const existingDistrict = districtname.find(
+        (c) => c.id === selecteddistrictnameId
       );
 
-      setDistrictname(updatedDistricts);
-      setFilteredDistrictname(updatedDistricts.filter(district =>
-        district.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ));
+      // Build the updated city correctly
+      const updatedDistrict = {
+        id: selecteddistrictnameId,
+        name: formData.districtname,   // map formData.cityname → name
+        added_by: existingDistrict?.added_by || "Registration Admin",
+        created_at: existingDistrict?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
 
+      // Update in countriesname
+      setDistrictname((prev) =>
+        prev.map((district) =>
+          district.id === selecteddistrictnameId ? updatedDistrict : district
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredDistrictname((prev) =>
+        prev.map((district) =>
+          district.id === selecteddistrictnameId ? updatedDistrict : district
+        )
+      );
       setSuccessMessage("District updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
       setShowEditModal(false);
     } catch (error) {
-      console.error(`Error updating District: ${selecteddistrictnameId}`, error);
+      console.error(
+        `Error updating districtname with ID ${selecteddistrictnameId}:`,
+        error
+      );
     }
   };
-
 
   const handleDelete = async () => {
     try {

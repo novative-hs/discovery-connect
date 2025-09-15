@@ -16,7 +16,7 @@ export default function Policy() {
             Welcome to Discovery Connect
           </h2>
         }
-        backgroundImage="/assets/img/about/good.jpg"
+        backgroundImage="/assets/img/about/aboutus.jpg"
 
       />
       <PolicyArea />

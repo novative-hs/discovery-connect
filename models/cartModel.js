@@ -53,7 +53,7 @@ const getAllCart = (id, callback) => {
     JOIN orders o ON c.order_id = o.id
     WHERE o.user_id = ?
   `;
-
+  
   mysqlConnection.query(sqlQuery, [id], (err, results) => {
     if (err) {
       console.error("Error fetching cart data:", err);
@@ -113,7 +113,7 @@ const updateDocument = (newCartData, callback) => {
     return callback(new Error("Tracking ID is required"), null);
   }
 
-  const getCartIdQuery = "SELECT id FROM cart WHERE tracking_id = ?";
+  const getCartIdQuery = `SELECT id FROM orders o WHERE o.tracking_id = ?`;
   mysqlConnection.query(getCartIdQuery, [newCartData.tracking_id], (err, results) => {
     if (err) {
       console.error("Error fetching cart ID:", err);
@@ -131,7 +131,7 @@ const updateDocument = (newCartData, callback) => {
     results.forEach((row) => {
       const sql = `
         INSERT INTO sampledocuments
-        (cart_id, study_copy, irb_file, nbc_file, added_by, role, created_at, updated_at)
+        (order_id, study_copy, irb_file, nbc_file, added_by, role, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
       `;
 

@@ -46,8 +46,8 @@ const DashboardArea = () => {
         return <ChangePassword />;
       case "update-committeemember":
         return <UpdateCommitteemember />;
-      case "reviewdone":
-        return <SampleArea1 />
+        case "reviewdone":
+          return <SampleArea1 />
       default:
         return <SampleArea />;
     }

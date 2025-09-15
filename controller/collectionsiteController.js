@@ -17,8 +17,8 @@ const getAllCollectionSites = (req, res) => {
 };
 
 const getAllCollectioninCollectionStaff = (req, res) => {
-  const { id } = req.params;
-  collectionsiteModel.getAllCollectioninCollectionStaff(id, (err, results) => {
+  const {id}=req.params;
+  collectionsiteModel.getAllCollectioninCollectionStaff(id,(err, results) => {
     if (err) {
       console.error('Error fetching collection sites:', err);
       return res.status(500).json({ error: 'An error occurred' });
@@ -149,7 +149,7 @@ const updateCollectionSiteDetail = (req, res) => {
     cityid,
     districtid,
     countryid,
-    logo: file ? file.buffer : null,  // Save the binary data (Buffer) of the file
+     logo: file ? file.buffer : null,  // Save the binary data (Buffer) of the file
   };
 
   collectionsiteModel.updateCollectionSiteDetail(id, updateData, (err, result) => {

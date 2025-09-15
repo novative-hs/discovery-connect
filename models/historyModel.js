@@ -171,7 +171,7 @@ const create_samplehistoryTable = () => {
   CREATE TABLE IF NOT EXISTS sample_history (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     sample_id VARCHAR(36) NOT NULL,
-    user_account_id INT,
+    user_account_id BIGINT,
     status VARCHAR(50),
     comments TEXT, 
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

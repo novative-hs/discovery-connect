@@ -23,46 +23,46 @@ const LoginForm = () => {
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
-  const onSubmit = async (data) => {
-    try {
-      const result = await loginUser(data);
-      if (result?.error) {
-        const errorData = result.error?.data;
-        const errorMsg =
-          errorData?.message || errorData?.error || result.error?.statusText || "Internal Server Error";
-        notifyError(errorMsg);
-      } else {
-        const { id, accountType, action, committeetype, authToken } = result?.data?.user || {};
-        if (!id) return notifyError("Unexpected error: User ID is missing.");
+ const onSubmit = async (data) => {
+  try {
+    const result = await loginUser(data);
+    if (result?.error) {
+      const errorData = result.error?.data;
+      const errorMsg =
+        errorData?.message || errorData?.error || result.error?.statusText || "Internal Server Error";
+      notifyError(errorMsg);
+    } else {
+      const { id, accountType, action,committeetype, authToken } = result?.data?.user || {};
+      if (!id) return notifyError("Unexpected error: User ID is missing.");
 
-        sessionStorage.setItem("userID", id);
-        sessionStorage.setItem("accountType", accountType);
-        if (typeof action !== "undefined") {
-          sessionStorage.setItem("staffAction", action);
-        }
-        if (typeof committeetype !== "undefined") {
-          sessionStorage.setItem("committeetype", committeetype);
-        }
-
-        notifySuccess("Login successfully");
-
-        document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
-
-        const fromPage = router.query.from;
-
-        // ✅ Handle redirect after login based on source
-        if (fromPage === "cart") {
-          router.push("/cart?triggerCheckout=true"); // ✅ re-run pricing logic in cart
-        } else if (fromPage === "checkout") {
-          router.push("/dashboardheader?tab=Checkout");
-        } else {
-          router.push("/dashboardheader");
-        }
+      sessionStorage.setItem("userID", id);
+      sessionStorage.setItem("accountType", accountType);
+      if (typeof action !== "undefined") {
+        sessionStorage.setItem("staffAction", action);
       }
-    } catch (error) {
-      notifyError(error?.response?.data?.error || error?.message || "Something went wrong.");
+      if (typeof committeetype !== "undefined") {
+        sessionStorage.setItem("committeetype", committeetype);
+      }
+      
+      notifySuccess("Login successfully");
+
+      document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
+
+      const fromPage = router.query.from;
+
+      // ✅ Handle redirect after login based on source
+      if (fromPage === "cart") {
+        router.push("/cart?triggerCheckout=true"); // ✅ re-run pricing logic in cart
+      } else if (fromPage === "checkout") {
+        router.push("/dashboardheader?tab=Checkout");
+      } else {
+        router.push("/dashboardheader");
+      }
     }
-  };
+  } catch (error) {
+    notifyError(error?.response?.data?.error || error?.message || "Something went wrong.");
+  }
+};
 
 
   return (

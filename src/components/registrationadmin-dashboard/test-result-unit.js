@@ -14,7 +14,7 @@ import moment from "moment";
 const TestResultUnitArea = () => {
   const id = sessionStorage.getItem("userID");
 
-  const [showAddModal, setShowAddModal] = useState(false);
+ const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -24,12 +24,6 @@ const TestResultUnitArea = () => {
   const [formData, setFormData] = useState({
     name: "",
     added_by: id,
-  });
-  const [filters, setFilters] = useState({
-    name: "",
-    added_by: "",
-    created_at: "",
-    updated_at: ""
   });
   const [editTestResultUnitname, setEditTestResultUnitname] = useState(null); // State for selected TestMethod to edit
   const [testResultUnitname, setTestResultUnitname] = useState([]); // State to hold fetched City
@@ -44,17 +38,17 @@ const TestResultUnitArea = () => {
 
   // ✅ FETCH DATA ON LOAD
   useEffect(() => {
-    const fetchTestResultUnitname = async () => {
-      try {
-        const response = await axios.get(
-          `${url}/samplefields/get-samplefields/testresultunit`
-        );
-        setFilteredTestResultunitname(response.data);
-        setTestResultUnitname(response.data); // Store fetched TestMethod in state
-      } catch (error) {
-        console.error("Error fetching Test ResultUnit :", error);
-      }
-    };
+   const fetchTestResultUnitname = async () => {
+    try {
+      const response = await axios.get(
+        `${url}/samplefields/get-samplefields/testresultunit`
+      );
+      setFilteredTestResultunitname(response.data);
+      setTestResultUnitname(response.data); // Store fetched TestMethod in state
+    } catch (error) {
+      console.error("Error fetching Test ResultUnit :", error);
+    }
+  };
     fetchTestResultUnitname();
   }, [url]);
 
@@ -69,7 +63,7 @@ const TestResultUnitArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
     }
-  }, [filteredTestResultunitname, currentPage]);
+  }, [filteredTestResultunitname,currentPage]);
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -85,23 +79,13 @@ const TestResultUnitArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    // Update filters state
-    const newFilters = { ...filters, [field]: value };
-    setFilters(newFilters);
-
-    // Apply all active filters
-    const filtered = testResultUnitname.filter((testresultunit) => {
-      return Object.entries(newFilters).every(([filterField, filterValue]) => {
-        if (!filterValue.trim()) return true;
-
-        if (filterField === "added_by") {
-          return "registration admin".includes(filterValue.toLowerCase());
-        }
-
-        return testresultunit[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-      });
-    });
-
+    const filtered = value.trim()
+      ? testResultUnitname.filter((testresultunit) =>
+          field === "added_by"
+            ? "registration admin".includes(value.toLowerCase())
+            : testresultunit[field]?.toString().toLowerCase().includes(value.toLowerCase())
+        )
+      : testResultUnitname;
     setFilteredTestResultunitname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     setCurrentPage(0);
@@ -134,27 +118,10 @@ const TestResultUnitArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${url}/samplefields/post-samplefields/testresultunit`, formData);
-      const newItem = response.data; // Assuming API returns the created item
-
-      // Add new item to both datasets
-      const updatedTestResultUnitname = [...testResultUnitname, newItem];
-      setTestResultUnitname(updatedTestResultUnitname);
-
-      // Apply current filters to the updated dataset
-      const filtered = updatedTestResultUnitname.filter((testresultunit) => {
-        return Object.entries(filters).every(([filterField, filterValue]) => {
-          if (!filterValue.trim()) return true;
-
-          if (filterField === "added_by") {
-            return "registration admin".includes(filterValue.toLowerCase());
-          }
-
-          return testresultunit[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-        });
-      });
-
-      setFilteredTestResultunitname(filtered);
+      await axios.post(`${url}/samplefields/post-samplefields/testresultunit`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testresultunit`);
+      setFilteredTestResultunitname(response.data);
+      setTestResultUnitname(response.data);
       setSuccessMessage("Test Result Unit added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -168,30 +135,32 @@ const TestResultUnitArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/samplefields/put-samplefields/testresultunit/${selectedTestResultUnitnameId}`, formData);
-
-      // Instead of using response.data, manually update the item with the form data
-      const updatedTestResultUnitname = testResultUnitname.map(item =>
-        item.id === selectedTestResultUnitnameId
-          ? { ...item, name: formData.name, updated_at: new Date().toISOString() }
-          : item
+       const existingtestresultunit = testResultUnitname.find(
+        (c) => c.id === selectedTestResultUnitnameId
       );
 
-      setTestResultUnitname(updatedTestResultUnitname);
+      // Build the updated city correctly
+      const updatedtestresultunit = {
+        id: selectedTestResultUnitnameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingtestresultunit?.added_by || "Registration Admin",
+        created_at: existingtestresultunit?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
 
-      // Apply current filters to the updated dataset
-      const filtered = updatedTestResultUnitname.filter((testresultunit) => {
-        return Object.entries(filters).every(([filterField, filterValue]) => {
-          if (!filterValue.trim()) return true;
+      // Update in countriesname
+      setTestResultUnitname((prev) =>
+        prev.map((testresultunit) =>
+          testresultunit.id === selectedTestResultUnitnameId ? updatedtestresultunit : testresultunit
+        )
+      );
 
-          if (filterField === "added_by") {
-            return "registration admin".includes(filterValue.toLowerCase());
-          }
-
-          return testresultunit[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-        });
-      });
-
-      setFilteredTestResultunitname(filtered);
+      // Update in filteredCityname
+      setFilteredTestResultunitname((prev) =>
+        prev.map((testresultunit) =>
+          testresultunit.id === selectedTestResultUnitnameId ? updatedtestresultunit : testresultunit
+        )
+      );
       setSuccessMessage("Test Result Unit updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -204,25 +173,9 @@ const TestResultUnitArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`${url}/samplefields/delete-samplefields/testresultunit/${selectedTestResultUnitnameId}`);
-
-      // Remove item from both datasets
-      const updatedTestResultUnitname = testResultUnitname.filter(item => item.id !== selectedTestResultUnitnameId);
-      setTestResultUnitname(updatedTestResultUnitname);
-
-      // Apply current filters to the updated dataset
-      const filtered = updatedTestResultUnitname.filter((testresultunit) => {
-        return Object.entries(filters).every(([filterField, filterValue]) => {
-          if (!filterValue.trim()) return true;
-
-          if (filterField === "added_by") {
-            return "registration admin".includes(filterValue.toLowerCase());
-          }
-
-          return testresultunit[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-        });
-      });
-
-      setFilteredTestResultunitname(filtered);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testresultunit`);
+      setFilteredTestResultunitname(response.data);
+      setTestResultUnitname(response.data);
       setSuccessMessage("Test Result Unit deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
@@ -248,7 +201,7 @@ const TestResultUnitArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/testresultunit`, { bulkData: payload });
@@ -289,10 +242,10 @@ const TestResultUnitArea = () => {
     XLSX.writeFile(workbook, "Test_System_List.xlsx");
   };
 
-
+  
   if (!id) return <div>Loading...</div>;
 
-  return (
+ return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">

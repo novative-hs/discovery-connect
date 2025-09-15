@@ -312,7 +312,7 @@ const BioBankSampleArea = () => {
 
       const response = await axios.get(url);
       const { samples, totalCount, pageSize: serverPageSize, currentPage: serverPage } = response.data;
-      console.log(samples)
+
       setSamples(samples);
       setFilteredSamples(samples);
       setTotalPages(Math.ceil(totalCount / serverPageSize));
@@ -374,38 +374,38 @@ const BioBankSampleArea = () => {
   };
 
 
-  const handleFilterChange = (field, value) => {
-    const trimmed = value.trim?.() || value;
-    let newFilters = {};
+ const handleFilterChange = (field, value) => {
+  const trimmed = value.trim?.() || value;
+  let newFilters = {};
 
-    if (field === "price") {
-      setPriceFilter(value);
-      setSearchField("");
-      setSearchValue("");
-      newFilters = { priceFilter: value };
-    } else if (field === "visibility") {
-      setVisibility(value);
-      setSearchField("");
-      setSearchValue("");
-      setPriceFilter("");
-      newFilters = { visibility: value };
-    } else if (field === "date_from" || field === "date_to") {
-      if (field === "date_from") setDateFrom(trimmed);
-      if (field === "date_to") setDateTo(trimmed);
-      newFilters = {
-        date_from: field === "date_from" ? trimmed : dateFrom,
-        date_to: field === "date_to" ? trimmed : dateTo
-      };
-    } else {
-      setSearchField(field);
-      setSearchValue(value);
-      setPriceFilter("");
-      newFilters = { searchField: field, searchValue: value };
-    }
+  if (field === "price") {
+    setPriceFilter(value);
+    setSearchField("");
+    setSearchValue("");
+    newFilters = { priceFilter: value };
+  } else if (field === "visibility") {
+    setVisibility(value);
+    setSearchField("");
+    setSearchValue("");
+    setPriceFilter("");
+    newFilters = { visibility: value };
+  } else if (field === "date_from" || field === "date_to") {
+    if (field === "date_from") setDateFrom(trimmed);
+    if (field === "date_to") setDateTo(trimmed);
+    newFilters = {
+      date_from: field === "date_from" ? trimmed : dateFrom,
+      date_to: field === "date_to" ? trimmed : dateTo
+    };
+  } else {
+    setSearchField(field);
+    setSearchValue(value);
+    setPriceFilter("");
+    newFilters = { searchField: field, searchValue: value };
+  }
 
-    setAppliedFilters(newFilters);  // <-- Store latest filters
-    fetchSamples(currentPage, itemsPerPage, newFilters);
-  };
+  setAppliedFilters(newFilters);  // <-- Store latest filters
+  fetchSamples(currentPage, itemsPerPage, newFilters);
+};
 
 
 
@@ -827,7 +827,6 @@ const BioBankSampleArea = () => {
       setPoolMode(true)
       setSelectedSampleName(sample.Analyte)
     }
-    console.log(sample)
     setFormData({
       patientname: sample.PatientName,
       finalConcentration: sample.finalConcentration,
@@ -916,7 +915,7 @@ const BioBankSampleArea = () => {
     setShowPriceModal(true);
   };
 
-  const handleUpdate = async (e) => {
+ const handleUpdate = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -1036,7 +1035,7 @@ const BioBankSampleArea = () => {
       setSelectedSamples([]);
 
       // Refresh sample list - consider a more optimized refresh if possible
-      fetchSamples(currentPage, itemsPerPage, appliedFilters);
+      fetchSamples(currentPage, itemsPerPage,appliedFilters );
 
     } catch (error) {
       console.error("Update error:", error);
@@ -1278,7 +1277,7 @@ const BioBankSampleArea = () => {
             </li>
             <li>
               <h6>
-                Click on Location Id to see Sample Picture.
+                Click on Location Id's to see Sample Picture.
               </h6>
             </li>
             <li>
@@ -1764,14 +1763,14 @@ const BioBankSampleArea = () => {
                               </button>
                             </li>
                           )}
-                          <li>
-                            <button
+                          
+                            {/* <button
                               className="dropdown-item"
                               onClick={() => handlePriceCurrencyClick(sample)}
                             >
                               <FontAwesomeIcon icon={faDollarSign} className="me-2" /> Set Price & Currency
-                            </button>
-                          </li>
+                            </button> */}
+                          
                           <li>
                             <button
                               className="dropdown-item text-danger"
@@ -2300,7 +2299,6 @@ const BioBankSampleArea = () => {
                                         value={formData.TestResultUnit}
                                         onChange={handleInputChange}
                                         required
-                                        disabled={!!formData.TestResultUnit} // ✅ Disable if unit is auto-set
                                         style={{
                                           height: "40px",
                                           fontSize: "14px",
@@ -3139,8 +3137,8 @@ const BioBankSampleArea = () => {
                                               ...prev,
                                               finalConcentration: e.target.value,
                                             }));
-                                            if (mode !== "Pooled") {
-                                              setMode(e.target.value)
+                                            if(mode!=="Pooled"){
+                                             setMode(e.target.value)
                                             }
                                           }}
                                           required

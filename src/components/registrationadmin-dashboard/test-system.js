@@ -14,6 +14,7 @@ import moment from "moment";
 const TestSystemArea = () => {
   const id = sessionStorage.getItem("userID");
 
+  // ✅ HOOKS MUST ALWAYS BE CALLED FIRST
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -21,12 +22,6 @@ const TestSystemArea = () => {
   const [historyData, setHistoryData] = useState();
   const [selectedTestSystemnameId, setSelectedTestSystemnameId] = useState(null);
   const [formData, setFormData] = useState({ name: "", added_by: id });
-  const [filters, setFilters] = useState({
-    name: "",
-    added_by: "",
-    created_at: "",
-    updated_at: ""
-  });
   const [editTestSystemname, setEditTestSystemname] = useState(null);
   const [testsystemname, setTestSystemname] = useState([]);
   const [successMessage, setSuccessMessage] = useState("");
@@ -57,7 +52,7 @@ const TestSystemArea = () => {
     if (currentPage >= pages) {
       setCurrentPage(0);
     }
-  }, [filteredTestSystemname, currentPage]);
+  }, [filteredTestSystemname, currentPage]); // ✅ added currentPage to dependencies
 
   // ✅ CONTROL SCROLL WHEN MODAL OPEN
   useEffect(() => {
@@ -73,23 +68,13 @@ const TestSystemArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    // Update filters state
-    const newFilters = { ...filters, [field]: value };
-    setFilters(newFilters);
-
-    // Apply all active filters
-    const filtered = testsystemname.filter((testsystem) => {
-      return Object.entries(newFilters).every(([filterField, filterValue]) => {
-        if (!filterValue.trim()) return true;
-
-        if (filterField === "added_by") {
-          return "registration admin".includes(filterValue.toLowerCase());
-        }
-
-        return testsystem[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-      });
-    });
-
+    const filtered = value.trim()
+      ? testsystemname.filter((testsystem) =>
+          field === "added_by"
+            ? "registration admin".includes(value.toLowerCase())
+            : testsystem[field]?.toString().toLowerCase().includes(value.toLowerCase())
+        )
+      : testsystemname;
     setFilteredTestSystemname(filtered);
     setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     setCurrentPage(0);
@@ -122,27 +107,10 @@ const TestSystemArea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${url}/samplefields/post-samplefields/testsystem`, formData);
-      const newItem = response.data;
-
-      // Add new item to both datasets
-      const updatedTestSystemname = [...testsystemname, newItem];
-      setTestSystemname(updatedTestSystemname);
-
-      // Apply current filters to the updated dataset
-      const filtered = updatedTestSystemname.filter((testsystem) => {
-        return Object.entries(filters).every(([filterField, filterValue]) => {
-          if (!filterValue.trim()) return true;
-
-          if (filterField === "added_by") {
-            return "registration admin".includes(filterValue.toLowerCase());
-          }
-
-          return testsystem[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-        });
-      });
-
-      setFilteredTestSystemname(filtered);
+      await axios.post(`${url}/samplefields/post-samplefields/testsystem`, formData);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testsystem`);
+      setFilteredTestSystemname(response.data);
+      setTestSystemname(response.data);
       setSuccessMessage("Test System added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -156,30 +124,32 @@ const TestSystemArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/samplefields/put-samplefields/testsystem/${selectedTestSystemnameId}`, formData);
-
-      // Instead of using response.data, manually update the item with the form data
-      const updatedTestSystemname = testsystemname.map(item =>
-        item.id === selectedTestSystemnameId
-          ? { ...item, name: formData.name, updated_at: new Date().toISOString() }
-          : item
+        const existingTestSystem = testsystemname.find(
+        (c) => c.id === selectedTestSystemnameId
       );
 
-      setTestSystemname(updatedTestSystemname);
+      // Build the updated city correctly
+      const updatedTestSystem = {
+        id: selectedTestSystemnameId,
+        name: formData.name,   // map formData.cityname → name
+        added_by: existingTestSystem?.added_by || "Registration Admin",
+        created_at: existingTestSystem?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
 
-      // Apply current filters to the updated dataset
-      const filtered = updatedTestSystemname.filter((testsystem) => {
-        return Object.entries(filters).every(([filterField, filterValue]) => {
-          if (!filterValue.trim()) return true;
+      // Update in countriesname
+      setTestSystemname((prev) =>
+        prev.map((TestSystem) =>
+          TestSystem.id === selectedTestSystemnameId ? updatedTestSystem : TestSystem
+        )
+      );
 
-          if (filterField === "added_by") {
-            return "registration admin".includes(filterValue.toLowerCase());
-          }
-
-          return testsystem[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-        });
-      });
-
-      setFilteredTestSystemname(filtered);
+      // Update in filteredCityname
+      setFilteredTestSystemname((prev) =>
+        prev.map((TestSystem) =>
+          TestSystem.id === selectedTestSystemnameId ? updatedTestSystem : TestSystem
+        )
+      );
       setSuccessMessage("Test System updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -192,25 +162,9 @@ const TestSystemArea = () => {
   const handleDelete = async () => {
     try {
       await axios.delete(`${url}/samplefields/delete-samplefields/testsystem/${selectedTestSystemnameId}`);
-
-      // Remove item from both datasets
-      const updatedTestSystemname = testsystemname.filter(item => item.id !== selectedTestSystemnameId);
-      setTestSystemname(updatedTestSystemname);
-
-      // Apply current filters to the updated dataset
-      const filtered = updatedTestSystemname.filter((testsystem) => {
-        return Object.entries(filters).every(([filterField, filterValue]) => {
-          if (!filterValue.trim()) return true;
-
-          if (filterField === "added_by") {
-            return "registration admin".includes(filterValue.toLowerCase());
-          }
-
-          return testsystem[filterField]?.toString().toLowerCase().includes(filterValue.toLowerCase());
-        });
-      });
-
-      setFilteredTestSystemname(filtered);
+      const response = await axios.get(`${url}/samplefields/get-samplefields/testsystem`);
+      setFilteredTestSystemname(response.data);
+      setTestSystemname(response.data);
       setSuccessMessage("Test System deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
@@ -236,7 +190,7 @@ const TestSystemArea = () => {
       const workbook = XLSX.read(event.target.result, { type: "binary" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const data = XLSX.utils.sheet_to_json(sheet);
-      const payload = data.map((row) => ({ name: row.Name, added_by: id }));
+      const payload = data.map((row) => ({ name: row.name, added_by: id }));
 
       try {
         await axios.post(`${url}/samplefields/post-samplefields/testsystem`, { bulkData: payload });
@@ -277,10 +231,10 @@ const TestSystemArea = () => {
     XLSX.writeFile(workbook, "Test_System_List.xlsx");
   };
 
-
+  
   if (!id) return <div>Loading...</div>;
 
-  return (
+   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">

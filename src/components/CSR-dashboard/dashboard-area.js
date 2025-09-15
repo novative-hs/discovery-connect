@@ -51,7 +51,7 @@ const DashboardArea = () => {
         return <CompletedSampleArea />;
       case "change-password":
         return <ChangePassword />;
-      case "collectionsitelist":
+        case "collectionsitelist":
         return <CollectionsiteList />;
       default:
         return <OrderInfo setActiveTab={setActiveTab} />;

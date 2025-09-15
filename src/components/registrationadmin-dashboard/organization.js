@@ -48,14 +48,6 @@ const OrganizationArea = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
-  const [currentFilters, setCurrentFilters] = useState({
-    OrganizationName: '',
-    phoneNumber: '',
-    HECPMDCRegistrationNo: '',
-    type: '',
-    created_at: '',
-    status: ''
-  });
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(organizations.length / itemsPerPage);
@@ -104,7 +96,7 @@ const OrganizationArea = () => {
     }
 
     try {
-      await axios.post(
+      const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/createorg`,
         newformData,
         {
@@ -113,47 +105,6 @@ const OrganizationArea = () => {
           },
         }
       );
-      // Fetch fresh data
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
-      );
-
-      // Ensure we have an array
-      const freshData = Array.isArray(response.data) ? response.data : [];
-
-      // Update main data
-      setAllOrganizations(freshData);
-
-      // Start with all data or empty array if undefined
-      let filtered = [...freshData];
-
-      // Apply search term filters only if we have filters and data
-      if (filtered.length > 0 && currentFilters) {
-        Object.entries(currentFilters).forEach(([field, value]) => {
-          if (value && value.trim() !== "") {
-            filtered = filtered.filter((organization) => {
-              const fieldValue = organization[field]?.toString().toLowerCase();
-              const searchValue = value.toLowerCase();
-
-              if (field === "status") {
-                return fieldValue === searchValue;
-              }
-              return fieldValue?.includes(searchValue);
-            });
-          }
-        });
-      }
-
-      // Apply status filter if active
-      if (statusFilter && filtered.length > 0) {
-        filtered = filtered.filter(organization =>
-          organization.status?.toLowerCase() === statusFilter.toLowerCase()
-        );
-      }
-
-      setOrganizations(filtered);
-      setFilteredOrganizations(filtered);
-
 
       notifySuccess("Organization Registered Successfully");
       fetchOrganizations(); // refresh list
@@ -228,11 +179,6 @@ const OrganizationArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    // Update filter state
-    setCurrentFilters(prev => ({
-      ...prev,
-      [field]: value
-    }));
     setSearchTerm(value);
 
     if (!value) {
@@ -349,27 +295,27 @@ const OrganizationArea = () => {
     });
   };
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
+ const handleUpdate = async (e) => {
+  e.preventDefault();
 
-    const newformData = new FormData();
-    newformData.append("OrganizationName", formData.OrganizationName);
-    newformData.append("phoneNumber", formData.phoneNumber);
-    newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
-    newformData.append("website", formData.website);
-    newformData.append("fullAddress", formData.fullAddress);
-    newformData.append("city", formData.city);
-    newformData.append("district", formData.district);
-    newformData.append("country", formData.country);
-    newformData.append("status", "inactive");
-    newformData.append("type", formData.type);
+  const newformData = new FormData();
+  newformData.append("OrganizationName", formData.OrganizationName);
+  newformData.append("phoneNumber", formData.phoneNumber);
+  newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
+  newformData.append("website", formData.website);
+  newformData.append("fullAddress", formData.fullAddress);
+  newformData.append("city", formData.city);
+  newformData.append("district", formData.district);
+  newformData.append("country", formData.country);
+  newformData.append("status", "inactive");
+  newformData.append("type", formData.type);
 
-    if (formData.logo) {
-      newformData.append("logo", formData.logo);
-    }
+  if (formData.logo) {
+    newformData.append("logo", formData.logo);
+  }
 
-    try {
-      await axios.put(
+  try {
+     const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/update/${selectedOrganizationId}`,
         newformData,
         {
@@ -378,57 +324,52 @@ const OrganizationArea = () => {
           },
         }
       );
+    // Find existing record (to keep fields like created_at etc.)
+    const existingOrg = allorganizations.find(
+      (org) => org.id === selectedOrganizationId
+    );
 
-      // Fetch fresh data
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/get`
-      );
+    // Build updated record locally
+    const updatedOrg = {
+      ...existingOrg, // keep old unchanged fields
+      OrganizationName: formData.OrganizationName,
+      phoneNumber: formData.phoneNumber,
+      HECPMDCRegistrationNo: formData.HECPMDCRegistrationNo,
+      website: formData.website,
+      fullAddress: formData.fullAddress,
+      city: formData.city,
+      district: formData.district,
+      country: formData.country,
+      type: formData.type,
+      // If you want, update updated_at here:
+      updated_at: new Date().toISOString(),
+    };
 
-      // Ensure we have an array
-      const freshData = Array.isArray(response.data) ? response.data : [];
+    // Replace in allorganizations
+    setAllOrganizations((prev) =>
+      prev.map((org) =>
+        org.id === selectedOrganizationId ? updatedOrg : org
+      )
+    );
 
-      // Update main data
-      setAllOrganizations(freshData);
+    // Replace in filtered organizations
+    setOrganizations((prev) =>
+      prev.map((org) =>
+        org.id === selectedOrganizationId ? updatedOrg : org
+      )
+    );
 
-      // Apply all active filters
-      let filtered = [...freshData];
+    notifySuccess("Organization Updated Successfully");
+    setShowEditModal(false);
+    resetFormData();
+  } catch (error) {
+    const errorMessage =
+      error?.response?.data?.error || "An unexpected error occurred";
+    notifyError(errorMessage);
+    setShowEditModal(false);
+  }
+};
 
-      // 1. Apply search filters from currentFilters
-      Object.entries(currentFilters).forEach(([field, value]) => {
-        if (value && value.trim() !== "") {
-          filtered = filtered.filter((org) => {
-            const fieldValue = org[field]?.toString().toLowerCase();
-            const searchValue = value.toLowerCase();
-
-            if (field === "status") {
-              return fieldValue === searchValue;
-            }
-            return fieldValue?.includes(searchValue);
-          });
-        }
-      });
-
-      // 2. Apply status filter if active (this should override any status filter in currentFilters)
-      if (statusFilter) {
-        filtered = filtered.filter(org =>
-          org.status?.toLowerCase() === statusFilter.toLowerCase()
-        );
-      }
-
-      // Update both states
-      setOrganizations(filtered);
-      setFilteredOrganizations(filtered);
-
-      notifySuccess("Organization Updated Successfully");
-      setShowEditModal(false);
-      resetFormData();
-    } catch (error) {
-      const errorMessage =
-        error?.response?.data?.error || "An unexpected error occurred";
-      notifyError(errorMessage);
-      setShowEditModal(false);
-    }
-  };
 
   const handleToggleStatusOptions = (id) => {
     setStatusOptionsVisibility((prev) => ({
@@ -451,7 +392,31 @@ const OrganizationArea = () => {
       // Assuming the response is successful, set success message and hide the dropdown
       setSuccessMessage(response.data.message);
       setTimeout(() => setSuccessMessage(""), 3000);
-      fetchOrganizations();
+         const existingOrg = allorganizations.find(
+      (org) => org.id === selectedOrganizationId
+    );
+
+    // Build updated record locally
+    const updatedOrg = {
+      ...existingOrg, // keep old unchanged fields
+      status: option,
+      // If you want, update updated_at here:
+      updated_at: new Date().toISOString(),
+    };
+
+    // Replace in allorganizations
+    setAllOrganizations((prev) =>
+      prev.map((org) =>
+        org.id === selectedOrganizationId ? updatedOrg : org
+      )
+    );
+
+    // Replace in filtered organizations
+    setOrganizations((prev) =>
+      prev.map((org) =>
+        org.id === selectedOrganizationId ? updatedOrg : org
+      )
+    );
 
       // Close the dropdown after status change
       setStatusOptionsVisibility((prev) => ({

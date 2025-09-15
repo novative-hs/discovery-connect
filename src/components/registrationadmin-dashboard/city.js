@@ -18,13 +18,6 @@ const CityArea = () => {
     cityname: "",
     added_by: id,
   });
-
-  const [currentFilters, setCurrentFilters] = useState({
-    name: '',
-    added_by: '',
-    created_at: '',
-    updated_at: ''
-  });
   const [editcityname, setEditcityname] = useState(null); // State for selected City to edit
   const [cityname, setcityname] = useState([]); // Store all cities
   const [filteredCityname, setFilteredCityname] = useState([]); // Store filtered cities
@@ -71,11 +64,6 @@ const CityArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    // Update filter state
-    setCurrentFilters(prev => ({
-      ...prev,
-      [field]: value
-    }));
     let filtered = [];
 
     if (value.trim() === "") {
@@ -156,26 +144,38 @@ const CityArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${url}/city/put-city/${selectedcitynameId}`, formData);
-      const response = await axios.get(`${url}/city/get-city`);
-      setFilteredCityname(response.data);
-      setcityname(response.data);
-      // Reapply all active filters
-      let filtered = response.data;
-      Object.entries(currentFilters).forEach(([field, value]) => {
-        if (value.trim() !== "") {
-          filtered = filtered.filter((city) => {
-            if (field === "added_by") {
-              return "registration admin".includes(value.toLowerCase());
-            }
-            return city[field]?.toString().toLowerCase().includes(value.toLowerCase());
-          });
-        }
-      });
+      await axios.put(
+        `${url}/city/put-city/${selectedcitynameId}`,
+        formData
+      );
 
-      setFilteredCityname(filtered);
-      setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-      setCurrentPage(0);
+      // Get the existing city from state
+      const existingCity = cityname.find(
+        (c) => c.id === selectedcitynameId
+      );
+
+      // Build the updated city correctly
+      const updatedCity = {
+        id: selectedcitynameId,
+        name: formData.cityname,   // map formData.cityname → name
+        added_by: existingCity?.added_by || "Registration Admin",
+        created_at: existingCity?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in cityname
+      setcityname((prev) =>
+        prev.map((city) =>
+          city.id === selectedcitynameId ? updatedCity : city
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredCityname((prev) =>
+        prev.map((city) =>
+          city.id === selectedcitynameId ? updatedCity : city
+        )
+      );
 
       setSuccessMessage("City updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
@@ -722,4 +722,3 @@ const CityArea = () => {
 };
 
 export default CityArea;
-
