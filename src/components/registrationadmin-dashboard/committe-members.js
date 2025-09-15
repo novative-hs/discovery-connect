@@ -267,18 +267,7 @@ const CommitteeMemberArea = () => {
       );
 
 
-      setCommitteemembers((prev) =>
-        prev.map((member) =>
-          member.id === selectedCommitteememberId ? { ...member, ...formData } : member
-        )
-      );
-
-      setFilteredCommitteemembers((prev) =>
-        prev.map((member) =>
-          member.id === selectedCommitteememberId ? { ...member, ...formData } : member
-        )
-      );
-
+      fetchCommitteemembers();
       setShowEditModal(false);
       setSuccessMessage("Committeemember updated successfully.");
 
@@ -339,6 +328,7 @@ const CommitteeMemberArea = () => {
         ...prev,
         [committeememberId]: false,
       }));
+      fetchCommitteemembers();
       setSuccessMessage("Committe Member Type Updated successfully");
       setTimeout(() => {
         setSuccessMessage("");
@@ -1209,7 +1199,7 @@ const CommitteeMemberArea = () => {
                                     {visibleCommentIndex === index ? "Hide" : "View"}
                                   </button>
                                 </td>
-                                <td>
+                                 <td>
                                   {/* IRB File Download Button */}
                                   {order.study_copy && order.study_copy.data && (
                                     <button
@@ -1365,11 +1355,7 @@ const CommitteeMemberArea = () => {
                 {fieldsToShowInOrder.map(({ field, label }) => {
                   const value = selectedCommitteMember[field];
                   if (value === undefined) return null;
-                  console.log(value)
-                  // Format date fields
-                  if (field.includes("date") || field.includes("at")) {
-                    value = formatDate(value);
-                  }
+
                   return (
                     <div className="col-md-6" key={field}>
                       <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">

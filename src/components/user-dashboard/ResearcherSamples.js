@@ -83,7 +83,6 @@ const SampleArea = () => {
 
   const groupSamplesByOrder = (samples) => {
     const grouped = {};
-
     samples.forEach((sample) => {
       const key = sample.tracking_id;
       if (!grouped[key]) {

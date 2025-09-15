@@ -53,7 +53,7 @@ function Database() {
   sampleModel.createPriceRequest()
   sampleModel.createPoolSampleTable();
   historyModel.create_samplehistoryTable();
-sampleReturnModel.createSampleReturnTable()
+
   // Order Related Tables
   orderModel.createOrderTable()
   cartModel.createCartTable();

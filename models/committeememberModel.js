@@ -33,6 +33,7 @@ const createCommitteeMemberTable = () => {
     }
   });
 };
+
 const fetchCommitteeOrderHistory = (committeeMemberId, callback) => {
   const query = `
     SELECT 

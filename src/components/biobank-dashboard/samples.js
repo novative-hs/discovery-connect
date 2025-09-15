@@ -1770,7 +1770,7 @@ const BioBankSampleArea = () => {
                             >
                               <FontAwesomeIcon icon={faDollarSign} className="me-2" /> Set Price & Currency
                             </button> */}
-                          
+                         
                           <li>
                             <button
                               className="dropdown-item text-danger"

@@ -1084,6 +1084,7 @@ const sendEmailForOrder = async (req, callback) => {
 
     `;
 
+
     // ✅ Send emails if new quotes exist
     if (newQuotes.length > 0) {
       try {

@@ -101,6 +101,7 @@ const fetchOrderHistory = (researcherId, callback) => {
       console.error("Error fetching researcher order history:", err);
       return callback(err, null);
     }
+
     callback(null, results);
   });
 };
