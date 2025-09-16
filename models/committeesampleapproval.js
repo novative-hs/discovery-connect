@@ -27,10 +27,10 @@ const createcommitteesampleapprovalTable = () => {
     }
   });
 };
-const insertCommitteeApproval = async (cartId, senderId, committeeType , callback) => {
+const insertCommitteeApproval = async (cartId, senderId, committeeType, callback) => {
   try {
     const connection = mysqlConnection.promise();
-    const orderId = cartId; 
+    const orderId = cartId;
 
     // 1. Fetch committee members (only active ones)
     let memberQuery = "";
@@ -208,7 +208,7 @@ const getAllOrderByCommittee = async (
   pageSize,
   searchField,
   searchValue,
-  status,     
+  status,
   callback
 ) => {
   try {
@@ -216,7 +216,7 @@ const getAllOrderByCommittee = async (
     const connection = mysqlConnection.promise();
 
     // 🔹 Base WHERE clause
-    let whereClause = `WHERE 1=1`; 
+    let whereClause = `WHERE 1=1`;
     const params = [];
 
     // 🔎 Search field filter
@@ -236,18 +236,18 @@ const getAllOrderByCommittee = async (
     }
 
     // 🔎 Committee status filter
-   // 🔎 Committee status filter
-if (status) {
-  if (status === "Approved") {
-    // Matlab: "Pending" ko hata do
-    whereClause += ` AND (ca.committee_status != ?)`;
-    params.push("Pending");
-  } else {
-    // Normal case: exact match
-    whereClause += ` AND (ca.committee_status = ?)`;
-    params.push(status);
-  }
-}
+    // 🔎 Committee status filter
+    if (status) {
+      if (status === "Approved") {
+        // Matlab: "Pending" ko hata do
+        whereClause += ` AND (ca.committee_status != ?)`;
+        params.push("Pending");
+      } else {
+        // Normal case: exact match
+        whereClause += ` AND (ca.committee_status = ?)`;
+        params.push(status);
+      }
+    }
 
 
     // 1️⃣ Count query
@@ -305,38 +305,73 @@ if (status) {
   }
 };
 
-
-
 const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback) => {
   const offset = (page - 1) * pageSize;
 
-  let whereClause = "WHERE csa.committee_member_id = ?";
-  const params = [id];
+  let whereClause = "WHERE 1=1";
+  const params = [];
 
+  // Filter by search field
   if (searchField && searchValue) {
     let dbField = searchField;
-    if (searchField === "order_id") dbField = "o.id";
+    if (searchField === "order_id") dbField = "o.id";  // changed cart_id → order_id
     whereClause += ` AND ${dbField} LIKE ?`;
     params.push(`%${searchValue}%`);
   }
 
+  // ✅ Remove committee_member_id from whereClause (already handled in JOIN)
+
   const sqlQuery = `
-    WITH ranked_docs AS (
-      SELECT d.*,
-             ROW_NUMBER() OVER (PARTITION BY d.order_id ORDER BY COALESCE(d.updated_at, d.created_at) DESC) AS rn
-      FROM sampledocuments d
-    )
-    SELECT o.id AS order_id,
-           rd.study_copy, rd.irb_file, rd.nbc_file, rd.reporting_mechanism
+    SELECT 
+      o.id AS order_id,
+
+      -- Study Copy (latest if exists, otherwise null)
+      (
+        SELECT sd.study_copy
+        FROM sampledocuments sd
+        WHERE sd.order_id = o.id AND sd.study_copy IS NOT NULL
+        ORDER BY COALESCE(sd.updated_at, sd.created_at) DESC
+        LIMIT 1
+      ) AS study_copy,
+
+      -- IRB File
+      (
+        SELECT sd.irb_file
+        FROM sampledocuments sd
+        WHERE sd.order_id = o.id AND sd.irb_file IS NOT NULL
+        ORDER BY COALESCE(sd.updated_at, sd.created_at) DESC
+        LIMIT 1
+      ) AS irb_file,
+
+      -- NBC File
+      (
+        SELECT sd.nbc_file
+        FROM sampledocuments sd
+        WHERE sd.order_id = o.id AND sd.nbc_file IS NOT NULL
+        ORDER BY COALESCE(sd.updated_at, sd.created_at) DESC
+        LIMIT 1
+      ) AS nbc_file,
+
+      -- Reporting Mechanism
+      (
+        SELECT sd.reporting_mechanism
+        FROM sampledocuments sd
+        WHERE sd.order_id = o.id AND sd.reporting_mechanism IS NOT NULL
+        ORDER BY COALESCE(sd.updated_at, sd.created_at) DESC
+        LIMIT 1
+      ) AS reporting_mechanism
+
     FROM orders o
-    JOIN committeesampleapproval csa ON o.id = csa.order_id
-    LEFT JOIN ranked_docs rd ON rd.order_id = o.id AND rd.rn = 1
+    JOIN committeesampleapproval csa 
+      ON o.id = csa.order_id AND csa.committee_member_id = ?
     ${whereClause}
-    ORDER BY o.created_at DESC
-    LIMIT ? OFFSET ?;
+    ORDER BY o.created_at ASC
+    LIMIT ? OFFSET ?
   `;
 
-  mysqlConnection.query(sqlQuery, [...params, pageSize, offset], (err, results) => {
+  const queryParams = [id, ...params, pageSize, offset];
+
+  mysqlConnection.query(sqlQuery, queryParams, (err, results) => {
     if (err) {
       console.error("Error fetching documents:", err);
       callback(err, null);
@@ -345,7 +380,6 @@ const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback)
     }
   });
 };
-
 
 
 module.exports = {
