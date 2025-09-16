@@ -202,14 +202,24 @@ const updateCommitteeStatus = async (order_id, committee_member_id, committee_st
 };
 
 
-const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchValue, callback) => {
+const getAllOrderByCommittee = async (
+  id,
+  page,
+  pageSize,
+  searchField,
+  searchValue,
+  status,     
+  callback
+) => {
   try {
     const offset = (page - 1) * pageSize;
     const connection = mysqlConnection.promise();
 
+    // 🔹 Base WHERE clause
     let whereClause = `WHERE 1=1`; 
-    const params = [id]; // committee_member_id 
+    const params = [];
 
+    // 🔎 Search field filter
     if (searchField && searchValue) {
       let dbField;
       switch (searchField) {
@@ -225,55 +235,67 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
       }
     }
 
+    // 🔎 Committee status filter
+   // 🔎 Committee status filter
+if (status) {
+  if (status === "Approved") {
+    // Matlab: "Pending" ko hata do
+    whereClause += ` AND (ca.committee_status != ?)`;
+    params.push("Pending");
+  } else {
+    // Normal case: exact match
+    whereClause += ` AND (ca.committee_status = ?)`;
+    params.push(status);
+  }
+}
+
+
+    // 1️⃣ Count query
+    const [[{ totalCount }]] = await connection.query(`
+      SELECT COUNT(*) AS totalCount
+      FROM orders o
+      JOIN cart c ON o.id = c.order_id
+      JOIN user_account u ON o.user_id = u.id
+      LEFT JOIN researcher r ON u.id = r.user_account_id 
+      LEFT JOIN organization org ON r.nameofOrganization = org.id
+      JOIN sample s ON c.sample_id = s.id
+      LEFT JOIN committeesampleapproval ca
+        ON ca.order_id = o.id AND ca.committee_member_id = ?
+      ${whereClause}
+    `, [id, ...params]);
+
+    // 2️⃣ Paged query
     const [rows] = await connection.query(`
-      SELECT *,
-             COUNT(*) OVER() AS totalCount
-      FROM (
-        SELECT 
-          o.id AS order_id, 
-          o.tracking_id,
-          o.user_id, 
-          u.email AS user_email,
-          r.ResearcherName AS researcher_name, 
-          org.OrganizationName AS organization_name,
-          s.id AS sample_id,
-          s.Analyte, 
-          s.VolumeUnit,
-          s.age,
-          s.gender,
-          s.TestResult,
-          s.TestResultUnit,
-          s.volume,
-          s.room_number,
-          s.freezer_id,
-          s.box_id,
-          c.price, 
-          c.quantity, 
-          o.totalpayment, 
-          o.order_status,  
-          o.created_at,
-          ca.committee_status,  
-          ca.comments
-        FROM orders o
-        JOIN cart c ON o.id = c.order_id              -- 🔑 link cart to order
-        JOIN user_account u ON o.user_id = u.id
-        LEFT JOIN researcher r ON u.id = r.user_account_id 
-        LEFT JOIN organization org ON r.nameofOrganization = org.id
-        JOIN sample s ON c.sample_id = s.id           -- 🔑 sample belongs to cart
-        LEFT JOIN committeesampleapproval ca
-          ON ca.order_id = o.id AND ca.committee_member_id = ?
-        ${whereClause}
-        ORDER BY o.created_at ASC
-        LIMIT ? OFFSET ?
-      ) AS sub;
-    `, [...params, pageSize, offset]);
+      SELECT 
+        o.id AS order_id, o.tracking_id, o.user_id,
+        u.email AS user_email,
+        r.ResearcherName AS researcher_name, 
+        org.OrganizationName AS organization_name,
+        s.id AS sample_id, s.Analyte, s.VolumeUnit, s.age, s.gender,
+        s.TestResult, s.TestResultUnit, s.volume,
+        s.room_number, s.freezer_id, s.box_id,
+        c.price, c.quantity, o.totalpayment, o.order_status, o.created_at,
+        ca.committee_status, ca.comments
+      FROM orders o
+      JOIN cart c ON o.id = c.order_id
+      JOIN user_account u ON o.user_id = u.id
+      LEFT JOIN researcher r ON u.id = r.user_account_id 
+      LEFT JOIN organization org ON r.nameofOrganization = org.id
+      JOIN sample s ON c.sample_id = s.id
+      LEFT JOIN committeesampleapproval ca
+        ON ca.order_id = o.id AND ca.committee_member_id = ?
+      ${whereClause}
+      ORDER BY o.created_at DESC
+      LIMIT ? OFFSET ?
+    `, [id, ...params, pageSize, offset]);
 
-    const totalCount = rows.length ? rows[0].totalCount : 0;
-
+    // 3️⃣ Map results
     const results = rows.map(sample => ({
       ...sample,
-      committee_status: sample.committee_status || "Pending",
-      locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-')
+      committee_status: sample.committee_status,
+      locationids: [sample.room_number, sample.freezer_id, sample.box_id]
+        .filter(Boolean)
+        .join('-')
     }));
 
     callback(null, { results, totalCount });
@@ -283,57 +305,38 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
   }
 };
 
+
+
 const getAllDocuments = (page, pageSize, searchField, searchValue, id, callback) => {
   const offset = (page - 1) * pageSize;
 
-  let whereClause = "WHERE 1=1";
-  const params = [];
+  let whereClause = "WHERE csa.committee_member_id = ?";
+  const params = [id];
 
-  // Filter by search field
   if (searchField && searchValue) {
     let dbField = searchField;
-    if (searchField === "order_id") dbField = "o.id";  // changed cart_id → order_id
+    if (searchField === "order_id") dbField = "o.id";
     whereClause += ` AND ${dbField} LIKE ?`;
     params.push(`%${searchValue}%`);
   }
 
-  // Filter by committee member ID
-  if (id) {
-    whereClause += " AND csa.committee_member_id = ?";
-    params.push(id);
-  }
-
-  // Optimized SQL using CTE + ROW_NUMBER()
   const sqlQuery = `
- SELECT 
-  o.id AS order_id,
-  (SELECT d.study_copy 
-   FROM sampledocuments d 
-   WHERE d.order_id = o.id AND d.study_copy IS NOT NULL
-   ORDER BY COALESCE(d.updated_at, d.created_at) DESC LIMIT 1) AS study_copy,
-  (SELECT d.irb_file 
-   FROM sampledocuments d 
-   WHERE d.order_id = o.id AND d.irb_file IS NOT NULL
-   ORDER BY COALESCE(d.updated_at, d.created_at) DESC LIMIT 1) AS irb_file,
-  (SELECT d.nbc_file 
-   FROM sampledocuments d 
-   WHERE d.order_id = o.id AND d.nbc_file IS NOT NULL
-   ORDER BY COALESCE(d.updated_at, d.created_at) DESC LIMIT 1) AS nbc_file,
-  (SELECT d.reporting_mechanism 
-   FROM sampledocuments d 
-   WHERE d.order_id = o.id AND d.reporting_mechanism IS NOT NULL
-   ORDER BY COALESCE(d.updated_at, d.created_at) DESC LIMIT 1) AS reporting_mechanism
-FROM orders o
-JOIN committeesampleapproval csa ON o.id = csa.order_id
-${whereClause}
-ORDER BY o.created_at ASC
-LIMIT ? OFFSET ?;
-
+    WITH ranked_docs AS (
+      SELECT d.*,
+             ROW_NUMBER() OVER (PARTITION BY d.order_id ORDER BY COALESCE(d.updated_at, d.created_at) DESC) AS rn
+      FROM sampledocuments d
+    )
+    SELECT o.id AS order_id,
+           rd.study_copy, rd.irb_file, rd.nbc_file, rd.reporting_mechanism
+    FROM orders o
+    JOIN committeesampleapproval csa ON o.id = csa.order_id
+    LEFT JOIN ranked_docs rd ON rd.order_id = o.id AND rd.rn = 1
+    ${whereClause}
+    ORDER BY o.created_at DESC
+    LIMIT ? OFFSET ?;
   `;
 
-  const queryParams = [...params, pageSize, offset];
-
-  mysqlConnection.query(sqlQuery, queryParams, (err, results) => {
+  mysqlConnection.query(sqlQuery, [...params, pageSize, offset], (err, results) => {
     if (err) {
       console.error("Error fetching documents:", err);
       callback(err, null);
@@ -342,6 +345,7 @@ LIMIT ? OFFSET ?;
     }
   });
 };
+
 
 
 module.exports = {
