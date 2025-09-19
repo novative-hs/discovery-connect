@@ -181,8 +181,29 @@ const createCollectionsiteStaff = (req, callback) => {
                 // ✅ Send confirmation email
                 sendEmail(
                   email,
-                  'Welcome to Discovery Connect',
-                  `Dear ${staffName},\n\nYour account status is currently pending.\nPlease wait for approval.\n\nRegards,\nDiscovery Connect`
+                  '🎉 Welcome to Discovery Connect – Your Staff Account Has Been Created',
+                  `
+  <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px;">
+    <h2 style="color: #2c3e50;">Hello ${staffName},</h2>
+
+    <p>Welcome to <b>Discovery Connect</b>! 🎉</p>
+    
+    <p>Your staff account for the <b>Collection Site</b> has been successfully created.</p>
+
+    <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0;">
+      <p style="margin: 0; font-size: 16px;">
+        <strong>Status:</strong> <span style="color: #ff9800;">Pending</span>
+      </p>
+    </div>
+
+    <p>Our team is reviewing your account. You’ll receive another email once your account has been <b>approved</b> and is ready to use.</p>
+
+    <p style="margin-top: 20px;">If you have any questions, reply to this email and we’ll be happy to help.</p>
+
+    <p style="margin-top: 30px;">Best regards,</p>
+    <p><b>The Discovery Connect Team</b></p>
+  </div>
+  `
                 );
 
                 callback(null, {
@@ -237,35 +258,48 @@ const updateCollectonsiteStaffStatus = async (id, status) => {
 
     if (status === "inactive") {
       emailText = `
-      Dear ${staffName},
-
-      We hope you're doing well.
-
-      We wanted to inform you that your collection site's staff account on Discovery Connect has been set to <b>inactive</b>. This means you will no longer be able to access the platform or its services until reactivation.
-
-      If you believe this was done in error or you need further assistance, please reach out to our support team.
-
-      Thank you for being a part of Discovery Connect.
-
-      Best regards,  
-      The Discovery Connect Team
-      `;
+  <div style="font-family: Arial, sans-serif; line-height:1.6; color:#333; max-width:600px; margin:auto; padding:20px; border:1px solid #eee; border-radius:8px;">
+    <h2 style="color:#d9534f; text-align:center;">Account Deactivated</h2>
+    <p>Dear <b>${staffName}</b>,</p>
+    <p>
+      We wanted to inform you that your <b>Collection Site Staff account</b> on 
+      <b>Discovery Connect</b> has been <span style="color:#d9534f; font-weight:bold;">deactivated</span>.
+    </p>
+    <p>
+      This means you will no longer be able to log in or access the platform until your account is reactivated.  
+      If you believe this was done in error or need assistance, please contact our support team.
+    </p>
+    <p style="margin-top:20px;">Thank you for being a part of Discovery Connect.</p>
+    <hr style="border:none; border-top:1px solid #eee; margin:20px 0;">
+    <p style="font-size:13px; color:#777; text-align:center;">
+      Best regards,<br><b>The Discovery Connect Team</b>
+    </p>
+  </div>
+  `;
     } else if (status === "active") {
       emailText = `
-      Dear ${staffName},
-
-      We are pleased to inform you that your collection site's staff account on Discovery Connect has been <b>approved and activated</b>!
-
-      You can now log in and start exploring all the features and resources our platform offers. We're excited to have you onboard and look forward to your active participation.
-
-      If you have any questions or need help getting started, feel free to contact us.
-
-      Welcome to Discovery Connect!
-
-      Best regards,  
-      The Discovery Connect Team
-      `;
+  <div style="font-family: Arial, sans-serif; line-height:1.6; color:#333; max-width:600px; margin:auto; padding:20px; border:1px solid #eee; border-radius:8px;">
+    <h2 style="color:#28a745; text-align:center;">Welcome Aboard 🎉</h2>
+    <p>Dear <b>${staffName}</b>,</p>
+    <p>
+      Great news! Your <b>Collection Site Staff account</b> on 
+      <b>Discovery Connect</b> has been 
+      <span style="color:#28a745; font-weight:bold;">approved and activated</span>.
+    </p>
+    <p>
+      You can now log in and start using the platform to manage your collection site and explore its features.  
+      We’re excited to have you on board and look forward to your active participation!
+    </p>
+    <p>If you have any questions or need help, feel free to reach out to our support team.</p>
+    <p style="margin-top:20px;">Welcome to <b>Discovery Connect</b>!</p>
+    <hr style="border:none; border-top:1px solid #eee; margin:20px 0;">
+    <p style="font-size:13px; color:#777; text-align:center;">
+      Best regards,<br><b>The Discovery Connect Team</b>
+    </p>
+  </div>
+  `;
     }
+
 
     // Send email
     sendEmail(email, "Account Status Update", emailText)
