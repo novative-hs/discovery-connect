@@ -164,25 +164,7 @@ const CSRArea = () => {
       );
       setSuccessMessage("CSR status updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
-       const existing = allCSR.find(
-        (item) => item.id === id
-      );
-
-      // Build updated record
-      const updated = {
-        ...existing,
-        status: option,
-      };
-
-      // Update in allcollectionsitesstaff
-      setAllCSR((prev) =>
-        prev.map((item) => (item.id === id ? updated : item))
-      );
-
-      // Update in filtered collectionsitestaff
-      setCSR((prev) =>
-        prev.map((item) => (item.id === id ? updated : item))
-      );
+      fetchCSR(); // Refresh data after delete
       setStatusOptionsVisibility((prev) => ({
         ...prev,
         [id]: false,
@@ -251,7 +233,7 @@ const CSRArea = () => {
       collectionsitename: CSR.collection_id,
       fullAddress: CSR.fullAddress,
       status: CSR.status,
-      permission: CSR.permission,
+      permission: formData.permission,
     });
   };
   const handleUpdate = async (e) => {
@@ -278,40 +260,7 @@ const CSRArea = () => {
           notifyError(errorMessage);
         } else {
           notifySuccess("CSR Updated Successfully");
-             const existingcsr= allCSR.find(
-        (csr) => csr.id === selectedCSRId
-      );
-      
-
-      // Build updated record locally
-      const updatedcsr = {
-        ...existingcsr, // keep old unchanged fields
-        CSRName:formData.CSRName,
-        collectionsitename:formData.collectionsitename,
-         phoneNumber: formData.phoneNumber,
-        fullAddress: formData.fullAddress,
-        city: formData.city,
-        district: formData.district,
-        country: formData.country,
-        email:formData.email,
-        password:formData.password,
-        permission:formData.permission,
-        updated_at: new Date().toISOString(),
-      };
-
-      // Replace in collectionsitesstaff
-      setAllCSR((prev) =>
-        prev.map((csr) =>
-          csr.id === selectedCSRId ? updatedcsr : csr
-        )
-      );
-
-      // Replace in filtered collectionsitesstaff
-      setCSR((prev) =>
-        prev.map((csr) =>
-          csr.id === selectedCSRId ? updatedcsr: csr
-        )
-      );
+          fetchCSR();
           setShowEditModal(false);
         }
       })

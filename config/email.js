@@ -4,24 +4,29 @@ const { secret } = require("./secret");
 
 // Create a reusable transporter object
 const transporter = nodemailer.createTransport({
-  host: secret.email_host, 
-  service: secret.email_service, 
-  port: secret.email_port || 465, 
-  secure: secret.email_port == 465, 
+  host: process.env.HOST,       // box573.bluehost.com
+  port: process.env.EMAIL_PORT, // 465
+  secure: true,                 // true for port 465
   auth: {
-    user: secret.email_user,
-    pass: secret.email_pass, 
+    user: process.env.EMAIL_USER, // full email
+    pass: process.env.EMAIL_PASS, // mailbox password
+  },
+  tls: {
+    rejectUnauthorized: false,   // sometimes needed on shared hosting
   },
 });
 
+
+
 // Verify transporter before sending emails
-transporter.verify((err, success) => {
-  if (err) {
-    console.error(" Email transporter verification failed:", err.message);
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("Transporter error:", error);
   } else {
-    console.log(" Email transporter is ready.");
+    console.log("✅ Server is ready to take messages");
   }
 });
+
 
 // Function to send an email
 const sendEmail = async (to, subject, html) => {

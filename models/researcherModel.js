@@ -101,6 +101,7 @@ const fetchOrderHistory = (researcherId, callback) => {
       console.error("Error fetching researcher order history:", err);
       return callback(err, null);
     }
+
     callback(null, results);
   });
 };
@@ -387,44 +388,57 @@ const updateResearcherStatus = async (id, status) => {
     const email = emailResults[0].email;
     const name = emailResults[0].ResearcherName;
 
-    let emailText = `
-    Dear ${name},
-  
-    We hope this message finds you well! 
-  
-    We would like to update you about the status of your Researcher account. 
-  
-    - **Status:** Pending Approval
-  
-    Your account is currently <b>pending</b> approval. Rest assured, we are reviewing your details, and you will be notified once your account has been approved. In the meantime, please feel free to reach out to us if you have any questions or require further assistance.
-  
-    Thank you for your patience and cooperation.
-  
-    Best regards,
-    The Discovery Connect Team
-  `;
+  let emailText = `
+  <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px;">
+    <h2 style="color: #2c3e50;">Hello ${name},</h2>
+    
+    <p>We wanted to let you know about the current status of your <strong>Account</strong> at <b>Discovery Connect</b>.</p>
+
+    <div style="background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 20px 0;">
+      <p style="margin: 0; font-size: 16px;">
+        <strong>Status:</strong> <span style="color: #ff9800;">Pending</span>
+      </p>
+    </div>
+
+    <p>Your account is currently pending. Our team is reviewing your details, and you’ll receive an update once the process is complete.</p>
+
+    <p>In the meantime, if you have any questions, feel free to reply to this email — we’re here to help.</p>
+
+    <p style="margin-top: 30px;">Best regards,</p>
+    <p><b>The Discovery Connect Team</b></p>
+  </div>
+`;
+
 
     if (status === "approved") {
-      emailText = `
-    Dear ${name},
-  
-    Congratulations! 🎉
-  
-    We are thrilled to inform you that your Researcher account has been successfully <b>approved</b>! You can now log in and access your account to manage your information and interact with the Discovery Connect platform.
-  
-    Here are a few next steps:
-    - Log in to your account and explore all the features: [Log in to Discovery Connect](http://discovery-connect.com/login).
-    - Get in touch with our support team if you have any questions or need assistance.
-  
-    We are excited to have you on board and look forward to seeing how you’ll benefit from our platform!
-  
-    Best regards,
-    The Discovery Connect Team
-  `;
+   emailText = `
+  <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; padding: 20px; max-width: 600px; margin: auto; border: 1px solid #e0e0e0; border-radius: 8px;">
+    <h2 style="color: #2c3e50;">Congratulations ${name}! 🎉</h2>
+    
+    <p>We’re excited to let you know that your <strong>Account</strong> in <b>Discovery Connect</b> has been <span style="color: #28a745;"><b>approved</b></span>.</p>
+
+    <p>You can now log in and start exploring the platform.</p>
+
+    <div style="text-align: center; margin: 25px 0;">
+      <a href="http://discovery-connect.com/login" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-size: 16px;">
+        Log in to Discovery Connect
+      </a>
+    </div>
+
+    <p>Need help? Our support team is ready to assist you anytime.</p>
+
+    <p style="margin-top: 30px;">Welcome aboard, and we look forward to your contributions!</p>
+
+    <p>Best Regards,</p>
+
+    <p><b>The Discovery Connect Team</b></p>
+  </div>
+`;
+
 
     }
 
-    sendEmail(email, "Welcome to Discovery Connect", emailText)
+    sendEmail(email, "Researcher Account Status - Dicovery Connect", emailText)
       .then(() => console.log("Email sent successfully"))
       .catch((emailErr) => console.error("Error sending email:", emailErr));
 

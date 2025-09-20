@@ -48,7 +48,7 @@ const updateCommitteeStatus = (req, res) => {
 
 const getAllOrderByCommittee = (req, res) => {
   const { id } = req.params; // committee_member_id
-  const { page = 1, pageSize = 10, searchField, searchValue } = req.query;
+  const { page = 1, pageSize = 10, searchField, searchValue,status } = req.query;
 
   committeesampleapproval.getAllOrderByCommittee(
     id,
@@ -56,6 +56,7 @@ const getAllOrderByCommittee = (req, res) => {
     parseInt(pageSize),
     searchField,
     searchValue,
+    status,
     (err, result) => {
       if (err) {
         return res.status(500).json({ error: "Error fetching cart list" });

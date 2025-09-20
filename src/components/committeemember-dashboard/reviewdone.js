@@ -29,31 +29,45 @@ const SampleArea = () => {
   const [showSampleModal, setShowSampleModal] = useState(false);
   const [selectedSample, setSelectedSample] = useState(null);
 
-  useEffect(() => {
-    if (!id) return;
-    (async () => {
-      try {
-        const base = process.env.NEXT_PUBLIC_API_BASE_URL;
-        const page = 1, pageSize = 500;
-        const [oRes, dRes] = await Promise.all([
-          axios.get(`${base}/api/committeesampleapproval/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}`),
-          axios.get(`${base}/api/committeesampleapproval/getAllDocuments/${id}?page=${page}&pageSize=${pageSize}`),
-        ]);
-        const orders = (oRes.data?.results || []).filter((o) => o.committee_status !== "Pending");
-        const docMap = (dRes.data?.results || []).reduce((m, d) => (d?.order_id ? ((m[d.order_id] = d), m) : m), {});
-        const seen = new Set();
-        const merged = orders.reduce((arr, o) => {
-          const m = { ...o, ...(docMap[o.order_id] || {}) };
-          const k = `${m.order_id}__${m.Analyte}`;
-          if (!seen.has(k)) seen.add(k), arr.push(m);
-          return arr;
-        }, []);
-        setRows(merged);
-      } catch {
-        notifyError("Failed to load data");
-      }
-    })();
-  }, [id]);
+useEffect(() => {
+  if (!id) return;
+  (async () => {
+    try {
+      const base = process.env.NEXT_PUBLIC_API_BASE_URL;
+      const page = 1, pageSize = 500;
+      const status = "Approved";
+
+      const oRes = await axios.get(
+        `${base}/api/committeesampleapproval/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}&status=${status}`
+      );
+      const dRes = await axios.get(
+        `${base}/api/committeesampleapproval/getAllDocuments/${id}?page=${page}&pageSize=${pageSize}`
+      );
+
+      const orders = oRes.data?.results || [];
+      const docMap = (dRes.data?.results || []).reduce((m, d) => {
+        if (d?.order_id) m[d.order_id] = d;
+        return m;
+      }, {});
+
+      const seen = new Set();
+      const merged = orders.reduce((arr, o) => {
+        const m = { ...o, ...(docMap[o.order_id] || {}) };
+        const k = `${m.order_id}__${m.Analyte}`;
+        if (!seen.has(k)) {
+          seen.add(k);
+          arr.push(m);
+        }
+        return arr;
+      }, []);
+
+      setRows(merged);
+    } catch (err) {
+      console.log(err);
+    }
+  })();
+}, [id]);
+
 
   const filtered = useMemo(() => {
     const match = (v, q) => (!q ? true : String(v ?? "").toLowerCase().includes(q.toLowerCase()));

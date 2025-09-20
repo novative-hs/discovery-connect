@@ -11,15 +11,16 @@ import { useQuery } from "@tanstack/react-query";
 // Data fetcher
 const fetchSamples = async ({ queryKey: [, id, page, pageSize, field, value] }) => {
   const base = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const status = 'Pending';
   const filter = field && value ? `&searchField=${field}&searchValue=${value}` : "";
   const isDocField = ["study_copy", "reporting_mechanism", "irb_file", "nbc_file"].includes(field);
 
-  const ordersUrl = `${base}/api/committeesampleapproval/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}${isDocField ? "" : filter}`;
+  const ordersUrl = `${base}/api/committeesampleapproval/getOrderbyCommittee/${id}?page=${page}&pageSize=${pageSize}${isDocField ? "" : filter}&status=${status}`;
   const docsUrl = `${base}/api/committeesampleapproval/getAllDocuments/${id}?page=${page}&pageSize=${pageSize}${isDocField ? filter : ""}`;
 
   const [ordersRes, docsRes] = await Promise.all([axios.get(ordersUrl), axios.get(docsUrl)]);
 
-  const orders = (ordersRes.data.results || []).filter((o) => (o.committee_status || "").toLowerCase() === "pending");
+  const orders = ordersRes.data.results || []
   const docs = docsRes.data.results || [];
   const docMap = docs.reduce((m, d) => (d.order_id ? ((m[d.order_id] = d), m) : m), {});
   const samples = orders.map((o) => ({ ...o, ...(docMap[o.order_id] || {}) }));

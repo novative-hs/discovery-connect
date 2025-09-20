@@ -127,33 +127,33 @@ const PendingSampleArea = () => {
   }, [samples, nameFilter, cityFilter]);
 
   const handleFilterChange = (field, value) => {
-    if (field === "researcher_name") {
-      setNameFilter(value);
-    } else if (field === "city_name") {
-      setCityFilter(value);
-    } else {
-      let filtered = [];
+    let filtered = [];
 
-      if (value.trim() === "") {
-        filtered = samples;
-      } else {
-        // Special handling for product location search
+    if (value.trim() === "") {
+      filtered = samples;
+    } else {
+      filtered = samples.filter((sample) => {
         if (field === "product_location") {
-          filtered = samples.filter((sample) => {
-            const location = sample.BiobankName || sample.CollectionSiteName || "";
-            return location.toLowerCase().includes(value.toLowerCase());
-          });
-        } else {
-          // Standard search for other fields
-          filtered = samples.filter((sample) =>
-            sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
+          // Combine Biobank + split CollectionSiteName by comma
+          const locations = [
+            sample.BiobankName,
+            ...(sample.CollectionSiteName
+              ? sample.CollectionSiteName.split(",").map(s => s.trim())
+              : [])
+          ].filter(Boolean);
+
+          // Match against each location
+          return locations.some(loc =>
+            loc.toLowerCase().includes(value.toLowerCase())
           );
         }
-      }
 
-      setFilteredSamplename(filtered);
-      setCurrentPage(0);
+        return sample[field]?.toString().toLowerCase().includes(value.toLowerCase());
+      });
     }
+
+    setFilteredSamplename(filtered);
+    setCurrentPage(0);
   };
 
   const handleOrderStatusSubmit = async () => {
@@ -216,7 +216,7 @@ const PendingSampleArea = () => {
       fileInputRef.current.value = "";
     }
   };
-  if (id === null) return <div>Loading...</div>;
+  if (id === null) return <div>Loading...</div>
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
@@ -271,9 +271,12 @@ const PendingSampleArea = () => {
                     <td>
                       {records && records.length > 0
                         ? [...new Set(
-                          records.map(
-                            (rec) => rec.BiobankName || rec.CollectionSiteName || "---"
-                          )
+                          records.map((rec) => {
+                            const names = [];
+                            if (rec.BiobankName) names.push(rec.BiobankName);
+                            if (rec.CollectionSiteName) names.push(rec.CollectionSiteName);
+                            return names.join(", ");
+                          })
                         )].join(", ")
                         : "---"}
                     </td>
@@ -283,7 +286,7 @@ const PendingSampleArea = () => {
                     <td>{records[0].researcher_name}</td>
                     <td>{records[0].user_email} | {records[0].phoneNumber}</td>
                     <td>{records[0].city_name}</td>
-                    <td>{records[0].fullAddress}, {records[0].city_name}, {records[0].country_name}</td>
+                    <td>{records[0].fullAddress} ,{records[0].city_name}, {records[0].country_name}</td>
                     {/* <td>{records[0].order_status}</td> */}
                     <td>
                       <button

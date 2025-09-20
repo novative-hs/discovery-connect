@@ -50,15 +50,15 @@ const TermsArea = () => {
                 border: "1px solid rgba(0,0,0,0.05)",
               }}
             >
-              <p className="text-start mb-0 fs-5">
-                <strong className="d-block mb-2 fs-4">
+              <p className="text-start mb-0 fs-5" style={{textAlign: "justify"}}>
+                <strong className="d-block mb-2 fs-5">
                   “Discovery Connect - Collection and Distribution of Human Biological Material”
                 </strong>
                 The project aims for collection, storage and distribution of Human Biological Materials
                 (Serum, Plasma, Blood, Urine, Sputum, Pus, Body Fluids, Tissues etc.) both specific disease
                 oriented or normal human serum and plasma for the manufacturing of In-Vitro Diagnostic products.
               </p>
-              <p className="text-start mb-0 mt-3 fs-5">
+              <p className="text-start mb-0 mt-3 fs-5" style={{textAlign: "justify"}}>
                 Discovery-Connect is the custodian of the HBM and agrees to use this HBM as outlined by the consent.
                 If the HBM is given to another party, it would be through a Material Transfer Agreement (MTA) and
                 appropriate ethical, scientific, and legal approval.

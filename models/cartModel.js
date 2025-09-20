@@ -166,7 +166,6 @@ const updateDocument = (newCartData, callback) => {
   });
 };
 
-
 module.exports = {
   createCartTable,
   getAllCart,

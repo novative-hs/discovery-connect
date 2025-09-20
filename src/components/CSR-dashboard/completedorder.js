@@ -124,94 +124,27 @@ const CompletedSampleArea = () => {
   }, [samples, nameFilter, cityFilter]);
 
   const handleFilterChange = (field, value) => {
-    if (field === "researcher_name") {
-      setNameFilter(value);
-    } else if (field === "city_name") {
-      setCityFilter(value);
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = samples;
     } else {
-      let filtered = [];
-
-      if (value.trim() === "") {
-        filtered = samples;
-      } else {
-        // Special handling for product location search
+      filtered = samples.filter((sample) => {
         if (field === "product_location") {
-          filtered = samples.filter((sample) => {
-            const location = sample.BiobankName || sample.CollectionSiteName || "";
-            return location.toLowerCase().includes(value.toLowerCase());
-          });
-        } else {
-          // Standard search for other fields
-          filtered = samples.filter((sample) =>
-            sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
-          );
+          const location = sample.BiobankName || sample.CollectionSiteName || "";
+          return location.toLowerCase().includes(value.toLowerCase());
         }
-      }
-
-      setFilteredSamplename(filtered);
-      setCurrentPage(0);
+        return sample[field]?.toString().toLowerCase().includes(value.toLowerCase());
+      });
     }
+
+    setFilteredSamplename(filtered);
+    setCurrentPage(0);
   };
 
-  const handleOrderStatusSubmit = async () => {
-    setIsSubmitting(true);
 
-    if (!deliveryDate || !deliveryTime || !dispatchVia || !dispatchSlip) {
-      notifyError("Please select all the details.");
-      return setIsSubmitting(false);
-    }
 
-    try {
-      const formData = new FormData();
-      formData.append("orderid", selectedUserSamples[0].id);
-      formData.append("cartStatus", orderStatus);
-      formData.append("deliveryDate", deliveryDate);
-      formData.append("deliveryTime", deliveryTime);
-      formData.append("dispatchVia", dispatchVia);
-      if (dispatchSlip) formData.append("dispatchSlip", dispatchSlip);
 
-      const res = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/order/updatestatusbyCSR`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      notifySuccess(res.data.message);
-      setShowOrderStatusModal(false);
-      setShowOrderStatusError(false);
-      fetchSamples();
-    } catch (error) {
-      console.error("Error updating order status:", error);
-      notifyError("Failed to update order status.");
-    } finally {
-      setIsSubmitting(false);
-      setOrderStatus("Dispatched");
-      setDispatchSlip(null);
-      setDispatchVia("");
-      setDeliveryDate("");
-      setDeliveryTime("");
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
-  };
-
-  const handleCancelModal = () => {
-    setShowOrderStatusModal(false);
-    setOrderStatus("Dispatched");
-    setDispatchSlip(null);
-    setDispatchVia("");
-    setDeliveryDate("");
-    setDeliveryTime("");
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
 
   if (id === null) return <div>Loading...</div>;
 
