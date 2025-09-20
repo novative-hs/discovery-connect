@@ -146,8 +146,8 @@ const BankArea = () => {
     e.preventDefault();
     try {
       await axios.put(`${url}/update-bank/${selectedbanknameId}`, formData);
-      
-     const existingBank = bankname.find(
+
+      const existingBank = bankname.find(
         (c) => c.id === selectedbanknameId
       );
 

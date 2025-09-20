@@ -18,7 +18,7 @@ import InputMask from "react-input-mask";
 
 const BioBankSampleArea = () => {
   const id = sessionStorage.getItem("userID");
-  
+
   const [samples, setSamples] = useState([]);
   const [filteredSamples, setFilteredSamples] = useState(samples);
 
@@ -27,11 +27,15 @@ const BioBankSampleArea = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 50;
   const [totalPages, setTotalPages] = useState(0);
- 
+
   const [searchField, setSearchField] = useState(null);
   const [searchValue, setSearchValue] = useState(null);
   const [pageSize, setPageSize] = useState(50);
   const [totalCount, setTotalCount] = useState(0);
+
+  // Add state for sample details modal
+  const [showSampleModal, setShowSampleModal] = useState(false);
+  const [selectedSample, setSelectedSample] = useState(null);
 
   const tableHeaders = [
     { label: "Patient Name", key: "PatientName" },
@@ -71,6 +75,17 @@ const BioBankSampleArea = () => {
     { label: "Concurrent Medical Conditions", key: "ConcurrentMedicalConditions" },
   ];
 
+  // Function to open sample details modal
+  const openModal = (sample) => {
+    setSelectedSample(sample);
+    setShowSampleModal(true);
+  };
+
+  // Function to close sample details modal
+  const closeModal = () => {
+    setShowSampleModal(false);
+    setSelectedSample(null);
+  };
 
   // Fetch samples from the backend
   const fetchSamples = useCallback(async (page = 1, pageSize = 50, filters = {}) => {
@@ -111,8 +126,6 @@ const BioBankSampleArea = () => {
 
   const currentData = filteredSamples;
 
- 
-
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages); // Adjust down if needed
@@ -120,21 +133,17 @@ const BioBankSampleArea = () => {
   }, [totalPages, currentPage]);
 
   const handlePageChange = (event) => {
-    const selectedPage = event.selected; // React Paginate is 0-indexed, so we adjust
-    setCurrentPage(selectedPage); // This will trigger the data change based on selected page
+    const selectedPage = event.selected;
+    setCurrentPage(selectedPage);
   };
-
 
   // Filter the researchers list
   const handleFilterChange = (field, value) => {
-
-      setSearchField(field);
-      setSearchValue(value);
-      fetchSamples(1, itemsPerPage, { searchField: field, searchValue: value });
-    
+    setSearchField(field);
+    setSearchValue(value);
+    fetchSamples(1, itemsPerPage, { searchField: field, searchValue: value });
   };
 
- 
   if (id === null) {
     return <div>Loading...</div>;
   }
@@ -148,8 +157,6 @@ const BioBankSampleArea = () => {
           <table className="table table-bordered table-hover text-center align-middle w-auto border">
             <thead className="table-primary text-dark">
               <tr className="text-center">
-               
-
                 {tableHeaders.map(({ label, key }, index) => (
                   <th key={index} className="px-2" style={{ minWidth: "120px", whiteSpace: "nowrap" }}>
                     <div className="d-flex flex-column align-items-center">
@@ -166,7 +173,6 @@ const BioBankSampleArea = () => {
                     </div>
                   </th>
                 ))}
-
               </tr>
             </thead>
             <tbody className="table-light">
@@ -214,7 +220,6 @@ const BioBankSampleArea = () => {
 Freezer ID=${sample.freezer_id || "----"} 
 Box ID=${sample.box_id || "----"} `;
 
-                              // To show logo while clicking on location IDs
                               const handleLogoClick = () => {
                                 const logo =
                                   typeof sample.logo === "string"
@@ -248,7 +253,6 @@ Box ID=${sample.box_id || "----"} `;
                             } else if (key === "volume") {
                               return `${sample.volume} ${sample.VolumeUnit || ""}`;
                             }
-                           
                             else if (key === "age") {
                               if (!sample.age || sample.age === 0) {
                                 return "-----";
@@ -268,12 +272,11 @@ Box ID=${sample.box_id || "----"} `;
                         )}
                       </td>
                     ))}
-                    
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="8" className="text-center">
+                  <td colSpan={tableHeaders.length} className="text-center">
                     No samples available
                   </td>
                 </tr>
@@ -286,10 +289,10 @@ Box ID=${sample.box_id || "----"} `;
           <Pagination
             handlePageClick={handlePageChange}
             pageCount={totalPages}
-            focusPage={currentPage} // If using react-paginate, which is 0-based
+            focusPage={currentPage}
           />
         )}
-      
+
         {/* Modal to show Sample Picture */}
         {showLogoModal && (
           <div
@@ -328,8 +331,100 @@ Box ID=${sample.box_id || "----"} `;
             </div>
           </div>
         )}
+
+        {/* Sample Details Modal */}
+        {showSampleModal && selectedSample && (
+          <div
+            className="modal fade show"
+            style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
+            tabIndex="-1"
+            role="dialog"
+          >
+            <div
+              className="modal-dialog modal-lg"
+              style={{ marginTop: "80px" }}
+              role="document"
+            >
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">Sample Details - {selectedSample.Analyte || "Unknown"}</h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={closeModal}
+                    aria-label="Close"
+                  ></button>
+                </div>
+                <div className="modal-body">
+                  <div className="row">
+                    <div className="col-md-6">
+                      <h6>Basic Information</h6>
+                      <table className="table table-sm">
+                        <tbody>
+                          <tr>
+                            <td><strong>Patient Name:</strong></td>
+                            <td>{selectedSample.PatientName || "----"}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>MR Number:</strong></td>
+                            <td>{selectedSample.MRNumber || "----"}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>Age:</strong></td>
+                            <td>{selectedSample.age ? `${selectedSample.age} years` : "----"}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>Gender:</strong></td>
+                            <td>{selectedSample.gender || "----"}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="col-md-6">
+                      <h6>Sample Information</h6>
+                      <table className="table table-sm">
+                        <tbody>
+                          <tr>
+                            <td><strong>Sample Type:</strong></td>
+                            <td>{selectedSample.SampleTypeMatrix || "----"}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>Volume:</strong></td>
+                            <td>{selectedSample.volume ? `${selectedSample.volume} ${selectedSample.VolumeUnit || ""}` : "----"}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>Status:</strong></td>
+                            <td>{selectedSample.status || "----"}</td>
+                          </tr>
+                          <tr>
+                            <td><strong>Price:</strong></td>
+                            <td>{selectedSample.price && selectedSample.SamplePriceCurrency
+                              ? `${selectedSample.price} ${selectedSample.SamplePriceCurrency}`
+                              : "----"}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <h6 className="mt-3">Additional Information</h6>
+                  <div className="row">
+                    {fieldsToShowInOrder.map(({ label, key }) => (
+                      selectedSample[key] && (
+                        <div key={key} className="col-md-6 mb-2">
+                          <strong>{label}:</strong> {selectedSample[key]}
+                        </div>
+                      )
+                    ))}
+                  </div>
+                </div>
+                <div className="modal-footer">
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-     
     </section>
   );
 };

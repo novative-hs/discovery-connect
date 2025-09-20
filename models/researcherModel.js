@@ -70,7 +70,7 @@ const fetchOrderHistory = (researcherId, callback) => {
       c.quantity,
       o.totalpayment,
       c.price,
-      0.tracking_id,
+      o.tracking_id,
       o.totalpayment,
       o.subtotal,
 

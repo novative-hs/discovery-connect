@@ -33,6 +33,7 @@ const OrderInfo = ({ setActiveTab }) => {
   const [staffAction, setStaffAction] = useState("");
   const id = typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
 
+
   useEffect(() => {
     if (id) {
       const action = sessionStorage.getItem("staffAction") || "";
@@ -85,9 +86,14 @@ const OrderInfo = ({ setActiveTab }) => {
   const fetchUserCount = async () => {
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/city/getAll`
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsite/get`
       );
-      setCollectionCount(response.data.totalCollectionSites);
+      // Count only active sites
+      const activeSites = response.data.filter(
+        (site) => site.status && site.status.toLowerCase() === "active"
+      ).length;
+
+      setCollectionCount(activeSites);
     } catch (error) {
       console.error("Error fetching user count:", error);
     }

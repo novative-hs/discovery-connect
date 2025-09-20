@@ -78,6 +78,14 @@ const SampleArea = () => {
     return reqOK && optOK;
   }
 
+  const fieldMap = {
+    "Order ID": "tracking_id",
+    "Order Date": "created_at",
+    "Researcher Name": "researcher_name",
+    "Organization Name": "organization_name",
+    "Review Status": "committee_status",
+  };
+
   const handleOpenModal = (type, group) => {
     if (!group?.length) return alert("Sample data missing.");
     if (!allDocsViewed()) return alert("Please view all required documents first.");
@@ -158,9 +166,12 @@ const SampleArea = () => {
                       type="text"
                       className="form-control form-control-sm text-center"
                       placeholder={`Search ${label}`}
-                      onChange={(e) =>
-                        (setSearchField(label.toLowerCase().replace(" ", "_")), setSearchValue(e.target.value), setCurrentPage(1))
-                      }
+                      onChange={(e) => {
+                        const mappedField = fieldMap[label];
+                        setSearchField(mappedField);
+                        setSearchValue(e.target.value);
+                        setCurrentPage(1);
+                      }}
                     />
                     <span className="fw-bold mt-1">{label}</span>
                   </div>
@@ -169,6 +180,7 @@ const SampleArea = () => {
               <th>Action</th>
             </tr>
           </thead>
+
           <tbody>
             {Object.values(grouped).map((group, idx) => (
               <tr key={idx}>

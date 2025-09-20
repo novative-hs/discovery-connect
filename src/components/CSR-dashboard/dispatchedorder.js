@@ -27,6 +27,8 @@ const DispatchSampleArea = () => {
   const [dispatchSlip, setDispatchSlip] = useState(null);
   const fileInputRef = useRef(null);
   const [currency, setCurrency] = useState(null);
+  const [nameFilter, setNameFilter] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -37,7 +39,7 @@ const DispatchSampleArea = () => {
   const tableHeaders = [
     { label: "Order ID", key: "tracking_id" },
     { label: "Order Date", key: "created_at" },
-    { label: "Product Location", key: "source_name" },
+    { label: "Product Location", key: "product_location" }, // Changed key to custom value
     { label: "Customer Name", key: "researcher_name" },
     { label: "Customer City", key: "city_name" },
   ];
@@ -90,15 +92,58 @@ const DispatchSampleArea = () => {
 
   const handlePageChange = (event) => setCurrentPage(event.selected);
 
-  const handleFilterChange = (field, value) => {
-    let filtered = value.trim()
-      ? samples.filter((sample) =>
-        sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
-      )
-      : samples;
+  // Apply both name and city filters together
+  useEffect(() => {
+    let filtered = samples;
+
+    // Apply name filter
+    if (nameFilter.trim() !== "") {
+      filtered = filtered.filter(sample =>
+        sample.researcher_name?.toLowerCase().includes(nameFilter.toLowerCase())
+      );
+    }
+
+    // Apply city filter
+    if (cityFilter.trim() !== "") {
+      filtered = filtered.filter(sample =>
+        sample.city_name?.toLowerCase().includes(cityFilter.toLowerCase())
+      );
+    }
+
     setFilteredSamplename(filtered);
     setCurrentPage(0);
+  }, [samples, nameFilter, cityFilter]);
+
+  const handleFilterChange = (field, value) => {
+    if (field === "researcher_name") {
+      setNameFilter(value);
+    } else if (field === "city_name") {
+      setCityFilter(value);
+    } else {
+      let filtered = [];
+
+      if (value.trim() === "") {
+        filtered = samples;
+      } else {
+        // Special handling for product location search
+        if (field === "product_location") {
+          filtered = samples.filter((sample) => {
+            const location = sample.BiobankName || sample.CollectionSiteName || "";
+            return location.toLowerCase().includes(value.toLowerCase());
+          });
+        } else {
+          // Standard search for other fields
+          filtered = samples.filter((sample) =>
+            sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
+          );
+        }
+      }
+
+      setFilteredSamplename(filtered);
+      setCurrentPage(0);
+    }
   };
+
 
   // ✅ Confirm Order submit
   const handleCompleteOrder = async () => {

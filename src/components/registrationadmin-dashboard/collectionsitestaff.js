@@ -39,6 +39,14 @@ const CollectionSiteStaffArea = () => {
   const [allcollectionsitesstaff, setAllCollectionsitesstaff] = useState([]); // State to hold fetched collectionsites
   const [collectionsitesstaff, setCollectionsitesstaff] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
+  const [filters, setFilters] = useState({
+    staffName: "",
+    useraccount_email: "",
+    useraccount_password: "",
+    permission: "",
+    status: "",
+    created_at: ""
+  });
 
 
   const [formData, setFormData] = useState({
@@ -77,9 +85,14 @@ const CollectionSiteStaffArea = () => {
   };
 
   const getPermissionDisplayText = () => {
-    if (isAllPermissionsSelected) {
+    // Check if we have "all" permission (either as string or all values selected)
+    const hasAllPermissions =
+      formData.permission === "all" ||
+      (Array.isArray(formData.permission) && formData.permission.length === allPermissions.length);
+
+    if (hasAllPermissions) {
       return "All Pages Access";
-    } else if (formData.permission.length) {
+    } else if (formData.permission && formData.permission.length) {
       return allPermissions
         .filter((perm) => formData.permission.includes(perm.value))
         .map((perm) => perm.label)
@@ -163,16 +176,45 @@ const CollectionSiteStaffArea = () => {
     }
   };
 
+  const applyFilters = () => {
+    let filtered = [...allcollectionsitesstaff];
+
+    // Har filter ko apply karein
+    Object.entries(filters).forEach(([field, value]) => {
+      if (value) {
+        filtered = filtered.filter((staff) => {
+          const fieldValue = staff[field]?.toString().toLowerCase() || "";
+          const searchValue = value.toLowerCase();
+
+          // Status ke liye exact match
+          if (field === "status") {
+            return fieldValue === searchValue;
+          }
+
+          // Baaki fields ke liye partial match
+          return fieldValue.includes(searchValue);
+        });
+      }
+    });
+
+    // Status filter bhi apply karein agar set hai
+    if (statusFilter) {
+      filtered = filtered.filter((staff) =>
+        staff.status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+
+    setCollectionsitesstaff(filtered);
+    setCurrentPage(0);
+  };
+
   const onSubmit = async (event) => {
     event.preventDefault();
 
     // Prepare data to send to backend
     const dataToSend = {
       ...formData,
-      permission:
-        formData.permission.length === allPermissions.length
-          ? "all"  // send string "all" if all permissions selected
-          : formData.permission, // else send array of selected permissions
+      permission: permissionType === "all" ? "all" : formData.permission.join(",") // Convert array to string if not "all"
     };
 
     try {
@@ -216,29 +258,15 @@ const CollectionSiteStaffArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    setSearchTerm(value);
-
-    if (!value) {
-      setCollectionsitesstaff(allcollectionsitesstaff); // Restore full list
-    } else {
-      const filtered = allcollectionsitesstaff.filter((staff) => {
-        const fieldValue = staff[field]?.toString().toLowerCase();
-        const searchValue = value.toLowerCase();
-
-        if (field === "status") {
-          // Use exact match for status
-          return fieldValue === searchValue;
-        }
-
-        // Use partial match for other fields
-        return fieldValue?.includes(searchValue);
-      });
-
-      setCollectionsitesstaff(filtered);
-    }
-
-    setCurrentPage(0); // Reset to first page when filtering
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
+
+  useEffect(() => {
+    applyFilters();
+  }, [filters, statusFilter, allcollectionsitesstaff]);
 
 
   useEffect(() => {
@@ -271,10 +299,25 @@ const CollectionSiteStaffArea = () => {
 
 
   const handleEditClick = (collectionsitestaff) => {
-
     setSelectedCollectionSiteStaffId(collectionsitestaff.id);
     setEditCollectionsiteStaff(collectionsitestaff);
     setShowEditModal(true);
+
+    // Handle permission data conversion
+    let permissionData = [];
+    let permissionTypeValue = "specific";
+
+    if (collectionsitestaff.permission === "all") {
+      // If permission is "all", select all permissions
+      permissionData = allPermissions.map((p) => p.value);
+      setPermissionType("all");
+    } else {
+      // If permission is an array or comma-separated string
+      permissionData = Array.isArray(collectionsitestaff.permission)
+        ? collectionsitestaff.permission
+        : (collectionsitestaff.permission?.split(",") || []);
+      setPermissionType("specific");
+    }
 
     setFormData({
       user_account_id: collectionsitestaff.user_account_id,
@@ -282,9 +325,7 @@ const CollectionSiteStaffArea = () => {
       staffName: collectionsitestaff.staffName,
       email: collectionsitestaff.useraccount_email,
       password: collectionsitestaff.useraccount_password,
-      permission: Array.isArray(collectionsitestaff.permission)
-        ? collectionsitestaff.permission
-        : (collectionsitestaff.permission?.split(",") || []),
+      permission: permissionData,
       status: collectionsitestaff.status
     });
   };
@@ -292,44 +333,42 @@ const CollectionSiteStaffArea = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
+      const updateData = {
+        ...formData,
+        permission: permissionType === "all" ? "all" : formData.permission.join(",") // Convert array to string if not "all"
+      };
+
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/updatedetail/${selectedCollectionsiteStaffId}`,
-        formData,
+        updateData, // Send the processed data instead of formData
       );
 
-      // Find existing record (to keep fields like created_at etc.)
-      const existingcollectionsitestaff = allcollectionsitesstaff.find(
-        (collectionsitesstaff) => collectionsitesstaff.id === selectedCollectionsiteStaffId
-      );
-
-      // Build updated record locally
+      // Create the updated record with the new data from the form
       const updatedcollectionsitestaff = {
-        ...existingcollectionsitestaff, // keep old unchanged fields
-        collectionsitesid: formData.collectionsitesid,
+        ...editCollectionsitestaff, // Use the original staff data
+        collectionsite_id: formData.collectionsitesid,
         staffName: formData.staffName,
-        email: formData.email,
-        password: formData.password,
-        permission: formData.permission,
+        useraccount_email: formData.email,
+        useraccount_password: formData.password,
+        permission: permissionType === "all" ? "all" : formData.permission,
+        status: formData.status,
         updated_at: new Date().toISOString(),
       };
 
-      // Replace in collectionsitesstaff
-      setAllCollectionsitesstaff((prev) =>
-        prev.map((collectionsitestaff) =>
-          collectionsitestaff.id === selectedCollectionsiteStaffId ? updatedcollectionsitestaff : collectionsitestaff
+      // Update both states immediately
+      setAllCollectionsitesstaff(prev =>
+        prev.map(item =>
+          item.id === selectedCollectionsiteStaffId ? updatedcollectionsitestaff : item
         )
       );
 
-      // Replace in filtered collectionsitesstaff
-      setCollectionsitesstaff((prev) =>
-        prev.map((collectionsitestaff) =>
-          collectionsitestaff.id === selectedCollectionsiteStaffId ? updatedcollectionsitestaff : collectionsitestaff
+      setCollectionsitesstaff(prev =>
+        prev.map(item =>
+          item.id === selectedCollectionsiteStaffId ? updatedcollectionsitestaff : item
         )
       );
+
       notifySuccess("Collection Site Staff Updated Successfully");
-
-      setSelectedCollectionSiteStaffId("");
-      setEditCollectionsiteStaff("");
       setShowEditModal(false);
       resetFormData();
     } catch (error) {
@@ -349,40 +388,30 @@ const CollectionSiteStaffArea = () => {
   // Handle status update
   const handleStatusClick = async (id, option) => {
     try {
-      // Send status update request to backend
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/collectionsitestaff/edit/${id}`,
         { data: { status: option } },
         { headers: { "Content-Type": "application/json" } }
       );
 
-      // Assuming the response is successful, set success message
       setSuccessMessage(response.data.message);
       setTimeout(() => setSuccessMessage(""), 3000);
 
-      // Find the existing record
-      const existing = allcollectionsitesstaff.find(
-        (item) => item.id === id
+      // Update both states immediately
+      setAllCollectionsitesstaff(prev =>
+        prev.map(item =>
+          item.id === id ? { ...item, status: option } : item
+        )
       );
 
-      // Build updated record
-      const updated = {
-        ...existing,
-        status: option,
-      };
-
-      // Update in allcollectionsitesstaff
-      setAllCollectionsitesstaff((prev) =>
-        prev.map((item) => (item.id === id ? updated : item))
-      );
-
-      // Update in filtered collectionsitestaff
-      setCollectionsitesstaff((prev) =>
-        prev.map((item) => (item.id === id ? updated : item))
+      setCollectionsitesstaff(prev =>
+        prev.map(item =>
+          item.id === id ? { ...item, status: option } : item
+        )
       );
 
       // Close the dropdown after status change
-      setStatusOptionsVisibility((prev) => ({
+      setStatusOptionsVisibility(prev => ({
         ...prev,
         [id]: false,
       }));
@@ -390,8 +419,6 @@ const CollectionSiteStaffArea = () => {
       console.error("Error updating status:", error);
     }
   };
-
-
   useEffect(() => {
     const anyModalOpen = showAddModal || showDeleteModal || showEditModal || showHistoryModal;
 
@@ -525,7 +552,8 @@ const CollectionSiteStaffArea = () => {
               id="statusFilter"
               className="form-control"
               style={{ width: "auto" }}
-              onChange={(e) => handleFilterChange("status", e.target.value)}
+              value={statusFilter} // Yeh line add karein
+              onChange={(e) => setStatusFilter(e.target.value)} // Yeh line change karein
             >
               <option value="">All</option>
               <option value="inactive">InActive</option>
@@ -581,20 +609,20 @@ const CollectionSiteStaffArea = () => {
             <tr className="text-center">
               {columns.map(({ label, placeholder, field }) => (
                 <th key={field} className="col-md-1 px-2">
-
                   <div className="d-flex flex-column align-items-center">
                     <input
                       type="text"
                       className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                       placeholder={`Search ${label}`}
-                      onChange={(e) => handleFilterChange(field, e.target.value)}
+                      value={filters[field] || ""} // Yeh line change karein
+                      onChange={(e) =>
+                        handleFilterChange(field, e.target.value) // Yeh line change karein
+                      }
                       style={{ minWidth: "160px", maxWidth: "150px", width: "100%" }}
-
                     />
                     <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                       {label}
                     </span>
-
                   </div>
                 </th>
               ))}
@@ -877,7 +905,7 @@ const CollectionSiteStaffArea = () => {
                           {getPermissionDisplayText()}
                         </button>
 
-                        <ul className="dropdown-menu p-2" style={{ minWidth: "100%" }}>
+                        <ul className="dropdown-menu p-2" style={{ minWidth: "100%", width: "300px" }}>
                           <li>
                             <label className="dropdown-item d-flex align-items-center gap-2">
                               <input
@@ -995,11 +1023,28 @@ const CollectionSiteStaffArea = () => {
                     historyData.map((log, index) => {
                       const {
                         staffName,
+                        email,
+                        useraccount_email,
+                        collectionsite_id,
                         permission,
+                        status,
                         created_at,
-                        updated_at,
-                        status
+                        updated_at
                       } = log;
+
+                      // Get collection site name from collectionsites array using collectionsite_id
+                      const getCollectionSiteName = (siteId) => {
+                        const site = collectionsites.find(site => site.id === siteId);
+                        return site ? site.name : `Site #${siteId}`;
+                      };
+
+                      const collectionSiteName = collectionsite_id
+                        ? getCollectionSiteName(collectionsite_id)
+                        : "N/A";
+
+                      // Use email or useraccount_email
+                      const staffEmail = email || useraccount_email || "N/A";
+
                       // Determine timestamp and person depending on status type:
                       const time =
                         status === "added" || status === "active"
@@ -1016,7 +1061,7 @@ const CollectionSiteStaffArea = () => {
                             marginBottom: "10px",
                           }}
                         >
-                          {/* Added */}
+                          {/* Added or Updated */}
                           {(status === "added" || status === "updated") && (
                             <div
                               style={{
@@ -1030,38 +1075,52 @@ const CollectionSiteStaffArea = () => {
                                 marginTop: status === "updated" ? "5px" : "0px",
                               }}
                             >
-                              Collection Site Staff: <b>{staffName}</b> was{" "}
-                              <b style={{ color: "green" }}>{status}</b> by Registration Admin at{" "}
-                              {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
+                              <div><b>Collection Site Staff status:</b> {status}</div>
+                              <div><b>Name:</b> {staffName}</div>
+                              <div><b>Email:</b> {staffEmail}</div>
+                              <div><b>Collection Site:</b> {collectionSiteName}</div>
+                              <div><b>Permission:</b> {permission === "all" ? "All Pages Access" : permission}</div>
+
+                              {status === "added" && created_at && (
+                                <div>
+                                  <b>Created At:</b> {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                </div>
+                              )}
+
+                              {status === "updated" && updated_at && (
+                                <div>
+                                  <b>Updated At:</b> {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                </div>
+                              )}
                             </div>
                           )}
-                          {/* Active */}
-                          {(status === "active" ||
-                            status === "inactive") && (
-                              <div
-                                style={{
-                                  padding: "10px 15px",
-                                  borderRadius: "15px",
-                                  backgroundColor:
-                                    status === "active"
-                                      ? "#cce5ff"
-                                      : "#f8d7da", // blue or red
-                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                  maxWidth: "75%",
-                                  fontSize: "14px",
-                                  textAlign: "left",
-                                  marginTop: "5px",
-                                }}
-                              >
-                                Collection Site Staff: <b>{staffName}</b>{" "}
-                                was <b>{status}</b> by Registration Admin at{" "}
-                                {moment(
+
+                          {/* Active or Inactive */}
+                          {(status === "active" || status === "inactive") && (
+                            <div
+                              style={{
+                                padding: "10px 15px",
+                                borderRadius: "15px",
+                                backgroundColor:
                                   status === "active"
-                                    ? created_at
-                                    : updated_at
-                                ).format("DD MMM YYYY, h:mm A")}
-                              </div>
-                            )}
+                                    ? "#cce5ff"
+                                    : "#f8d7da", // blue or red
+                                boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                                maxWidth: "75%",
+                                fontSize: "14px",
+                                textAlign: "left",
+                                marginTop: "5px",
+                              }}
+                            >
+                              <b>Collection Site Staff:</b> {staffName}{" "}
+                              was <b>{status}</b> by Registration Admin at{" "}
+                              {moment(
+                                status === "active"
+                                  ? created_at
+                                  : updated_at
+                              ).format("DD MMM YYYY, h:mm A")}
+                            </div>
+                          )}
                         </div>
                       );
                     })
@@ -1074,7 +1133,6 @@ const CollectionSiteStaffArea = () => {
           </div>
         </>
       )}
-
       <Modal show={showModal}
         onHide={closeModal}
         size="lg"

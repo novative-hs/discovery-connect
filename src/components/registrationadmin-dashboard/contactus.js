@@ -15,6 +15,14 @@ const ContactUS = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 10;
+  const [filters, setFilters] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+    message: "",
+    created_at: ""
+  });
 
   const tableHeaders = [
     { label: "Name", key: "name" },
@@ -41,6 +49,24 @@ const ContactUS = () => {
     }
   };
 
+  const applyFilters = () => {
+    let filtered = [...contact_us];
+
+    // Har filter ko apply karein
+    Object.entries(filters).forEach(([field, value]) => {
+      if (value) {
+        filtered = filtered.filter((contact) => {
+          const fieldValue = contact[field]?.toString().toLowerCase() || "";
+          const searchValue = value.toLowerCase();
+          return fieldValue.includes(searchValue);
+        });
+      }
+    });
+
+    setFilteredContactus(filtered);
+    setCurrentPage(0);
+  };
+
   useEffect(() => {
     const pages = Math.max(
       1,
@@ -58,30 +84,22 @@ const ContactUS = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    let filtered = [];
-
-    if (value.trim() === "") {
-      filtered = contact_us;
-    } else {
-      filtered = contact_us.filter((contact_us) =>
-        contact_us[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase())
-      );
-    }
-
-    setFilteredContactus(filtered);
-    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-    setCurrentPage(0);
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
+
+  useEffect(() => {
+    applyFilters();
+  }, [filters, contact_us]);
 
   const id = sessionStorage.getItem("userID");
   if (id === null) {
     return <div>Loading...</div>;
   }
 
-  
+
 
   const currentData = filteredContactus.slice(
     currentPage * itemsPerPage,
@@ -102,7 +120,8 @@ const ContactUS = () => {
                         type="text"
                         className="form-control form-control-sm bg-light border-0 shadow-sm text-center"
                         placeholder={`Search ${label}`}
-                        onChange={(e) => handleFilterChange(key, e.target.value)}
+                        value={filters[key] || ""} // Yeh line change karein
+                        onChange={(e) => handleFilterChange(key, e.target.value)} // Yeh line change karein
                       />
                       <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-10">
                         {label}

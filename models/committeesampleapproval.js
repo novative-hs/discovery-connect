@@ -27,10 +27,10 @@ const createcommitteesampleapprovalTable = () => {
     }
   });
 };
-const insertCommitteeApproval = async (cartId, senderId, committeeType , callback) => {
+const insertCommitteeApproval = async (cartId, senderId, committeeType, callback) => {
   try {
     const connection = mysqlConnection.promise();
-    const orderId = cartId; 
+    const orderId = cartId;
 
     // 1. Fetch committee members (only active ones)
     let memberQuery = "";
@@ -207,7 +207,7 @@ const getAllOrderByCommittee = async (id, page, pageSize, searchField, searchVal
     const offset = (page - 1) * pageSize;
     const connection = mysqlConnection.promise();
 
-    let whereClause = `WHERE 1=1`; 
+    let whereClause = `WHERE 1=1`;
     const params = [id]; // committee_member_id 
 
     if (searchField && searchValue) {
@@ -342,6 +342,8 @@ LIMIT ? OFFSET ?;
     }
   });
 };
+
+
 
 
 module.exports = {

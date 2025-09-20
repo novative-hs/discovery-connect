@@ -53,6 +53,14 @@ const CollectionSiteArea = () => {
     status: "",
   });
 
+  const [filters, setFilters] = useState({
+    CollectionSiteName: "",
+    CollectionSiteType: "",
+    phoneNumber: "",
+    created_at: "",
+    status: ""
+  });
+
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(collectionsites.length / itemsPerPage);
@@ -130,11 +138,72 @@ const CollectionSiteArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/get-reg-history/${filterType}/${id}`
       );
       const data = await response.json();
-      setHistoryData(data);
-      "Data", data;
+
+      // Enhance history data with current collection site details if needed
+      if (data && data.length > 0) {
+        // Check if this is a staff-related history entry (missing collection site details)
+        const enhancedData = data.map(record => {
+          if (!record.CollectionSiteName && !record.phoneNumber) {
+            // This is likely a staff-related record, find the current collection site
+            const currentSite = allcollectionsites.find(site => site.id === id);
+            if (currentSite) {
+              return {
+                ...record,
+                isStaffRelated: true,
+                currentSiteData: {
+                  CollectionSiteName: currentSite.CollectionSiteName,
+                  phoneNumber: currentSite.phoneNumber,
+                  city: currentSite.city,
+                  district: currentSite.district,
+                  country: currentSite.country,
+                  fullAddress: currentSite.fullAddress
+                }
+              };
+            }
+          }
+          return { ...record, isStaffRelated: false };
+        });
+
+        setHistoryData(enhancedData);
+      } else {
+        setHistoryData(data);
+      }
     } catch (error) {
       console.error("Error fetching history:", error);
     }
+  };
+
+
+  const applyFilters = () => {
+    let filtered = [...allcollectionsites];
+
+    // Har filter ko apply karein
+    Object.entries(filters).forEach(([field, value]) => {
+      if (value) {
+        filtered = filtered.filter((collectionsite) => {
+          const fieldValue = collectionsite[field]?.toString().toLowerCase() || "";
+          const searchValue = value.toLowerCase();
+
+          // Status ke liye exact match
+          if (field === "status") {
+            return fieldValue === searchValue;
+          }
+
+          // Baaki fields ke liye partial match
+          return fieldValue.includes(searchValue);
+        });
+      }
+    });
+
+    // Status filter bhi apply karein agar set hai
+    if (statusFilter) {
+      filtered = filtered.filter((collectionsite) =>
+        collectionsite.status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+
+    setCollectionsites(filtered);
+    setCurrentPage(0);
   };
 
   // Call this function when opening the modal
@@ -186,28 +255,15 @@ const CollectionSiteArea = () => {
   };
 
   const handleFilterChange = (field, value) => {
-    setSearchTerm(value);
-
-    if (!value) {
-      setCollectionsites(allcollectionsites);
-    } else {
-      const filtered = allcollectionsites.filter((collectionsite) => {
-        const fieldValue = collectionsite[field]?.toString().toLowerCase();
-        const searchValue = value.toLowerCase();
-
-        // Use exact match for 'status', partial match for others
-        if (field === "status") {
-          return fieldValue === searchValue;
-        }
-
-        return fieldValue?.includes(searchValue);
-      });
-
-      setCollectionsites(filtered);
-    }
-
-    setCurrentPage(0); // Reset to first page when filtering
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
+
+  useEffect(() => {
+    applyFilters();
+  }, [filters, statusFilter, allcollectionsites]);
 
   useEffect(() => {
     const updatedFilteredCollectionsite = collectionsites.filter(
@@ -284,20 +340,23 @@ const CollectionSiteArea = () => {
       const file = new File([blob], "logo.jpg", { type: "image/jpeg" });
       logodata = file;
     }
+
     setSelectedCollectionSiteId(collectionsite.id);
     setEditCollectionsite(collectionsite);
     setShowEditModal(true);
+
+    // Use the ID values from the collectionsite object if available, otherwise fall back to name values
     setFormData({
       user_account_id: collectionsite.user_account_id,
       CollectionSiteName: collectionsite.CollectionSiteName,
       CollectionSiteType: collectionsite.CollectionSiteType,
-      city: collectionsite.cityid,
-      district: collectionsite.districtid,
-      country: collectionsite.countryid,
+      city: collectionsite.cityid || collectionsite.city, // Use ID field if available
+      district: collectionsite.districtid || collectionsite.district, // Use ID field if available
+      country: collectionsite.countryid || collectionsite.country, // Use ID field if available
       phoneNumber: collectionsite.phoneNumber,
       fullAddress: collectionsite.fullAddress,
       logo: logodata,
-      logoPreview: logoPreview, // ✅ use the correctly computed value
+      logoPreview: logoPreview,
       status: collectionsite.status,
     });
   };
@@ -319,9 +378,6 @@ const CollectionSiteArea = () => {
       newformData.append("logo", formData.logo);
     }
 
-    // Debugging: log the FormData
-
-
     try {
       const response = await axios.put(
         `${url}/admin/collectionsite/updatedetail/${selectedCollectionsiteId}`,
@@ -333,40 +389,48 @@ const CollectionSiteArea = () => {
         }
       );
 
-      // Find existing record (to keep fields like created_at etc.)
+      // Find existing record
       const existingcollectionsite = allcollectionsites.find(
         (org) => org.id === selectedCollectionsiteId
       );
 
-      // Build updated record locally
+      // Look up the names from your arrays USING THE FORM DATA (ID values)
+      const cityName = cityname.find(city => city.id == formData.city)?.name || formData.city;
+      const districtName = districtname.find(district => district.id == formData.district)?.name || formData.district;
+      const countryName = countryname.find(country => country.id == formData.country)?.name || formData.country;
+
+      // Build updated record locally with both ID and name values
       const updatedcollectionsite = {
         ...existingcollectionsite, // keep old unchanged fields
         CollectionSiteName: formData.CollectionSiteName,
         phoneNumber: formData.phoneNumber,
         CollectionSiteType: formData.CollectionSiteType,
         fullAddress: formData.fullAddress,
-        city: formData.city,
-        district: formData.district,
-        country: formData.country,
+        city: cityName, // Use the name for display
+        district: districtName, // Use the name for display
+        country: countryName, // Use the name for display
+        cityid: formData.city, // Preserve the ID for editing
+        districtid: formData.district, // Preserve the ID for editing
+        countryid: formData.country, // Preserve the ID for editing
         updated_at: new Date().toISOString(),
       };
 
-      // Replace in allorganizations
+      // Replace in allcollectionsites
       setAllCollectionsites((prev) =>
         prev.map((collectionsite) =>
           collectionsite.id === selectedCollectionsiteId ? updatedcollectionsite : collectionsite
         )
       );
 
-      // Replace in filtered organizations
+      // Replace in filtered collectionsites
       setCollectionsites((prev) =>
         prev.map((collectionsite) =>
           collectionsite.id === selectedCollectionsiteId ? updatedcollectionsite : collectionsite
         )
       );
+
       notifySuccess("Update collection site successfully");
       setShowEditModal(false);
-
       resetFormData();
     } catch (error) {
       console.error("Update error:", error);
@@ -375,7 +439,6 @@ const CollectionSiteArea = () => {
       );
     }
   };
-
   const handleToggleStatusOptions = (id) => {
     setStatusOptionsVisibility((prev) => ({
       ...prev,
@@ -434,6 +497,13 @@ const CollectionSiteArea = () => {
       console.error("Error updating status:", error);
     }
   };
+
+  useEffect(() => {
+    if (showHistoryModal) {
+      console.log("History Data:", historyData);
+    }
+  }, [showHistoryModal, historyData]);
+
   useEffect(() => {
     const anyModalOpen =
       showAddModal || showDeleteModal || showEditModal || showHistoryModal;
@@ -594,7 +664,8 @@ const CollectionSiteArea = () => {
                   id="statusFilter"
                   className="form-control"
                   style={{ width: "auto" }}
-                  onChange={(e) => handleFilterChange("status", e.target.value)}
+                  value={statusFilter} // Yeh line add karein
+                  onChange={(e) => setStatusFilter(e.target.value)} // Yeh line change karein
                 >
                   <option value="">All</option>
                   <option value="inactive">InActive</option>
@@ -655,8 +726,9 @@ const CollectionSiteArea = () => {
                           type="text"
                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                           placeholder={`Search ${label}`}
+                          value={filters[field] || ""} // Yeh line change karein
                           onChange={(e) =>
-                            handleFilterChange(field, e.target.value)
+                            handleFilterChange(field, e.target.value) // Yeh line change karein
                           }
                           style={{
                             minWidth: "205px",
@@ -1082,7 +1154,7 @@ const CollectionSiteArea = () => {
                   <div className="modal-content">
                     {/* Modal Header */}
                     <div className="modal-header">
-                      <h5 className="modal-title">History</h5>
+                      <h5 className="modal-title">Collection Site History</h5>
                       <button
                         type="button"
                         className="close"
@@ -1105,87 +1177,111 @@ const CollectionSiteArea = () => {
                       style={{
                         maxHeight: "500px",
                         overflowY: "auto",
-                        backgroundColor: "#e5ddd5", // WhatsApp-style background
+                        backgroundColor: "#e5ddd5",
                         padding: "15px",
                         borderRadius: "10px",
                       }}
                     >
                       {historyData && historyData.length > 0 ? (
-                        historyData.map((log, index) => {
-                          const {
-                            CollectionSiteName,
-                            created_at,
-                            updated_at,
-                            status,
-                          } = log;
+                        // Filter out staff-related entries and only show collection site history
+                        historyData
+                          .filter(log => !log.isStaffRelated) // This line filters out staff entries
+                          .map((log, index) => {
+                            const {
+                              CollectionSiteName,
+                              created_at,
+                              updated_at,
+                              status,
+                              phoneNumber,
+                              city_name,
+                              country_name,
+                              district_name,
+                              fullAddress,
+                            } = log;
 
-                          // Determine timestamp and person depending on status type:
-                          const time =
-                            status === "added" || status === "active"
-                              ? created_at
-                              : updated_at;
+                            // Determine timestamp depending on status type
+                            const time =
+                              status === "added" || status === "active"
+                                ? created_at
+                                : updated_at;
 
-                          return (
-                            <div
-                              key={index}
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "flex-start",
-                                marginBottom: "10px",
-                              }}
-                            >
-                              {/* Added */}
-                              {(status === "added" || status === "updated") && (
-                                <div
-                                  style={{
-                                    padding: "10px 15px",
-                                    borderRadius: "15px",
-                                    backgroundColor: status === "added" ? "#ffffff" : "#dcf8c6",
-                                    boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                    maxWidth: "75%",
-                                    fontSize: "14px",
-                                    textAlign: "left",
-                                    marginTop: status === "updated" ? "5px" : "0px",
-                                  }}
-                                >
-                                  Collectionsite: <b>{CollectionSiteName}</b> was{" "}
-                                  <b style={{ color: "green" }}>{status}</b> by Registration Admin at{" "}
-                                  {moment(status === "added" ? created_at : updated_at).format("DD MMM YYYY, h:mm A")}
-                                </div>
-                              )}
-                              {/* Active */}
-                              {(status === "active" ||
-                                status === "inactive") && (
+                            return (
+                              <div
+                                key={index}
+                                style={{
+                                  display: "flex",
+                                  flexDirection: "column",
+                                  alignItems: "flex-start",
+                                  marginBottom: "16px",
+                                }}
+                              >
+                                {/* For 'added' or 'updated' statuses */}
+                                {(status === "added" || status === "updated") && (
                                   <div
                                     style={{
-                                      padding: "10px 15px",
-                                      borderRadius: "15px",
-                                      backgroundColor:
-                                        status === "active"
-                                          ? "#cce5ff"
-                                          : "#f8d7da", // blue or red
-                                      boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                      maxWidth: "75%",
+                                      backgroundColor: status === "updated" ? "#dcf8c6" : "#ffffff",
+                                      border: "1px solid #ccc",
+                                      borderRadius: "18px",
+                                      padding: "16px",
+                                      maxWidth: "85%",
+                                      boxShadow: "0 3px 6px rgba(0,0,0,0.1)",
                                       fontSize: "14px",
-                                      textAlign: "left",
-                                      marginTop: "5px",
+                                      lineHeight: "1.5",
+                                      fontFamily: "Segoe UI, sans-serif",
                                     }}
                                   >
-                                    <b>Collectionsite:</b> {CollectionSiteName}{" "}
-                                    was <b>{status}</b> by Registration Admin at{" "}
-                                    {moment(
-                                      status === "active"
-                                        ? created_at
-                                        : updated_at
-                                    ).format("DD MMM YYYY, h:mm A")}
+                                    <div style={{ marginBottom: "8px", fontWeight: "bold", color: "#555" }}>
+                                      Collection Site {status === "added" ? "added" : "updated"}
+                                    </div>
+                                    <div><b>Name:</b> {CollectionSiteName || "N/A"}</div>
+                                    <div><b>Phone:</b> {phoneNumber || "N/A"}</div>
+                                    <div><b>Country:</b> {country_name || "N/A"}</div>
+                                    <div><b>District:</b> {district_name || "N/A"}</div>
+                                    <div><b>City:</b> {city_name || "N/A"}</div>
+                                    <div><b>Address:</b> {fullAddress || "N/A"}</div>
+
+                                    {/* Conditionally show created_at or updated_at */}
+                                    {status === "added" && created_at && (
+                                      <div>
+                                        <b>Created At:</b> {moment(created_at).format("DD MMM YYYY, h:mm A")}
+                                      </div>
+                                    )}
+
+                                    {status === "updated" && updated_at && (
+                                      <div>
+                                        <b>Updated At:</b> {moment(updated_at).format("DD MMM YYYY, h:mm A")}
+                                      </div>
+                                    )}
                                   </div>
                                 )}
-                            </div>
-                          );
-                        })
+
+                                {/* For 'active' or 'inactive' — status only */}
+                                {(status === "active" || status === "inactive") && (
+                                  <div
+                                    style={{
+                                      backgroundColor: status === "active" ? "#e6f4ea" : "#fdecea",
+                                      borderLeft: `6px solid ${status === "active" ? "#28a745" : "#dc3545"}`,
+                                      borderRadius: "12px",
+                                      padding: "12px 16px",
+                                      maxWidth: "70%",
+                                      fontSize: "14px",
+                                      color: "#333",
+                                      fontFamily: "Segoe UI, sans-serif",
+                                    }}
+                                  >
+                                    Collection Site was <b>{status}</b> at
+                                    {updated_at && (
+                                      <div>
+                                        {moment(updated_at).format("DD MMM YYYY, h:mm A")} by <b>Registration Admin</b>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
                       ) : (
-                        <p className="text-left">No history available.</p>
+                        <p className="text-left">No collection site history available.</p>
                       )}
                     </div>
                   </div>
@@ -1193,7 +1289,6 @@ const CollectionSiteArea = () => {
               </div>
             </>
           )}
-
         </div>
       </div>
       <Modal
@@ -1219,7 +1314,17 @@ const CollectionSiteArea = () => {
             <div className="p-3">
               <div className="row g-3">
                 {fieldsToShowInOrder.map(({ field, label }) => {
-                  const value = selectedCollectionSite[field];
+                  // For city, district, country fields, check if we have ID fields
+                  let value = selectedCollectionSite[field];
+
+                  if (field === "city" && selectedCollectionSite.cityid) {
+                    value = cityname.find(city => city.id == selectedCollectionSite.cityid)?.name || value;
+                  } else if (field === "district" && selectedCollectionSite.districtid) {
+                    value = districtname.find(district => district.id == selectedCollectionSite.districtid)?.name || value;
+                  } else if (field === "country" && selectedCollectionSite.countryid) {
+                    value = countryname.find(country => country.id == selectedCollectionSite.countryid)?.name || value;
+                  }
+
                   if (value === undefined) return null;
 
                   return (
@@ -1229,7 +1334,7 @@ const CollectionSiteArea = () => {
                           {label}
                         </span>
                         <span className="fs-6 text-dark">
-                          {value?.toString() || "----"}
+                          {value || "----"}
                         </span>
                       </div>
                     </div>

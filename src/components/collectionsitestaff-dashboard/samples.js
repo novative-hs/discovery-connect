@@ -92,6 +92,7 @@ const SampleArea = () => {
   const [gender, setGender] = useState("");
   const [collectionSite, setCollectionSite] = useState("");
   const [visibility, setVisibility] = useState("");
+  const [ageFilter, setAgeFilter] = useState("");
 
   const [transferDetails, setTransferDetails] = useState({
     TransferTo: id,
@@ -234,6 +235,17 @@ const SampleArea = () => {
     setActions(splitActions);
   }, []);
 
+  useEffect(() => {
+    if (ageFilter) {
+      const filtered = samples.filter(sample =>
+        sample.age && sample.age.toString().includes(ageFilter)
+      );
+      setFilteredSamplename(filtered);
+    } else {
+      setFilteredSamplename(samples);
+    }
+  }, [ageFilter, samples]);
+
   // Fetch countries from backend
   useEffect(() => {
 
@@ -316,7 +328,6 @@ const SampleArea = () => {
         ownResponseurl += `&${filterString}`;
         receivedResponseurl += `&${filterString}`;
       }
-
 
       const [ownResponse, receivedResponse] = await Promise.all([
         axios.get(ownResponseurl),
@@ -584,7 +595,7 @@ const SampleArea = () => {
   };
 
 
-const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return; // 🛑 Prevent double submission
 
@@ -1201,7 +1212,7 @@ const handleSubmit = async (e) => {
         )}
         <div className="text-danger fw-bold" style={{ marginTop: "-20px" }}>
           <h6>
-            Note: Click on Location Id's to see Sample Picture.
+            Note: Click on Location Id to see Sample Picture.
           </h6>
           <h6>
             Note: Click on Sample Icon to see Pooled Sample History.
@@ -1217,7 +1228,6 @@ const handleSubmit = async (e) => {
 
           {/* FILTERS SECTION */}
           <div className="d-flex flex-wrap gap-4 align-items-end">
-
             {/* Date From */}
             <div className="form-group">
               <label className="form-label fw-semibold mb-1">Date From</label>
@@ -1254,9 +1264,6 @@ const handleSubmit = async (e) => {
               />
             </div>
 
-
-
-
             {/* Analyte */}
             <div className="form-group">
               <label className="form-label fw-semibold mb-1">Analyte</label>
@@ -1292,8 +1299,25 @@ const handleSubmit = async (e) => {
               </select>
             </div>
 
+            {/* Age Filter - NEW */}
+            <div className="form-group">
+              <label className="form-label fw-semibold mb-1">Age</label>
+              <input
+                type="number"
+                className="form-control border rounded-3"
+                placeholder="Enter age"
+                style={{ width: "200px", height: "42px" }}
+                value={ageFilter}
+                onChange={(e) => {
+                  setAgeFilter(e.target.value);
+                  // handleFilterChange("age", e.target.value);
+                }}
+                min="0"
+              />
+            </div>
+
             {/* Clear Button */}
-            {(analyte || gender || dateFrom || dateTo) && (
+            {(analyte || gender || ageFilter || dateFrom || dateTo) && (
               <div className="form-group">
                 <label className="d-block mb-1">&nbsp;</label>
                 <button
@@ -1301,6 +1325,7 @@ const handleSubmit = async (e) => {
                   onClick={() => {
                     setAnalyte("");
                     setGender("");
+                    setAgeFilter("");
                     setCollectionSite("");
                     setVisibility("");
                     setDateFrom("");
@@ -2926,294 +2951,294 @@ const handleSubmit = async (e) => {
                     <div className="modal-body">
                       {/* Parallel Columns - 5 columns */}
                       <div className="row">
-                       
-                          <>
-                            {/* Only show selected fields in pool mode */}
-                            <div className="col-md-12">
-                              <div className="row">
-                                <div className="form-group col-md-6">
-                                  <label>
-                                    Analyte <span className="text-danger">*</span>
-                                  </label>
 
-                                  {showEditPoolModal ? (
-                                    <input
-                                      type="text"
-                                      className="form-control"
-                                      name="Analyte"
-                                      value={formData.Analyte || ""}
-                                      disabled
-                                      style={{
-                                        height: "45px",
-                                        fontSize: "14px",
-                                        backgroundColor: "#f5f5f5",
-                                      }}
-                                    />
-                                  ) : (
-                                    <select
-                                      className="form-control"
-                                      name="Analyte"
-                                      value={formData.Analyte}
-                                      onChange={(e) => {
-                                        setFormData((prev) => ({
-                                          ...prev,
-                                          Analyte: e.target.value,
-                                        }));
-                                      }}
-                                      required
-                                      style={{
-                                        height: "45px",
-                                        fontSize: "14px",
-                                        backgroundColor: !formData.Analyte ? "#fdecea" : "#fff",
-                                      }}
-                                    >
-                                      <option value="" disabled hidden>
-                                        Select Analyte
-                                      </option>
-                                      {analyteOptions.map((analyte, index) => (
-                                        <option key={index} value={analyte}>
-                                          {analyte}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  )}
+                        <>
+                          {/* Only show selected fields in pool mode */}
+                          <div className="col-md-12">
+                            <div className="row">
+                              <div className="form-group col-md-6">
+                                <label>
+                                  Analyte <span className="text-danger">*</span>
+                                </label>
 
-                                </div>
-                                <div className="form-group col-md-6">
-                                  <label>
-                                    Location (IDs){" "}
-                                    <span className="text-danger">*</span>
-                                  </label>
-                                  <InputMask
-                                    mask="999-999-999"
-                                    maskChar={null}
-                                    value={formData.locationids}
-                                    onChange={handleInputChange}
-                                  >
-                                    {(inputProps) => (
-                                      <input
-                                        {...inputProps}
-                                        type="text"
-                                        className="form-control"
-                                        name="locationids"
-                                        placeholder="000-000-000"
-                                        style={{
-                                          height: "45px",
-                                          fontSize: "14px",
-                                          backgroundColor: !formData.locationids
-                                            ? "#fdecea"
-                                            : "#fff",
-                                        }}
-                                        required
-                                        title="Location ID's = Room Number, Freezer ID and Box ID"
-                                      />
-                                    )}
-                                  </InputMask>
-                                </div>
-                                <div className="form-group col-md-6">
-                                  <label className="mb-2">
-                                    Final Concentration <span className="text-danger">*</span>
-                                  </label>
-                                  <div
+                                {showEditPoolModal ? (
+                                  <input
+                                    type="text"
+                                    className="form-control"
+                                    name="Analyte"
+                                    value={formData.Analyte || ""}
+                                    disabled
                                     style={{
-                                      display: "flex",
-                                      gap: "10px",
-                                      alignItems: "center",
+                                      height: "45px",
+                                      fontSize: "14px",
+                                      backgroundColor: "#f5f5f5",
                                     }}
-                                  >
-                                    {["Low", "Medium", "High"].map((level) => (
-                                      <div key={level} className="form-check">
-                                        <input
-                                          className="form-check-input"
-                                          type="radio"
-                                          name="finalConcentration"
-                                          id={`finalConcentration-${level}`}
-                                          value={level}
-                                          checked={formData.finalConcentration === level} // <-- FIXED
-                                          onChange={(e) => {
-                                            setFormData((prev) => ({
-                                              ...prev,
-                                              finalConcentration: e.target.value,
-                                            }));
-                                            setMode(e.target.value)
-                                          }}
-                                          required
-                                        />
-
-                                        <label
-                                          className="form-check-label"
-                                          htmlFor={`finalConcentration-${level}`}
-                                        >
-                                          {level}
-                                        </label>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-
-                                <div className="form-group col-md-6">
-                                  <label>
-                                    Volume <span className="text-danger">*</span>
-                                  </label>
-                                  <div className="d-flex">
-                                    <input
-                                      type="number"
-                                      className="form-control me-2"
-                                      name="volume"
-                                      value={formData.volume}
-                                      onChange={(e) => {
-                                        const value = parseFloat(e.target.value);
-                                        if (
-                                          e.target.value === "" ||
-                                          (value * 10) % 5 === 0
-                                        ) {
-                                          handleInputChange(e);
-                                        }
-                                      }}
-                                      step="0.5"
-                                      min="0.5"
-                                      max={
-                                        unitMaxValues[formData.VolumeUnit] ||
-                                        undefined
-                                      }
-                                      required
-                                      style={{
-                                        height: "45px",
-                                        fontSize: "14px",
-                                        backgroundColor: !formData.volume
-                                          ? "#fdecea"
-                                          : "#fff",
-                                      }}
-                                    />
-                                    <select
-                                      className="form-control"
-                                      name="VolumeUnit"
-                                      value={formData.VolumeUnit}
-                                      onChange={handleInputChange}
-                                      required
-                                      style={{
-                                        height: "45px",
-                                        fontSize: "14px",
-                                        backgroundColor: !formData.VolumeUnit
-                                          ? "#fdecea"
-                                          : "#fff",
-                                      }}
-                                    >
-                                      <option value="" hidden></option>
-                                      {volumeunitNames.map((name, index) => (
-                                        <option key={index} value={name}>
-                                          {name}
-                                        </option>
-                                      ))}
-                                    </select>
-                                  </div>
-                                  {/* Validation message*/}
-                                  {formData.volume &&
-                                    formData.VolumeUnit &&
-                                    parseFloat(formData.volume) >
-                                    (unitMaxValues[formData.VolumeUnit] ||
-                                      Infinity) && (
-                                      <small className="text-danger mt-1">
-                                        Value must be less than or equal to{" "}
-                                        {unitMaxValues[
-                                          formData.VolumeUnit
-                                        ].toLocaleString()}
-                                        .
-                                      </small>
-                                    )}
-                                </div>
-                                <div className="form-group col-md-6">
-                                  <label>
-                                    Sample Type Matrix <span className="text-danger">*</span>
-                                  </label>
+                                  />
+                                ) : (
                                   <select
                                     className="form-control"
-                                    name="SampleTypeMatrix"
-                                    value={formData.SampleTypeMatrix}
-                                    onChange={handleInputChange}
+                                    name="Analyte"
+                                    value={formData.Analyte}
+                                    onChange={(e) => {
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        Analyte: e.target.value,
+                                      }));
+                                    }}
                                     required
                                     style={{
                                       height: "45px",
                                       fontSize: "14px",
-                                      backgroundColor: !formData.SampleTypeMatrix ? "#fdecea" : "#fff",
+                                      backgroundColor: !formData.Analyte ? "#fdecea" : "#fff",
                                     }}
                                   >
-                                    <option value="" hidden></option>
-                                    {selectedSampleTypeMatrixes.map((matrix, index) => (
-                                      <option key={index} value={matrix}>
-                                        {matrix}
+                                    <option value="" disabled hidden>
+                                      Select Analyte
+                                    </option>
+                                    {analyteOptions.map((analyte, index) => (
+                                      <option key={index} value={analyte}>
+                                        {analyte}
                                       </option>
                                     ))}
                                   </select>
+                                )}
 
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>
+                                  Location (IDs){" "}
+                                  <span className="text-danger">*</span>
+                                </label>
+                                <InputMask
+                                  mask="999-999-999"
+                                  maskChar={null}
+                                  value={formData.locationids}
+                                  onChange={handleInputChange}
+                                >
+                                  {(inputProps) => (
+                                    <input
+                                      {...inputProps}
+                                      type="text"
+                                      className="form-control"
+                                      name="locationids"
+                                      placeholder="000-000-000"
+                                      style={{
+                                        height: "45px",
+                                        fontSize: "14px",
+                                        backgroundColor: !formData.locationids
+                                          ? "#fdecea"
+                                          : "#fff",
+                                      }}
+                                      required
+                                      title="Location ID's = Room Number, Freezer ID and Box ID"
+                                    />
+                                  )}
+                                </InputMask>
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label className="mb-2">
+                                  Final Concentration <span className="text-danger">*</span>
+                                </label>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    gap: "10px",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  {["Low", "Medium", "High"].map((level) => (
+                                    <div key={level} className="form-check">
+                                      <input
+                                        className="form-check-input"
+                                        type="radio"
+                                        name="finalConcentration"
+                                        id={`finalConcentration-${level}`}
+                                        value={level}
+                                        checked={formData.finalConcentration === level} // <-- FIXED
+                                        onChange={(e) => {
+                                          setFormData((prev) => ({
+                                            ...prev,
+                                            finalConcentration: e.target.value,
+                                          }));
+                                          setMode(e.target.value)
+                                        }}
+                                        required
+                                      />
+
+                                      <label
+                                        className="form-check-label"
+                                        htmlFor={`finalConcentration-${level}`}
+                                      >
+                                        {level}
+                                      </label>
+                                    </div>
+                                  ))}
                                 </div>
+                              </div>
 
-                                <div className="form-group col-md-6">
-                                  <label>
-                                    Container Type{" "}
-                                    <span className="text-danger">*</span>
-                                  </label>
+                              <div className="form-group col-md-6">
+                                <label>
+                                  Volume <span className="text-danger">*</span>
+                                </label>
+                                <div className="d-flex">
+                                  <input
+                                    type="number"
+                                    className="form-control me-2"
+                                    name="volume"
+                                    value={formData.volume}
+                                    onChange={(e) => {
+                                      const value = parseFloat(e.target.value);
+                                      if (
+                                        e.target.value === "" ||
+                                        (value * 10) % 5 === 0
+                                      ) {
+                                        handleInputChange(e);
+                                      }
+                                    }}
+                                    step="0.5"
+                                    min="0.5"
+                                    max={
+                                      unitMaxValues[formData.VolumeUnit] ||
+                                      undefined
+                                    }
+                                    required
+                                    style={{
+                                      height: "45px",
+                                      fontSize: "14px",
+                                      backgroundColor: !formData.volume
+                                        ? "#fdecea"
+                                        : "#fff",
+                                    }}
+                                  />
                                   <select
                                     className="form-control"
-                                    name="ContainerType"
-                                    value={formData.ContainerType}
+                                    name="VolumeUnit"
+                                    value={formData.VolumeUnit}
                                     onChange={handleInputChange}
                                     required
                                     style={{
                                       height: "45px",
                                       fontSize: "14px",
-                                      backgroundColor: !formData.ContainerType
+                                      backgroundColor: !formData.VolumeUnit
                                         ? "#fdecea"
                                         : "#fff",
                                     }}
                                   >
                                     <option value="" hidden></option>
-                                    {containertypeNames.map((name, index) => (
+                                    {volumeunitNames.map((name, index) => (
                                       <option key={index} value={name}>
                                         {name}
                                       </option>
                                     ))}
                                   </select>
                                 </div>
-                                <div className="form-group col-md-6">
-                                  <label>
-                                    Sample Picture{" "}
-                                    <span className="text-danger"></span>
-                                  </label>
-                                  <div className="d-flex align-items-center">
-                                    <input
-                                      name="logo"
-                                      type="file"
-                                      id="logo"
-                                      accept="image/*"
-                                      onChange={(e) =>
-                                        logoHandler(e.target.files[0])
-                                      }
-                                      // required={!formData.logo} // only required if no logo is set
-                                      className="form-control"
+                                {/* Validation message*/}
+                                {formData.volume &&
+                                  formData.VolumeUnit &&
+                                  parseFloat(formData.volume) >
+                                  (unitMaxValues[formData.VolumeUnit] ||
+                                    Infinity) && (
+                                    <small className="text-danger mt-1">
+                                      Value must be less than or equal to{" "}
+                                      {unitMaxValues[
+                                        formData.VolumeUnit
+                                      ].toLocaleString()}
+                                      .
+                                    </small>
+                                  )}
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>
+                                  Sample Type Matrix <span className="text-danger">*</span>
+                                </label>
+                                <select
+                                  className="form-control"
+                                  name="SampleTypeMatrix"
+                                  value={formData.SampleTypeMatrix}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: !formData.SampleTypeMatrix ? "#fdecea" : "#fff",
+                                  }}
+                                >
+                                  <option value="" hidden></option>
+                                  {selectedSampleTypeMatrixes.map((matrix, index) => (
+                                    <option key={index} value={matrix}>
+                                      {matrix}
+                                    </option>
+                                  ))}
+                                </select>
+
+                              </div>
+
+                              <div className="form-group col-md-6">
+                                <label>
+                                  Container Type{" "}
+                                  <span className="text-danger">*</span>
+                                </label>
+                                <select
+                                  className="form-control"
+                                  name="ContainerType"
+                                  value={formData.ContainerType}
+                                  onChange={handleInputChange}
+                                  required
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: !formData.ContainerType
+                                      ? "#fdecea"
+                                      : "#fff",
+                                  }}
+                                >
+                                  <option value="" hidden></option>
+                                  {containertypeNames.map((name, index) => (
+                                    <option key={index} value={name}>
+                                      {name}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="form-group col-md-6">
+                                <label>
+                                  Sample Picture{" "}
+                                  <span className="text-danger"></span>
+                                </label>
+                                <div className="d-flex align-items-center">
+                                  <input
+                                    name="logo"
+                                    type="file"
+                                    id="logo"
+                                    accept="image/*"
+                                    onChange={(e) =>
+                                      logoHandler(e.target.files[0])
+                                    }
+                                    // required={!formData.logo} // only required if no logo is set
+                                    className="form-control"
+                                    style={{
+                                      height: "45px",
+                                      fontSize: "14px",
+                                      border: !formData.TestResult ? "1px solid #ced4da" : "1px solid #ced4da",
+                                    }}
+                                  />
+                                  {logoPreview && (
+                                    <img
+                                      src={logoPreview}
+                                      alt="Logo Preview"
+                                      width="80"
                                       style={{
-                                        height: "45px",
-                                        fontSize: "14px",
-                                        border: !formData.TestResult ? "1px solid #ced4da" : "1px solid #ced4da",
+                                        marginLeft: "20px",
+                                        borderRadius: "5px",
                                       }}
                                     />
-                                    {logoPreview && (
-                                      <img
-                                        src={logoPreview}
-                                        alt="Logo Preview"
-                                        width="80"
-                                        style={{
-                                          marginLeft: "20px",
-                                          borderRadius: "5px",
-                                        }}
-                                      />
-                                    )}
-                                  </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
-                          </>
-                      
+                          </div>
+                        </>
+
                       </div>
                     </div>
                     <div className="modal-footer d-flex justify-content-between align-items-center">

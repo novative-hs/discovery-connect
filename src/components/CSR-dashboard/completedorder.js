@@ -26,8 +26,9 @@ const CompletedSampleArea = () => {
   const [dispatchVia, setDispatchVia] = useState("");
   const [dispatchSlip, setDispatchSlip] = useState(null);
   const fileInputRef = useRef(null);
-  const [currency, setCurrency] = useState(null)
-
+  const [currency, setCurrency] = useState(null);
+  const [nameFilter, setNameFilter] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -38,12 +39,9 @@ const CompletedSampleArea = () => {
   const tableHeaders = [
     { label: "Order ID", key: "tracking_id" },
     { label: "Order Date", key: "created_at" },
-    { label: "Product Location", key: "source_name" },
+    { label: "Product Location", key: "product_location" },
     { label: "Customer Name", key: "researcher_name" },
-    // { label: "Customer Contact", key: "user_email" },
     { label: "Customer City", key: "city_name" },
-    // { label: "Customer Adress", key: "fullAddress" },
-    // { label: "Order Status", key: "order_status" },
   ];
 
   const fetchSamples = async (action = staffAction) => {
@@ -74,6 +72,7 @@ const CompletedSampleArea = () => {
       setCurrency("PKR");
     }
   }, [filteredSamplename]);
+
   const groupedSamples = filteredSamplename.reduce((acc, sample) => {
     const key = sample.tracking_id;
     if (!acc[key]) acc[key] = [];
@@ -102,23 +101,61 @@ const CompletedSampleArea = () => {
     setCurrentPage(event.selected);
   };
 
-  const handleFilterChange = (field, value) => {
-    let filtered = [];
-    if (value.trim() === "") {
-      filtered = samples;
-    } else {
-      filtered = samples.filter((sample) =>
-        sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
+  // Apply both name and city filters together
+  useEffect(() => {
+    let filtered = samples;
+
+    // Apply name filter
+    if (nameFilter.trim() !== "") {
+      filtered = filtered.filter(sample =>
+        sample.researcher_name?.toLowerCase().includes(nameFilter.toLowerCase())
       );
     }
+
+    // Apply city filter
+    if (cityFilter.trim() !== "") {
+      filtered = filtered.filter(sample =>
+        sample.city_name?.toLowerCase().includes(cityFilter.toLowerCase())
+      );
+    }
+
     setFilteredSamplename(filtered);
     setCurrentPage(0);
+  }, [samples, nameFilter, cityFilter]);
+
+  const handleFilterChange = (field, value) => {
+    if (field === "researcher_name") {
+      setNameFilter(value);
+    } else if (field === "city_name") {
+      setCityFilter(value);
+    } else {
+      let filtered = [];
+
+      if (value.trim() === "") {
+        filtered = samples;
+      } else {
+        // Special handling for product location search
+        if (field === "product_location") {
+          filtered = samples.filter((sample) => {
+            const location = sample.BiobankName || sample.CollectionSiteName || "";
+            return location.toLowerCase().includes(value.toLowerCase());
+          });
+        } else {
+          // Standard search for other fields
+          filtered = samples.filter((sample) =>
+            sample[field]?.toString().toLowerCase().includes(value.toLowerCase())
+          );
+        }
+      }
+
+      setFilteredSamplename(filtered);
+      setCurrentPage(0);
+    }
   };
 
   const handleOrderStatusSubmit = async () => {
     setIsSubmitting(true);
 
-    // // Validation
     if (!deliveryDate || !deliveryTime || !dispatchVia || !dispatchSlip) {
       notifyError("Please select all the details.");
       return setIsSubmitting(false);
@@ -162,6 +199,7 @@ const CompletedSampleArea = () => {
       }
     }
   };
+
   const handleCancelModal = () => {
     setShowOrderStatusModal(false);
     setOrderStatus("Dispatched");
@@ -170,7 +208,6 @@ const CompletedSampleArea = () => {
     setDeliveryDate("");
     setDeliveryTime("");
 
-    // clear actual file input field
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -187,6 +224,7 @@ const CompletedSampleArea = () => {
         <h4 className="text-center text-dark fw-bold mb-4">
           Completed Orders
         </h4>
+
         <div className="table-responsive w-100">
           <table className="table table-bordered table-hover text-center align-middle table-sm shadow-sm rounded">
             <thead className="table-primary text-white">
@@ -238,17 +276,11 @@ const CompletedSampleArea = () => {
                         )].join(", ")
                         : "---"}
                     </td>
-
-
-
                     <td>{records[0].researcher_name}</td>
-                    {/* <td>{records[0].user_email} | {records[0].phoneNumber}</td> */}
                     <td>{records[0].city_name}</td>
-                    {/* <td>{records[0].fullAddress} ,{records[0].district_name} District,{records[0].city_name},{records[0].country_name}</td> */}
-                    {/* <td>{records[0].order_status}</td> */}
                     <td>
                       <button
-                        className="btn btn-outline-success btn-sm d-flex justify-content-center align-items-center gap-2  rounded-pill shadow"
+                        className="btn btn-outline-success btn-sm d-flex justify-content-center align-items-center gap-2 rounded-pill shadow"
                         onClick={() => {
                           setSelectedUserSamples(records);
                           setSelectedUserName(researcher);
@@ -280,7 +312,7 @@ const CompletedSampleArea = () => {
             onHide={() => setShowOrderStatusModal(false)}
             size="lg"
             centered
-            scrollable // makes modal body scrollable when content is too tall
+            scrollable
           >
             <Modal.Header closeButton>
               <Modal.Title>
@@ -289,20 +321,17 @@ const CompletedSampleArea = () => {
             </Modal.Header>
             <Modal.Body
               className="p-4 bg-light rounded-3 shadow-sm"
-              style={{ maxHeight: "80vh", overflowY: "auto" }} // max height & scroll
+              style={{ maxHeight: "80vh", overflowY: "auto" }}
             >
-
               <div className="table-responsive">
                 <table className="table table-bordered table-hover text-center table-sm align-middle bg-white rounded shadow-sm">
                   <thead className="table-success text-dark">
                     <tr>
                       <th>Item</th>
                       <th>Qty X Volume</th>
-
                       <th>
                         Unit Price ({selectedUserSamples[0]?.SamplePriceCurrency || '$'})
                       </th>
-
                     </tr>
                   </thead>
                   <tbody>
@@ -312,15 +341,12 @@ const CompletedSampleArea = () => {
                           <div>
                             <div className="fw-semibold">{sample.Analyte}</div>
                             <div className="text-muted small">
-                              {/* Gender and Age */}
                               {(sample.gender || sample.age) && (
                                 <>
                                   {sample.gender}
                                   {sample.age ? `${sample.gender ? ', ' : ''}${sample.age} years` : ''}
                                 </>
                               )}
-
-                              {/* Separator + TestResult */}
                               {(sample.TestResult || sample.TestResultUnit) && (sample.gender || sample.age) && ' | '}
                               {(sample.TestResult || sample.TestResultUnit) && (
                                 <>
@@ -330,12 +356,9 @@ const CompletedSampleArea = () => {
                             </div>
                           </div>
                         </td>
-
                         <td>
                           {sample.quantity || 0} × {sample.volume || 0}{sample.volumeUnit || ''}
                         </td>
-
-
                         <td style={{ textAlign: "right" }}>
                           {sample.price
                             ? `${Number(sample.price).toLocaleString("en-US", {
@@ -344,18 +367,6 @@ const CompletedSampleArea = () => {
                             })}`
                             : "-"}
                         </td>
-
-                        {/* <td style={{ textAlign: "right" }}>
-                          {sample.totalpayment
-                            ? `${Number(sample.totalpayment).toLocaleString("en-US", {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2
-                            })}`
-                            : "-"}
-                        </td> */}
-
-
-
                       </tr>
                     ))}
                   </tbody>
@@ -371,7 +382,6 @@ const CompletedSampleArea = () => {
                         {selectedUserSamples[0].subtotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </td>
                     </tr>
-                    {/* tax */}
                     <tr>
                       <td colSpan="2" className="text-end fw-bold">
                         Tax (
@@ -390,8 +400,6 @@ const CompletedSampleArea = () => {
                           : Number(selectedUserSamples[0].tax_value).toLocaleString()}
                       </td>
                     </tr>
-
-                    {/* Paltform charges */}
                     <tr>
                       <td colSpan="2" className="text-end fw-bold">
                         Platform Charges ({selectedUserSamples[0].platform_value.toString().replace(/\.00$/, "")}{selectedUserSamples[0]?.platform_type === "percent" ? "%" : ""})
@@ -407,7 +415,6 @@ const CompletedSampleArea = () => {
                           : Number(selectedUserSamples[0].platform_value).toLocaleString()}
                       </td>
                     </tr>
-                    {/* freight charges */}
                     <tr>
                       <td colSpan="2" className="text-end fw-bold">
                         Freight Charges ({selectedUserSamples[0].freight_value.toString().replace(/\.00$/, "")}{selectedUserSamples[0]?.freight_type === "percent" ? "%" : ""})
@@ -435,10 +442,8 @@ const CompletedSampleArea = () => {
                       </td>
                     </tr>
                   </tfoot>
-
                 </table>
               </div>
-
             </Modal.Body>
           </Modal>
         )}
@@ -448,4 +453,3 @@ const CompletedSampleArea = () => {
 };
 
 export default CompletedSampleArea;
-

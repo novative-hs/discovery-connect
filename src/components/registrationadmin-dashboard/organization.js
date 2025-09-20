@@ -48,6 +48,14 @@ const OrganizationArea = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
+  const [filters, setFilters] = useState({
+    OrganizationName: "",
+    phoneNumber: "",
+    HECPMDCRegistrationNo: "",
+    type: "",
+    created_at: "",
+    status: ""
+  });
   const itemsPerPage = 10;
   // Calculate total pages
   const totalPages = Math.ceil(organizations.length / itemsPerPage);
@@ -137,6 +145,39 @@ const OrganizationArea = () => {
     setShowHistoryModal(true);
   };
 
+  // Ye naya function add karein
+  const applyFilters = () => {
+    let filtered = [...allorganizations];
+
+    // Har filter ko apply karein
+    Object.entries(filters).forEach(([field, value]) => {
+      if (value) {
+        filtered = filtered.filter((organization) => {
+          const fieldValue = organization[field]?.toString().toLowerCase() || "";
+          const searchValue = value.toLowerCase();
+
+          // Status ke liye exact match
+          if (field === "status") {
+            return fieldValue === searchValue;
+          }
+
+          // Baaki fields ke liye partial match
+          return fieldValue.includes(searchValue);
+        });
+      }
+    });
+
+    // Status filter bhi apply karein agar set hai
+    if (statusFilter) {
+      filtered = filtered.filter((organization) =>
+        organization.status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+
+    setOrganizations(filtered);
+    setCurrentPage(0);
+  };
+
   // Fetch organizations from backend when component loads
   useEffect(() => {
     const fetchAll = async () => {
@@ -178,31 +219,18 @@ const OrganizationArea = () => {
     }
   };
 
+
   const handleFilterChange = (field, value) => {
-    setSearchTerm(value);
-
-    if (!value) {
-      // If no value, reset list
-      setOrganizations(allorganizations);
-    } else {
-      const filtered = allorganizations.filter((organization) => {
-        const fieldValue = organization[field]?.toString().toLowerCase();
-        const searchValue = value.toLowerCase();
-
-        // Use exact match for status
-        if (field === "status") {
-          return fieldValue === searchValue;
-        }
-
-        // Use partial match for other fields
-        return fieldValue?.includes(searchValue);
-      });
-
-      setOrganizations(filtered);
-    }
-
-    setCurrentPage(0); // Reset to first page when filtering
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
+
+
+  useEffect(() => {
+    applyFilters();
+  }, [filters, statusFilter, allorganizations]);
 
   useEffect(() => {
     const updatedFilteredOrganization = organizations.filter((organization) => {
@@ -275,47 +303,53 @@ const OrganizationArea = () => {
       const file = new File([blob], "logo.jpg", { type: "image/jpeg" });
       logodata = file;
     }
+
     setSelectedOrganizationId(organization.id);
     setEditOrganization(organization);
     setShowEditModal(true);
+
+    // Find the actual IDs for city, district, and country
+    const cityId = cityname.find(city => city.name === organization.city)?.id || organization.city;
+    const districtId = districtname.find(district => district.name === organization.district)?.id || organization.district;
+    const countryId = countryname.find(country => country.name === organization.country)?.id || organization.country;
+
     setFormData({
       user_account_id: organization.user_account_id,
       OrganizationName: organization.OrganizationName,
-      city: organization.cityid,
-      district: organization.districtid,
-      country: organization.countryid,
+      city: cityId, // Use the ID, not the name
+      district: districtId, // Use the ID, not the name
+      country: countryId, // Use the ID, not the name
       phoneNumber: organization.phoneNumber,
       fullAddress: organization.fullAddress,
       type: organization.type,
       HECPMDCRegistrationNo: organization.HECPMDCRegistrationNo,
       website: organization.website,
       logo: logodata,
-      logoPreview: logoPreview, // ✅ use the correctly computed value
+      logoPreview: logoPreview,
       status: organization.status,
     });
   };
+  const handleUpdate = async (e) => {
+    e.preventDefault();
 
- const handleUpdate = async (e) => {
-  e.preventDefault();
+    const newformData = new FormData();
+    newformData.append("OrganizationName", formData.OrganizationName);
+    newformData.append("phoneNumber", formData.phoneNumber);
+    newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
+    newformData.append("website", formData.website);
+    newformData.append("fullAddress", formData.fullAddress);
+    newformData.append("city", formData.city);
+    newformData.append("district", formData.district);
+    newformData.append("country", formData.country);
+    newformData.append("status", "inactive");
+    newformData.append("type", formData.type);
 
-  const newformData = new FormData();
-  newformData.append("OrganizationName", formData.OrganizationName);
-  newformData.append("phoneNumber", formData.phoneNumber);
-  newformData.append("HECPMDCRegistrationNo", formData.HECPMDCRegistrationNo);
-  newformData.append("website", formData.website);
-  newformData.append("fullAddress", formData.fullAddress);
-  newformData.append("city", formData.city);
-  newformData.append("district", formData.district);
-  newformData.append("country", formData.country);
-  newformData.append("status", "inactive");
-  newformData.append("type", formData.type);
+    if (formData.logo) {
+      newformData.append("logo", formData.logo);
+    }
 
-  if (formData.logo) {
-    newformData.append("logo", formData.logo);
-  }
-
-  try {
-     const response = await axios.put(
+    try {
+      const response = await axios.put(
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/organization/update/${selectedOrganizationId}`,
         newformData,
         {
@@ -324,52 +358,56 @@ const OrganizationArea = () => {
           },
         }
       );
-    // Find existing record (to keep fields like created_at etc.)
-    const existingOrg = allorganizations.find(
-      (org) => org.id === selectedOrganizationId
-    );
 
-    // Build updated record locally
-    const updatedOrg = {
-      ...existingOrg, // keep old unchanged fields
-      OrganizationName: formData.OrganizationName,
-      phoneNumber: formData.phoneNumber,
-      HECPMDCRegistrationNo: formData.HECPMDCRegistrationNo,
-      website: formData.website,
-      fullAddress: formData.fullAddress,
-      city: formData.city,
-      district: formData.district,
-      country: formData.country,
-      type: formData.type,
-      // If you want, update updated_at here:
-      updated_at: new Date().toISOString(),
-    };
+      // Find existing record
+      const existingOrg = allorganizations.find(
+        (org) => org.id === selectedOrganizationId
+      );
 
-    // Replace in allorganizations
-    setAllOrganizations((prev) =>
-      prev.map((org) =>
-        org.id === selectedOrganizationId ? updatedOrg : org
-      )
-    );
+      // Look up the names from your arrays USING THE FORM DATA (not API response)
+      const cityName = cityname.find(city => city.id == formData.city)?.name || formData.city;
+      const districtName = districtname.find(district => district.id == formData.district)?.name || formData.district;
+      const countryName = countryname.find(country => country.id == formData.country)?.name || formData.country;
 
-    // Replace in filtered organizations
-    setOrganizations((prev) =>
-      prev.map((org) =>
-        org.id === selectedOrganizationId ? updatedOrg : org
-      )
-    );
+      // Build updated record locally with names instead of IDs
+      const updatedOrg = {
+        ...existingOrg, // keep old unchanged fields
+        OrganizationName: formData.OrganizationName,
+        phoneNumber: formData.phoneNumber,
+        HECPMDCRegistrationNo: formData.HECPMDCRegistrationNo,
+        website: formData.website,
+        fullAddress: formData.fullAddress,
+        city: cityName, // Use the name from lookup
+        district: districtName, // Use the name from lookup
+        country: countryName, // Use the name from lookup
+        type: formData.type,
+        updated_at: new Date().toISOString(),
+      };
 
-    notifySuccess("Organization Updated Successfully");
-    setShowEditModal(false);
-    resetFormData();
-  } catch (error) {
-    const errorMessage =
-      error?.response?.data?.error || "An unexpected error occurred";
-    notifyError(errorMessage);
-    setShowEditModal(false);
-  }
-};
+      // Replace in allorganizations
+      setAllOrganizations((prev) =>
+        prev.map((org) =>
+          org.id === selectedOrganizationId ? updatedOrg : org
+        )
+      );
 
+      // Replace in filtered organizations
+      setOrganizations((prev) =>
+        prev.map((org) =>
+          org.id === selectedOrganizationId ? updatedOrg : org
+        )
+      );
+
+      notifySuccess("Organization Updated Successfully");
+      setShowEditModal(false);
+      resetFormData();
+    } catch (error) {
+      const errorMessage =
+        error?.response?.data?.error || "An unexpected error occurred";
+      notifyError(errorMessage);
+      setShowEditModal(false);
+    }
+  };
 
   const handleToggleStatusOptions = (id) => {
     setStatusOptionsVisibility((prev) => ({
@@ -392,31 +430,31 @@ const OrganizationArea = () => {
       // Assuming the response is successful, set success message and hide the dropdown
       setSuccessMessage(response.data.message);
       setTimeout(() => setSuccessMessage(""), 3000);
-         const existingOrg = allorganizations.find(
-      (org) => org.id === selectedOrganizationId
-    );
+      const existingOrg = allorganizations.find(
+        (org) => org.id === selectedOrganizationId
+      );
 
-    // Build updated record locally
-    const updatedOrg = {
-      ...existingOrg, // keep old unchanged fields
-      status: option,
-      // If you want, update updated_at here:
-      updated_at: new Date().toISOString(),
-    };
+      // Build updated record locally
+      const updatedOrg = {
+        ...existingOrg, // keep old unchanged fields
+        status: option,
+        // If you want, update updated_at here:
+        updated_at: new Date().toISOString(),
+      };
 
-    // Replace in allorganizations
-    setAllOrganizations((prev) =>
-      prev.map((org) =>
-        org.id === selectedOrganizationId ? updatedOrg : org
-      )
-    );
+      // Replace in allorganizations
+      setAllOrganizations((prev) =>
+        prev.map((org) =>
+          org.id === selectedOrganizationId ? updatedOrg : org
+        )
+      );
 
-    // Replace in filtered organizations
-    setOrganizations((prev) =>
-      prev.map((org) =>
-        org.id === selectedOrganizationId ? updatedOrg : org
-      )
-    );
+      // Replace in filtered organizations
+      setOrganizations((prev) =>
+        prev.map((org) =>
+          org.id === selectedOrganizationId ? updatedOrg : org
+        )
+      );
 
       // Close the dropdown after status change
       setStatusOptionsVisibility((prev) => ({
@@ -599,11 +637,13 @@ const OrganizationArea = () => {
                 <label htmlFor="statusFilter" className="mb-0">
                   Status:
                 </label>
+
                 <select
                   id="statusFilter"
                   className="form-control"
                   style={{ width: "auto" }}
-                  onChange={(e) => handleFilterChange("status", e.target.value)}
+                  value={statusFilter} // Yeh line add karein
+                  onChange={(e) => setStatusFilter(e.target.value)} // Yeh line change karein
                 >
                   <option value="">All</option>
                   <option value="inactive">InActive</option>
@@ -665,8 +705,9 @@ const OrganizationArea = () => {
                           type="text"
                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                           placeholder={`Search ${label}`}
+                          value={filters[field] || ""} // Yeh line change karein
                           onChange={(e) =>
-                            handleFilterChange(field, e.target.value)
+                            handleFilterChange(field, e.target.value) // Yeh line change karein
                           }
                           style={{
                             minWidth: "160px",
@@ -1020,39 +1061,37 @@ const OrganizationArea = () => {
                           <select
                             className="form-control p-2"
                             name="city"
-                            value={formData.city} // Store the selected city ID in formData
-                            onChange={handleInputChange} // Handle change to update formData
+                            value={formData.city}
+                            onChange={handleInputChange}
                             required
                           >
-                            <option value="" disabled>
-                              Select City
-                            </option>
+                            <option value="" disabled>Select City</option>
                             {cityname.map((city) => (
-                              <option key={city.id} value={city.id}>
+                              <option key={city.id} value={city.id}> {/* Use city.id as value */}
                                 {city.name}
                               </option>
                             ))}
                           </select>
                         </div>
+
                         <div className="form-group">
                           <label>District</label>
                           <select
-                            className="form-control  p-2"
+                            className="form-control p-2"
                             name="district"
                             value={formData.district}
                             onChange={handleInputChange}
                             required
                           >
-                            <option value="" disabled>
-                              Select District
-                            </option>
+                            <option value="" disabled>Select District</option>
                             {districtname.map((district) => (
-                              <option key={district.id} value={district.id}>
+                              <option key={district.id} value={district.id}> {/* Use district.id as value */}
                                 {district.name}
                               </option>
                             ))}
                           </select>
                         </div>
+
                         <div className="form-group">
                           <label>Country</label>
                           <select
@@ -1062,11 +1101,9 @@ const OrganizationArea = () => {
                             onChange={handleInputChange}
                             required
                           >
-                            <option value="" disabled>
-                              Select Country
-                            </option>
+                            <option value="" disabled>Select Country</option>
                             {countryname.map((country) => (
-                              <option key={country.id} value={country.id}>
+                              <option key={country.id} value={country.id}> {/* Use country.id as value */}
                                 {country.name}
                               </option>
                             ))}

@@ -1,16 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import Pagination from "@ui/Pagination";
 
+// 🔹 Debounce hook
+function useDebounce(value, delay = 500) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+
+    return debouncedValue;
+}
+
 const CollectionsiteList = () => {
     const [allSites, setAllSites] = useState([]);
-    const [activeSites, setActiveSites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState({
         CollectionSiteName: "",
         CollectionSiteType: "",
         phoneNumber: "",
-        status: ""
+        fullAddress: "",
     });
 
     const [currentPage, setCurrentPage] = useState(0);
@@ -18,43 +29,12 @@ const CollectionsiteList = () => {
 
     const itemsPerPage = 10;
 
+    // 🔹 Apply debounce on filters
+    const debouncedFilters = useDebounce(filters, 500);
+
     useEffect(() => {
         fetchAllSites();
     }, []);
-
-    useEffect(() => {
-        // Only active sites
-        const active = allSites.filter(
-            (site) => site.status && site.status.toLowerCase() === "active"
-        );
-
-        // Apply filters
-        let filtered = active.filter((site) => {
-            return (
-                (!filters.CollectionSiteName ||
-                    site.CollectionSiteName?.toLowerCase().includes(
-                        filters.CollectionSiteName.toLowerCase()
-                    )) &&
-                (!filters.CollectionSiteType ||
-                    site.CollectionSiteType?.toLowerCase().includes(
-                        filters.CollectionSiteType.toLowerCase()
-                    )) &&
-                (!filters.phoneNumber ||
-                    site.phoneNumber?.toString().includes(filters.phoneNumber)) &&
-                (!filters.fullAddress ||
-                    site.fullAddress?.toLowerCase().includes(filters.fullAddress.toLowerCase()))
-            );
-        });
-
-        setActiveSites(filtered);
-
-        // update pagination
-        const pages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
-        setTotalPages(pages);
-        if (currentPage >= pages) {
-            setCurrentPage(0);
-        }
-    }, [allSites, filters, currentPage]);
 
     const fetchAllSites = async () => {
         try {
@@ -68,6 +48,50 @@ const CollectionsiteList = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    // 🔹 Filtering + Pagination with useMemo
+    const filteredSites = useMemo(() => {
+        const active = allSites.filter(
+            (site) => site.status && site.status.toLowerCase() === "active"
+        );
+
+        return active.filter((site) => {
+            return (
+                (!debouncedFilters.CollectionSiteName ||
+                    site.CollectionSiteName?.toLowerCase().includes(
+                        debouncedFilters.CollectionSiteName.toLowerCase()
+                    )) &&
+                (!debouncedFilters.CollectionSiteType ||
+                    site.CollectionSiteType?.toLowerCase().includes(
+                        debouncedFilters.CollectionSiteType.toLowerCase()
+                    )) &&
+                (!debouncedFilters.phoneNumber ||
+                    site.phoneNumber?.toString().includes(debouncedFilters.phoneNumber)) &&
+                (!debouncedFilters.fullAddress ||
+                    site.fullAddress
+                        ?.toLowerCase()
+                        .includes(debouncedFilters.fullAddress.toLowerCase()))
+            );
+        });
+    }, [allSites, debouncedFilters]);
+
+    const currentData = useMemo(() => {
+        const pages = Math.max(1, Math.ceil(filteredSites.length / itemsPerPage));
+        setTotalPages(pages);
+
+        if (currentPage >= pages) {
+            setCurrentPage(0);
+        }
+
+        return filteredSites.slice(
+            currentPage * itemsPerPage,
+            (currentPage + 1) * itemsPerPage
+        );
+    }, [filteredSites, currentPage]);
+
+    const handlePageChange = (event) => {
+        setCurrentPage(event.selected);
     };
 
     if (loading) {
@@ -90,18 +114,8 @@ const CollectionsiteList = () => {
         { label: "Collection Site Name", key: "CollectionSiteName" },
         { label: "Type", key: "CollectionSiteType" },
         { label: "Contact", key: "phoneNumber" },
-        { label: "full Address", key: "fullAddress" }
+        { label: "Full Address", key: "fullAddress" },
     ];
-
-    // Paginated data
-    const currentData = activeSites.slice(
-        currentPage * itemsPerPage,
-        (currentPage + 1) * itemsPerPage
-    );
-
-    const handlePageChange = (event) => {
-        setCurrentPage(event.selected);
-    };
 
     return (
         <section className="policy__area pb-40 overflow-hidden p-3">
@@ -122,7 +136,7 @@ const CollectionsiteList = () => {
                                                 type="text"
                                                 className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                                                 placeholder={`Search ${label}`}
-                                                value={filters[key]}
+                                                value={filters[key] || ""}
                                                 onChange={(e) =>
                                                     setFilters({ ...filters, [key]: e.target.value })
                                                 }
@@ -143,7 +157,10 @@ const CollectionsiteList = () => {
                                         <td>{site.CollectionSiteName || "----"}</td>
                                         <td>{site.CollectionSiteType || "----"}</td>
                                         <td>{site.phoneNumber || "----"}</td>
-                                        <td>{site.fullAddress || ""},{site.city || ""},{site.district || ""},{site.country || ""}</td>
+                                        <td>
+                                            {site.fullAddress || ""}, {site.city || ""},{" "}
+                                            {site.district || ""}, {site.country || ""}
+                                        </td>
                                     </tr>
                                 ))
                             ) : (

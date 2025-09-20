@@ -10,6 +10,7 @@ import {
 import Pagination from "@ui/Pagination";
 import moment from "moment";
 import * as XLSX from "xlsx";
+
 const ResearcherArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -32,10 +33,39 @@ const ResearcherArea = () => {
     email: "",
     phoneNumber: "",
     nameofOrganization: "",
-    // created_at: "",
     status: "",
-    // logo: ""
   });
+
+  // Replace individual filter states with this:
+  const [searchFilters, setSearchFilters] = useState({
+    ResearcherName: "",
+    email: "",
+    phoneNumber: "",
+    OrganizationName: "",
+    created_at: "",
+    status: ""
+  });
+
+  const [expandedOrders, setExpandedOrders] = useState([]);
+
+  const toggleExpand = (trackingId) => {
+    if (expandedOrders.includes(trackingId)) {
+      setExpandedOrders(expandedOrders.filter((id) => id !== trackingId));
+    } else {
+      setExpandedOrders([...expandedOrders, trackingId]);
+    }
+  };
+
+  const researcherName = orderhistoryData[0]?.researcher_name || "---";
+
+
+  // Individual filter states
+  const [nameFilter, setNameFilter] = useState("");
+  const [emailFilter, setEmailFilter] = useState("");
+  const [contactFilter, setContactFilter] = useState("");
+  const [organizationFilter, setOrganizationFilter] = useState("");
+  const [createdAtFilter, setCreatedAtFilter] = useState("");
+  const [statusSearchFilter, setStatusSearchFilter] = useState("");
 
   useEffect(() => {
     fetchResearchers();
@@ -48,38 +78,112 @@ const ResearcherArea = () => {
       );
       setResearchers(response.data);
       setAllResearchers(response.data);
+      setFilteredResearchers(response.data);
     } catch (error) {
       console.error("Error fetching researchers:", error);
     }
   };
 
-  const handleFilterChange = (field, value) => {
-    setSearchTerm(value);
-
-    if (!value) {
-      setResearchers(allResearchers);
-    } else {
-      const filtered = allResearchers.filter((researcher) => {
-        return researcher[field]
-          ?.toString()
-          .toLowerCase()
-          .includes(value.toLowerCase());
-      });
-      setResearchers(filtered);
-    }
-
-    setCurrentPage(0); // Reset to first page when filtering
-  };
-
+  // Apply all filters together
+  // Updated useEffect for filtering
   useEffect(() => {
-    const updatedFilteredResearchers = researchers.filter((researcher) => {
-      if (!statusFilter) return true;
-      return researcher.status.toLowerCase() === statusFilter.toLowerCase();
+    let filtered = allResearchers;
+
+    // Apply all search filters
+    Object.entries(searchFilters).forEach(([field, value]) => {
+      if (value.trim() !== "") {
+        filtered = filtered.filter(researcher => {
+          if (field === "created_at") {
+            return formatDate(researcher[field])?.toLowerCase().includes(value.toLowerCase());
+          }
+          return researcher[field]?.toLowerCase().includes(value.toLowerCase());
+        });
+      }
     });
 
-    setFilteredResearchers(updatedFilteredResearchers);
-    setCurrentPage(0); // Reset to first page when filtering
-  }, [researchers, statusFilter]);
+    // Apply status dropdown filter
+    if (statusFilter.trim() !== "") {
+      filtered = filtered.filter(researcher =>
+        researcher.status?.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+
+    setResearchers(filtered);
+    setFilteredResearchers(filtered);
+    setCurrentPage(0);
+  }, [allResearchers, searchFilters, statusFilter]);
+
+
+  const handleIndividualFilter = (field, value) => {
+    switch (field) {
+      case "ResearcherName":
+        setNameFilter(value);
+        break;
+      case "email":
+        setEmailFilter(value);
+        break;
+      case "phoneNumber":
+        setContactFilter(value);
+        break;
+      case "OrganizationName":
+        setOrganizationFilter(value);
+        break;
+      case "created_at":
+        setCreatedAtFilter(value);
+        break;
+      case "status":
+        setStatusSearchFilter(value);
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Utility function
+  const groupByOrder = (data) => {
+    return data.reduce((acc, item) => {
+      // unique key banado combination ka
+      const key = `${item.order_id}_${item.tracking_id}`;
+
+      if (!acc[key]) {
+        acc[key] = {
+          order_id: item.order_id,
+          tracking_id: item.tracking_id,
+          researcher_name: item.researcher_name,
+          order_status: item.order_status,
+          technicaladmin_status: item.technicaladmin_status,
+          scientific_committee_status: item.scientific_committee_status,
+          ethical_committee_status: item.ethical_committee_status,
+          subtotal: item.subtotal,
+          tax_value: item.tax_value,
+          tax_type: item.tax_type,
+          platform_value: item.platform_value,
+          platform_type: item.platform_type,
+          freight_value: item.freight_value,
+          freight_type: item.freight_type,
+          totalpayment: item.totalpayment,
+          SamplePriceCurrency: item.SamplePriceCurrency,
+          items: [],
+        };
+      }
+      acc[key].items.push(item);
+      return acc;
+    }, {});
+  };
+
+
+
+  // Updated filter handler
+  const handleFilterChange = (field, value) => {
+    setSearchFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+  };
 
   const currentData = filteredResearchers.slice(
     currentPage * itemsPerPage,
@@ -87,8 +191,9 @@ const ResearcherArea = () => {
   );
 
   const handlePageChange = (event) => {
-    setCurrentPage(event.selected); // React Paginate uses 0-based index
+    setCurrentPage(event.selected);
   };
+
   const handleDelete = async () => {
     try {
       const response = await axios.delete(
@@ -96,10 +201,10 @@ const ResearcherArea = () => {
       );
       if (response.data && response.data.message) {
         setSuccessMessage(response.data.message);
-        setTimeout(() => setSuccessMessage(""), 3000); // Clear message after 3 seconds
+        setTimeout(() => setSuccessMessage(""), 3000);
       }
 
-      fetchResearchers(); // Refresh data after delete
+      fetchResearchers();
       setShowDeleteModal(false);
       setSelectedResearcherId(null);
     } catch (error) {
@@ -112,17 +217,17 @@ const ResearcherArea = () => {
 
   const handleEditClick = (researcher) => {
     setSelectedResearcherId(researcher.id);
-    setEditResearcher(researcher); // Store the researcher data to edit
-    setShowEditModal(true); // Show the edit modal
+    setEditResearcher(researcher);
+    setShowEditModal(true);
     setFormData({
       ResearcherName: researcher.ResearcherName,
       email: researcher.email,
       phoneNumber: researcher.phoneNumber,
       OrganizationName: researcher.OrganizationName,
-      // created_at: researcher.created_at,
       status: researcher.status,
     });
   };
+
   const handleUpdate = async (e) => {
     e.preventDefault();
 
@@ -132,10 +237,14 @@ const ResearcherArea = () => {
         formData
       );
 
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/get`
+      const updatedResearchers = researchers.map(researcher =>
+        researcher.id === selectedResearcherId
+          ? { ...researcher, ...formData }
+          : researcher
       );
-      setResearchers(newResponse.data);
+
+      setResearchers(updatedResearchers);
+      setAllResearchers(updatedResearchers);
 
       setShowEditModal(false);
       setSuccessMessage("Researcher updated successfully.");
@@ -167,6 +276,7 @@ const ResearcherArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/orderhistory/${id}`
       );
       const data = await response.json();
+      console.log("API Response:", data);
       setOrderHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);
@@ -263,7 +373,7 @@ const ResearcherArea = () => {
 
     XLSX.writeFile(workbook, "Researcher_List.xlsx");
   };
-
+  const groupedOrders = groupByOrder(orderhistoryData);
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
@@ -273,10 +383,7 @@ const ResearcherArea = () => {
             <div className="d-flex flex-column justify-content-start justify-content-sm-start align-items-center gap-2 text-center w-100">
               {/* Success Message */}
               {successMessage && (
-                <div
-                  className="alert alert-success w-100 text-start"
-                  role="alert"
-                >
+                <div className="alert alert-success w-100 text-start" role="alert">
                   {successMessage}
                 </div>
               )}
@@ -293,9 +400,8 @@ const ResearcherArea = () => {
                     id="statusFilter"
                     className="form-control"
                     style={{ width: "auto" }}
-                    onChange={(e) =>
-                      handleFilterChange("status", e.target.value)
-                    }
+                    onChange={(e) => handleStatusFilterChange(e.target.value)}
+                    value={statusFilter}
                   >
                     <option value="">All</option>
                     <option value="pending">Pending</option>
@@ -369,9 +475,8 @@ const ResearcherArea = () => {
                           type="text"
                           className="form-control form-control-sm"
                           placeholder={placeholder}
-                          onChange={(e) =>
-                            handleFilterChange(field, e.target.value)
-                          }
+                          onChange={(e) => handleFilterChange(field, e.target.value)}
+                          value={searchFilters[field]}
                         />
                         <div className="fw-bold mt-1">{label}</div>
                       </th>
@@ -384,7 +489,6 @@ const ResearcherArea = () => {
                   {currentData.length > 0 ? (
                     currentData.map((researcher) => (
                       <tr key={researcher.id}>
-                        {/* <td>{researcher.id}</td> */}
                         <td>{researcher.ResearcherName}</td>
                         <td>{researcher.email}</td>
                         <td>{researcher.phoneNumber}</td>
@@ -429,10 +533,7 @@ const ResearcherArea = () => {
                               }
                               title="History"
                             >
-                              <FontAwesomeIcon
-                                icon={faReceipt}
-                                size="sm"
-                              />
+                              <FontAwesomeIcon icon={faReceipt} size="sm" />
                             </button>
                           </div>
                         </td>
@@ -461,6 +562,7 @@ const ResearcherArea = () => {
               />
             )}
           </div>
+
           {/* Edit Researcher Modal */}
           {showEditModal && (
             <>
@@ -818,156 +920,182 @@ const ResearcherArea = () => {
                       </div>
                     ) : (
                       <>
-                        {/* Researcher Name Styling */}
+                        {/* Researcher Name */}
                         <div className="mb-4 text-center">
                           <span className="h5 fw-bold text-primary">Researcher: </span>
-                          <span className="h5 text-dark">
-                            {orderhistoryData[0]?.researcher_name}
-                          </span>
+                          <span className="h5 text-dark">{researcherName}</span>
                         </div>
 
-                        <div className="mb-4 text-center d-flex justify-content-center gap-5 flex-wrap">
-                          <div>
-                            <span className="h6 fw-bold text-primary">Order Status: </span>
-                            <span className="h6 text-dark">
-                              {orderhistoryData[0]?.order_status || "---"}
-                            </span>
-                          </div>
-
-                          <div>
-                            <span className="h6 fw-bold text-primary">Technical Admin Status: </span>
-                            <span className="h6 text-dark">
-                              {orderhistoryData[0]?.technicaladmin_status || "---"}
-                            </span>
-                          </div>
-
-                          <div>
-                            <span className="h6 fw-bold text-primary">Scientific Committee Status: </span>
-                            <span className="h6 text-dark">
-                              {orderhistoryData[0]?.scientific_committee_status || "---"}
-                            </span>
-                          </div>
-
-                          <div>
-                            <span className="h6 fw-bold text-primary">Ethical Committee Status: </span>
-                            <span className="h6 text-dark">
-                              {orderhistoryData[0]?.ethical_committee_status || "---"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Table with modern styling */}
+                        {/* Orders Table */}
                         <div className="table-responsive">
                           <table className="table table-hover table-striped align-middle">
                             <thead className="table-dark">
                               <tr>
-                                <th>Analyte</th>
-                                <th>Gender</th>
-                                <th>Quantity X Volume</th>
-                                <th>TestResult & Unit</th>
-                                <th className="text-end">Price ({orderhistoryData[0].SamplePriceCurrency})</th>
-
-
+                                <th>Tracking ID</th>
+                                <th>Order Status</th>
+                                <th>Technical Admin</th>
+                                <th>Scientific Committee</th>
+                                <th>Ethical Committee</th>
+                                <th>Action</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {orderhistoryData.map((order, index) => (
-                                <tr key={index}>
-                                  <td>{order.Analyte}</td>
-                                  <td>{`${order.age || ""}  | ${order.gender}`}</td>
-                                  <td>{`${order.quantity} X ${order.Volume}${order.VolumeUnit}`}</td>
-                                  <td>{order.TestResult}{order.TestResultUnit}</td>
-                                  <td className="text-end">{order.price?.toLocaleString()}</td>
+                              {Object.entries(groupedOrders).map(([orderId, order], index) => (
+                                <React.Fragment key={orderId}>
+                                  {/* Parent Row */}
+                                  <tr>
+                                    <td>{order.tracking_id || "---"}</td>
+                                    <td>{order.order_status || "---"}</td>
+                                    <td>{order.technicaladmin_status || "---"}</td>
+                                    <td>{order.scientific_committee_status || "---"}</td>
+                                    <td>{order.ethical_committee_status || "---"}</td>
+                                    <td>
+                                      <button
+                                        className="btn btn-sm btn-primary"
+                                        onClick={() => toggleExpand(index)}
+                                      >
+                                        {expandedOrders.includes(index) ? "Hide" : "View Order"}
+                                      </button>
+                                    </td>
+                                  </tr>
 
+                                  {/* Expanded Details */}
+                                  {expandedOrders.includes(index) && (
+                                    <tr>
+                                      <td colSpan="6">
+                                        <div className="p-3 bg-light border rounded">
+                                          <h6 className="fw-bold mb-3">Order Details</h6>
 
-                                </tr>
+                                          <table className="table table-sm table-bordered">
+                                            <thead className="table-light">
+                                              <tr>
+                                                <th>Analyte</th>
+                                                <th>Gender</th>
+                                                <th>Quantity X Volume</th>
+                                                <th>Test Result & Unit</th>
+                                                <th className="text-end">
+                                                  Price ({order.SamplePriceCurrency})
+                                                </th>
+                                              </tr>
+                                            </thead>
+                                            <tbody>
+                                              {order.items.map((item, i) => (
+                                                <tr key={i}>
+                                                  <td>{item.Analyte}</td>
+                                                  <td>
+                                                    {item.age || item.gender ? (
+                                                      <>
+                                                        {item.age && `${item.age} years`}
+                                                        {item.age && item.gender && " | "}
+                                                        {item.gender}
+                                                      </>
+                                                    ) : (
+                                                      "---"
+                                                    )}
+                                                  </td>
+                                                  <td>{`${item.quantity} X ${item.Volume}${item.VolumeUnit}`}</td>
+                                                  <td>
+                                                    {item.TestResult}
+                                                    {item.TestResultUnit}
+                                                  </td>
+                                                  <td className="text-end">
+                                                    {item.price?.toLocaleString()}
+                                                  </td>
+                                                </tr>
+                                              ))}
+                                            </tbody>
+
+                                            {/* Summary Rows */}
+                                            <tfoot>
+                                              <tr>
+                                                <th colSpan="4" className="text-end">Subtotal</th>
+                                                <th className="text-end">
+                                                  {Number(order.subtotal).toLocaleString()}
+                                                </th>
+                                              </tr>
+                                              <tr>
+                                                <th colSpan="4" className="text-end">
+                                                  Tax ({order.tax_value}
+                                                  {order.tax_type === "percent" ? "%" : ""})
+                                                </th>
+                                                <th className="text-end">
+                                                  {order.tax_type === "percent"
+                                                    ? (
+                                                      (order.subtotal * order.tax_value) / 100
+                                                    ).toLocaleString("en-PK", {
+                                                      minimumFractionDigits: 2,
+                                                      maximumFractionDigits: 2,
+                                                    })
+                                                    : Number(order.tax_value || 0).toLocaleString("en-PK", {
+                                                      minimumFractionDigits: 2,
+                                                      maximumFractionDigits: 2,
+                                                    })}
+                                                </th>
+                                              </tr>
+                                              <tr>
+                                                <th colSpan="4" className="text-end">
+                                                  Platform Charges ({order.platform_value}
+                                                  {order.platform_type === "percent" ? "%" : ""})
+                                                </th>
+                                                <th className="text-end">
+                                                  {order.platform_type === "percent"
+                                                    ? (
+                                                      (order.subtotal * order.platform_value) / 100
+                                                    ).toLocaleString("en-PK", {
+                                                      minimumFractionDigits: 2,
+                                                      maximumFractionDigits: 2,
+                                                    })
+                                                    : Number(order.platform_value || 0).toLocaleString(
+                                                      "en-PK",
+                                                      {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2,
+                                                      }
+                                                    )}
+                                                </th>
+                                              </tr>
+                                              <tr>
+                                                <th colSpan="4" className="text-end">
+                                                  Freight Charges ({order.freight_value}
+                                                  {order.freight_type === "percent" ? "%" : ""})
+                                                </th>
+                                                <th className="text-end">
+                                                  {order.freight_type === "percent"
+                                                    ? (
+                                                      (order.subtotal * order.freight_value) / 100
+                                                    ).toLocaleString("en-PK", {
+                                                      minimumFractionDigits: 2,
+                                                      maximumFractionDigits: 2,
+                                                    })
+                                                    : Number(order.freight_value || 0).toLocaleString(
+                                                      "en-PK",
+                                                      {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2,
+                                                      }
+                                                    )}
+                                                </th>
+                                              </tr>
+                                              <tr className="table-success fw-bold">
+                                                <th colSpan="4" className="text-end">Total</th>
+                                                <th className="text-end">
+                                                  {order.totalpayment
+                                                    ? order.totalpayment.toLocaleString("en-PK", {
+                                                      minimumFractionDigits: 2,
+                                                      maximumFractionDigits: 2,
+                                                    })
+                                                    : ""}
+                                                </th>
+                                              </tr>
+                                            </tfoot>
+                                          </table>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )}
+                                </React.Fragment>
                               ))}
                             </tbody>
-                            <thead className="table-light">
-                              <tr>
-                                <th colSpan="3"></th>
-                                <th>Subtotal</th>
-                                <th className="text-end">{Number(orderhistoryData[0]?.subtotal).toLocaleString()}</th>
-                              </tr>
-                            </thead>
-                            <thead className="table-light">
-                              <tr>
-                                <th colSpan="3"></th>
-                                <th>Tax ({Number(orderhistoryData[0]?.tax_value).toLocaleString()}{orderhistoryData[0]?.tax_type === "percent" ? "%" : ""})</th>
-                                <th className="text-end">
-                                  {orderhistoryData[0]?.tax_type === "percent"
-                                    ? (
-                                      (orderhistoryData[0]?.subtotal * orderhistoryData[0]?.tax_value) / 100
-                                    ).toLocaleString("en-PK", {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    })
-                                    : Number(orderhistoryData[0]?.tax_value || 0).toLocaleString("en-PK", {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    })}</th>
-                              </tr>
-                            </thead>
-                            <thead className="table-light">
-                              <tr>
-                                <th colSpan="3"></th>
-                                <th>Paltform Charges ({Number(orderhistoryData[0]?.platform_value).toLocaleString()}{orderhistoryData[0]?.platform_type === "percent" ? "%" : ""})</th>
-                                <th className="text-end">
-                                  {orderhistoryData[0]?.tax_type === "percent"
-                                    ? (
-                                      (orderhistoryData[0]?.subtotal * orderhistoryData[0]?.platform_value) / 100
-                                    ).toLocaleString("en-PK", {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    })
-                                    : Number(orderhistoryData[0]?.platform_value || 0).toLocaleString("en-PK", {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    })}
-                                </th>
-                              </tr>
-                            </thead>
-                            <thead className="table-light">
-                              <tr>
-                                <th colSpan="3"></th>
-                                <th>
-                                  Freight Charges (
-                                  {Number(orderhistoryData[0]?.freight_value).toLocaleString()}
-                                  {orderhistoryData[0]?.freight_type === "percent" ? "%" : ""}
-                                  )
-                                </th>
-                                <th className="text-end">
-                                  {orderhistoryData[0]?.freight_type === "percent"
-                                    ? (
-                                      (orderhistoryData[0]?.subtotal * orderhistoryData[0]?.freight_value) / 100
-                                    ).toLocaleString("en-PK", {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    })
-                                    : Number(orderhistoryData[0]?.freight_value || 0).toLocaleString("en-PK", {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    })}
-                                </th>
-                              </tr>
-                            </thead>
-
-                            <thead className="table-light">
-                              <tr>
-                                <th colSpan="3"></th>
-                                <th>Total</th>
-                                <th className="text-end">
-                                  {orderhistoryData[0]?.totalpayment
-                                    ? orderhistoryData[0].totalpayment.toLocaleString("en-PK", {
-                                      minimumFractionDigits: 2,
-                                      maximumFractionDigits: 2,
-                                    })
-                                    : ""}
-                                </th>
-
-
-                              </tr>
-                            </thead>
                           </table>
                         </div>
                       </>
