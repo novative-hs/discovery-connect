@@ -45,6 +45,7 @@ const OrderPage = () => {
     nbc_file: false,
   });
   const [trackingID, setTrackingID] = useState(null);
+  const [filters, setFilters] = useState({});
 
 
   const ordersPerPage = 10;
@@ -84,6 +85,15 @@ const OrderPage = () => {
   });
   const [show, setShow] = useState(false);
   const [documentloading, setDocumentLoading] = useState(false);
+
+
+  const resetFilters = () => {
+    setFilters({});
+    setSearchField(null);
+    setSearchValue(null);
+    setCurrentPage(1);
+    fetchOrders(1, ordersPerPage);
+  };
 
   useEffect(() => {
     const storedUserID = sessionStorage.getItem("userID");
@@ -159,18 +169,21 @@ const OrderPage = () => {
 
 
   useEffect(() => {
-    if (!searchField || !searchValue) {
+    if (!filters || Object.keys(filters).length === 0) {
       setOrders(allOrdersRaw);
       return;
     }
 
     const filteredGroups = allOrdersRaw.filter((group) => {
-      const fieldValue = (group[searchField] || "").toString().toLowerCase();
-      return fieldValue.includes(searchValue);
+      return Object.entries(filters).every(([field, value]) => {
+        if (!value) return true; // skip empty filters
+        const fieldValue = (group[field] || "").toString().toLowerCase();
+        return fieldValue.includes(value);
+      });
     });
 
     setOrders(filteredGroups);
-  }, [allOrdersRaw, searchField, searchValue]);
+  }, [allOrdersRaw, filters]);
 
 
   const fetchOrders = async (page, pageSize, filters = {}) => {
@@ -225,9 +238,11 @@ const OrderPage = () => {
 
   const handleFilterChange = (field, value) => {
     const trimmedValue = value.trim().toLowerCase();
-    setSearchField(field);
-    setSearchValue(trimmedValue);
-    setCurrentPage(1); // Reset to page 1 — this triggers fetch in useEffect
+    setFilters((prev) => ({
+      ...prev,
+      [field]: trimmedValue
+    }));
+    setCurrentPage(1);
   };
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
@@ -502,9 +517,31 @@ const OrderPage = () => {
         )}
 
         <div className="row justify-content-center">
-          <h4 className="tp-8 fw-bold text-success text-center pb-2">
-            Review Pending
-          </h4>
+          <div className="d-flex justify-content-between align-items-center mb-3 w-100">
+            {/* Left Side empty spacer */}
+            <div style={{ width: "100px" }}></div>
+
+            {/* Center Heading */}
+            <h4 className="tp-8 fw-bold text-success text-center pb-2 flex-grow-1">
+              Review Pending
+            </h4>
+
+            <div className="row justify-content-center">
+              <div className="d-flex justify-content-between align-items-center mb-3 w-100">
+                {Object.values(filters).some(value => value && value.trim() !== '') && (
+                  <Button
+                    onClick={resetFilters}
+                    className="reset-btn fw-semibold ms-2"
+                  >
+                    🔄 Reset Filters
+                  </Button>
+                )}
+              </div>
+            </div>
+
+          </div>
+
+
 
           {/* Table */}
           <div className="table-responsive" style={{ overflowX: "auto", maxWidth: "100%" }}>
@@ -517,8 +554,8 @@ const OrderPage = () => {
                     { label: "Client Name", field: "researcher_name" },
                     { label: "Client Email", field: "user_email" },
                     { label: "Organization Name", field: "organization_name" },
-                    { label: "Scientific", field: "committee_status" },
-                    { label: "Ethical", field: "committee_status" },
+                    { label: "Scientific", field: "scientific_committee_status" }, // ✅ Alag field
+                    { label: "Ethical", field: "ethical_committee_status" }, // ✅ Alag field
                     { label: "View Documents", key: "study_copy" },
                   ].map(({ label, field, key }, index) => (
                     <th
@@ -537,6 +574,7 @@ const OrderPage = () => {
                             type="text"
                             className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                             placeholder={`Search ${label}`}
+                            value={filters[field] || ''} // ✅ Controlled input
                             onChange={(e) => handleFilterChange(field, e.target.value)}
                             style={{ width: "100%" }}
                           />
@@ -562,7 +600,6 @@ const OrderPage = () => {
                     Action
                   </th>
                 </tr>
-
               </thead>
               <tbody className="table-light">
                 {currentOrders.length > 0 ? (
@@ -1170,7 +1207,7 @@ const OrderPage = () => {
                                 <div
                                   style={{ fontSize: "0.95rem", color: "#1f2937" }}
                                 >
-                                  <strong>The Order referred to Technical Admin</strong> 
+                                  <strong>The Order referred to Technical Admin</strong>
                                 </div>
                               </div>
                             </div>
@@ -1233,8 +1270,8 @@ const OrderPage = () => {
                                       {/* <FaClock
                                         style={{ marginRight: "5px", color: "#6c757d" }}
                                       /> */}
-                                    <strong>  The Order Referred to {approval.committeetype} Committee –{" "}
-                                      {approval.CommitteeMemberName}
+                                      <strong>  The Order Referred to {approval.committeetype} Committee –{" "}
+                                        {approval.CommitteeMemberName}
                                       </strong>
                                     </div>
                                   </div>
@@ -1250,8 +1287,8 @@ const OrderPage = () => {
                                           {/* <FaTimesCircle
                                             style={{ marginRight: "5px", color: "#dc3545" }}
                                           /> */}
-                                         <strong>The Order Refused by {approval.committeetype} Committee –{" "}
-                                          {approval.CommitteeMemberName}
+                                          <strong>The Order Refused by {approval.committeetype} Committee –{" "}
+                                            {approval.CommitteeMemberName}
                                           </strong>
                                         </>
                                       ) : (
@@ -1260,7 +1297,7 @@ const OrderPage = () => {
                                             style={{ marginRight: "5px", color: "#198754" }}
                                           /> */}
                                           <strong>The Order Approved by {approval.committeetype} Committee –{" "}
-                                          {approval.CommitteeMemberName}</strong>
+                                            {approval.CommitteeMemberName}</strong>
                                         </>
                                       )}
                                     </div>

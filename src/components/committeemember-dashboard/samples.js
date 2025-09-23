@@ -52,6 +52,7 @@ const SampleArea = () => {
   const [showGroupedModal, setShowGroupedModal] = useState(false);
   const [selectedResearcherSamples, setSelectedResearcherSamples] = useState(null);
   const [viewedDocuments, setViewedDocuments] = useState({ study_copy: false, irb_file: false, nbc_file: false });
+  const [filters, setFilters] = useState({}); // ✅ New state for filters
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["orders", id, currentPage, itemsPerPage, searchField, searchValue],
@@ -60,6 +61,14 @@ const SampleArea = () => {
     staleTime: 60_000,
     enabled: !!id,
   })
+
+  // ✅ Reset filters function
+  const resetFilters = () => {
+    setSearchField("");
+    setSearchValue("");
+    setFilters({});
+    setCurrentPage(1);
+  };
 
   const samples = data?.samples || [];
   const totalPages = Math.ceil((data?.totalCount || 0) / itemsPerPage);
@@ -154,7 +163,24 @@ const SampleArea = () => {
 
   return (
     <div className="container py-3">
-      <h4 className="text-center text-success">Review Pending</h4>
+      {/* ✅ Header with Reset Filters Button */}
+      <div className="d-flex justify-content-center align-items-center mb-3 position-relative">
+        {/* Centered Heading */}
+        <h4 className="text-success mb-0 text-center fw-bold">
+          Review Pending
+        </h4>
+
+        {/* Reset Filters Button - Only show when search is active */}
+        {(searchField && searchValue) && (
+          <Button
+            onClick={resetFilters}
+            className="reset-btn position-absolute end-0"
+          >
+            🔄 Reset Filters
+          </Button>
+        )}
+      </div>
+
 
       <div className="table-responsive">
         <table className="table table-bordered table-hover text-center align-middle">
@@ -167,10 +193,12 @@ const SampleArea = () => {
                       type="text"
                       className="form-control form-control-sm text-center"
                       placeholder={`Search ${label}`}
+                      value={filters[fieldMap[label]] || ''} // ✅ Controlled input
                       onChange={(e) => {
                         const mappedField = fieldMap[label];
                         setSearchField(mappedField);
                         setSearchValue(e.target.value);
+                        setFilters(prev => ({ ...prev, [mappedField]: e.target.value }));
                         setCurrentPage(1);
                       }}
                     />

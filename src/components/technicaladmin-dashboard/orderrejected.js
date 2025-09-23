@@ -66,6 +66,7 @@ const OrderPage = () => {
   const [filtertotal, setfiltertotal] = useState(null);
   const [searchField, setSearchField] = useState(null);
   const [searchValue, setSearchValue] = useState(null);
+  const [filters, setFilters] = useState({});
   const [allOrdersRaw, setAllOrdersRaw] = useState([]);
 
   const indexOfLastOrder = currentPage * ordersPerPage;
@@ -77,6 +78,13 @@ const OrderPage = () => {
   });
   const [show, setShow] = useState(false);
   const [documentloading, setDocumentLoading] = useState(false);
+  const resetFilters = () => {
+    setFilters({});
+    setSearchField(null);
+    setSearchValue(null);
+    setCurrentPage(1);
+    fetchOrders(1, ordersPerPage);
+  };
 
   useEffect(() => {
     const storedUserID = sessionStorage.getItem("userID");
@@ -93,18 +101,21 @@ const OrderPage = () => {
   }, [currentPage]);
 
   useEffect(() => {
-    if (!searchField || !searchValue) {
+    if (!filters || Object.keys(filters).length === 0) {
       setOrders(allOrdersRaw);
       return;
     }
 
     const filteredGroups = allOrdersRaw.filter((group) => {
-      const fieldValue = (group[searchField] || "").toString().toLowerCase();
-      return fieldValue.includes(searchValue);
+      return Object.entries(filters).every(([field, value]) => {
+        if (!value) return true; // skip empty
+        const fieldValue = (group[field] || "").toString().toLowerCase();
+        return fieldValue.includes(value);
+      });
     });
 
     setOrders(filteredGroups);
-  }, [allOrdersRaw, searchField, searchValue]);
+  }, [allOrdersRaw, filters]);
 
 
   const fetchOrders = async (page, pageSize, filters = {}) => {
@@ -159,10 +170,13 @@ const OrderPage = () => {
 
   const handleFilterChange = (field, value) => {
     const trimmedValue = value.trim().toLowerCase();
-    setSearchField(field);
-    setSearchValue(trimmedValue);
-    setCurrentPage(1); // Reset to page 1 — this triggers fetch in useEffect
+    setFilters((prev) => ({
+      ...prev,
+      [field]: trimmedValue
+    }));
+    setCurrentPage(1); // reset to first page
   };
+
   const handlePageChange = (event) => {
     const selectedPage = event.selected + 1; // React Paginate is 0-indexed, so we adjust
     setCurrentPage(selectedPage); // This will trigger the data change based on selected page
@@ -232,9 +246,29 @@ const OrderPage = () => {
         )}
 
         <div className="row justify-content-center">
-          <h4 className="tp-8 fw-bold text-success text-center pb-2">
-            Review Done
-          </h4>
+          <div className="d-flex justify-content-between align-items-center mb-3 w-100">
+            {/* Left Side empty spacer */}
+            <div style={{ width: "100px" }}></div>
+
+            {/* Center Heading */}
+            <h4 className="tp-8 fw-bold text-success text-center pb-2 flex-grow-1">
+              Review Done
+            </h4>
+
+            <div className="row justify-content-center">
+              <div className="d-flex justify-content-between align-items-center mb-3 w-100">
+                {Object.values(filters).some(value => value && value.trim() !== '') && (
+                  <Button
+                    onClick={resetFilters}
+                    className="reset-btn fw-semibold ms-2"
+                  >
+                    🔄 Reset Filters
+                  </Button>
+                )}
+              </div>
+            </div>
+
+          </div>
 
           {/* Table */}
           <div className="table-responsive" style={{ overflowX: "auto", maxWidth: "100%" }}>
@@ -254,14 +288,8 @@ const OrderPage = () => {
                       label: "Organization Name",
                       field: "organization_name",
                     },
-                    {
-                      label: "Scientific",
-                      field: "committee_status",
-                    },
-                    {
-                      label: "Ethical",
-                      field: "committee_status",
-                    },
+                    { label: "Scientific", field: "scientific_committee_status" },
+                    { label: "Ethical", field: "ethical_committee_status" },
 
                   ].map(({ label, field }, index) => (
                     <th
@@ -279,6 +307,7 @@ const OrderPage = () => {
                           type="text"
                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                           placeholder={`Search ${label}`}
+                          value={filters[field] || ''} // Controlled input
                           onChange={(e) => handleFilterChange(field, e.target.value)}
                           style={{ width: "100%" }}
                         />
