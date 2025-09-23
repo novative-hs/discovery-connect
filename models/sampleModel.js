@@ -166,9 +166,21 @@ const getSamples = (user_account_id, page, pageSize, filters, callback) => {
           break;
 
         case "gender":
+          if (!isNaN(value)) {
+            // If numeric -> filter by age
+            searchClause += ` AND s.age = ?`;
+            searchParams.push(parseInt(value, 10));
+          } else {
+            // Otherwise filter by gender (exact match)
+            searchClause += ` AND LOWER(s.gender) = ?`;
+            searchParams.push(value.toLowerCase());
+          }
+          break;
+
+
         case "sample_visibility":
           searchClause += ` AND LOWER(s.${field}) LIKE ?`;
-          searchParams.push(value.toLowerCase() + "%");
+          searchParams.push(`%${value.toLowerCase()}%`);   // <-- changed here
           break;
         case "date_from":
           searchClause += ` AND DATE(s.created_at) >= ?`;

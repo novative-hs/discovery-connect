@@ -410,25 +410,26 @@ const SampleArea = () => {
     }
   }, [totalPages]);
 
-  const handleFilterChange = (field, value) => {
-    const updatedFilters = { ...filters };
+const handleFilterChange = (field, value) => {
+  const updatedFilters = { ...filters }
 
-    if (value) {
-      updatedFilters[field] = value;
-    } else {
-      delete updatedFilters[field];
-    }
+  if (value !== undefined && value !== null) {
+    updatedFilters[field] = value;
+  } else {
+    delete updatedFilters[field];
+  }
 
-    setFilters(updatedFilters);
+  setFilters(updatedFilters);
 
-    // ✅ Only fire once when filters are valid
-    if (updatedFilters.date_to && updatedFilters.date_from) {
-      fetchSamples(currentPage, itemsPerPage, updatedFilters);
-    } else if (updatedFilters.date_to && !updatedFilters.date_from) {
-      // If only date_to → fetch with that
-      fetchSamples(currentPage, itemsPerPage, { date_to: updatedFilters.date_to });
-    }
-  };
+  let finalFilters = { ...updatedFilters };
+
+  if (updatedFilters.date_to && !updatedFilters.date_from) {
+    finalFilters = { date_to: updatedFilters.date_to, ...updatedFilters };
+  }
+
+  fetchSamples(currentPage, itemsPerPage, finalFilters);
+};
+
 
 
 
@@ -1295,12 +1296,11 @@ const SampleArea = () => {
                 <option value="">All</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
-                <option value="Other">Other</option>
               </select>
             </div>
 
             {/* Age Filter - NEW */}
-            <div className="form-group">
+            {/* <div className="form-group">
               <label className="form-label fw-semibold mb-1">Age</label>
               <input
                 type="number"
@@ -1314,7 +1314,7 @@ const SampleArea = () => {
                 }}
                 min="0"
               />
-            </div>
+            </div> */}
 
             {/* Clear Button */}
             {(analyte || gender || ageFilter || dateFrom || dateTo) && (
