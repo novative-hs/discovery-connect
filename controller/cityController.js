@@ -8,12 +8,8 @@ const createCityTable = (req, res) => {
 
 // Controller to get all cities with pagination and search
 const getAllCities = (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 10;
-  const search = req.query.search || '';
-  cityModel.getAllCities(page, limit, search, (err, results) => {
+ cityModel.getAllCities((err, results) => {
     if (err) {
-      console.error("Database error:", err);
       return res.status(500).json({ error: "Error fetching city list" });
     }
     res.status(200).json(results);

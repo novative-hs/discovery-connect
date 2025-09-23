@@ -27,39 +27,13 @@ const createCityTable = () => {
 
 
 // Function to get all cities with pagination and search
-const getAllCities = (page, limit, search, callback) => {
-  const offset = (page - 1) * limit;
-
-  let countQuery = 'SELECT COUNT(*) as total FROM city WHERE status = "active"';
-  let dataQuery = 'SELECT * FROM city WHERE status = "active"';
-
-  // Add search condition if provided
-  if (search && search.trim() !== '') {
-    const searchCondition = ` AND name LIKE '%${mysqlConnection.escape(search).replace(/'/g, '')}%'`;
-    countQuery += searchCondition;
-    dataQuery += searchCondition;
-  }
-
-  dataQuery += ` ORDER BY name ASC LIMIT ${limit} OFFSET ${offset}`;
-
-  // First get total count
-  mysqlConnection.query(countQuery, (err, countResult) => {
+const getAllCities = (callback) => {
+  const query = 'SELECT * FROM city WHERE status = "active" ORDER BY name ASC';
+  mysqlConnection.query(query, (err, results) => {
     if (err) {
       callback(err, null);
     } else {
-      // Then get paginated data
-      mysqlConnection.query(dataQuery, (err, results) => {
-        if (err) {
-          callback(err, null);
-        } else {
-          callback(null, {
-            data: results,
-            total: countResult[0].total,
-            page: parseInt(page),
-            totalPages: Math.ceil(countResult[0].total / limit)
-          });
-        }
-      });
+      callback(null, results);
     }
   });
 };

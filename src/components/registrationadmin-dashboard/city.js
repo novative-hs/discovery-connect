@@ -18,8 +18,6 @@ const CityArea = () => {
     cityname: "",
     added_by: id,
   });
-
-  const [cities, setCities] = useState([]);
   const [editcityname, setEditcityname] = useState(null); // State for selected City to edit
   const [cityname, setcityname] = useState([]); // Store all cities
   const [filteredCityname, setFilteredCityname] = useState([]); // Store filtered cities
@@ -29,54 +27,65 @@ const CityArea = () => {
   // Calculate total pages dynamically
 
   const [successMessage, setSuccessMessage] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [totalItems, setTotalItems] = useState(0);
   const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`;
-  // Fetch cities from backend with pagination
+  // Fetch City from backend when component loads
   useEffect(() => {
-    const fetchCities = async () => {
-      console.log("Pagination", currentPage + 1, itemsPerPage, searchTerm)
+    const fetchcityname = async () => {
       try {
-        const response = await axios.get(
-          `${url}/city/get-city?page=${currentPage + 1}&limit=${itemsPerPage}&search=${searchTerm}`
-        );
-        setCities(response.data.data || []); // Ensure it's always an array
-        setTotalPages(response.data.totalPages || 0);
-        setTotalItems(response.data.total || 0);
+        const response = await axios.get(`${url}/city/get-city`);
+        setcityname(response.data);
+        setFilteredCityname(response.data); // Initialize filtered list
       } catch (error) {
-        console.error("Error fetching cities:", error);
-        setCities([]); // Set to empty array on error
+        console.error("Error fetching City:", error);
       }
     };
-    fetchCities();
-  }, [url, currentPage, searchTerm]);
+    fetchcityname(); // Call the function when the component mounts
+  }, [url]);
 
+  useEffect(() => {
+    const pages = Math.max(
+      1,
+      Math.ceil(filteredCityname.length / itemsPerPage)
+    );
+    setTotalPages(pages);
 
-  // useEffect(() => {
-  //   const pages = Math.max(
-  //     1,
-  //     Math.ceil(filteredCityname.length / itemsPerPage)
-  //   );
-  //   setTotalPages(pages);
+    if (currentPage >= pages) {
+      setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
+    }
+  }, [filteredCityname, currentPage]);
 
-  //   if (currentPage >= pages) {
-  //     setCurrentPage(0); // Reset to page 0 if the current page is out of bounds
-  //   }
-  // }, [filteredCityname, currentPage]);
-
-  // const currentData = filteredCityname.slice(
-  //   currentPage * itemsPerPage,
-  //   (currentPage + 1) * itemsPerPage
-  // );
+  const currentData = filteredCityname.slice(
+    currentPage * itemsPerPage,
+    (currentPage + 1) * itemsPerPage
+  );
 
   const handlePageChange = (event) => {
     setCurrentPage(event.selected);
   };
 
   const handleFilterChange = (field, value) => {
-    setSearchTerm(value);
-    setCurrentPage(0); // Reset to first page when filtering
+    let filtered = [];
+
+    if (value.trim() === "") {
+      filtered = cityname;
+    } else {
+      filtered = cityname.filter((city) => {
+        if (field === "added_by") {
+          return "registration admin".includes(value.toLowerCase());
+        }
+
+        return city[field]
+          ?.toString()
+          .toLowerCase()
+          .includes(value.toLowerCase());
+      });
+    }
+
+    setFilteredCityname(filtered);
+    setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+    setCurrentPage(0);
   };
+
 
   const fetchHistory = async (filterType, id) => {
     try {
@@ -106,16 +115,13 @@ const CityArea = () => {
     setFormData({ cityname: "", added_by: id });
   };
 
-  // Update the handleSubmit function to reset to first page after adding
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await axios.post(`${url}/city/post-city`, formData);
-      // Refetch the current data
-      const response = await axios.get(
-        `${url}/city/get-city?page=${currentPage + 1}&limit=${itemsPerPage}&search=${searchTerm}`
-      );
-      setCities(response.data.data);
+      const response = await axios.get(`${url}/city/get-city`);
+      setFilteredCityname(response.data);
+      setcityname(response.data);
       setSuccessMessage("City added successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       resetFormData();
@@ -135,7 +141,6 @@ const CityArea = () => {
     setShowEditModal(true);
   };
 
-  // Update the handleUpdate function
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
@@ -144,11 +149,33 @@ const CityArea = () => {
         formData
       );
 
-      // Refetch the current page to get updated data
-      const response = await axios.get(
-        `${url}/city/get-city?page=${currentPage + 1}&limit=${itemsPerPage}&search=${searchTerm}`
+      // Get the existing city from state
+      const existingCity = cityname.find(
+        (c) => c.id === selectedcitynameId
       );
-      setCities(response.data.data);
+
+      // Build the updated city correctly
+      const updatedCity = {
+        id: selectedcitynameId,
+        name: formData.cityname,   // map formData.cityname → name
+        added_by: existingCity?.added_by || "Registration Admin",
+        created_at: existingCity?.created_at,  // keep original
+        updated_at: new Date().toISOString(),  // update timestamp
+      };
+
+      // Update in cityname
+      setcityname((prev) =>
+        prev.map((city) =>
+          city.id === selectedcitynameId ? updatedCity : city
+        )
+      );
+
+      // Update in filteredCityname
+      setFilteredCityname((prev) =>
+        prev.map((city) =>
+          city.id === selectedcitynameId ? updatedCity : city
+        )
+      );
 
       setSuccessMessage("City updated successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
@@ -159,24 +186,12 @@ const CityArea = () => {
     }
   };
 
-
-  // Update the handleDelete function
   const handleDelete = async () => {
     try {
       await axios.delete(`${url}/city/delete-city/${selectedcitynameId}`);
-
-      // Refetch data, if we're on the last page and it's now empty, go to previous page
-      const response = await axios.get(
-        `${url}/city/get-city?page=${currentPage + 1}&limit=${itemsPerPage}&search=${searchTerm}`
-      );
-      console.log("API Response:", response.data);
-
-      if (response.data.data.length === 0 && currentPage > 0) {
-        setCurrentPage(currentPage - 1);
-      } else {
-        setCities(response.data.data);
-      }
-
+      const response = await axios.get(`${url}/city/get-city`);
+      setFilteredCityname(response.data);
+      setcityname(response.data);
       setSuccessMessage("City deleted successfully.");
       setTimeout(() => setSuccessMessage(""), 3000);
       setShowDeleteModal(false);
@@ -382,8 +397,8 @@ const CityArea = () => {
                 </tr>
               </thead>
               <tbody>
-                {cities.length > 0 ? (
-                  cities.map((cityname) => (
+                {currentData.length > 0 ? (
+                  currentData.map((cityname) => (
                     <tr key={cityname.id}>
                       {/* <td>{cityname.id}</td> */}
                       <td>{cityname.name}</td>

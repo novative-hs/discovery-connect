@@ -28,15 +28,10 @@ export const cartSlice = createSlice({
       // Remove expired items and unreserve them
       const updatedCart = cartItems.filter(item => {
         if (isExpired(item)) {
-          // 👇 Call API to set reserved = 0
-          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/${item.id}/reserve/0`, {
-            method: "PUT"
-          }).catch((err) => {
-            console.error("Failed to unreserve sample:", err);
-          });
-          return false; // remove from cart
+          unreserveSample(item.id);  
+          return false; 
         }
-        return true; // keep in cart
+        return true;
       });
 
       // Check if the new sample is already in the updated cart
@@ -102,11 +97,7 @@ export const cartSlice = createSlice({
 
       if (removedItem) {
         // Call API to set reserved = 0
-        fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/${removedItem.id}/reserve/0`, {
-          method: "PUT"
-        }).catch((err) => {
-          console.error("Failed to unreserve sample:", err);
-        });
+        unreserveSample(removedItem.id);
       }
 
       // Remove from cart
@@ -128,11 +119,7 @@ export const cartSlice = createSlice({
         const isExpired = diffHours > 48;
         if (isExpired) {
           // Call API to unreserve
-          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/${item.id}/reserve/0`, {
-            method: "PUT",
-          }).catch((err) => {
-            console.error("Failed to unreserve sample:", err);
-          });
+          unreserveSample(removedItem.id);
         }
         return !isExpired;
       });
@@ -194,6 +181,22 @@ export const cartSlice = createSlice({
 
 
 });
+const unreserveSample = async (id) => {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/${id}/reserve/0`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!res.ok) {
+      console.error("Failed to unreserve sample. Status:", res.status);
+    } else {
+      console.log("Sample unreserved:", id);
+    }
+  } catch (err) {
+    console.error("Failed to unreserve sample:", err);
+  }
+};
 
 export const {
   add_cart_product,
