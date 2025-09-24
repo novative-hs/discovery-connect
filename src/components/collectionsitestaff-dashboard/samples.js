@@ -154,6 +154,7 @@ const SampleArea = () => {
   const fieldsToShowInOrder = [
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Container Type", key: "ContainerType" },
+    { label: "Final Concentration", key: "finalConcentration" },
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
