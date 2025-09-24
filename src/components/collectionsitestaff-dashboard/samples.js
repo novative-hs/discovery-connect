@@ -140,14 +140,11 @@ const SampleArea = () => {
 
   const tableHeaders = [
     { label: "Patient Name", key: "PatientName" },
-    // { label: "Patient Location", key: "PatientLocation" },
     { label: "Gender & Age", key: "gender" },
-    // { label: "MR Number", key: "MRNumber" },
     { label: "Location", key: "locationids" },
     { label: "Analyte", key: "Analyte" },
     { label: "Test Result & Unit", key: "TestResult" },
     { label: "Volume", key: "volume" },
-    // { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Status", key: "status" },
     // { label: "Sample Visibility", key: "sample_visibility" },
     { label: "Sample Mode", key: "samplemode" },
@@ -155,6 +152,7 @@ const SampleArea = () => {
   ];
 
   const fieldsToShowInOrder = [
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Container Type", key: "ContainerType" },
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
@@ -855,10 +853,16 @@ const handleFilterChange = (field, value) => {
 
     } else {
       setShowEditPoolModal(true)
-      setPoolMode(true)
+      setPoolMode(false)
       setSelectedSampleName(sample.Analyte)
     }
 
+    const sampleValue = (sample.SampleTypeMatrix || "").trim().toLowerCase();
+
+    // Find the original string in options (preserves case and spacing)
+    const selectedMatrix = sampletypematrixNames.find(
+      m => m.trim().toLowerCase() === sampleValue
+    );
     setFormData({
       patientname: sample.PatientName,
       finalConcentration: sample.finalConcentration,
@@ -877,7 +881,7 @@ const handleFilterChange = (field, value) => {
       CountryOfCollection: sample.CountryOfCollection,
       quantity: sample.quantity,
       VolumeUnit: sample.VolumeUnit,
-      SampleTypeMatrix: sample.SampleTypeMatrix?.trim() || "",
+      SampleTypeMatrix: selectedMatrix || "",
       SmokingStatus: sample.SmokingStatus,
       AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
       InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
@@ -3154,7 +3158,7 @@ const handleFilterChange = (field, value) => {
                                 <select
                                   className="form-control"
                                   name="SampleTypeMatrix"
-                                  value={formData.SampleTypeMatrix}
+                                  value={formData.SampleTypeMatrix || ""}
                                   onChange={handleInputChange}
                                   required
                                   style={{
@@ -3164,12 +3168,16 @@ const handleFilterChange = (field, value) => {
                                   }}
                                 >
                                   <option value="" hidden></option>
+                                  {selectedSampleTypeMatrixes.includes(formData.SampleTypeMatrix) ? null : (
+                                    <option value={formData.SampleTypeMatrix}>{formData.SampleTypeMatrix}</option>
+                                  )}
                                   {selectedSampleTypeMatrixes.map((matrix, index) => (
                                     <option key={index} value={matrix}>
                                       {matrix}
                                     </option>
                                   ))}
                                 </select>
+
 
                               </div>
 
