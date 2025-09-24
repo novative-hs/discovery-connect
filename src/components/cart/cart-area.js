@@ -2,24 +2,47 @@ import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
-import { remove_product, set_cart_products } from "src/redux/features/cartSlice";
+import {
+  remove_product,
+  set_cart_products,
+} from "src/redux/features/cartSlice";
 import { notifyError, notifySuccess } from "@utils/toast";
+import Link from "next/link";
 const CartArea = () => {
   const currencySymbols = {
-    PKR: "Rs", USD: "$", EUR: "€", GBP: "£", INR: "₹", // Add more as needed 
+    PKR: "Rs",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    INR: "₹", // Add more as needed
   };
   const router = useRouter();
   const dispatch = useDispatch();
   const { cart_products } = useSelector((state) => state.cart);
   const [loading, setLoading] = React.useState(false);
-  const userID = typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
+  const userID =
+    typeof window !== "undefined" ? sessionStorage.getItem("userID") : null;
   const hasTriggeredCheckoutRef = useRef(false);
   const priceIntervalRef = useRef(null);
-  const unpricedItems = cart_products.filter((item) => !item.price || item.price === 0);
-  const validItems = cart_products.filter((item) => item.price && item.price > 0);
-  const displayCurrency = validItems.length > 0 ? currencySymbols[validItems[0].SamplePriceCurrency] || validItems[0].SamplePriceCurrency : "Rs"; const allItemsHavePrice = unpricedItems.length === 0;
+  const unpricedItems = cart_products.filter(
+    (item) => !item.price || item.price === 0
+  );
+  const validItems = cart_products.filter(
+    (item) => item.price && item.price > 0
+  );
+  const displayCurrency =
+    validItems.length > 0
+      ? currencySymbols[validItems[0].SamplePriceCurrency] ||
+        validItems[0].SamplePriceCurrency
+      : "Rs";
+  const allItemsHavePrice = unpricedItems.length === 0;
 
-  const getCartHash = (items) => { return items.map((item) => item.id).sort().join("-"); };
+  const getCartHash = (items) => {
+    return items
+      .map((item) => item.id)
+      .sort()
+      .join("-");
+  };
   const cartHash = getCartHash(unpricedItems);
   const quoteSentKey = `quoteSent_${userID}_${cartHash}`;
   const [quoteAlreadySent, setQuoteAlreadySent] = useState(false);
@@ -46,21 +69,25 @@ const CartArea = () => {
 
     // Step 3: Calculate charges on subtotal
     const tax =
-      taxPercent > 0 ? (subtotal * taxPercent) / 100 : taxAmount > 0 ? taxAmount : 0;
+      taxPercent > 0
+        ? (subtotal * taxPercent) / 100
+        : taxAmount > 0
+        ? taxAmount
+        : 0;
 
     const platform =
       platformPercent > 0
         ? (subtotal * platformPercent) / 100
         : platformAmount > 0
-          ? platformAmount
-          : 0;
+        ? platformAmount
+        : 0;
 
     const freight =
       freightPercent > 0
         ? (subtotal * freightPercent) / 100
         : freightAmount > 0
-          ? freightAmount
-          : 0;
+        ? freightAmount
+        : 0;
 
     // Step 4: Grand Total
     const grandTotal = subtotal + tax + platform + freight;
@@ -80,7 +107,6 @@ const CartArea = () => {
     };
   };
 
-
   const {
     subtotal,
     tax,
@@ -95,21 +121,21 @@ const CartArea = () => {
     grandTotal,
   } = calculateCartBreakdown(cart_products);
   useEffect(() => {
-    // Recalculate cart hash on every cart change 
+    // Recalculate cart hash on every cart change
     const newCartHash = getCartHash(unpricedItems);
     const newQuoteSentKey = `quoteSent_${userID}_${newCartHash}`;
     const stored = sessionStorage.getItem(newQuoteSentKey) === "true";
     setQuoteAlreadySent(stored);
   }, [cart_products, userID]);
-  // ⏱ Refresh prices every 30s 
+  // ⏱ Refresh prices every 30s
   useEffect(() => {
     if (unpricedItems.length > 0) {
-      priceIntervalRef.current = setInterval(() => { refreshCartPrices(cart_products); },
-        15000);
+      priceIntervalRef.current = setInterval(() => {
+        refreshCartPrices(cart_products);
+      }, 15000);
     }
     return () => {
-      if (priceIntervalRef.current)
-        clearInterval(priceIntervalRef.current);
+      if (priceIntervalRef.current) clearInterval(priceIntervalRef.current);
     };
   }, [cart_products]);
 
@@ -148,47 +174,89 @@ const CartArea = () => {
 
   useEffect(() => {
     const triggerFromQuery = router.query.triggerCheckout === "true";
-    const triggerFromStorage = sessionStorage.getItem("triggerCheckoutAfterLogin") === "true";
-    if ((triggerFromQuery || triggerFromStorage) && !hasTriggeredCheckoutRef.current && userID) {
-      hasTriggeredCheckoutRef.current = true; if (triggerFromStorage)
-        sessionStorage.removeItem("triggerCheckoutAfterLogin"); handleProceedToCheckout();
-      if (triggerFromQuery) { router.replace("/cart"); }
+    const triggerFromStorage =
+      sessionStorage.getItem("triggerCheckoutAfterLogin") === "true";
+    if (
+      (triggerFromQuery || triggerFromStorage) &&
+      !hasTriggeredCheckoutRef.current &&
+      userID
+    ) {
+      hasTriggeredCheckoutRef.current = true;
+      if (triggerFromStorage)
+        sessionStorage.removeItem("triggerCheckoutAfterLogin");
+      handleProceedToCheckout();
+      if (triggerFromQuery) {
+        router.replace("/cart");
+      }
     }
   }, [router.query, userID]);
   const handleProceedToCheckout = async () => {
-    if (loading) return; if (!userID) {
+    if (loading) return;
+    if (!userID) {
       sessionStorage.setItem("triggerCheckoutAfterLogin", "true");
-      router.push("/login?from=cart&triggerCheckout=true"); return;
+      router.push("/login?from=cart&triggerCheckout=true");
+      return;
     }
     if (quoteAlreadySent) {
-      alert("Your quote request has already been sent. Please wait for Biobank's response.");
+      alert(
+        "Your quote request has already been sent. Please wait for Biobank's response."
+      );
       return;
     }
     if (unpricedItems.length > 0) {
       try {
         setLoading(true);
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`,
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/send-email`,
           {
-            method: "POST", headers: { "Content-Type": "application/json" },
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              userID, products: unpricedItems.map((item) =>
-                ({ id: item.id, masterid: item.masterid, analyte: item.Analyte, Volume: item.Volume, VolumeUnit: item.VolumeUnit, TestResult: item.TestResult, TestResultUnit: item.TestResultUnit, price: item.price, quantity: item.quantity })),
+              userID,
+              products: unpricedItems.map((item) => ({
+                id: item.id,
+                masterid: item.masterid,
+                analyte: item.Analyte,
+                Volume: item.Volume,
+                VolumeUnit: item.VolumeUnit,
+                TestResult: item.TestResult,
+                TestResultUnit: item.TestResultUnit,
+                price: item.price,
+                quantity: item.quantity,
+              })),
             }),
-          }); const resData = await response.json(); if (response.ok) {
-            sessionStorage.setItem(quoteSentKey, "true"); setQuoteAlreadySent(true); // ✅ triggers re-render 
-            notifySuccess("Quote request has been sent to the Biobank. Please wait up to 24 hours for a price update.");
           }
-        else { notifyError(`Quote request failed: ${resData.message || "Unknown error"}`); }
+        );
+        const resData = await response.json();
+        if (response.ok) {
+          sessionStorage.setItem(quoteSentKey, "true");
+          setQuoteAlreadySent(true); // ✅ triggers re-render
+          notifySuccess(
+            "Quote request has been sent to the Biobank. Please wait up to 24 hours for a price update."
+          );
+        } else {
+          notifyError(
+            `Quote request failed: ${resData.message || "Unknown error"}`
+          );
+        }
+      } catch (err) {
+        console.error(err);
+        notifyError("Failed to request quote. Try again.");
+      } finally {
+        setLoading(false);
       }
-      catch (err) { console.error(err); notifyError("Failed to request quote. Try again."); }
-      finally { setLoading(false); } return;
-    } router.push("/dashboardheader?tab=Checkout");
+      return;
+    }
+    router.push("/dashboardheader?tab=Checkout");
   };
   const handleRemoveProduct = (item) => {
-    dispatch(remove_product(item)); // Remove ALL quoteSent keys for this user (old + new) 
+    dispatch(remove_product(item)); // Remove ALL quoteSent keys for this user (old + new)
     Object.keys(sessionStorage).forEach((key) => {
-      if (key.startsWith(`quoteSent_${userID}_`)) { sessionStorage.removeItem(key); }
-    }); setQuoteAlreadySent(false);
+      if (key.startsWith(`quoteSent_${userID}_`)) {
+        sessionStorage.removeItem(key);
+      }
+    });
+    setQuoteAlreadySent(false);
   };
 
   return (
@@ -228,8 +296,8 @@ const CartArea = () => {
               }}
             >
               <i className="fas fa-clock me-2"></i>
-              This sample will be accessible within 48 hours. After that, it will be
-              automatically removed from your cart.
+              This sample will be accessible within 48 hours. After that, it
+              will be automatically removed from your cart.
             </div>
             {/* Left - Cart Items */}
             <div className="col-lg-8 mb-4">
@@ -260,11 +328,15 @@ const CartArea = () => {
                           >
                             <td>{i + 1}</td>
                             <td>
-                              <span className="fw-semibold">{item.masterid}</span>
+                              <span className="fw-semibold">
+                                {item.masterid}
+                              </span>
                             </td>
                             <td className="d-flex align-items-center gap-3">
                               <div>
-                                <div className="fw-semibold">{item.Analyte}</div>
+                                <div className="fw-semibold">
+                                  {item.Analyte}
+                                </div>
                                 <div className="text-muted small">
                                   {item.gender}, {item.age} years |{" "}
                                   {item.TestResult} {item.TestResultUnit}
@@ -299,8 +371,6 @@ const CartArea = () => {
                           </tr>
                         ))}
                       </tbody>
-
-
                     </table>
                   </div>
                 </div>
@@ -328,10 +398,9 @@ const CartArea = () => {
                       </span>
                       <span>
                         {subtotal && subtotal > 0
-                          ? `${subtotal.toLocaleString(
-                            "en-PK",
-                            { minimumFractionDigits: 2 }
-                          )}`
+                          ? `${subtotal.toLocaleString("en-PK", {
+                              minimumFractionDigits: 2,
+                            })}`
                           : "---"}
                       </span>
                     </li>
@@ -344,7 +413,9 @@ const CartArea = () => {
                           Tax ({taxPercent > 0 ? `${taxPercent}%` : taxAmount})
                         </span>
                         <span>
-                          {tax.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
+                          {tax.toLocaleString("en-PK", {
+                            minimumFractionDigits: 2,
+                          })}
                         </span>
                       </li>
                     )}
@@ -354,10 +425,16 @@ const CartArea = () => {
                       <li className="list-group-item d-flex justify-content-between fw-semibold">
                         <span>
                           <i className="fas fa-receipt me-2 text-danger"></i>{" "}
-                          Platform Charges ({platformPercent > 0 ? `${platformPercent}%` : platformAmount})
+                          Platform Charges (
+                          {platformPercent > 0
+                            ? `${platformPercent}%`
+                            : platformAmount}
+                          )
                         </span>
                         <span>
-                          {platform.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
+                          {platform.toLocaleString("en-PK", {
+                            minimumFractionDigits: 2,
+                          })}
                         </span>
                       </li>
                     )}
@@ -367,14 +444,19 @@ const CartArea = () => {
                       <li className="list-group-item d-flex justify-content-between fw-semibold">
                         <span>
                           <i className="fas fa-receipt me-2 text-danger"></i>{" "}
-                          Freight Charges ({freightPercent > 0 ? `${freightPercent}%` : freightAmount})
+                          Freight Charges (
+                          {freightPercent > 0
+                            ? `${freightPercent}%`
+                            : freightAmount}
+                          )
                         </span>
                         <span>
-                          {freight.toLocaleString("en-PK", { minimumFractionDigits: 2 })}
+                          {freight.toLocaleString("en-PK", {
+                            minimumFractionDigits: 2,
+                          })}
                         </span>
                       </li>
                     )}
-
                   </ul>
 
                   <div className="d-flex justify-content-between fw-bold fs-5 mb-3">
@@ -382,15 +464,26 @@ const CartArea = () => {
                     <span>
                       {grandTotal && grandTotal > 0
                         ? `${grandTotal.toLocaleString("en-PK", {
-                          minimumFractionDigits: 2,
-                        })}`
+                            minimumFractionDigits: 2,
+                          })}`
                         : "---"}
                     </span>
                   </div>
 
-                  <button className={`btn w-100 ${allItemsHavePrice ? "btn-primary" : "btn-danger"}`}
-                    onClick={handleProceedToCheckout} disabled={loading || quoteAlreadySent} >
-                    {loading ? "Please wait..." : allItemsHavePrice ? "Checkout" : quoteAlreadySent ? "Quote Requested" : "Request Quote"}
+                  <button
+                    className={`btn w-100 ${
+                      allItemsHavePrice ? "btn-primary" : "btn-danger"
+                    }`}
+                    onClick={handleProceedToCheckout}
+                    disabled={loading || quoteAlreadySent}
+                  >
+                    {loading
+                      ? "Please wait..."
+                      : allItemsHavePrice
+                      ? "Checkout"
+                      : quoteAlreadySent
+                      ? "Quote Requested"
+                      : "Request Quote"}
                   </button>
                 </div>
               </div>
