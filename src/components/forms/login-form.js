@@ -52,7 +52,7 @@ const LoginForm = () => {
 
       // ✅ Handle redirect after login based on source
       if (fromPage === "cart") {
-        router.push("/cart?triggerCheckout=true"); // ✅ re-run pricing logic in cart
+        router.push("/dashboardheader?tab=Cart"); // ✅ re-run pricing logic in cart
       } else if (fromPage === "checkout") {
         router.push("/dashboardheader?tab=Checkout");
       } else {

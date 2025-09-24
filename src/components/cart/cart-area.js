@@ -210,12 +210,12 @@ const CartArea = () => {
               }}
             ></i>
             <h4 className="fw-semibold mb-3">Your cart is empty</h4>
-            <a
+            <Link
               href="/shop"
               className="btn btn-danger rounded-pill px-4 py-2 shadow"
             >
               Browse Samples
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="row">
