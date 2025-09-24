@@ -4,10 +4,12 @@ import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import { remove_product, set_cart_products } from "src/redux/features/cartSlice";
 import { notifyError, notifySuccess } from "@utils/toast";
+import Link from "next/link";
 const CartArea = () => {
   const currencySymbols = {
     PKR: "Rs", USD: "$", EUR: "€", GBP: "£", INR: "₹", // Add more as needed 
   };
+
   const router = useRouter();
   const dispatch = useDispatch();
   const { cart_products } = useSelector((state) => state.cart);
