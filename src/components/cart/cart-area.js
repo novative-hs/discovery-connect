@@ -16,6 +16,7 @@ const CartArea = () => {
     GBP: "£",
     INR: "₹", // Add more as needed
   };
+
   const router = useRouter();
   const dispatch = useDispatch();
   const { cart_products } = useSelector((state) => state.cart);
