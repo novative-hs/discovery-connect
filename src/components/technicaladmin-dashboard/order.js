@@ -176,9 +176,9 @@ const OrderPage = () => {
 
     const filteredGroups = allOrdersRaw.filter((group) => {
       return Object.entries(filters).every(([field, value]) => {
-        if (!value) return true; // skip empty filters
+        if (!value.trim()) return true; // ✅ 
         const fieldValue = (group[field] || "").toString().toLowerCase();
-        return fieldValue.includes(value);
+        return fieldValue.includes(value.toLowerCase());
       });
     });
 
@@ -237,10 +237,9 @@ const OrderPage = () => {
   const currentOrders = orders || [];
 
   const handleFilterChange = (field, value) => {
-    const trimmedValue = value.trim().toLowerCase();
     setFilters((prev) => ({
       ...prev,
-      [field]: trimmedValue
+      [field]: value // ✅ Original value maintain karein
     }));
     setCurrentPage(1);
   };

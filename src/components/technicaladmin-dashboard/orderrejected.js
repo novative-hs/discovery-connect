@@ -3,9 +3,7 @@ import axios from "axios";
 import Pagination from "@ui/Pagination";
 import { Modal, Button, Form, Table } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faDownload
-} from "@fortawesome/free-solid-svg-icons";
+import { faDownload } from "@fortawesome/free-solid-svg-icons";
 import {
   FaUserTie,
   FaUsers,
@@ -46,7 +44,6 @@ const OrderPage = () => {
   });
   const [trackingID, setTrackingID] = useState(null);
 
-
   const ordersPerPage = 10;
   const [transferLoading, setTransferLoading] = useState(false);
   const [transferredOrders, setTransferredOrders] = useState(() => {
@@ -56,7 +53,6 @@ const OrderPage = () => {
   // New state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedHistory, setSelectedHistory] = useState([]);
-
 
   const [comment, setComment] = useState("");
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -90,13 +86,12 @@ const OrderPage = () => {
     const storedUserID = sessionStorage.getItem("userID");
     if (storedUserID) {
       setUserID(storedUserID);
-
     }
   }, []);
   // Helper function to parse statuses
 
   useEffect(() => {
-    localStorage.removeItem("transferredOrders")
+    localStorage.removeItem("transferredOrders");
     fetchOrders(currentPage, ordersPerPage);
   }, [currentPage]);
 
@@ -108,15 +103,14 @@ const OrderPage = () => {
 
     const filteredGroups = allOrdersRaw.filter((group) => {
       return Object.entries(filters).every(([field, value]) => {
-        if (!value) return true; // skip empty
+        if (!value.trim()) return true;
         const fieldValue = (group[field] || "").toString().toLowerCase();
-        return fieldValue.includes(value);
+        return fieldValue.includes(value.toLowerCase());
       });
     });
 
     setOrders(filteredGroups);
   }, [allOrdersRaw, filters]);
-
 
   const fetchOrders = async (page, pageSize, filters = {}) => {
     setLoading(true);
@@ -125,7 +119,9 @@ const OrderPage = () => {
       let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/technicalapproval/getOrderbyTechnical?page=${page}&pageSize=${pageSize}&status=Accepted`;
 
       if (searchField && searchValue) {
-        url += `&searchField=${searchField}&searchValue=${encodeURIComponent(searchValue)}`;
+        url += `&searchField=${searchField}&searchValue=${encodeURIComponent(
+          searchValue
+        )}`;
       }
 
       const response = await axios.get(url);
@@ -159,7 +155,6 @@ const OrderPage = () => {
     }
   };
 
-
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
       setCurrentPage(totalPages); // Adjust down if needed
@@ -169,12 +164,11 @@ const OrderPage = () => {
   const currentOrders = orders || [];
 
   const handleFilterChange = (field, value) => {
-    const trimmedValue = value.trim().toLowerCase();
     setFilters((prev) => ({
       ...prev,
-      [field]: trimmedValue
+      [field]: value,
     }));
-    setCurrentPage(1); // reset to first page
+    setCurrentPage(1);
   };
 
   const handlePageChange = (event) => {
@@ -182,19 +176,18 @@ const OrderPage = () => {
     setCurrentPage(selectedPage); // This will trigger the data change based on selected page
   };
 
-
   const closeModal = () => {
     setSelectedOrder(null);
     setShowOrderModal(false);
   };
-
 
   const handleHistory = useCallback(async (orderGroup) => {
     setShowHistoryModal(true);
     setLoadingHistory(true);
 
     try {
-      const response = await axios.get(   // ✅ await here
+      const response = await axios.get(
+        // ✅ await here
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/technicalapproval/getHistory`,
         {
           params: {
@@ -215,13 +208,18 @@ const OrderPage = () => {
 
   const formatDT = (date) =>
     date
-      ? new Date(date).toLocaleString("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "2-digit",   // <- 2-digit year
-        hour: "numeric", minute: "2-digit", second: "2-digit",
-        hour12: true,
-      }).replace("AM", "am").replace("PM", "pm")
+      ? new Date(date)
+          .toLocaleString("en-GB", {
+            day: "numeric",
+            month: "short",
+            year: "2-digit", // <- 2-digit year
+            hour: "numeric",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          })
+          .replace("AM", "am")
+          .replace("PM", "pm")
       : "";
 
   useEffect(() => {
@@ -257,7 +255,9 @@ const OrderPage = () => {
 
             <div className="row justify-content-center">
               <div className="d-flex justify-content-between align-items-center mb-3 w-100">
-                {Object.values(filters).some(value => value && value.trim() !== '') && (
+                {Object.values(filters).some(
+                  (value) => value && value.trim() !== ""
+                ) && (
                   <Button
                     onClick={resetFilters}
                     className="reset-btn fw-semibold ms-2"
@@ -267,11 +267,13 @@ const OrderPage = () => {
                 )}
               </div>
             </div>
-
           </div>
 
           {/* Table */}
-          <div className="table-responsive" style={{ overflowX: "auto", maxWidth: "100%" }}>
+          <div
+            className="table-responsive"
+            style={{ overflowX: "auto", maxWidth: "100%" }}
+          >
             <table className="table table-bordered table-hover text-center align-middle w-auto border">
               <thead className="table-primary text-dark">
                 <tr className="text-center">
@@ -279,7 +281,7 @@ const OrderPage = () => {
                     { label: "Order ID", field: "tracking_id" },
                     {
                       label: "Order Date",
-                      field: "created_at"
+                      field: "created_at",
                     },
                     { label: "Client Name", field: "researcher_name" },
                     { label: "Client Email", field: "user_email" },
@@ -288,9 +290,11 @@ const OrderPage = () => {
                       label: "Organization Name",
                       field: "organization_name",
                     },
-                    { label: "Scientific", field: "scientific_committee_status" },
+                    {
+                      label: "Scientific",
+                      field: "scientific_committee_status",
+                    },
                     { label: "Ethical", field: "ethical_committee_status" },
-
                   ].map(({ label, field }, index) => (
                     <th
                       key={index}
@@ -307,13 +311,18 @@ const OrderPage = () => {
                           type="text"
                           className="form-control bg-light border form-control-sm text-center shadow-none rounded"
                           placeholder={`Search ${label}`}
-                          value={filters[field] || ''} // Controlled input
-                          onChange={(e) => handleFilterChange(field, e.target.value)}
+                          value={filters[field] || ""} // Controlled input
+                          onChange={(e) =>
+                            handleFilterChange(field, e.target.value)
+                          }
                           style={{ width: "100%" }}
                         />
                         <span
                           className="fw-bold mt-1 d-block fs-6 text-center"
-                          style={{ wordWrap: "break-word", whiteSpace: "normal" }}
+                          style={{
+                            wordWrap: "break-word",
+                            whiteSpace: "normal",
+                          }}
                         >
                           {label}
                         </span>
@@ -338,11 +347,15 @@ const OrderPage = () => {
                   currentOrders.map((orderGroup) => (
                     <tr key={orderGroup.tracking_id}>
                       <td>{orderGroup.tracking_id}</td>
-                      <td>{new Date(orderGroup.created_at).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: '2-digit'
-                      }).replace(/ /g, '-')}</td>
+                      <td>
+                        {new Date(orderGroup.created_at)
+                          .toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "short",
+                            year: "2-digit",
+                          })
+                          .replace(/ /g, "-")}
+                      </td>
                       <td>{orderGroup.researcher_name}</td>
                       <td>{orderGroup.user_email}</td>
                       <td>{orderGroup.organization_name}</td>
@@ -383,8 +396,6 @@ const OrderPage = () => {
                           </Button>
                         </div>
                       </td>
-
-
                     </tr>
                   ))
                 ) : (
@@ -395,7 +406,6 @@ const OrderPage = () => {
                   </tr>
                 )}
               </tbody>
-
             </table>
           </div>
           {/* Order Detail  */}
@@ -409,29 +419,37 @@ const OrderPage = () => {
                 {/* 📦 Status + Actions Section */}
                 <div className="p-4 rounded-3 shadow-sm bg-white border border-light mb-4">
                   <div className="d-flex flex-wrap align-items-center justify-content-between">
-
                     {/* 🟢 Technical Admin Status */}
                     <div className="d-flex align-items-center mb-2 mb-md-0">
                       <span className="fw-semibold text-secondary me-2 fs-5">
-                        <i className="bi bi-person-check-fill text-success me-1"></i> Technical Admin Status:
+                        <i className="bi bi-person-check-fill text-success me-1"></i>{" "}
+                        Technical Admin Status:
                       </span>
                       <span
-                        className={`badge px-3 py-2 fs-5 rounded-pill ${selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted")
-                          ? "bg-success-subtle text-success"
-                          : selectedOrder.analytes?.some(item => item.technical_admin_status === "Pending")
+                        className={`badge px-3 py-2 fs-5 rounded-pill ${
+                          selectedOrder.analytes?.every(
+                            (item) => item.technical_admin_status === "Accepted"
+                          )
+                            ? "bg-success-subtle text-success"
+                            : selectedOrder.analytes?.some(
+                                (item) =>
+                                  item.technical_admin_status === "Pending"
+                              )
                             ? "bg-warning-subtle text-warning"
                             : "bg-danger-subtle text-danger"
-                          }`}
+                        }`}
                       >
-                        {selectedOrder.analytes?.every(item => item.technical_admin_status === "Accepted")
+                        {selectedOrder.analytes?.every(
+                          (item) => item.technical_admin_status === "Accepted"
+                        )
                           ? "Accepted"
-                          : selectedOrder.analytes?.some(item => item.technical_admin_status === "Pending")
-                            ? "Pending"
-                            : "Rejected"}
+                          : selectedOrder.analytes?.some(
+                              (item) =>
+                                item.technical_admin_status === "Pending"
+                            )
+                          ? "Pending"
+                          : "Rejected"}
                       </span>
-
-
-
                     </div>
 
                     {/* 🎯 Action Buttons */}
@@ -444,24 +462,27 @@ const OrderPage = () => {
                         onClick={() => {
                           const reviews = [];
 
-                          selectedOrder.analytes.forEach(item => {
-                            if (item.committee_comments && item.committee_comments.trim() !== "") {
+                          selectedOrder.analytes.forEach((item) => {
+                            if (
+                              item.committee_comments &&
+                              item.committee_comments.trim() !== ""
+                            ) {
                               // If Scientific committee exists, add it
                               if (item.scientific_committee_status) {
                                 reviews.push({
-                                  member: item.committee_member_name || 'N/A',
-                                  committee: 'Scientific',
+                                  member: item.committee_member_name || "N/A",
+                                  committee: "Scientific",
                                   comment: item.committee_comments,
-                                  status: item.scientific_committee_status
+                                  status: item.scientific_committee_status,
                                 });
                               }
                               // If Ethical committee exists, add it separately
                               if (item.ethical_committee_status) {
                                 reviews.push({
-                                  member: item.committee_member_name || 'N/A',
-                                  committee: 'Ethical',
+                                  member: item.committee_member_name || "N/A",
+                                  committee: "Ethical",
                                   comment: item.committee_comments,
-                                  status: item.ethical_committee_status
+                                  status: item.ethical_committee_status,
                                 });
                               }
                             }
@@ -474,12 +495,9 @@ const OrderPage = () => {
                       </Button>
 
                       {/* Accept */}
-
                     </div>
                   </div>
                 </div>
-
-
 
                 {/* Analytes Table */}
                 <div className="table-responsive">
@@ -491,37 +509,47 @@ const OrderPage = () => {
                         <th>Age</th>
                         <th>Gender</th>
                         <th>Test Result & Unit</th>
-
                       </tr>
                     </thead>
                     <tbody>
                       {selectedOrder.analytes?.map((order, index) => (
                         <tr key={order.order_id || index}>
-                          <td className="text-primary fw-semibold" style={{ cursor: "pointer" }} onClick={() => {
-                            setSelectedSample(order);
-                            setSampleShowModal(true);
-                          }}>
+                          <td
+                            className="text-primary fw-semibold"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => {
+                              setSelectedSample(order);
+                              setSampleShowModal(true);
+                            }}
+                          >
                             <span style={{ textDecoration: "underline" }}>
                               {order.Analyte || "N/A"}
                             </span>
 
-                            <div className="text-muted small" style={{ textDecoration: "none", cursor: "default" }}>
-
-                            </div>
+                            <div
+                              className="text-muted small"
+                              style={{
+                                textDecoration: "none",
+                                cursor: "default",
+                              }}
+                            ></div>
                           </td>
 
-                          <td>{order.quantity} X {order.volume}{order.VolumeUnit}</td>
+                          <td>
+                            {order.quantity} X {order.volume}
+                            {order.VolumeUnit}
+                          </td>
                           <td>{order.age ? `${order.age} year` : "---"}</td>
 
                           <td>{order.gender || "---"}</td>
                           <td>
                             {(order.TestResult || order.TestResultUnit) && (
                               <>
-                                {order.TestResult ?? ''} {order.TestResultUnit ?? ''}
+                                {order.TestResult ?? ""}{" "}
+                                {order.TestResultUnit ?? ""}
                               </>
                             )}
                           </td>
-
                         </tr>
                       ))}
                     </tbody>
@@ -530,9 +558,6 @@ const OrderPage = () => {
               </Modal.Body>
             </Modal>
           )}
-
-
-
 
           {/* Pagination Controls */}
           {totalPages >= 0 && (
@@ -567,7 +592,8 @@ const OrderPage = () => {
               {reviewData.length > 0 ? (
                 (() => {
                   // Get the first non-empty comment field
-                  const commentString = reviewData.find(r => r.comment)?.comment || "";
+                  const commentString =
+                    reviewData.find((r) => r.comment)?.comment || "";
                   const parts = commentString.split(" | "); // each committee entry
 
                   return parts.map((part, idx) => {
@@ -579,7 +605,9 @@ const OrderPage = () => {
                     const [leftPart, rest] = part.split(":");
                     if (leftPart && leftPart.includes("(")) {
                       const nameStart = leftPart.indexOf("(");
-                      committeeType = leftPart.slice(nameStart + 1, leftPart.indexOf(")")).trim();
+                      committeeType = leftPart
+                        .slice(nameStart + 1, leftPart.indexOf(")"))
+                        .trim();
                       committeeName = leftPart.slice(0, nameStart).trim();
                     }
 
@@ -602,10 +630,24 @@ const OrderPage = () => {
                           paddingBottom: "1rem",
                         }}
                       >
-                        <p style={{ marginBottom: "0.3rem", color: "#444", fontWeight: "600", fontSize: "1.05rem" }}>
+                        <p
+                          style={{
+                            marginBottom: "0.3rem",
+                            color: "#444",
+                            fontWeight: "600",
+                            fontSize: "1.05rem",
+                          }}
+                        >
                           Committee Member Name: {committeeName || "-----"}
                         </p>
-                        <p style={{ marginBottom: "0.4rem", color: "#777", fontSize: "0.9rem", fontStyle: "italic" }}>
+                        <p
+                          style={{
+                            marginBottom: "0.4rem",
+                            color: "#777",
+                            fontSize: "0.9rem",
+                            fontStyle: "italic",
+                          }}
+                        >
                           Committee Member Type: {committeeType || "----"}
                         </p>
                         <p
@@ -616,16 +658,29 @@ const OrderPage = () => {
                               committeeStatus.toLowerCase() === "approved"
                                 ? "#2e7d32"
                                 : committeeStatus.toLowerCase() === "refused"
-                                  ? "#c62828"
-                                  : "#555",
+                                ? "#c62828"
+                                : "#555",
                             fontSize: "0.95rem",
                           }}
                         >
                           Status: {committeeStatus || "---"}
                         </p>
-                        <p style={{ color: "#333", lineHeight: "1.4", fontSize: "0.95rem", whiteSpace: "pre-wrap" }}>
+                        <p
+                          style={{
+                            color: "#333",
+                            lineHeight: "1.4",
+                            fontSize: "0.95rem",
+                            whiteSpace: "pre-wrap",
+                          }}
+                        >
                           Committee Member Comments:{" "}
-                          {committeeComment || <span style={{ color: "#999", fontStyle: "italic" }}>No comment</span>}
+                          {committeeComment || (
+                            <span
+                              style={{ color: "#999", fontStyle: "italic" }}
+                            >
+                              No comment
+                            </span>
+                          )}
                         </p>
                       </div>
                     );
@@ -645,8 +700,6 @@ const OrderPage = () => {
                 </p>
               )}
             </Modal.Body>
-
-
           </Modal>
 
           {/* History */}
@@ -694,7 +747,8 @@ const OrderPage = () => {
                   ></span>
                   <p className="mt-3 fs-5">Loading history...</p>
                 </div>
-              ) : Array.isArray(selectedHistory) && selectedHistory.length > 0 ? (
+              ) : Array.isArray(selectedHistory) &&
+                selectedHistory.length > 0 ? (
                 selectedHistory.map((history, idx) => (
                   <div
                     key={idx}
@@ -779,9 +833,14 @@ const OrderPage = () => {
                                   {formatDT(ta.Technicaladmindate)}
                                 </div>
                                 <div
-                                  style={{ fontSize: "0.95rem", color: "#1f2937" }}
+                                  style={{
+                                    fontSize: "0.95rem",
+                                    color: "#1f2937",
+                                  }}
                                 >
-                                  <strong>The Order referred to Technical Admin</strong>
+                                  <strong>
+                                    The Order referred to Technical Admin
+                                  </strong>
                                 </div>
                               </div>
                             </div>
@@ -840,11 +899,19 @@ const OrderPage = () => {
                                 {approval.committee_created_at && (
                                   <div style={{ marginBottom: "0.6rem" }}>
                                     {formatDT(approval.committee_created_at)}
-                                    <div style={{ fontSize: "1rem", color: "#1f2937" }}>
+                                    <div
+                                      style={{
+                                        fontSize: "1rem",
+                                        color: "#1f2937",
+                                      }}
+                                    >
                                       {/* <FaClock
                                                style={{ marginRight: "5px", color: "#6c757d" }}
                                              /> */}
-                                      <strong>  The Order Referred to {approval.committeetype} Committee –{" "}
+                                      <strong>
+                                        {" "}
+                                        The Order Referred to{" "}
+                                        {approval.committeetype} Committee –{" "}
                                         {approval.CommitteeMemberName}
                                       </strong>
                                     </div>
@@ -855,13 +922,21 @@ const OrderPage = () => {
                                 {approval.committee_approval_date && (
                                   <div>
                                     {formatDT(approval.committee_approval_date)}
-                                    <div style={{ fontSize: "1rem", color: "#1f2937" }}>
-                                      {approval.committee_status === "Refused" ? (
+                                    <div
+                                      style={{
+                                        fontSize: "1rem",
+                                        color: "#1f2937",
+                                      }}
+                                    >
+                                      {approval.committee_status ===
+                                      "Refused" ? (
                                         <>
                                           {/* <FaTimesCircle
                                                    style={{ marginRight: "5px", color: "#dc3545" }}
                                                  /> */}
-                                          <strong>The Order Refused by {approval.committeetype} Committee –{" "}
+                                          <strong>
+                                            The Order Refused by{" "}
+                                            {approval.committeetype} Committee –{" "}
                                             {approval.CommitteeMemberName}
                                           </strong>
                                         </>
@@ -870,8 +945,11 @@ const OrderPage = () => {
                                           {/* <FaCheckCircle
                                                    style={{ marginRight: "5px", color: "#198754" }}
                                                  /> */}
-                                          <strong>The Order Approved by {approval.committeetype} Committee –{" "}
-                                            {approval.CommitteeMemberName}</strong>
+                                          <strong>
+                                            The Order Approved by{" "}
+                                            {approval.committeetype} Committee –{" "}
+                                            {approval.CommitteeMemberName}
+                                          </strong>
                                         </>
                                       )}
                                     </div>
@@ -928,8 +1006,14 @@ const OrderPage = () => {
                               >
                                 {formatDT(doc.created_at)}
                               </div>
-                              <div style={{ fontSize: "0.95rem", color: "#1f2937" }}>
-                                <strong>{doc.uploaded_by_role}</strong> uploaded:{" "}
+                              <div
+                                style={{
+                                  fontSize: "0.95rem",
+                                  color: "#1f2937",
+                                }}
+                              >
+                                <strong>{doc.uploaded_by_role}</strong>{" "}
+                                uploaded:{" "}
                                 <em>
                                   {Array.isArray(doc.files)
                                     ? doc.files.join(", ")
@@ -991,10 +1075,14 @@ const OrderPage = () => {
                                 >
                                   {formatDT(ta.TechnicaladminApproval_date)}
                                 </div>
-                                <div style={{ fontSize: "1rem", color: "#1f2937" }}>
+                                <div
+                                  style={{ fontSize: "1rem", color: "#1f2937" }}
+                                >
                                   Order{" "}
-                                  <b>{ta.technical_admin_status.toLowerCase()}</b> by
-                                  Technical Admin
+                                  <b>
+                                    {ta.technical_admin_status.toLowerCase()}
+                                  </b>{" "}
+                                  by Technical Admin
                                 </div>
                               </div>
                             </div>
@@ -1078,18 +1166,21 @@ const OrderPage = () => {
                       <div className="mt-3 p-2 bg-light rounded text-start">
                         {selectedSample.quantity != null && (
                           <p>
-                            <strong>Order Quantity:</strong> {selectedSample.quantity}
+                            <strong>Order Quantity:</strong>{" "}
+                            {selectedSample.quantity}
                           </p>
                         )}
 
-                        {(selectedSample.volume || selectedSample.Volumeunit) && (
+                        {(selectedSample.volume ||
+                          selectedSample.Volumeunit) && (
                           <p>
-                            <strong>Volume:</strong>{" "}
-                            {selectedSample.volume} {selectedSample.Volumeunit}
+                            <strong>Volume:</strong> {selectedSample.volume}{" "}
+                            {selectedSample.Volumeunit}
                           </p>
                         )}
 
-                        {(selectedSample.age != null || selectedSample.gender) && (
+                        {(selectedSample.age != null ||
+                          selectedSample.gender) && (
                           <p>
                             {selectedSample.age != null && (
                               <>
@@ -1107,7 +1198,8 @@ const OrderPage = () => {
 
                         {selectedSample.ethnicity && (
                           <p>
-                            <strong>Ethnicity:</strong> {selectedSample.ethnicity}
+                            <strong>Ethnicity:</strong>{" "}
+                            {selectedSample.ethnicity}
                           </p>
                         )}
 
@@ -1124,26 +1216,31 @@ const OrderPage = () => {
                     <div className="col-md-7">
                       {selectedSample.storagetemp && (
                         <p>
-                          <strong>Storage Temperature:</strong> {selectedSample.storagetemp}
+                          <strong>Storage Temperature:</strong>{" "}
+                          {selectedSample.storagetemp}
                         </p>
                       )}
 
                       {selectedSample.SampleTypeMatrix && (
                         <p>
-                          <strong>Sample Type:</strong> {selectedSample.SampleTypeMatrix}
+                          <strong>Sample Type:</strong>{" "}
+                          {selectedSample.SampleTypeMatrix}
                         </p>
                       )}
 
-                      {(selectedSample.TestResult || selectedSample.TestResultUnit) && (
+                      {(selectedSample.TestResult ||
+                        selectedSample.TestResultUnit) && (
                         <p>
-                          <strong>Test Result:</strong> {selectedSample.TestResult}{" "}
+                          <strong>Test Result:</strong>{" "}
+                          {selectedSample.TestResult}{" "}
                           {selectedSample.TestResultUnit}
                         </p>
                       )}
 
                       {selectedSample.TestMethod && (
                         <p>
-                          <strong>Test Method:</strong> {selectedSample.TestMethod}
+                          <strong>Test Method:</strong>{" "}
+                          {selectedSample.TestMethod}
                         </p>
                       )}
 
@@ -1180,10 +1277,9 @@ const OrderPage = () => {
               </div>
             </>
           )}
-
         </div>
       </div>
-    </section >
+    </section>
   );
 };
 
