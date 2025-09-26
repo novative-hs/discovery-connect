@@ -90,6 +90,7 @@ const SampleArea = () => {
   const [filters, setFilters] = useState({ date_to: today });
   const [analyte, setAnalyte] = useState("");
   const [gender, setGender] = useState("");
+  const [filtersamplemode,setFilterSampleMode]=useState("")
   const [collectionSite, setCollectionSite] = useState("");
   const [visibility, setVisibility] = useState("");
   const [ageFilter, setAgeFilter] = useState("");
@@ -1070,6 +1071,9 @@ const handleFilterChange = (field, value) => {
   useEffect(() => {
     if (
       showAddModal ||
+      showAddtestResultandUnitModal ||
+      showAddPoolModal ||
+      showEditPoolModal ||
       showEditModal ||
       showTransferModal ||
       showHistoryModal
@@ -1084,6 +1088,9 @@ const handleFilterChange = (field, value) => {
     }
   }, [
     showAddModal,
+    showAddtestResultandUnitModal,
+    showAddPoolModal,
+    showEditPoolModal,
     showEditModal,
     showTransferModal,
     showHistoryModal,
@@ -1304,6 +1311,25 @@ const handleFilterChange = (field, value) => {
               </select>
             </div>
 
+             <div className="form-group">
+              <label className="form-label fw-semibold mb-1">Sample Mode</label>
+              <select
+                className="form-select border rounded-3"
+                style={{ width: "200px", height: "42px" }}
+                value={filtersamplemode}
+                onChange={(e) => {
+                  setFilterSampleMode(e.target.value);
+                  handleFilterChange("samplemode", e.target.value);
+                }}
+              >
+                <option value="">All</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+                <option value="High">High</option>
+                <option value="Pooled">Pooled</option>
+              </select>
+            </div>
+
             {/* Age Filter - NEW */}
             {/* <div className="form-group">
               <label className="form-label fw-semibold mb-1">Age</label>
@@ -1322,7 +1348,7 @@ const handleFilterChange = (field, value) => {
             </div> */}
 
             {/* Clear Button */}
-            {(analyte || gender || ageFilter || dateFrom || dateTo) && (
+            {(analyte || gender || ageFilter || dateFrom || dateTo || filtersamplemode) && (
               <div className="form-group">
                 <label className="d-block mb-1">&nbsp;</label>
                 <button
@@ -1331,6 +1357,7 @@ const handleFilterChange = (field, value) => {
                     setAnalyte("");
                     setGender("");
                     setAgeFilter("");
+                    setFilterSampleMode("")
                     setCollectionSite("");
                     setVisibility("");
                     setDateFrom("");
@@ -2892,7 +2919,7 @@ const handleFilterChange = (field, value) => {
         {(showAddPoolModal || showEditPoolModal) && (
           <>
             {/* Bootstrap Backdrop with Blur */}
-            <div
+              <div
               className="modal-backdrop fade show"
               style={{ backdropFilter: "blur(5px)" }}
             ></div>

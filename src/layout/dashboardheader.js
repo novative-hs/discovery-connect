@@ -191,6 +191,9 @@ const Header = ({ setActiveTab, activeTab }) => {
             ...(actions?.some(action => ["add_full", "add_basic", "edit", "dispatch", "history", "all"].includes(action))
               ? [{ label: "Sample List", tab: "samples" }]
               : []),
+               ...(actions?.some(action => ["add_full", "add_basic", "edit", "dispatch", "history", "all"].includes(action))
+              ? [{ label: "Pooled Samples List", tab: "pooled-sample" }]
+              : []),
             ...(actions?.some(action => ["receive", "all"].includes(action))
               ? [{ label: "Sample Dispatch", tab: "sample-dispatch" }]
               : []),

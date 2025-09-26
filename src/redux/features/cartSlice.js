@@ -112,19 +112,23 @@ export const cartSlice = createSlice({
       const storedCart = getLocalStorage(CART_STORAGE_KEY) || [];
       const now = new Date();
 
+      const expiredItems = [];
       const updatedCart = storedCart.filter((item) => {
         const addedTime = new Date(item.addedAt);
         const diffHours = (now - addedTime) / (1000 * 60 * 60);
 
         const isExpired = diffHours > 48;
+      
         if (isExpired) {
-          // Call API to unreserve
-          unreserveSample(item.id);
+          expiredItems.push(item);
         }
         return !isExpired;
       });
 
-      if (updatedCart.length < storedCart.length) {
+      // Unreserve expired samples
+      if (expiredItems.length > 0) {
+        
+        expiredItems.forEach((item) => unreserveSample(item.id));
         notifyError("Samples have been removed from your cart because they expired after 48 hours.");
       }
 

@@ -31,9 +31,11 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
   const tableHeaders = [
     { label: "Analyte", key: "Analyte" },
     { label: "Qty × Volume", key: "volume" },
-    { label: "Age", key: "age" },
-    { label: "Gender", key: "gender" },
-    { label: "Test Result", key: "TestResult" },
+     { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    // { label: "Age", key: "age" },
+    // { label: "Gender", key: "gender" },
+    // { label: "Test Result", key: "TestResult" },
     { label: "Price", key: "price" },
   ];
 
