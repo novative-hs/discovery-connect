@@ -320,7 +320,7 @@ const SampleArea = () => {
                     <td>{s.volume ? `${s.volume} ${s.VolumeUnit || ""}` : "----"}</td>
                     <td>{s.TestResult ? `${s.TestResult} ${s.TestResultUnit || ""}` : "----"}</td>
                     <td>{s.quantity || "----"}</td>
-                    <td className="text-end">{s.price.toLocaleString()}</td>
+                    <td className="text-end">{s.price ? s.price.toLocaleString() : "----"}</td>
 
                   </tr>
                 ))}
