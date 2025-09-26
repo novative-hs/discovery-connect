@@ -9,6 +9,7 @@ import SampleDispatchArea from './sample-dispatch';
 import Header from '../../layout/dashboardheader';
 import SampleReturn from "./sample-return";
 import SampleLost from './sample-lost'
+import PooledSampleArea from "./pooled-sample";
 const DashboardArea = () => {
   const [activeTab, setActiveTab] = useState("samples"); // Default
   const [id, setUserID] = useState(null);
@@ -57,6 +58,8 @@ const DashboardArea = () => {
     switch (activeTab) {
       case "samples":
         return <SampleArea />;
+        case "pooled-sample":
+          return <PooledSampleArea/>
       case "sample-dispatch":
         return <SampleDispatchArea />;
       case "sample-return":
@@ -67,7 +70,7 @@ const DashboardArea = () => {
         return <ChangePassword />;
       case "update-collectionsitestaff":
         return <UpdateCollectionSiteStaff />;
-
+        
       default:
         return <SampleArea />;
     }
