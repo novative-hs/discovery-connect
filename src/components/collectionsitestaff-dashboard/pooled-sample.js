@@ -48,12 +48,13 @@ const PooledSampleArea = () => {
     { label: "Test Result", key: "TestResult" },
     { label: "Volume", key: "volume" },
     // { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Status", key: "status" },
     { label: "Sample Mode", key: "samplemode" },
   ];
 
   const fieldsToShowInOrder = [
     { label: "Container Type", key: "ContainerType" },
+    { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
+    { label: "Status", key: "status" },
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
@@ -331,97 +332,52 @@ Box ID=${sample.box_id || "----"} `;
         )}
 
         {/* Sample Details Modal */}
-        {showSampleModal && selectedSample && (
-          <div
-            className="modal fade show"
-            style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
-            tabIndex="-1"
-            role="dialog"
-          >
-            <div
-              className="modal-dialog modal-lg"
-              style={{ marginTop: "80px" }}
-              role="document"
-            >
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Sample Details - {selectedSample.Analyte || "Unknown"}</h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={closeModal}
-                    aria-label="Close"
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <div className="row">
-                    <div className="col-md-6">
-                      <h6>Basic Information</h6>
-                      <table className="table table-sm">
-                        <tbody>
-                          <tr>
-                            <td><strong>Patient Name:</strong></td>
-                            <td>{selectedSample.PatientName || "----"}</td>
-                          </tr>
-                          <tr>
-                            <td><strong>MR Number:</strong></td>
-                            <td>{selectedSample.MRNumber || "----"}</td>
-                          </tr>
-                          <tr>
-                            <td><strong>Age:</strong></td>
-                            <td>{selectedSample.age ? `${selectedSample.age} years` : "----"}</td>
-                          </tr>
-                          <tr>
-                            <td><strong>Gender:</strong></td>
-                            <td>{selectedSample.gender || "----"}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="col-md-6">
-                      <h6>Sample Information</h6>
-                      <table className="table table-sm">
-                        <tbody>
-                          <tr>
-                            <td><strong>Sample Type:</strong></td>
-                            <td>{selectedSample.SampleTypeMatrix || "----"}</td>
-                          </tr>
-                          <tr>
-                            <td><strong>Volume:</strong></td>
-                            <td>{selectedSample.volume ? `${selectedSample.volume} ${selectedSample.VolumeUnit || ""}` : "----"}</td>
-                          </tr>
-                          <tr>
-                            <td><strong>Status:</strong></td>
-                            <td>{selectedSample.status || "----"}</td>
-                          </tr>
-                          <tr>
-                            <td><strong>Price:</strong></td>
-                            <td>{selectedSample.price && selectedSample.SamplePriceCurrency
-                              ? `${selectedSample.price} ${selectedSample.SamplePriceCurrency}`
-                              : "----"}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <h6 className="mt-3">Additional Information</h6>
-                  <div className="row">
-                    {fieldsToShowInOrder.map(({ label, key }) => (
-                      selectedSample[key] && (
-                        <div key={key} className="col-md-6 mb-2">
-                          <strong>{label}:</strong> {selectedSample[key]}
+         {showSampleModal && selectedSample && (
+       <Modal show={showSampleModal}
+              onHide={closeModal}
+              size="lg"
+              centered
+              backdrop="static"
+              keyboard={false}>
+              <Modal.Header closeButton className="border-0">
+                <Modal.Title className="fw-bold text-danger"> Sample Details - {selectedSample.Analyte || "Unknown"}</Modal.Title>
+              </Modal.Header>
+      
+              <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
+                {selectedSample ? (
+                  (() => {
+                    const validFields = fieldsToShowInOrder.filter(({ key }) => {
+                      const value = selectedSample[key];
+                      return value !== undefined && value !== null && value !== "";
+                    });
+      
+                    if (validFields.length === 0) {
+                      return <div className="text-center text-muted p-3">No sample detail to show</div>;
+                    }
+      
+                    return (
+                      <div className="p-3">
+                        <div className="row g-3">
+                          {validFields.map(({ key, label }) => (
+                            <div className="col-md-6" key={key}>
+                              <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                                <span className="text-muted small fw-bold mb-1">{label}</span>
+                                <span className="fs-6 text-dark">{selectedSample[key]?.toString() || "----"}</span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                      )
-                    ))}
-                  </div>
-                </div>
-                <div className="modal-footer">
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+                      </div>
+                    );
+                  })()
+                ) : (
+                  <div className="text-center text-muted p-3">No sample detail to show</div>
+                )}
+              </Modal.Body>
+      
+              <Modal.Footer className="border-0"></Modal.Footer>
+            </Modal>
+         )}
       </div>
     </section>
   );
