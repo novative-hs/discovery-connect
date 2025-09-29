@@ -14,6 +14,7 @@ const upload = multer({
 
 // Sample Routes
 router.get('/sample/get/:id', SampleController.getSamples);
+router.get('/sample/getAllPooledSample/:id',SampleController.getAllPooledSample)
 router.get('/sample/getAll', SampleController.getAllSamples);
 router.get('/sample/getAllSamples', SampleController.getAllCSSamples);
 router.get('/sample/:id', SampleController.getSampleById);

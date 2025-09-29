@@ -70,7 +70,15 @@ const getSamples = (req, res) => {
     });
   });
 };
-
+const getAllPooledSample=(req,res)=>{
+  const {id}= req.params;
+  SampleModel.getAllPooledSample(id,(err, results) => {
+    if (err) {
+      return res.status(500).json({ error: "Error fetching samples volumn" });
+    }
+    res.status(200).json(results);
+  })
+}
 
 const getAllVolumnUnits = (req, res) => {
   const { name } = req.params;
@@ -82,6 +90,7 @@ const getAllVolumnUnits = (req, res) => {
     res.status(200).json({ data: results });
   });
 }
+
 const deleteSample = (req, res) => {
   const sampleId = req.params.id;
 
@@ -314,4 +323,5 @@ module.exports = {
   updatetestResultandUnit,
   getsingleSamples,
   updateReservedSample,
+  getAllPooledSample
 };
