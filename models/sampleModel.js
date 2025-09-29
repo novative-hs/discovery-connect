@@ -120,7 +120,7 @@ const createPriceRequest = () => {
 
 // Function to get all samples with 'In Stock' status
 const getSamples = (user_account_id, page, pageSize, filters, callback) => {
-  const userId = parseInt(user_account_id, 10);
+  const userId = parseInt(user_account_id);
   const pageInt = parseInt(page, 10) || 1;
   const pageSizeInt = parseInt(pageSize, 10) || 50;
   const offset = (pageInt - 1) * pageSizeInt;
@@ -249,7 +249,48 @@ const getSamples = (user_account_id, page, pageSize, filters, callback) => {
   });
 };
 
+const getAllPooledSample = (id, callback) => {
+  const userId = parseInt(id);
+  if (isNaN(userId)) {
+    return callback(new Error("Invalid user_account_id"), null);
+  }
+  const siteQuery = `SELECT collectionsite_id FROM collectionsitestaff WHERE user_account_id = ?`;
 
+  mysqlConnection.query(siteQuery, [userId], (err, siteResult) => {
+    if (err || siteResult.length === 0) {
+      return callback(err || new Error("Collection site not found"), null);
+    }
+
+    const collectionsite_id = siteResult[0].collectionsite_id;
+    const dataQuery = `
+      SELECT s.*
+      FROM sample s
+      JOIN user_account ua ON s.user_account_id = ua.id
+      JOIN collectionsitestaff cs ON ua.id = cs.user_account_id
+      WHERE cs.collectionsite_id = ?
+      AND s.status = 'In Stock'
+      AND s.samplemode IS NOT NULL
+      AND s.samplemode != 'Individual'
+      AND s.is_deleted = 0
+      AND LOWER(ua.accountType) = 'collectionsitesstaff';
+
+    `;
+    mysqlConnection.query(dataQuery, collectionsite_id, (err, results) => {
+      if (err) return callback(err);
+
+      const enrichedResults = results.map(sample => ({
+        ...sample,
+        locationids: [sample.room_number, sample.freezer_id, sample.box_id].filter(Boolean).join('-'),
+        masterID: sample.masterID ? decryptAndShort(sample.masterID) : null,
+      }));
+      callback(null, {
+        results: enrichedResults,
+      });
+    });
+
+  });
+
+}
 
 const getAllSamples = (callback) => {
   const query = `
@@ -818,9 +859,9 @@ const createSample = (data, callback) => {
               const newStatus = data.alreadypooled === "Pooled" ? "AddtoPool" : "Pooled";
 
               const updateStatusQuery = `
-      UPDATE sample SET status = ?, sample_visibility = 'Non-Public',reserved=0
-      WHERE id IN (?)
-    `;
+                UPDATE sample SET status = ?, sample_visibility = 'Non-Public',reserved=0
+                WHERE id IN (?)
+              `;
 
               mysqlConnection.query(updateStatusQuery, [newStatus, poolSamplesArray], (err, statusResults) => {
                 if (err) {
@@ -1083,4 +1124,5 @@ module.exports = {
   updatetestResultandUnit,
   getsingleSamples,
   updateReservedSample,
+  getAllPooledSample
 };
