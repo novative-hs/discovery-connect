@@ -23,8 +23,6 @@ const SampleArea = () => {
   const [locationError, setLocationError] = useState("")
   const [showAddtestResultandUnitModal, setShowAddTestResultandUnitModal] = useState("");
   const [selectedSampleTypeMatrixes, setSelectedSampleTypeMatrixes] = useState([]);
-  const [selectedSamplesData, setSelectedSamplesData] = useState([]);
-
 
   const [showEdittestResultandUnitModal, setShowEditTestResultandUnitModal] = useState("")
   const [mode, setMode] = useState("");
@@ -578,7 +576,13 @@ const SampleArea = () => {
         .filter(Boolean);
 
       const uniqueAnalytes = [...new Set(selectedAnalytes)];
-      setAnalyteOptions(uniqueAnalytes);
+      setAnalyteOptions(
+        uniqueAnalytes.map((name) => ({
+          value: name,
+          label: name,
+        }))
+      );
+
 
       const selectedSampleData = samples.filter((s) => selected.includes(s.id));
 
@@ -685,32 +689,32 @@ const SampleArea = () => {
       setPoolMode(true);
     }
   };
-const calculateTotalVolume = (analyteName, poolSample) => {
-  let totalVolume = 0;
-  let units = new Set();
-console.log(poolSample)
-  // 1️⃣ Base pool sample ka volume
-  if (selectedOption === "already" && poolSample) {
-    totalVolume += parseFloat(poolSample.volume) || 0;
-    if (poolSample.VolumeUnit) units.add(poolSample.VolumeUnit);
-  }
-
-  // 2️⃣ Dropdown analyte ka volume
-  if (analyteName) {
-    const analyteSample = alreadypooled.find(
-      (s) => s.Analyte === analyteName
-    );
-    if (analyteSample) {
-      totalVolume += parseFloat(analyteSample.volume) || 0;
-      if (analyteSample.VolumeUnit) units.add(analyteSample.VolumeUnit);
+  const calculateTotalVolume = (analyteName, poolSample) => {
+    let totalVolume = 0;
+    let units = new Set();
+    console.log(poolSample)
+    // 1️⃣ Base pool sample ka volume
+    if (selectedOption === "already" && poolSample) {
+      totalVolume += parseFloat(poolSample.volume) || 0;
+      if (poolSample.VolumeUnit) units.add(poolSample.VolumeUnit);
     }
-  }
-console.log(totalVolume)
-  return {
-    volume: totalVolume,
-    VolumeUnit: units.size === 1 ? [...units][0] : "",
+
+    // 2️⃣ Dropdown analyte ka volume
+    if (analyteName) {
+      const analyteSample = alreadypooled.find(
+        (s) => s.Analyte === analyteName
+      );
+      if (analyteSample) {
+        totalVolume += parseFloat(analyteSample.volume) || 0;
+        if (analyteSample.VolumeUnit) units.add(analyteSample.VolumeUnit);
+      }
+    }
+    console.log(totalVolume)
+    return {
+      volume: totalVolume,
+      VolumeUnit: units.size === 1 ? [...units][0] : "",
+    };
   };
-};
 
 
 
@@ -944,66 +948,8 @@ console.log(totalVolume)
     setSelectedSampleName(sample.Analyte)
     setShowAddTestResultandUnitModal(true)
   }
-
- const handleCheckboxChange = (sample) => {
-  setSelectedSamples((prev) => {
-    let newSelectedSamples;
-    let newSelectedSamplesData;
-    
-    if (prev.includes(sample.id)) {
-      // Remove from selected
-      newSelectedSamples = prev.filter((id) => id !== sample.id);
-      newSelectedSamplesData = selectedSamplesData.filter(s => s.id !== sample.id);
-    } else {
-      // Add to selected
-      newSelectedSamples = [...prev, sample.id];
-      newSelectedSamplesData = [...selectedSamplesData, sample];
-    }
-    
-    setSelectedSamplesData(newSelectedSamplesData);
-    return newSelectedSamples;
-  });
-};
-
-
-// Function to get combined data - Different logic for page 1 vs other pages
-const getCombinedTableData = () => {
-  if (!poolMode) {
-    return currentData; // Normal mode: show only current page data
-  }
-
-  const currentPageIds = new Set(currentData.map(s => s.id));
-  
-  if (currentPage === 1) {
-    // Page 1: Show ALL selected samples from ALL pages
-    const allSelectedSamples = selectedSamplesData;
-    
-    // Separate: samples in current page vs other pages
-    const selectedInCurrentPage = allSelectedSamples.filter(s => currentPageIds.has(s.id));
-    const selectedFromOtherPages = allSelectedSamples.filter(s => !currentPageIds.has(s.id));
-    
-    const nonSelectedCurrentData = currentData.filter(s => !selectedSamples.includes(s.id));
-    
-    return [...selectedFromOtherPages, ...selectedInCurrentPage, ...nonSelectedCurrentData];
-  } else {
-    // Page 2, 3, etc.: Show only current page's selected samples
-    const selectedSamplesInCurrentPage = selectedSamplesData.filter(
-      selectedSample => currentPageIds.has(selectedSample.id)
-    );
-
-    const nonSelectedCurrentData = currentData.filter(
-      sample => !selectedSamples.includes(sample.id)
-    );
-
-    return [...selectedSamplesInCurrentPage, ...nonSelectedCurrentData];
-  }
-};
-  // Reset the display flag when pool mode changes or page changes
- 
-  const combinedData = getCombinedTableData();
-
   const handleEditClick = (sample) => {
-
+    console.log(sample)
     setSelectedSampleId(sample.id);
     setEditSample(sample);
 
@@ -1594,9 +1540,6 @@ const getCombinedTableData = () => {
                   <th>
                     <div className="d-flex flex-column align-items-center">
                       <span className="fw-bold fs-6 text-wrap">Pool</span>
-                      <span className="small text-muted">
-                        Selected: {selectedSamples.length}
-                      </span>
                     </div>
                   </th>
                 )}
@@ -1638,24 +1581,27 @@ const getCombinedTableData = () => {
 
 
             <tbody className="table-light">
-               {combinedData.length > 0 ? (
-                combinedData.map((sample) => {
-                  const isSelected = selectedSamples.includes(sample.id);
-                  
-                  return (
-                    <tr 
-                      key={sample.id} 
-                      className={isSelected ? "table-warning" : ""}
-                    >
-                      {poolMode && (
-                        <td className="text-center">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handleCheckboxChange(sample)}
-                          />
-                        </td>
-                      )}
+              {currentData.length > 0 ? (
+                currentData.map((sample) => (
+                  <tr key={sample.id}>
+                    {(poolMode) && (
+                      <td className="text-center">
+
+                        <input
+                          type="checkbox"
+                          checked={selectedSamples.includes(sample.id)}
+                          onChange={() => {
+                            setSelectedSamples((prev) =>
+                              prev.includes(sample.id)
+                                ? prev.filter((id) => id !== sample.id)
+                                : [...prev, sample.id]
+                            );
+                          }}
+                        />
+
+                      </td>
+                    )}
+
                     {tableHeaders.map(({ key }, index) => (
                       <td
                         key={index}
@@ -1866,8 +1812,7 @@ const getCombinedTableData = () => {
 
                       )}
                   </tr>
-                  );
-})
+                ))
               ) : (
                 <tr>
                   <td
@@ -3243,11 +3188,14 @@ const getCombinedTableData = () => {
                                 <option value="" disabled hidden>
                                   Select Analyte
                                 </option>
-                                {analyteOptions.map((analyte, index) => (
-                                  <option key={index} value={analyte}>
-                                    {analyte}
-                                  </option>
-                                ))}
+                                {Array.isArray(analyteOptions) &&
+                                  analyteOptions.map((analyte, index) => (
+                                    <option key={index} value={analyte.value}>
+                                      {analyte.label || analyte.value}
+                                    </option>
+                                  ))
+                                }
+
                               </select>
                             </div>
 
@@ -3332,7 +3280,10 @@ const getCombinedTableData = () => {
                                   }}
                                   step="0.5"
                                   min="0.5"
-                                  max={unitMaxValues[formData.VolumeUnit] || undefined}
+                                  max={
+                                    unitMaxValues[formData.VolumeUnit] ||
+                                    undefined
+                                  }
                                   required
                                   style={{
                                     height: "45px",
@@ -3347,12 +3298,14 @@ const getCombinedTableData = () => {
                                   name="VolumeUnit"
                                   value={formData.VolumeUnit}
                                   onChange={handleInputChange}
+                                  required
                                   style={{
+                                    height: "45px",
+                                    fontSize: "14px",
                                     backgroundColor: !formData.VolumeUnit
                                       ? "#fdecea"
                                       : "#fff",
                                   }}
-                                  required
                                 >
                                   <option value="" hidden></option>
                                   {volumeunitNames.map((name, index) => (
@@ -3362,6 +3315,20 @@ const getCombinedTableData = () => {
                                   ))}
                                 </select>
                               </div>
+                              {/* Validation message*/}
+                              {formData.volume &&
+                                formData.VolumeUnit &&
+                                parseFloat(formData.volume) >
+                                (unitMaxValues[formData.VolumeUnit] ||
+                                  Infinity) && (
+                                  <small className="text-danger mt-1">
+                                    Value must be less than or equal to{" "}
+                                    {unitMaxValues[
+                                      formData.VolumeUnit
+                                    ].toLocaleString()}
+                                    .
+                                  </small>
+                                )}
                             </div>
 
                             {/* Sample Type Matrix */}
@@ -3522,7 +3489,7 @@ const getCombinedTableData = () => {
                                         Analyte: e.target.value,
                                       }));
                                     }}
-                                    
+
                                     required
                                   >
                                     <option value="" disabled hidden>
@@ -3558,12 +3525,17 @@ const getCombinedTableData = () => {
                                       }}
                                       step="0.5"
                                       min="0.5"
-                                      max={unitMaxValues[formData.VolumeUnit] || undefined}
+                                      max={
+                                        unitMaxValues[formData.VolumeUnit] ||
+                                        undefined
+                                      }
                                       required
                                       style={{
                                         height: "45px",
                                         fontSize: "14px",
-                                        backgroundColor: !formData.volume ? "#fdecea" : "#fff",
+                                        backgroundColor: !formData.volume
+                                          ? "#fdecea"
+                                          : "#fff",
                                       }}
                                     />
                                     <select
@@ -3571,16 +3543,16 @@ const getCombinedTableData = () => {
                                       name="VolumeUnit"
                                       value={formData.VolumeUnit}
                                       onChange={handleInputChange}
+                                      required
                                       style={{
+                                        height: "45px",
+                                        fontSize: "14px",
                                         backgroundColor: !formData.VolumeUnit
                                           ? "#fdecea"
                                           : "#fff",
                                       }}
-                                      required
                                     >
-                                      <option value="" hidden>
-                                        Select Unit
-                                      </option>
+                                      <option value="" hidden></option>
                                       {volumeunitNames.map((name, index) => (
                                         <option key={index} value={name}>
                                           {name}
@@ -3588,6 +3560,20 @@ const getCombinedTableData = () => {
                                       ))}
                                     </select>
                                   </div>
+                                  {/* Validation message*/}
+                                  {formData.volume &&
+                                    formData.VolumeUnit &&
+                                    parseFloat(formData.volume) >
+                                    (unitMaxValues[formData.VolumeUnit] ||
+                                      Infinity) && (
+                                      <small className="text-danger mt-1">
+                                        Value must be less than or equal to{" "}
+                                        {unitMaxValues[
+                                          formData.VolumeUnit
+                                        ].toLocaleString()}
+                                        .
+                                      </small>
+                                    )}
                                 </div>
                               </>
                             )}
