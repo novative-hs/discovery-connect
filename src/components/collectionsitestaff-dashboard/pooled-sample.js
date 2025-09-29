@@ -32,6 +32,7 @@ const PooledSampleArea = () => {
   const [searchValue, setSearchValue] = useState(null);
   const [pageSize, setPageSize] = useState(50);
   const [totalCount, setTotalCount] = useState(0);
+  const [filters, setFilters] = useState({});
 
   // Add state for sample details modal
   const [showSampleModal, setShowSampleModal] = useState(false);
@@ -86,42 +87,49 @@ const PooledSampleArea = () => {
     setSelectedSample(null);
   };
 
-  // Fetch samples from the backend
-  const fetchSamples = useCallback(async (page = 1, pageSize = 50, filters = {}) => {
-    try {
-      const { priceFilter, searchField, searchValue } = filters;
-      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamplesPooled/${id}?page=${page}&pageSize=${pageSize}`;
-      if (priceFilter) url += `&priceFilter=${priceFilter}`;
-      if (searchField && searchValue)
-        url += `&searchField=${searchField}&searchValue=${searchValue}`;
-
-      const response = await axios.get(url);
-      const { samples, totalCount, pageSize: serverPageSize, currentPage: serverPage } = response.data;
-
-      setSamples(samples);
-      setFilteredSamples(samples);
-      setTotalPages(Math.ceil(totalCount / pageSize));
-      setTotalCount(totalCount);
-      setPageSize(serverPageSize);
-    } catch (error) {
-      console.error("Error fetching samples:", error);
-    }
-  }, [id]);
-
-  // Fetch samples from backend when component loads
-  useEffect(() => {
-    let isMounted = true;
-    const storedUser = getsessionStorage("user");
-
-    fetchSamples(currentPage + 1, itemsPerPage, {
-      searchField,
-      searchValue,
+   // Fetch samples from the backend with multiple filters
+// Fetch samples function mein error handling improve karo
+const fetchSamples = useCallback(async (page = 1, pageSize = 50, filters = {}) => {
+  try {
+    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamplesPooled/${id}?page=${page}&pageSize=${pageSize}`;
+    
+    Object.keys(filters).forEach(key => {
+      if (filters[key] && filters[key].trim() !== '') {
+        url += `&${key}=${encodeURIComponent(filters[key])}`;
+      }
     });
 
-    return () => {
-      isMounted = false;
-    };
-  }, [currentPage, searchField, searchValue, fetchSamples]);
+    console.log("API URL:", url);
+
+    const response = await axios.get(url);
+    const { samples, totalCount, pageSize: serverPageSize } = response.data;
+
+    setSamples(samples);
+    setFilteredSamples(samples);
+    setTotalPages(Math.ceil(totalCount / pageSize));
+    setTotalCount(totalCount);
+    setPageSize(serverPageSize);
+  } catch (error) {
+    console.error("Error fetching samples:", error);
+    // Error case mein empty array set karo
+    setSamples([]);
+    setFilteredSamples([]);
+    setTotalPages(0);
+    setTotalCount(0);
+  }
+}, [id]);
+
+  // Fetch samples from backend when component loads
+ useEffect(() => {
+  let isMounted = true;
+  const storedUser = getsessionStorage("user");
+
+  fetchSamples(currentPage + 1, itemsPerPage, filters); 
+
+  return () => {
+    isMounted = false;
+  };
+}, [currentPage, filters, fetchSamples]); 
 
   const currentData = filteredSamples;
 
@@ -137,11 +145,13 @@ const PooledSampleArea = () => {
   };
 
   // Filter the researchers list
-  const handleFilterChange = (field, value) => {
-    setSearchField(field);
-    setSearchValue(value);
-    fetchSamples(1, itemsPerPage, { searchField: field, searchValue: value });
-  };
+ const handleFilterChange = (field, value) => {
+  setFilters(prevFilters => ({
+    ...prevFilters,
+    [field]: value
+  }));
+  setCurrentPage(0); // Reset to first page when filter changes
+};
 
   if (id === null) {
     return <div>Loading...</div>;
@@ -163,6 +173,7 @@ const PooledSampleArea = () => {
                         type="text"
                         className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
                         placeholder={`Search ${label}`}
+                        value={filters[key] || ''}
                         onChange={(e) => handleFilterChange(key, e.target.value)}
                         style={{ minWidth: "110px" }}
                       />
@@ -275,10 +286,13 @@ Box ID=${sample.box_id || "----"} `;
                 ))
               ) : (
                 <tr>
-                  <td colSpan={tableHeaders.length} className="text-center">
-                    No samples available
-                  </td>
-                </tr>
+  <td colSpan={tableHeaders.length} className="text-center">
+    {Object.values(filters).some(filter => filter && filter.trim() !== '') 
+      ? "No Samples Available" 
+      : "No samples available in the pooled area"
+    }
+  </td>
+</tr>
               )}
             </tbody>
           </table>

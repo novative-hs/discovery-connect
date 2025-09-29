@@ -51,20 +51,26 @@ const getPriceRequest = (req, res) => {
 };
 
 
-const getBiobankSamplesPooled = (req, res) => {
+ const getBiobankSamplesPooled = (req, res) => {
   const id = parseInt(req.params.id);
   const page = req.query.page || 1;
   const pageSize = req.query.pageSize || 50;
 
   const priceFilter = req.query.priceFilter || null;
-  const searchField = req.query.searchField || null;
-  const searchValue = req.query.searchValue || null;
+  
+  // Multiple filters - sabhi query parameters ko filter object mein collect karo
+  const filters = {};
+  Object.keys(req.query).forEach(key => {
+    if (key !== 'page' && key !== 'pageSize' && key !== 'priceFilter') {
+      filters[key] = req.query[key];
+    }
+  });
 
   if (isNaN(id)) {
     return res.status(400).json({ error: "Invalid user_account_id" });
   }
 
-  BioBankModel.getBiobankSamplesPooled(id, page, pageSize, priceFilter, searchField, searchValue, (err, results) => {
+  BioBankModel.getBiobankSamplesPooled(id, page, pageSize, priceFilter, filters, (err, results) => {
     if (err) {
       return res.status(500).json({ error: "Error fetching samples" });
     }

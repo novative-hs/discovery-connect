@@ -22,6 +22,8 @@ const SampleArea = () => {
   const [locationError, setLocationError] = useState("")
   const [showAddtestResultandUnitModal, setShowAddTestResultandUnitModal] = useState("");
   const [selectedSampleTypeMatrixes, setSelectedSampleTypeMatrixes] = useState([]);
+  const [selectedSamplesData, setSelectedSamplesData] = useState([]);
+
 
   const [showEdittestResultandUnitModal, setShowEditTestResultandUnitModal] = useState("")
   const [mode, setMode] = useState("");
@@ -588,11 +590,18 @@ const handleFilterChange = (field, value) => {
         }));
       }
 
-      setMode("Pooled");
+       setMode("Pooled");
       setshowAddPoolModal(true);
     } else {
       setPoolMode(true);
+      setCurrentPage(1); // Always start from first page when entering pool mode
     }
+  };
+
+  // Add a function to view selected samples
+  const handleViewSelectedSamples = () => {
+    setShowSelectedSamplesOnFirstPage(true);
+    setCurrentPage(1); // Navigate to first page
   };
 
 
@@ -834,6 +843,64 @@ const handleFilterChange = (field, value) => {
     setSelectedSampleName(sample.Analyte)
     setShowAddTestResultandUnitModal(true)
   }
+
+ const handleCheckboxChange = (sample) => {
+  setSelectedSamples((prev) => {
+    let newSelectedSamples;
+    let newSelectedSamplesData;
+    
+    if (prev.includes(sample.id)) {
+      // Remove from selected
+      newSelectedSamples = prev.filter((id) => id !== sample.id);
+      newSelectedSamplesData = selectedSamplesData.filter(s => s.id !== sample.id);
+    } else {
+      // Add to selected
+      newSelectedSamples = [...prev, sample.id];
+      newSelectedSamplesData = [...selectedSamplesData, sample];
+    }
+    
+    setSelectedSamplesData(newSelectedSamplesData);
+    return newSelectedSamples;
+  });
+};
+
+
+// Function to get combined data - Different logic for page 1 vs other pages
+const getCombinedTableData = () => {
+  if (!poolMode) {
+    return currentData; // Normal mode: show only current page data
+  }
+
+  const currentPageIds = new Set(currentData.map(s => s.id));
+  
+  if (currentPage === 1) {
+    // Page 1: Show ALL selected samples from ALL pages
+    const allSelectedSamples = selectedSamplesData;
+    
+    // Separate: samples in current page vs other pages
+    const selectedInCurrentPage = allSelectedSamples.filter(s => currentPageIds.has(s.id));
+    const selectedFromOtherPages = allSelectedSamples.filter(s => !currentPageIds.has(s.id));
+    
+    const nonSelectedCurrentData = currentData.filter(s => !selectedSamples.includes(s.id));
+    
+    return [...selectedFromOtherPages, ...selectedInCurrentPage, ...nonSelectedCurrentData];
+  } else {
+    // Page 2, 3, etc.: Show only current page's selected samples
+    const selectedSamplesInCurrentPage = selectedSamplesData.filter(
+      selectedSample => currentPageIds.has(selectedSample.id)
+    );
+
+    const nonSelectedCurrentData = currentData.filter(
+      sample => !selectedSamples.includes(sample.id)
+    );
+
+    return [...selectedSamplesInCurrentPage, ...nonSelectedCurrentData];
+  }
+};
+  // Reset the display flag when pool mode changes or page changes
+ 
+  const combinedData = getCombinedTableData();
+
   const handleEditClick = (sample) => {
 
     setSelectedSampleId(sample.id);
@@ -1414,6 +1481,9 @@ const handleFilterChange = (field, value) => {
                   <th>
                     <div className="d-flex flex-column align-items-center">
                       <span className="fw-bold fs-6 text-wrap">Pool</span>
+                      <span className="small text-muted">
+                        Selected: {selectedSamples.length}
+                      </span>
                     </div>
                   </th>
                 )}
@@ -1455,27 +1525,24 @@ const handleFilterChange = (field, value) => {
 
 
             <tbody className="table-light">
-              {currentData.length > 0 ? (
-                currentData.map((sample) => (
-                  <tr key={sample.id}>
-                    {(poolMode) && (
-                      <td className="text-center">
-
-                        <input
-                          type="checkbox"
-                          checked={selectedSamples.includes(sample.id)}
-                          onChange={() => {
-                            setSelectedSamples((prev) =>
-                              prev.includes(sample.id)
-                                ? prev.filter((id) => id !== sample.id)
-                                : [...prev, sample.id]
-                            );
-                          }}
-                        />
-
-                      </td>
-                    )}
-
+               {combinedData.length > 0 ? (
+                combinedData.map((sample) => {
+                  const isSelected = selectedSamples.includes(sample.id);
+                  
+                  return (
+                    <tr 
+                      key={sample.id} 
+                      className={isSelected ? "table-warning" : ""}
+                    >
+                      {poolMode && (
+                        <td className="text-center">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => handleCheckboxChange(sample)}
+                          />
+                        </td>
+                      )}
                     {tableHeaders.map(({ key }, index) => (
                       <td
                         key={index}
@@ -1686,7 +1753,8 @@ const handleFilterChange = (field, value) => {
 
                       )}
                   </tr>
-                ))
+                  );
+})
               ) : (
                 <tr>
                   <td

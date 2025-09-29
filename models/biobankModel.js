@@ -299,8 +299,7 @@ const getBiobankSamplesPooled = (
   page,
   pageSize,
   priceFilter,
-  searchField,
-  searchValue,
+  filters,
   callback
 ) => {
   const pageInt = parseInt(page, 10) || 1;
@@ -312,8 +311,6 @@ const getBiobankSamplesPooled = (
   const paramsShared = [];
   const paramsOwn = [];
 
-  const likeValue = `%${searchValue?.toLowerCase()}%`;
-
   // Price filter
   if (priceFilter === "priceAdded") {
     baseWhereShared += ` AND sample.price IS NOT NULL AND sample.price > 0`;
@@ -323,28 +320,67 @@ const getBiobankSamplesPooled = (
     baseWhereOwn += ` AND (sample.price IS NULL OR sample.price = 0)`;
   }
 
-  // Search filter
-  if (searchField && searchValue) {
-    switch (searchField) {
+  Object.entries(filters).forEach(([field, value]) => {
+    if (!value || value.trim() === '') return;
+
+    const likeValue = `%${value.toLowerCase()}%`;
+
+    switch (field) {
+      case "PatientName":
+        baseWhereShared += ` AND LOWER(sample.PatientName) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.PatientName) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
+
+      case "PatientLocation":
+        baseWhereShared += ` AND LOWER(sample.PatientLocation) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.PatientLocation) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
+
+      case "MRNumber":
+        baseWhereShared += ` AND LOWER(sample.MRNumber) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.MRNumber) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
+
+      case "Analyte":
+        baseWhereShared += ` AND LOWER(sample.Analyte) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.Analyte) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
+
+      case "samplemode":
+        baseWhereShared += ` AND LOWER(sample.samplemode) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.samplemode) LIKE ?`;
+        paramsShared.push(likeValue);
+        paramsOwn.push(likeValue);
+        break;
+
+      case "gender":
+        baseWhereShared += ` AND LOWER(TRIM(sample.gender)) = ?`;
+        baseWhereOwn += ` AND LOWER(TRIM(sample.gender)) = ?`;
+        paramsShared.push(value.toLowerCase().trim());
+        paramsOwn.push(value.toLowerCase().trim());
+        break;
+
+
+      case "age":
+        baseWhereShared += ` AND CAST(sample.age AS CHAR) LIKE ?`;
+        baseWhereOwn += ` AND CAST(sample.age AS CHAR) LIKE ?`;
+        paramsShared.push(`%${value}%`);
+        paramsOwn.push(`%${value}%`);
+        break;
+
       case "locationids":
         baseWhereShared += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
         baseWhereOwn += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
         paramsShared.push(likeValue, likeValue, likeValue);
         paramsOwn.push(likeValue, likeValue, likeValue);
-        break;
-
-      case "price":
-        baseWhereShared += ` AND CONCAT_WS(' ', sample.price, sample.SamplePriceCurrency) LIKE ?`;
-        baseWhereOwn += ` AND CONCAT_WS(' ', sample.price, sample.SamplePriceCurrency) LIKE ?`;
-        paramsShared.push(likeValue);
-        paramsOwn.push(likeValue);
-        break;
-
-      case "volume":
-        baseWhereShared += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
-        baseWhereOwn += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
-        paramsShared.push(likeValue, searchValue.toLowerCase());
-        paramsOwn.push(likeValue, searchValue.toLowerCase());
         break;
 
       case "TestResult":
@@ -354,26 +390,21 @@ const getBiobankSamplesPooled = (
         paramsOwn.push(likeValue);
         break;
 
-      case "gender":
-        baseWhereShared += ` AND LOWER(sample.gender) LIKE ?`;
-        baseWhereOwn += ` AND LOWER(sample.gender) LIKE ?`;
-        paramsShared.push(`${searchValue.toLowerCase()}%`);
-        paramsOwn.push(`${searchValue.toLowerCase()}%`);
-        break;
-
-      case "CollectionSiteName":
-        baseWhereShared += ` AND LOWER(collectionsite.CollectionSiteName) LIKE ?`;
-        paramsShared.push(likeValue);
+      case "volume":
+        baseWhereShared += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
+        baseWhereOwn += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ?)`;
+        paramsShared.push(likeValue, value.toLowerCase());
+        paramsOwn.push(likeValue, value.toLowerCase());
         break;
 
       default:
-        baseWhereShared += ` AND LOWER(sample.\`${searchField}\`) LIKE ?`;
-        baseWhereOwn += ` AND LOWER(sample.\`${searchField}\`) LIKE ?`;
+        baseWhereShared += ` AND LOWER(sample.\`${field}\`) LIKE ?`;
+        baseWhereOwn += ` AND LOWER(sample.\`${field}\`) LIKE ?`;
         paramsShared.push(likeValue);
         paramsOwn.push(likeValue);
         break;
     }
-  }
+  });
 
   const sharedSamplesQuery = `
     SELECT sample.*, collectionsite.CollectionSiteName
@@ -409,7 +440,6 @@ const getBiobankSamplesPooled = (
 
   const finalParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id, pageSizeInt, offset];
   const countParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id];
-
 
   mysqlConnection.query(dataQuery, finalParams, (err, results) => {
     if (err) {
