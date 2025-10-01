@@ -300,9 +300,10 @@ const fetchSamples = useCallback(async (page = 1, pageSize = 50, filters = {}) =
                             }
                             return `${sample.age} years`;
                           } else if (key === "TestResult") {
-                            return `${sample.TestResult} ${
-                              sample.TestResultUnit || ""
-                            }`;
+                            if (!sample.TestResult && !sample.TestResultUnit) {
+                             return "-----";
+                            }
+                             return `${sample.TestResult || ""} ${sample.TestResultUnit || ""}`.trim();
                           } else if (key === "price") {
                             return sample.price && sample.SamplePriceCurrency
                               ? `${sample.price} ${sample.SamplePriceCurrency}`

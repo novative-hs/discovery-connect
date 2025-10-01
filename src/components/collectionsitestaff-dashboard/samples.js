@@ -946,16 +946,20 @@ console.log(totalVolume)
   }
 
  const handleCheckboxChange = (sample) => {
+  // Add CSS to prevent flash
+  document.body.style.setProperty('will-change', 'scroll-position', 'important');
+  document.documentElement.style.setProperty('scroll-behavior', 'auto', 'important');
+  
+  const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+  
   setSelectedSamples((prev) => {
     let newSelectedSamples;
     let newSelectedSamplesData;
     
     if (prev.includes(sample.id)) {
-      // Remove from selected
       newSelectedSamples = prev.filter((id) => id !== sample.id);
       newSelectedSamplesData = selectedSamplesData.filter(s => s.id !== sample.id);
     } else {
-      // Add to selected
       newSelectedSamples = [...prev, sample.id];
       newSelectedSamplesData = [...selectedSamplesData, sample];
     }
@@ -963,6 +967,20 @@ console.log(totalVolume)
     setSelectedSamplesData(newSelectedSamplesData);
     return newSelectedSamples;
   });
+
+  // Use microtask for immediate scroll restoration
+  Promise.resolve().then(() => {
+    window.scrollTo({ top: currentScroll, left: 0, behavior: 'auto' });
+  });
+
+  setTimeout(() => {
+    window.scrollTo({ top: currentScroll, left: 0, behavior: 'auto' });
+    // Remove styles after restoration
+    setTimeout(() => {
+      document.body.style.removeProperty('will-change');
+      document.documentElement.style.removeProperty('scroll-behavior');
+    }, 100);
+  }, 0);
 };
 
 
