@@ -185,6 +185,7 @@ const SampleArea = () => {
     patientlocation: "",
     locationids: "",
     Analyte: "",
+    AnalyteUniqueKey: "",
     age: "",
     phoneNumber: "",
     gender: "",
@@ -615,17 +616,24 @@ const SampleArea = () => {
         setSelectedSampleName(uniqueAnalytes[0]);
         setFormData((prev) => ({
           ...prev,
-          Analyte: uniqueAnalytes.length === 1 ? uniqueAnalytes[0] : "",
-          volume: totalVolume, // Total volume add kiya
-          VolumeUnit: units.length === 1 ? units[0] : "", // Agar same hai to auto-set, warna user select karega
+          Analyte: uniqueAnalytes[0],
+          volume: totalVolume,
+          VolumeUnit: units.length === 1 ? units[0] : "",
         }));
-      } else {
-        setSelectedSampleName("");
-        setFormData((prev) => ({
-          ...prev,
-          Analyte: "",
-        }));
-      }
+      } 
+      // else if (uniqueAnalytes.length > 1) {
+      //   // Multiple analytes selected — ask user or clear
+      //   alert("⚠️ You have selected samples with different analytes. Please select only one analyte type for pooling.");
+
+      //   // Reset form to prevent mixing
+      //   setSelectedSampleName("");
+      //   setFormData((prev) => ({
+      //     ...prev,
+      //     Analyte: "",
+      //   }));
+
+      //   return; // stop pooling
+      // }
 
       setMode("Pooled");
       setSelectedOption(e.target.value);
@@ -689,32 +697,49 @@ const SampleArea = () => {
       setPoolMode(true);
     }
   };
-  const calculateTotalVolume = (analyteName, poolSample) => {
+  const calculateTotalVolume = (analyteName, analyteId, poolSample) => {
     let totalVolume = 0;
     let units = new Set();
-    console.log(poolSample)
-    // 1️⃣ Base pool sample ka volume
+    const addedSampleIds = new Set();
+
+    // ✅ 1. Add already pooled base sample
     if (selectedOption === "already" && poolSample) {
       totalVolume += parseFloat(poolSample.volume) || 0;
       if (poolSample.VolumeUnit) units.add(poolSample.VolumeUnit);
+      addedSampleIds.add(poolSample.id);
     }
 
-    // 2️⃣ Dropdown analyte ka volume
-    if (analyteName) {
-      const analyteSample = alreadypooled.find(
-        (s) => s.Analyte === analyteName
-      );
-      if (analyteSample) {
-        totalVolume += parseFloat(analyteSample.volume) || 0;
-        if (analyteSample.VolumeUnit) units.add(analyteSample.VolumeUnit);
+    // ✅ 2. Add selected individual or pooled samples from checkbox selection
+    const selectedSampleData = samples.filter((s) => selectedSamples.includes(s.id));
+    selectedSampleData.forEach((s) => {
+      if (!addedSampleIds.has(s.id)) {
+        totalVolume += parseFloat(s.volume) || 0;
+        if (s.VolumeUnit) units.add(s.VolumeUnit);
+        addedSampleIds.add(s.id);
       }
+    });
+
+    // ✅ 3. Add matching analyte if both name and ID match (and not already added)
+    if (analyteName && analyteId) {
+      const analyteSamples = alreadypooled.filter(
+        (s) =>
+          s.id === analyteId &&
+          !addedSampleIds.has(s.id)
+      );
+
+      analyteSamples.forEach((s) => {
+        totalVolume += parseFloat(s.volume) || 0;
+        if (s.VolumeUnit) units.add(s.VolumeUnit);
+        addedSampleIds.add(s.id);
+      });
     }
-    console.log(totalVolume)
+
     return {
       volume: totalVolume,
       VolumeUnit: units.size === 1 ? [...units][0] : "",
     };
   };
+
 
 
 
@@ -732,6 +757,7 @@ const SampleArea = () => {
       formDataToSend.append(key, formData[key]);
     }
     formDataToSend.append("mode", effectiveMode);
+    console.log(selectedPoolSample)
 
     if (selectedOption === "already" && selectedPoolSample) {
       // formDataToSend.append("analyteObject", JSON.stringify(selectedPoolSample));
@@ -949,7 +975,6 @@ const SampleArea = () => {
     setShowAddTestResultandUnitModal(true)
   }
   const handleEditClick = (sample) => {
-    console.log(sample)
     setSelectedSampleId(sample.id);
     setEditSample(sample);
 
@@ -990,6 +1015,7 @@ const SampleArea = () => {
     const selectedMatrix = sampletypematrixNames.find(
       m => m.trim().toLowerCase() === sampleValue
     );
+
     setFormData({
       patientname: sample.PatientName,
       finalConcentration: sample.finalConcentration,
@@ -1008,7 +1034,7 @@ const SampleArea = () => {
       CountryOfCollection: sample.CountryOfCollection,
       quantity: sample.quantity,
       VolumeUnit: sample.VolumeUnit,
-      SampleTypeMatrix: selectedMatrix || "",
+      SampleTypeMatrix: selectedMatrix,
       SmokingStatus: sample.SmokingStatus,
       AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
       InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
@@ -1068,6 +1094,7 @@ const SampleArea = () => {
     }
   };
 
+
   const resetFormData = () => {
     setFormData({
       patientname: "",
@@ -1075,6 +1102,7 @@ const SampleArea = () => {
       patientlocation: "",
       locationids: "",
       Analyte: "",
+      AnalyteUniqueKey: "",
       age: "",
       volume: "",
       gender: "",
@@ -3168,35 +3196,50 @@ const SampleArea = () => {
                               <label>
                                 Analyte <span className="text-danger">*</span>
                               </label>
-                              <select
-                                className="form-control"
-                                name="Analyte"
-                                value={formData.Analyte}
-                                onChange={(e) =>
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    Analyte: e.target.value,
-                                  }))
-                                }
-                                required
-                                style={{
-                                  height: "45px",
-                                  fontSize: "14px",
-                                  backgroundColor: !formData.Analyte ? "#fdecea" : "#fff",
-                                }}
-                              >
-                                <option value="" disabled hidden>
-                                  Select Analyte
-                                </option>
-                                {Array.isArray(analyteOptions) &&
-                                  analyteOptions.map((analyte, index) => (
-                                    <option key={index} value={analyte.value}>
-                                      {analyte.label || analyte.value}
-                                    </option>
-                                  ))
-                                }
+                              {showEditPoolModal ? (
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="Analyte"
+                                  value={formData.Analyte || ""}
+                                  disabled
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: "#f5f5f5",
+                                  }}
+                                />
+                              ) : (
+                                <select
+                                  className="form-control"
+                                  name="Analyte"
+                                  value={formData.Analyte}
+                                  onChange={(e) =>
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      Analyte: e.target.value,
+                                    }))
+                                  }
+                                  required
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: !formData.Analyte ? "#fdecea" : "#fff",
+                                  }}
+                                >
+                                  <option value="" disabled hidden>
+                                    Select Analyte
+                                  </option>
+                                  {Array.isArray(analyteOptions) &&
+                                    analyteOptions.map((analyte, index) => (
+                                      <option key={index} value={analyte.value}>
+                                        {analyte.label || analyte.value}
+                                      </option>
+                                    ))
+                                  }
 
-                              </select>
+                                </select>
+                              )}
                             </div>
 
                             {/* Location IDs */}
@@ -3341,20 +3384,25 @@ const SampleArea = () => {
                                 name="SampleTypeMatrix"
                                 value={formData.SampleTypeMatrix || ""}
                                 onChange={handleInputChange}
-                                style={{
-                                  backgroundColor: !formData.SampleTypeMatrix
-                                    ? "#fdecea"
-                                    : "#fff",
-                                }}
                                 required
+                                style={{
+                                  height: "45px",
+                                  fontSize: "14px",
+                                  backgroundColor: !formData.SampleTypeMatrix ? "#fdecea" : "#fff",
+                                }}
                               >
-                                <option value="" hidden></option>
+                                <option value="" hidden> Select Option</option>
+                                {selectedSampleTypeMatrixes.includes(formData.SampleTypeMatrix) ? null : (
+                                  <option value={formData.SampleTypeMatrix}>{formData.SampleTypeMatrix}</option>
+                                )}
                                 {selectedSampleTypeMatrixes.map((matrix, index) => (
                                   <option key={index} value={matrix}>
                                     {matrix}
                                   </option>
                                 ))}
                               </select>
+
+
                             </div>
 
                             {/* Container Type */}
@@ -3457,19 +3505,22 @@ const SampleArea = () => {
                                   <select
                                     className="form-control"
                                     name="Analyte"
-                                    value={formData.Analyte}
+                                    value={formData.AnalyteUniqueKey || ""}
                                     onChange={(e) => {
                                       const selectedAnalyte = filteredAnalytes.find(
-                                        (sample) => sample.Analyte === e.target.value
+                                        (sample) =>
+                                          `${sample.Analyte}_${sample.volume}_${sample.VolumeUnit}` === e.target.value
                                       );
 
-                                      // ✅ Correct total volume calculation
+                                      if (!selectedAnalyte) return;
+
                                       const { volume, VolumeUnit } = calculateTotalVolume(
                                         selectedAnalyte?.Analyte,
-                                        selectedAnalyte // yahan hamesha "already pooled sample" ayega
+                                        selectedAnalyte?.id,
+                                        selectedAnalyte
                                       );
+                                      setSelectedPoolSample(selectedAnalyte)
 
-                                      // ✅ Location formatting
                                       const formattedLocationId = `${String(
                                         selectedAnalyte?.room_number || 0
                                       ).padStart(3, "0")}-${String(
@@ -3480,26 +3531,43 @@ const SampleArea = () => {
 
                                       setFormData((prev) => ({
                                         ...prev,
+                                        Analyte: selectedAnalyte.Analyte, // for backend
+                                        AnalyteUniqueKey: `${selectedAnalyte.Analyte}_${selectedAnalyte.volume}_${selectedAnalyte.VolumeUnit}`, // for dropdown
                                         volume,
                                         VolumeUnit,
-                                        SampleTypeMatrix: selectedAnalyte?.SampleTypeMatrix || prev.SampleTypeMatrix,
-                                        ContainerType: selectedAnalyte?.ContainerType || prev.ContainerType,
-                                        finalConcentration: selectedAnalyte?.finalConcentration || prev.finalConcentration,
+                                        SampleTypeMatrix:
+                                          selectedAnalyte?.SampleTypeMatrix || prev.SampleTypeMatrix,
+                                        ContainerType:
+                                          selectedAnalyte?.ContainerType || prev.ContainerType,
+                                        finalConcentration:
+                                          selectedAnalyte?.finalConcentration || prev.finalConcentration,
                                         locationids: formattedLocationId,
-                                        Analyte: e.target.value,
                                       }));
                                     }}
-
                                     required
+                                    disabled={filteredAnalytes.length === 0} // 👈 disable when no analytes
                                   >
-                                    <option value="" disabled hidden>
-                                      Select Analyte
-                                    </option>
-                                    {filteredAnalytes.map((sample, index) => (
-                                      <option key={index} value={sample.Analyte || ""}>
-                                        {sample.Analyte}
-                                      </option>
-                                    ))}
+                                    {filteredAnalytes.length === 0 ? (
+                                      <option value="">No Analytes Available</option>
+                                    ) : (
+                                      <>
+                                        <option value="" disabled hidden>
+                                          Select Analyte
+                                        </option>
+                                        {filteredAnalytes.map((sample, index) => (
+                                          <option
+                                            key={index}
+                                            value={`${sample.Analyte}_${sample.volume}_${sample.VolumeUnit}`}
+                                          >
+                                            {sample.Analyte}
+                                            {sample.volume
+                                              ? ` (${sample.volume}${sample.VolumeUnit ? " " + sample.VolumeUnit : ""
+                                              })`
+                                              : ""}
+                                          </option>
+                                        ))}
+                                      </>
+                                    )}
                                   </select>
                                 </div>
 
