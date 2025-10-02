@@ -560,26 +560,34 @@ const getAllCSSamples = (limit, offset, callback) => {
 
 
 
-
 const updateReservedSample = (sampleId, status, callback) => {
-  status = Number(status);  // force convert to number
-
+  status = Number(status); // make sure it's a number
   const updateQuery = "UPDATE sample SET reserved = ? WHERE id = ?";
-
   mysqlConnection.query(updateQuery, [status, sampleId], (err, result) => {
-    if (err) return callback(err);
+    if (err) {
+      console.log("sample error",err)
+      return callback(err)};
 
-    if (status === 0) {  // now it will work
+    // If unreserving (status = 0)
+    if (status === 0) {
       const deleteQuery = "DELETE FROM quote_requests WHERE sample_id = ?";
       mysqlConnection.query(deleteQuery, [sampleId], (deleteErr, deleteResult) => {
         if (deleteErr) return callback(deleteErr);
+
+        // ✅ Handle case when nothing was deleted
+        if (deleteResult.affectedRows === 0) {
+          console.log(`No quote request found for sample ID: ${sampleId}`);
+        }
+
         return callback(null, { updateResult: result, deleteResult });
       });
     } else {
+      // ✅ Reserved case
       return callback(null, { updateResult: result });
     }
   });
 };
+
 
 
 

@@ -20,24 +20,18 @@ import StepFlow from "@components/offer-product/stepflow";
 const HomeShop = () => {
   return (
     <Wrapper>
-      <SEO pageTitle={"Home Shop"} />
+      <SEO pageTitle="Home" />  {/* Homepage ke liye sahi title */}
       <Header />
       <HeroBanner />
-      
-      <Services/>
-      <StepFlow/>
-      <BioSpecimenSection/>
-      
-      {/* <ShopCategoryArea />
-      <ShopProducts /> */}
+      <Services />
+      <StepFlow />
+      <BioSpecimenSection />
       <OfferPopularProduct />
-      {/* <ShopBanner /> */}
-      {/* <ShopFeature /> */}
-      
-      <BackToTopCom/>
+      <BackToTopCom />
       <Footer />
     </Wrapper>
   );
 };
+
 
 export default HomeShop;

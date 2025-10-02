@@ -7,13 +7,13 @@ const SEO = ({ pageTitle, font }) => (
         {pageTitle && `${pageTitle} - Discovery Connect`}
       </title>
       <meta httpEquiv="x-ua-compatible" content="ie=edge" />
-      <meta
+      <meta name="google-site-verification" content="7N0gtoBbLWGpCJLwZjm0Eg6t9J8zrYF6t03gjHpPSHg" />
+     <meta
         name="description"
-        content="Discovery Connect provides secure collection, storage, and distribution of human biological materials
-         for research and diagnostic product development."
+        content="Discovery Connect helps researchers, biobanks, and collection sites securely collect, store, and share biological samples and data for research and diagnostics."
       />
 
-      <meta name="robots" content="noindex, follow" />
+      <meta name="robots" content="index, follow" />
       <meta
         name="viewport"
         content="width=device-width, initial-scale=1, shrink-to-fit=no"
