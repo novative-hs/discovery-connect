@@ -187,6 +187,7 @@ const SampleArea = () => {
     patientlocation: "",
     locationids: "",
     Analyte: "",
+    AnalyteUniqueKey: "",
     age: "",
     phoneNumber: "",
     gender: "",
@@ -577,8 +578,13 @@ const SampleArea = () => {
         .map((sample) => sample.Analyte)
         .filter(Boolean);
 
-      const uniqueAnalytes = [...new Set(selectedAnalytes)];
-      setAnalyteOptions(uniqueAnalytes);
+     const uniqueAnalytes = [...new Set(selectedAnalytes)];
+      setAnalyteOptions(
+        uniqueAnalytes.map((name) => ({
+          value: name,
+          label: name,
+        }))
+      );
 
       const selectedSampleData = samples.filter((s) => selected.includes(s.id));
 
@@ -611,17 +617,24 @@ const SampleArea = () => {
         setSelectedSampleName(uniqueAnalytes[0]);
         setFormData((prev) => ({
           ...prev,
-          Analyte: uniqueAnalytes.length === 1 ? uniqueAnalytes[0] : "",
-          volume: totalVolume, // Total volume add kiya
-          VolumeUnit: units.length === 1 ? units[0] : "", // Agar same hai to auto-set, warna user select karega
+          Analyte: uniqueAnalytes[0],
+          volume: totalVolume,
+          VolumeUnit: units.length === 1 ? units[0] : "",
         }));
-      } else {
-        setSelectedSampleName("");
-        setFormData((prev) => ({
-          ...prev,
-          Analyte: "",
-        }));
-      }
+      } 
+      // else if (uniqueAnalytes.length > 1) {
+      //   // Multiple analytes selected — ask user or clear
+      //   alert("⚠️ You have selected samples with different analytes. Please select only one analyte type for pooling.");
+
+      //   // Reset form to prevent mixing
+      //   setSelectedSampleName("");
+      //   setFormData((prev) => ({
+      //     ...prev,
+      //     Analyte: "",
+      //   }));
+
+      //   return; // stop pooling
+      // }
 
       setMode("Pooled");
       setSelectedOption(e.target.value);
@@ -632,85 +645,113 @@ const SampleArea = () => {
 
 
   };
-  const handlePoolButtonClick = () => {
+const handlePoolButtonClick = () => {
+  if (poolMode) {
+    const selected = [...selectedSamples];
 
-    if (poolMode) {
-      const selected = [...selectedSamples];
-
-      if (selected.length < 1) {
-        alert("Please select at least one sample to create a pool.");
-        return;
-      }
-
-      const selectedAnalytes = samples
-        .filter((sample) => selected.includes(sample.id))
-        .map((sample) => sample.Analyte)
-        .filter(Boolean);
-
-      const uniqueAnalytes = [...new Set(selectedAnalytes)];
-      setAnalyteOptions(uniqueAnalytes);
-      const selectedSampleData = samples.filter((s) => selected.includes(s.id));
-
-
-      // ✅ Corrected this line by using 'selected' instead of 'updated'
-      const selectedMatrixes = samples
-        .filter((s) => selected.includes(s.id))
-        .map((s) => s.SampleTypeMatrix?.trim())
-        .filter(Boolean);
-
-      const uniqueMatrixes = [...new Set(selectedMatrixes)];
-
-
-
-      setSelectedSampleTypeMatrixes(uniqueMatrixes);
-
-
-      if (uniqueAnalytes.length === 1) {
-        setSelectedSampleName(uniqueAnalytes[0]);
-        setFormData((prev) => ({
-          ...prev,
-          Analyte: uniqueAnalytes[0],
-        }));
-      } else {
-        setSelectedSampleName("");
-        setFormData((prev) => ({
-          ...prev,
-          Analyte: "",
-        }));
-      }
-      setshowOptionModal(false)
-      setMode("Pooled");
-      setshowAddPoolModal(true);
-    } else {
-      setPoolMode(true);
+    if (selected.length < 1) {
+      alert("Please select at least one sample to create a pool.");
+      return;
     }
-  };
+
+    const selectedAnalytes = samples
+      .filter((sample) => selected.includes(sample.id))
+      .map((sample) => sample.Analyte)
+      .filter(Boolean);
+
+    const uniqueAnalytes = [...new Set(selectedAnalytes)];
+    setAnalyteOptions(uniqueAnalytes);
+    const selectedSampleData = samples.filter((s) => selected.includes(s.id));
+
+    // ✅ Calculate total volume for NEW pool samples
+    const totalVolume = selectedSampleData.reduce(
+      (acc, sample) => acc + (parseFloat(sample.volume) || 0),
+      0
+    );
+
+    // ✅ Check Units
+    const units = [
+      ...new Set(selectedSampleData.map((s) => s.VolumeUnit).filter(Boolean)),
+    ];
+
+    const selectedMatrixes = samples
+      .filter((s) => selected.includes(s.id))
+      .map((s) => s.SampleTypeMatrix?.trim())
+      .filter(Boolean);
+
+    const uniqueMatrixes = [...new Set(selectedMatrixes)];
+    setSelectedSampleTypeMatrixes(uniqueMatrixes);
+
+    if (uniqueAnalytes.length === 1) {
+      setSelectedSampleName(uniqueAnalytes[0]);
+      setFormData((prev) => ({
+        ...prev,
+        Analyte: uniqueAnalytes[0],
+        volume: totalVolume, // ✅ Set calculated volume
+        VolumeUnit: units.length === 1 ? units[0] : "", // ✅ Set unit
+      }));
+    } else {
+      setSelectedSampleName("");
+      setFormData((prev) => ({
+        ...prev,
+        Analyte: "",
+        volume: totalVolume, // ✅ Still set volume even if multiple analytes
+        VolumeUnit: units.length === 1 ? units[0] : "",
+      }));
+    }
+    
+    setshowOptionModal(false)
+    setMode("Pooled");
+    setshowAddPoolModal(true);
+  } else {
+    setPoolMode(true);
+  }
+};
+  
+useEffect(() => {
+  console.log("AnalyteNames:", AnalyteNames);
+  console.log("analyteOptions:", analyteOptions);
+}, [AnalyteNames, analyteOptions]);
+
 const calculateTotalVolume = (analyteName, poolSample) => {
   let totalVolume = 0;
   let units = new Set();
-console.log(poolSample)
-  // 1️⃣ Base pool sample ka volume
+
+  // 1️⃣ Add volume from selected checkbox samples (ALWAYS add these)
+  const selectedSampleData = samples.filter(s => selectedSamples.includes(s.id));
+  console.log("Selected sample data:", selectedSampleData);
+  
+  selectedSampleData.forEach(s => {
+    const sampleVolume = parseFloat(s.volume) || 0;
+    totalVolume += sampleVolume;
+    if (s.VolumeUnit) units.add(s.VolumeUnit);
+    console.log(`Added ${sampleVolume} ${s.VolumeUnit} from sample ${s.id}`);
+  });
+
+  // 2️⃣ Add volume from already pooled sample (if "already" option selected)
   if (selectedOption === "already" && poolSample) {
-    totalVolume += parseFloat(poolSample.volume) || 0;
+    const poolVolume = parseFloat(poolSample.volume) || 0;
+    totalVolume += poolVolume;
     if (poolSample.VolumeUnit) units.add(poolSample.VolumeUnit);
+    console.log(`Added ${poolVolume} ${poolSample.VolumeUnit} from pooled sample`);
   }
 
-  // 2️⃣ Dropdown analyte ka volume
-  if (analyteName) {
-    const analyteSample = alreadypooled.find(
-      (s) => s.Analyte === analyteName
-    );
+  // 3️⃣ Add volume from dropdown analyte (only for "already" option when different analyte)
+  if (selectedOption === "already" && analyteName && (!poolSample || poolSample.Analyte !== analyteName)) {
+    const analyteSample = alreadypooled.find(s => s.Analyte === analyteName);
     if (analyteSample) {
-      totalVolume += parseFloat(analyteSample.volume) || 0;
+      const analyteVolume = parseFloat(analyteSample.volume) || 0;
+      totalVolume += analyteVolume;
       if (analyteSample.VolumeUnit) units.add(analyteSample.VolumeUnit);
+      console.log(`Added ${analyteVolume} ${analyteSample.VolumeUnit} from analyte ${analyteName}`);
     }
   }
-console.log(totalVolume)
   return {
     volume: totalVolume,
     VolumeUnit: units.size === 1 ? [...units][0] : "",
   };
 };
+
 
 
 
@@ -728,6 +769,7 @@ console.log(totalVolume)
       formDataToSend.append(key, formData[key]);
     }
     formDataToSend.append("mode", effectiveMode);
+    console.log(selectedPoolSample)
 
     if (selectedOption === "already" && selectedPoolSample) {
       // formDataToSend.append("analyteObject", JSON.stringify(selectedPoolSample));
@@ -1062,6 +1104,7 @@ const getCombinedTableData = () => {
     const selectedMatrix = sampletypematrixNames.find(
       m => m.trim().toLowerCase() === sampleValue
     );
+
     setFormData({
       patientname: sample.PatientName,
       finalConcentration: sample.finalConcentration,
@@ -1080,7 +1123,7 @@ const getCombinedTableData = () => {
       CountryOfCollection: sample.CountryOfCollection,
       quantity: sample.quantity,
       VolumeUnit: sample.VolumeUnit,
-      SampleTypeMatrix: selectedMatrix || "",
+      SampleTypeMatrix: selectedMatrix,
       SmokingStatus: sample.SmokingStatus,
       AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
       InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
@@ -1140,6 +1183,7 @@ const getCombinedTableData = () => {
     }
   };
 
+
   const resetFormData = () => {
     setFormData({
       patientname: "",
@@ -1147,6 +1191,7 @@ const getCombinedTableData = () => {
       patientlocation: "",
       locationids: "",
       Analyte: "",
+      AnalyteUniqueKey: "",
       age: "",
       volume: "",
       gender: "",
@@ -3241,32 +3286,51 @@ const getCombinedTableData = () => {
                               <label>
                                 Analyte <span className="text-danger">*</span>
                               </label>
-                              <select
-                                className="form-control"
-                                name="Analyte"
-                                value={formData.Analyte}
-                                onChange={(e) =>
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    Analyte: e.target.value,
-                                  }))
-                                }
-                                required
-                                style={{
-                                  height: "45px",
-                                  fontSize: "14px",
-                                  backgroundColor: !formData.Analyte ? "#fdecea" : "#fff",
-                                }}
-                              >
-                                <option value="" disabled hidden>
-                                  Select Analyte
-                                </option>
-                                {analyteOptions.map((analyte, index) => (
-                                  <option key={index} value={analyte}>
-                                    {analyte}
+                              {showEditPoolModal ? (
+                                <input
+                                  type="text"
+                                  className="form-control"
+                                  name="Analyte"
+                                  value={formData.Analyte || ""}
+                                  disabled
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: "#f5f5f5",
+                                  }}
+                                />
+                              ) : (
+                                <select
+                                  className="form-control"
+                                  name="Analyte"
+                                  value={formData.Analyte}
+                                  onChange={(e) =>
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      Analyte: e.target.value,
+                                    }))
+                                  }
+                                  required
+                                  style={{
+                                    height: "45px",
+                                    fontSize: "14px",
+                                    backgroundColor: !formData.Analyte ? "#fdecea" : "#fff",
+                                  }}
+                                >
+                                  <option value="" disabled hidden>
+                                    Select Analyte
                                   </option>
-                                ))}
-                              </select>
+                                  {Array.isArray(analyteOptions) &&
+                                    analyteOptions.map((analyte, index) => (
+                                      <option key={index} value={analyte.value}>
+                                        {analyte.label || analyte.value}
+                                      </option>
+                                    ))
+                                  }
+
+                                </select>
+                              )}
+                           
                             </div>
 
                             {/* Location IDs */}
@@ -3392,20 +3456,25 @@ const getCombinedTableData = () => {
                                 name="SampleTypeMatrix"
                                 value={formData.SampleTypeMatrix || ""}
                                 onChange={handleInputChange}
-                                style={{
-                                  backgroundColor: !formData.SampleTypeMatrix
-                                    ? "#fdecea"
-                                    : "#fff",
-                                }}
                                 required
+                                style={{
+                                  height: "45px",
+                                  fontSize: "14px",
+                                  backgroundColor: !formData.SampleTypeMatrix ? "#fdecea" : "#fff",
+                                }}
                               >
-                                <option value="" hidden></option>
+                                <option value="" hidden> Select Option</option>
+                                {selectedSampleTypeMatrixes.includes(formData.SampleTypeMatrix) ? null : (
+                                  <option value={formData.SampleTypeMatrix}>{formData.SampleTypeMatrix}</option>
+                                )}
                                 {selectedSampleTypeMatrixes.map((matrix, index) => (
                                   <option key={index} value={matrix}>
                                     {matrix}
                                   </option>
                                 ))}
                               </select>
+
+
                             </div>
 
                             {/* Container Type */}
@@ -3508,49 +3577,69 @@ const getCombinedTableData = () => {
                                   <select
                                     className="form-control"
                                     name="Analyte"
-                                    value={formData.Analyte}
+                                    value={formData.AnalyteUniqueKey || ""}
                                     onChange={(e) => {
-                                      const selectedAnalyte = filteredAnalytes.find(
-                                        (sample) => sample.Analyte === e.target.value
-                                      );
+                                     const selectedAnalyte = filteredAnalytes.find(
+                                    (sample) =>
+                                    `${sample.Analyte}_${sample.volume}_${sample.VolumeUnit}` === e.target.value
+                                     );
 
-                                      // ✅ Correct total volume calculation
-                                      const { volume, VolumeUnit } = calculateTotalVolume(
-                                        selectedAnalyte?.Analyte,
-                                        selectedAnalyte // yahan hamesha "already pooled sample" ayega
-                                      );
+                                  if (!selectedAnalyte) return;
 
-                                      // ✅ Location formatting
-                                      const formattedLocationId = `${String(
-                                        selectedAnalyte?.room_number || 0
-                                      ).padStart(3, "0")}-${String(
-                                        selectedAnalyte?.freezer_id || 0
-                                      ).padStart(3, "0")}-${String(
-                                        selectedAnalyte?.box_id || 0
-                                      ).padStart(3, "0")}`;
+                                 // ✅ Calculate volume including selected samples + this analyte
+                                 const { volume, VolumeUnit } = calculateTotalVolume(
+                                    selectedAnalyte?.Analyte,
+                                    selectedAnalyte
+                                  );
 
-                                      setFormData((prev) => ({
-                                        ...prev,
-                                        volume,
-                                        VolumeUnit,
-                                        SampleTypeMatrix: selectedAnalyte?.SampleTypeMatrix || prev.SampleTypeMatrix,
-                                        ContainerType: selectedAnalyte?.ContainerType || prev.ContainerType,
-                                        finalConcentration: selectedAnalyte?.finalConcentration || prev.finalConcentration,
-                                        locationids: formattedLocationId,
-                                        Analyte: e.target.value,
-                                      }));
+                                  setSelectedPoolSample(selectedAnalyte);
+
+                                  const formattedLocationId = `${String(
+                                    selectedAnalyte?.room_number || 0
+                                  ).padStart(3, "0")}-${String(
+                                    selectedAnalyte?.freezer_id || 0
+                                  ).padStart(3, "0")}-${String(
+                                    selectedAnalyte?.box_id || 0
+                                  ).padStart(3, "0")}`;
+
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    Analyte: selectedAnalyte.Analyte,
+                                    AnalyteUniqueKey: `${selectedAnalyte.Analyte}_${selectedAnalyte.volume}_${selectedAnalyte.VolumeUnit}`,
+                                    volume: volume, // ✅ Use calculated volume
+                                    VolumeUnit: VolumeUnit, // ✅ Use calculated unit
+                                    SampleTypeMatrix: selectedAnalyte?.SampleTypeMatrix || prev.SampleTypeMatrix,
+                                    ContainerType: selectedAnalyte?.ContainerType || prev.ContainerType,
+                                    finalConcentration: selectedAnalyte?.finalConcentration || prev.finalConcentration,
+                                    locationids: formattedLocationId,
+                                  }));
+
                                     }}
                                     
                                     required
+                                    disabled={filteredAnalytes.length === 0} // 👈 disable when no analytes
                                   >
-                                    <option value="" disabled hidden>
-                                      Select Analyte
-                                    </option>
-                                    {filteredAnalytes.map((sample, index) => (
-                                      <option key={index} value={sample.Analyte || ""}>
-                                        {sample.Analyte}
-                                      </option>
-                                    ))}
+                                    {filteredAnalytes.length === 0 ? (
+                                      <option value="">No Analytes Available</option>
+                                    ) : (
+                                      <>
+                                        <option value="" disabled hidden>
+                                          Select Analyte
+                                        </option>
+                                        {filteredAnalytes.map((sample, index) => (
+                                          <option
+                                            key={index}
+                                            value={`${sample.Analyte}_${sample.volume}_${sample.VolumeUnit}`}
+                                          >
+                                            {sample.Analyte}
+                                            {sample.volume
+                                              ? ` (${sample.volume}${sample.VolumeUnit ? " " + sample.VolumeUnit : ""
+                                              })`
+                                              : ""}
+                                          </option>
+                                        ))}
+                                      </>
+                                    )}
                                   </select>
                                 </div>
 
@@ -3623,6 +3712,7 @@ const getCombinedTableData = () => {
                         onClick={() => {
                           setshowOptionModal(true);
                           setshowAddPoolModal(false);
+                          resetFormData()
                         }}
                       >
                         Back

@@ -290,6 +290,47 @@ const updateQuarantineSamples = (req, res) => {
   });
 };
 
+const getCollectionSiteSamplesPooled = (req, res) => {
+  const id = parseInt(req.params.id);
+  const page = req.query.page || 1;
+  const pageSize = req.query.pageSize || 50;
+  const priceFilter = req.query.priceFilter || null;
+
+  const filters = {};
+  Object.keys(req.query).forEach((key) => {
+    if (key !== "page" && key !== "pageSize" && key !== "priceFilter") {
+      filters[key] = req.query[key];
+    }
+  });
+
+  if (isNaN(id)) {
+    return res.status(400).json({ error: "Invalid user_account_id" });
+  }
+
+  SampleModel.getCollectionSiteSamplesPooled(
+    id,
+    page,
+    pageSize,
+    priceFilter,
+    filters,
+    (err, results) => {
+      if (err) {
+        return res.status(500).json({ error: "Error fetching collection site samples" });
+      }
+
+      const { samples, totalCount } = results;
+      res.status(200).json({
+        samples,
+        totalPages: Math.ceil(totalCount / pageSize),
+        currentPage: parseInt(page),
+        pageSize: parseInt(pageSize),
+        totalCount,
+      });
+    }
+  );
+};
+
+
 const updatetestResultandUnit = (req, res) => {
 
   const { id } = req.params;
@@ -323,5 +364,6 @@ module.exports = {
   updatetestResultandUnit,
   getsingleSamples,
   updateReservedSample,
-  getAllPooledSample
+  getAllPooledSample,
+  getCollectionSiteSamplesPooled
 };

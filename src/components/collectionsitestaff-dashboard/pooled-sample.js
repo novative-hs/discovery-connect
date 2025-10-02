@@ -104,7 +104,7 @@ const closePatientModal = () => {
 // Fetch samples function mein error handling improve karo
 const fetchSamples = useCallback(async (page = 1, pageSize = 50, filters = {}) => {
   try {
-    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/biobank/getsamplesPooled/${id}?page=${page}&pageSize=${pageSize}`;
+    let url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/getPooledSamples/${id}?page=${page}&pageSize=${pageSize}`;
     
     Object.keys(filters).forEach(key => {
       if (filters[key] && filters[key].trim() !== '') {
@@ -124,13 +124,13 @@ const fetchSamples = useCallback(async (page = 1, pageSize = 50, filters = {}) =
     setPageSize(serverPageSize);
   } catch (error) {
     console.error("Error fetching samples:", error);
-    // Error case mein empty array set karo
     setSamples([]);
     setFilteredSamples([]);
     setTotalPages(0);
     setTotalCount(0);
   }
 }, [id]);
+
 
   // Fetch samples from backend when component loads
  useEffect(() => {

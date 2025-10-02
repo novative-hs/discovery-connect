@@ -19,6 +19,7 @@ router.get('/sample/getAll', SampleController.getAllSamples);
 router.get('/sample/getAllSamples', SampleController.getAllCSSamples);
 router.get('/sample/:id', SampleController.getSampleById);
 router.put("/sample/reserve", SampleController.updateReservedSample);
+router.get("/sample/getPooledSamples/:id", SampleController.getCollectionSiteSamplesPooled);
 router.post('/samples/postsample',upload.fields([{ name: 'logo', maxCount: 1 },{ name: 'samplepdf', maxCount: 1 },]),
 SampleController.createSample);
 router.put(

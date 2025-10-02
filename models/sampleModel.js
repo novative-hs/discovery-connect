@@ -1104,6 +1104,153 @@ const updateQuarantineSamples = (id, status, comment, callback) => {
   });
 };
 
+const getCollectionSiteSamplesPooled = (
+  user_account_id,
+  page,
+  pageSize,
+  priceFilter,
+  filters,
+  callback
+) => {
+  const pageInt = parseInt(page, 10) || 1;
+  const pageSizeInt = parseInt(pageSize, 10) || 50;
+  const offset = (pageInt - 1) * pageSizeInt;
+
+  // Step 1: get collectionsite_id of logged-in user
+  const getSiteQuery = `
+    SELECT collectionsite_id 
+    FROM collectionsitestaff 
+    WHERE user_account_id = ? 
+    LIMIT 1
+  `;
+
+  mysqlConnection.query(getSiteQuery, [user_account_id], (err, siteRows) => {
+    if (err) {
+      console.error("❌ Error fetching user's collectionsite:", err);
+      return callback(err);
+    }
+
+    if (!siteRows || siteRows.length === 0) {
+      return callback(null, { samples: [], totalCount: 0 }); // user not mapped to any site
+    }
+
+    const collectionsiteId = siteRows[0].collectionsite_id;
+
+    // Step 2: build dynamic filter
+    let baseWhere = `sample.status = "Pooled" AND sample.is_deleted = FALSE`;
+    const params = [];
+
+    if (priceFilter === "priceAdded") {
+      baseWhere += ` AND sample.price IS NOT NULL AND sample.price > 0`;
+    } else if (priceFilter === "priceNotAdded") {
+      baseWhere += ` AND (sample.price IS NULL OR sample.price = 0)`;
+    }
+
+    Object.entries(filters || {}).forEach(([field, value]) => {
+      if (!value || value.trim() === "") return;
+      const likeValue = `%${value.toLowerCase()}%`;
+
+      switch (field) {
+        case "PatientName":
+        case "PatientLocation":
+        case "MRNumber":
+        case "Analyte":
+        case "samplemode":
+          baseWhere += ` AND LOWER(sample.${field}) LIKE ?`;
+          params.push(likeValue);
+          break;
+
+        case "gender":
+          baseWhere += ` AND LOWER(TRIM(sample.gender)) = ?`;
+          params.push(value.toLowerCase().trim());
+          break;
+
+        case "age":
+          baseWhere += ` AND CAST(sample.age AS CHAR) LIKE ?`;
+          params.push(`%${value}%`);
+          break;
+
+        case "locationids":
+          baseWhere += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ? )`;
+          params.push(likeValue, likeValue, likeValue);
+          break;
+
+        case "TestResult":
+          baseWhere += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
+          params.push(likeValue);
+          break;
+
+        case "volume":
+          baseWhere += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ? )`;
+          params.push(likeValue, value.toLowerCase());
+          break;
+
+        default:
+          baseWhere += ` AND LOWER(sample.\`${field}\`) LIKE ?`;
+          params.push(likeValue);
+          break;
+      }
+    });
+
+    // Step 3: main queries
+    const dataQuery = `
+      SELECT sample.*, cs.CollectionSiteName
+      FROM sample
+      JOIN user_account ua_sample 
+        ON sample.user_account_id = ua_sample.id
+      JOIN collectionsitestaff cstaff_owner 
+        ON ua_sample.id = cstaff_owner.user_account_id
+      JOIN collectionsite cs 
+        ON cstaff_owner.collectionsite_id = cs.id
+      WHERE ${baseWhere}
+        AND cstaff_owner.collectionsite_id = ?
+        AND ua_sample.accountType <> 'biobank'
+      ORDER BY sample.id DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*) AS totalCount
+      FROM sample
+      JOIN user_account ua_sample 
+        ON sample.user_account_id = ua_sample.id
+      JOIN collectionsitestaff cstaff_owner 
+        ON ua_sample.id = cstaff_owner.user_account_id
+      WHERE ${baseWhere}
+        AND cstaff_owner.collectionsite_id = ?
+        AND ua_sample.accountType <> 'biobank'
+    `;
+
+    const finalParams = [...params, collectionsiteId, pageSizeInt, offset];
+    const countParams = [...params, collectionsiteId];
+
+    mysqlConnection.query(dataQuery, finalParams, (err, results) => {
+      if (err) {
+        console.error("❌ Data Query Error:", err.sqlMessage || err.message);
+        return callback(err);
+      }
+
+      const enrichedResults = results.map((sample) => ({
+        ...sample,
+        locationids: [sample.room_number, sample.freezer_id, sample.box_id]
+          .filter(Boolean)
+          .join("-"),
+      }));
+
+      mysqlConnection.query(countQuery, countParams, (err, countResults) => {
+        if (err) {
+          console.error("❌ Count Query Error:", err.sqlMessage || err.message);
+          return callback(err);
+        }
+        const totalCount = countResults[0]?.totalCount || 0;
+        callback(null, { samples: enrichedResults, totalCount });
+      });
+    });
+  });
+};
+
+
+
 module.exports = {
   getFilteredSamples,
   createSampleTable,
@@ -1124,5 +1271,6 @@ module.exports = {
   updatetestResultandUnit,
   getsingleSamples,
   updateReservedSample,
-  getAllPooledSample
+  getAllPooledSample,
+  getCollectionSiteSamplesPooled
 };
