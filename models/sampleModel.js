@@ -1117,13 +1117,7 @@ const getCollectionSiteSamplesPooled = (
   const offset = (pageInt - 1) * pageSizeInt;
 
   // Step 1: get collectionsite_id of logged-in user
-  const getSiteQuery = `
-    SELECT collectionsite_id 
-    FROM collectionsitestaff 
-    WHERE user_account_id = ? 
-    LIMIT 1
-  `;
-
+const getSiteQuery = `SELECT collectionsite_id FROM collectionsitestaff WHERE user_account_id = ?`;
   mysqlConnection.query(getSiteQuery, [user_account_id], (err, siteRows) => {
     if (err) {
       console.error("❌ Error fetching user's collectionsite:", err);
@@ -1137,7 +1131,7 @@ const getCollectionSiteSamplesPooled = (
     const collectionsiteId = siteRows[0].collectionsite_id;
 
     // Step 2: build dynamic filter
-    let baseWhere = `sample.status = "Pooled" AND sample.is_deleted = FALSE`;
+    let baseWhere = ""
     const params = [];
 
     if (priceFilter === "priceAdded") {
@@ -1194,35 +1188,37 @@ const getCollectionSiteSamplesPooled = (
 
     // Step 3: main queries
     const dataQuery = `
-      SELECT sample.*, cs.CollectionSiteName
-      FROM sample
-      JOIN user_account ua_sample 
-        ON sample.user_account_id = ua_sample.id
-      JOIN collectionsitestaff cstaff_owner 
-        ON ua_sample.id = cstaff_owner.user_account_id
-      JOIN collectionsite cs 
-        ON cstaff_owner.collectionsite_id = cs.id
-      WHERE ${baseWhere}
-        AND cstaff_owner.collectionsite_id = ?
-        AND ua_sample.accountType <> 'biobank'
-      ORDER BY sample.id DESC
+     SELECT s.*
+      FROM sample s
+      JOIN user_account ua ON s.user_account_id = ua.id
+      JOIN collectionsitestaff cs ON ua.id = cs.user_account_id
+      WHERE 
+      cs.collectionsite_id = ?
+      AND ua.accountType = 'CollectionSitesStaff' AND
+      sample.status = "Pooled" AND 
+      sample.is_deleted = FALSE
+      ${baseWhere}
+      ORDER BY s.created_at DESC
       LIMIT ? OFFSET ?
     `;
 
     const countQuery = `
       SELECT COUNT(*) AS totalCount
       FROM sample
-      JOIN user_account ua_sample 
-        ON sample.user_account_id = ua_sample.id
-      JOIN collectionsitestaff cstaff_owner 
-        ON ua_sample.id = cstaff_owner.user_account_id
-      WHERE ${baseWhere}
-        AND cstaff_owner.collectionsite_id = ?
-        AND ua_sample.accountType <> 'biobank'
+      JOIN user_account ua ON s.user_account_id = ua.id
+      JOIN collectionsitestaff cs ON ua.id = cs.user_account_id
+      WHERE 
+      cs.collectionsite_id = ?
+      AND ua.accountType = 'CollectionSitesStaff' AND
+      sample.status = "Pooled" AND 
+      sample.is_deleted = FALSE
+      ${baseWhere}
+      ORDER BY s.created_at DESC
+      LIMIT ? OFFSET ?
     `;
 
-    const finalParams = [...params, collectionsiteId, pageSizeInt, offset];
-    const countParams = [...params, collectionsiteId];
+    const finalParams = [collectionsiteId,...params, pageSizeInt, offset];
+    const countParams = [collectionsiteId,...params];
 
     mysqlConnection.query(dataQuery, finalParams, (err, results) => {
       if (err) {

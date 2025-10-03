@@ -756,66 +756,83 @@ const calculateTotalVolume = (analyteName, poolSample) => {
 
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (isSubmitting) return; // 🛑 Prevent double submission 
-    setIsSubmitting(true);
-    const isResultFilled = !!formData.TestResult && !!formData.TestResultUnit;
-    let effectiveMode = mode;
+  e.preventDefault();
+  if (isSubmitting) return;
+  setIsSubmitting(true);
+  
+  const isResultFilled = !!formData.TestResult && !!formData.TestResultUnit;
+  let effectiveMode = mode;
 
-    if (mode === "Pooled") { effectiveMode = isResultFilled ? "Pooled" : "AddtoPool"; }
+  if (mode === "Pooled") { 
+    effectiveMode = isResultFilled ? "Pooled" : "AddtoPool"; 
+  }
 
-    const formDataToSend = new FormData();
-    for (let key in formData) {
-      formDataToSend.append(key, formData[key]);
-    }
-    formDataToSend.append("mode", effectiveMode);
-    console.log(selectedPoolSample)
+  const formDataToSend = new FormData();
+  for (let key in formData) {
+    formDataToSend.append(key, formData[key]);
+  }
+  formDataToSend.append("mode", effectiveMode);
 
-    if (selectedOption === "already" && selectedPoolSample) {
-      // formDataToSend.append("analyteObject", JSON.stringify(selectedPoolSample));
-      selectedSamples.push(selectedPoolSample.id)
-    }
+  if (selectedOption === "already" && selectedPoolSample) {
+    selectedSamples.push(selectedPoolSample.id);
+  }
 
-    if ((effectiveMode !== "Individual") && Array.isArray(selectedSamples) && selectedSamples.length > 0) {
-      formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
-    }
-    for (let [key, value] of formDataToSend.entries()) {
-      console.log(key, value);
-    }
-    try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
-        formDataToSend,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
+  if ((effectiveMode !== "Individual") && Array.isArray(selectedSamples) && selectedSamples.length > 0) {
+    formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
+  }
 
-          },
-        });
-      fetchSamples(1, itemsPerPage, { searchField, searchValue });
-      setSelectedSamples([]);
-      setSelectedSampleName("");
-      setshowAddPoolModal(false);
-      setPoolMode(false);
-      setShowAddModal(false);
-      setSuccessMessage("Sample added successfully.");
-      setTimeout(() => setSuccessMessage(""), 3000);
-      resetFormData();
-      setLogoPreview(false);
-      setShowAdditionalFields(false);
-    } catch (error) {
-      if (error.response?.status === 409) {
-        notifyError(error.response.data?.error || "Duplicate entry found.");
+  try {
+    const response = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
+      formDataToSend,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       }
-      else {
-        notifyError("Something went wrong while adding the sample.");
-      }
-    }
-    finally {
-      resetFormData()
-      setIsSubmitting(false);
-    }
-  };
+    );
 
+    // ✅ POOLED SAMPLES KO REMOVE KARNA
+    if (selectedSamples.length > 0) {
+      // Current samples se pooled samples ko filter out karein
+      const updatedSamples = samples.filter(
+        sample => !selectedSamples.includes(sample.id)
+      );
+      
+      // State update karein
+      setSamples(updatedSamples);
+      setFilteredSamplename(updatedSamples);
+    }
+
+    // ✅ RESET ALL STATES
+    setSelectedSamples([]);
+    setSelectedSamplesData([]);
+    setSelectedSampleName("");
+    setshowAddPoolModal(false);
+    setPoolMode(false);
+    setShowAddModal(false);
+    setSuccessMessage("Sample pool successfully created.");
+    
+    // ✅ SERVER SE LATEST DATA FETCH KAREIN
+    setTimeout(() => {
+      fetchSamples(currentPage, itemsPerPage, filters);
+    }, 500);
+    
+    resetFormData();
+    setLogoPreview(false);
+    setShowAdditionalFields(false);
+    
+    setTimeout(() => setSuccessMessage(""), 3000);
+  } catch (error) {
+    if (error.response?.status === 409) {
+      notifyError(error.response.data?.error || "Duplicate entry found.");
+    } else {
+      notifyError("Something went wrong while adding the sample.");
+    }
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleAddTestResult = async (e) => {
     e.preventDefault();

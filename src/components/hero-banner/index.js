@@ -29,7 +29,7 @@ const HeroBanner = () => {
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.load();
-      videoRef.current.play();
+      videoRef.current.play().catch(() => {});
       videoRef.current.playbackRate = 1.5;
     }
   }, [videoIndex]);
@@ -37,6 +37,7 @@ const HeroBanner = () => {
   return (
     <div className="container-fluid p-0">
       <div className="position-relative d-flex flex-column justify-content-center align-items-start min-vh-100 px-5 py-5">
+        
         {/* Background Video */}
         <video
           ref={videoRef}
@@ -45,7 +46,7 @@ const HeroBanner = () => {
           playsInline
           loop={false}
           preload="none"
-          className="position-absolute top-0 start-0 w-100 h-100 object-fit-cover z-0"
+          className="hero-video position-absolute top-0 start-0 w-100 h-100 z-0"
         >
           <source src={videoSources[videoIndex]} type="video/mp4" />
           Your browser does not support the video tag.
@@ -74,12 +75,31 @@ const HeroBanner = () => {
             biospecimens directly from donors, enabling faster and more
             accessible scientific studies.
           </p>
-          <Link href="/register" className="btn btn-lg text-white p-3" style={{ backgroundColor: "#003366" }}>
+          <Link
+            href="/register"
+            className="btn btn-lg text-white p-3"
+            style={{ backgroundColor: "#003366" }}
+          >
             Register Yourself Now
           </Link>
-
         </div>
       </div>
+
+      {/* CSS Fix */}
+      <style jsx>{`
+       .hero-video {
+       object-fit: cover;
+       object-position: center;
+        }
+
+       @media (max-width: 768px) {
+       .hero-video {
+       object-fit: contain;   /* mobile pe full visible */
+       background-color: black;
+        }
+      }
+
+      `}</style>
     </div>
   );
 };
