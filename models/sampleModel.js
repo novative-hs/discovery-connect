@@ -1203,8 +1203,8 @@ const getSiteQuery = `SELECT collectionsite_id FROM collectionsitestaff WHERE us
       WHERE 
       cs.collectionsite_id = ?
       AND ua.accountType = 'CollectionSitesStaff' AND
-      sample.status = "Pooled" AND 
-      sample.is_deleted = FALSE
+      s.status = "Pooled" AND 
+      s.is_deleted = FALSE
       ${baseWhere}
       ORDER BY s.created_at DESC
       LIMIT ? OFFSET ?
@@ -1212,17 +1212,16 @@ const getSiteQuery = `SELECT collectionsite_id FROM collectionsitestaff WHERE us
 
     const countQuery = `
       SELECT COUNT(*) AS totalCount
-      FROM sample
+      FROM sample s
       JOIN user_account ua ON s.user_account_id = ua.id
       JOIN collectionsitestaff cs ON ua.id = cs.user_account_id
       WHERE 
       cs.collectionsite_id = ?
       AND ua.accountType = 'CollectionSitesStaff' AND
-      sample.status = "Pooled" AND 
-      sample.is_deleted = FALSE
+      s.status = "Pooled" AND 
+      s.is_deleted = FALSE
       ${baseWhere}
       ORDER BY s.created_at DESC
-      LIMIT ? OFFSET ?
     `;
 
     const finalParams = [collectionsiteId,...params, pageSizeInt, offset];
@@ -1230,7 +1229,7 @@ const getSiteQuery = `SELECT collectionsite_id FROM collectionsitestaff WHERE us
 
     mysqlConnection.query(dataQuery, finalParams, (err, results) => {
       if (err) {
-        console.error("❌ Data Query Error:", err.sqlMessage || err.message);
+        console.error("❌ Data Query Error:", err || err.message);
         return callback(err);
       }
 
