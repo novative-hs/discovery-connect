@@ -26,13 +26,18 @@ const HeroBanner = () => {
     };
   }, [videoSources.length]);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.load();
-      videoRef.current.play().catch(() => {});
-      videoRef.current.playbackRate = 1.5;
-    }
-  }, [videoIndex]);
+ useEffect(() => {
+  const video = videoRef.current;
+  if (video) {
+    video.pause(); // stop any previous playback first
+    video.playbackRate = 1.5;
+    video.play().catch((err) => {
+      if (err.name !== "AbortError") {
+        console.warn("Video play interrupted:", err);
+      }
+    });
+  }
+}, [videoIndex]);
 
   return (
     <div className="container-fluid p-0">

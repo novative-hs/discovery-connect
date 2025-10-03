@@ -25,11 +25,10 @@ export const cartSlice = createSlice({
         return diffHours > 48;
       };
 
-      // Remove expired items and unreserve them
+      // Remove expired items
       const updatedCart = cartItems.filter(item => {
         if (isExpired(item)) {
-          unreserveSample(item.id);  
-          return false; 
+          return false;
         }
         return true;
       });
@@ -95,10 +94,6 @@ export const cartSlice = createSlice({
     remove_product: (state, { payload }) => {
       const removedItem = state.cart_products.find(item => item.id === payload.id);
 
-      if (removedItem) {
-        // Call API to set reserved = 0
-        unreserveSample(removedItem.id);
-      }
 
       // Remove from cart
       state.cart_products = state.cart_products.filter(item => item.id !== payload.id);
@@ -107,7 +102,6 @@ export const cartSlice = createSlice({
       setsessionStorage(CART_STORAGE_KEY, state.cart_products);
       setLocalStorage(CART_STORAGE_KEY, state.cart_products);
     },
-
     get_cart_products: (state) => {
       const storedCart = getLocalStorage(CART_STORAGE_KEY) || [];
       const now = new Date();
@@ -118,17 +112,12 @@ export const cartSlice = createSlice({
         const diffHours = (now - addedTime) / (1000 * 60 * 60);
 
         const isExpired = diffHours > 48;
-      
-        if (isExpired) {
-          expiredItems.push(item);
-        }
+        if (isExpired) expiredItems.push(item);
         return !isExpired;
       });
 
-      // Unreserve expired samples
       if (expiredItems.length > 0) {
-        
-        expiredItems.forEach((item) => unreserveSample(item.id));
+        state.expiredItems = expiredItems; // <-- temporarily store expired ones
         notifyError("Samples have been removed from your cart because they expired after 48 hours.");
       }
 
@@ -136,6 +125,7 @@ export const cartSlice = createSlice({
       setLocalStorage(CART_STORAGE_KEY, updatedCart);
       setsessionStorage(CART_STORAGE_KEY, updatedCart);
     },
+
 
     initialOrderQuantity: (state) => {
       state.orderQuantity = 1;
@@ -185,22 +175,6 @@ export const cartSlice = createSlice({
 
 
 });
-const unreserveSample = async (id) => {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/${id}/reserve/0`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-    });
-
-    if (!res.ok) {
-      console.error("Failed to unreserve sample. Status:", res.status);
-    } else {
-      console.log("Sample unreserved:", id);
-    }
-  } catch (err) {
-    console.error("Failed to unreserve sample:", err);
-  }
-};
 
 export const {
   add_cart_product,

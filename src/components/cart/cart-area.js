@@ -34,7 +34,7 @@ const CartArea = () => {
   const displayCurrency =
     validItems.length > 0
       ? currencySymbols[validItems[0].SamplePriceCurrency] ||
-        validItems[0].SamplePriceCurrency
+      validItems[0].SamplePriceCurrency
       : "Rs";
   const allItemsHavePrice = unpricedItems.length === 0;
 
@@ -73,22 +73,22 @@ const CartArea = () => {
       taxPercent > 0
         ? (subtotal * taxPercent) / 100
         : taxAmount > 0
-        ? taxAmount
-        : 0;
+          ? taxAmount
+          : 0;
 
     const platform =
       platformPercent > 0
         ? (subtotal * platformPercent) / 100
         : platformAmount > 0
-        ? platformAmount
-        : 0;
+          ? platformAmount
+          : 0;
 
     const freight =
       freightPercent > 0
         ? (subtotal * freightPercent) / 100
         : freightAmount > 0
-        ? freightAmount
-        : 0;
+          ? freightAmount
+          : 0;
 
     // Step 4: Grand Total
     const grandTotal = subtotal + tax + platform + freight;
@@ -250,15 +250,44 @@ const CartArea = () => {
     }
     router.push("/dashboardheader?tab=Checkout");
   };
+
   const handleRemoveProduct = (item) => {
     dispatch(remove_product(item)); // Remove ALL quoteSent keys for this user (old + new)
+    unreserveSample(item.id)
     Object.keys(sessionStorage).forEach((key) => {
       if (key.startsWith(`quoteSent_${userID}_`)) {
         sessionStorage.removeItem(key);
       }
     });
+
     setQuoteAlreadySent(false);
   };
+  const unreserveSample = async (id) => {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/reserve`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sampleId: id,
+          status: 0,
+        }),
+      }
+    );
+
+    const data = await res.json(); // optional, to see backend response
+
+    if (!res.ok) {
+      console.error("Failed to unreserve sample. Status:", res.status, data);
+    } else {
+      console.log("Sample unreserved:", id, data);
+    }
+  } catch (err) {
+    console.error("Failed to unreserve sample:", err);
+  }
+};
+
 
   return (
     <section
@@ -400,8 +429,8 @@ const CartArea = () => {
                       <span>
                         {subtotal && subtotal > 0
                           ? `${subtotal.toLocaleString("en-PK", {
-                              minimumFractionDigits: 2,
-                            })}`
+                            minimumFractionDigits: 2,
+                          })}`
                           : "---"}
                       </span>
                     </li>
@@ -465,26 +494,25 @@ const CartArea = () => {
                     <span>
                       {grandTotal && grandTotal > 0
                         ? `${grandTotal.toLocaleString("en-PK", {
-                            minimumFractionDigits: 2,
-                          })}`
+                          minimumFractionDigits: 2,
+                        })}`
                         : "---"}
                     </span>
                   </div>
 
                   <button
-                    className={`btn w-100 ${
-                      allItemsHavePrice ? "btn-primary" : "btn-danger"
-                    }`}
+                    className={`btn w-100 ${allItemsHavePrice ? "btn-primary" : "btn-danger"
+                      }`}
                     onClick={handleProceedToCheckout}
                     disabled={loading || quoteAlreadySent}
                   >
                     {loading
                       ? "Please wait..."
                       : allItemsHavePrice
-                      ? "Checkout"
-                      : quoteAlreadySent
-                      ? "Quote Requested"
-                      : "Request Quote"}
+                        ? "Checkout"
+                        : quoteAlreadySent
+                          ? "Quote Requested"
+                          : "Request Quote"}
                   </button>
                 </div>
               </div>
