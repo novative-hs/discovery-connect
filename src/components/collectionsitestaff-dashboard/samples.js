@@ -695,7 +695,6 @@ const SampleArea = () => {
   const calculateTotalVolume = (analyteName, poolSample) => {
     let totalVolume = 0;
     let units = new Set();
-    console.log(poolSample)
     // 1️⃣ Base pool sample ka volume
     if (selectedOption === "already" && poolSample) {
       totalVolume += parseFloat(poolSample.volume) || 0;
@@ -712,7 +711,6 @@ const SampleArea = () => {
         if (analyteSample.VolumeUnit) units.add(analyteSample.VolumeUnit);
       }
     }
-    console.log(totalVolume)
     return {
       volume: totalVolume,
       VolumeUnit: units.size === 1 ? [...units][0] : "",
@@ -744,9 +742,7 @@ const SampleArea = () => {
     if ((effectiveMode !== "Individual") && Array.isArray(selectedSamples) && selectedSamples.length > 0) {
       formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
     }
-    for (let [key, value] of formDataToSend.entries()) {
-      console.log(key, value);
-    }
+   
     try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
         formDataToSend,
@@ -1448,7 +1444,6 @@ const SampleArea = () => {
                 style={{ width: "200px", height: "42px" }}
                 value={filtersamplemode}
                 onChange={(e) => {
-                  console.log(e.target.value)
                   setFilterSampleMode(e.target.value);
                   handleFilterChange("samplemode", e.target.value);
                 }}
