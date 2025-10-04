@@ -1143,9 +1143,9 @@ const getSiteQuery = `SELECT collectionsite_id FROM collectionsitestaff WHERE us
     const params = [];
 
     if (priceFilter === "priceAdded") {
-      baseWhere += ` AND sample.price IS NOT NULL AND sample.price > 0`;
+      baseWhere += ` AND s.price IS NOT NULL AND s.price > 0`;
     } else if (priceFilter === "priceNotAdded") {
-      baseWhere += ` AND (sample.price IS NULL OR sample.price = 0)`;
+      baseWhere += ` AND (s.price IS NULL OR s.price = 0)`;
     }
 
     Object.entries(filters || {}).forEach(([field, value]) => {
@@ -1158,37 +1158,37 @@ const getSiteQuery = `SELECT collectionsite_id FROM collectionsitestaff WHERE us
         case "MRNumber":
         case "Analyte":
         case "samplemode":
-          baseWhere += ` AND LOWER(sample.${field}) LIKE ?`;
+          baseWhere += ` AND LOWER(s.${field}) LIKE ?`;
           params.push(likeValue);
           break;
 
         case "gender":
-          baseWhere += ` AND LOWER(TRIM(sample.gender)) = ?`;
+          baseWhere += ` AND LOWER(TRIM(s.gender)) = ?`;
           params.push(value.toLowerCase().trim());
           break;
 
         case "age":
-          baseWhere += ` AND CAST(sample.age AS CHAR) LIKE ?`;
+          baseWhere += ` AND CAST(s.age AS CHAR) LIKE ?`;
           params.push(`%${value}%`);
           break;
 
         case "locationids":
-          baseWhere += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ? )`;
+          baseWhere += ` AND (LOWER(s.room_number) LIKE ? OR LOWER(s.freezer_id) LIKE ? OR LOWER(s.box_id) LIKE ? )`;
           params.push(likeValue, likeValue, likeValue);
           break;
 
         case "TestResult":
-          baseWhere += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
+          baseWhere += ` AND LOWER(CONCAT_WS(' ', s.TestResult, s.TestResultUnit)) LIKE ?`;
           params.push(likeValue);
           break;
 
         case "volume":
-          baseWhere += ` AND (LOWER(CONCAT_WS(' ', sample.volume, sample.VolumeUnit)) LIKE ? OR LOWER(sample.VolumeUnit) = ? )`;
+          baseWhere += ` AND (LOWER(CONCAT_WS(' ', s.volume, s.VolumeUnit)) LIKE ? OR LOWER(s.VolumeUnit) = ? )`;
           params.push(likeValue, value.toLowerCase());
           break;
 
         default:
-          baseWhere += ` AND LOWER(sample.\`${field}\`) LIKE ?`;
+          baseWhere += ` AND LOWER(s.\`${field}\`) LIKE ?`;
           params.push(likeValue);
           break;
       }
