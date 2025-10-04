@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 import logo from "@assets/img/logo/discoveryconnectlogo.png";
 import MobileMenus from "./mobile-menus";
-
 const OffCanvas = ({
   isOffCanvasOpen,
   setIsOffCanvasOpen,
@@ -73,41 +72,44 @@ const OffCanvas = ({
                 <Image src={logo} alt="logo" width={150} height={70} />
               </Link>
             </div>
-            <div className="mobile-menu-3 fix mb-40 menu-counter mean-container d-lg-none">
-              <div className="mean-bar">
-                <MobileMenus setActiveTab={setActiveTab} />
-              </div>
-            </div>
-            <div className="mobile-menu-3 fix mb-40 menu-counter mean-container d-lg-none">
-              <ul style={{ listStyleType: "none", padding: 0 }}>
-
-                {menuItems.map((item, index) => (
-                  <li
-                    key={index}
-                    className="menu-item"
-                    style={{
-                      borderBottom: "1px solid #ccc",
-                      paddingBottom: "10px",
-                    }}
-                  >
-                    <Link
-                      href="#"
-                      onClick={() => {
-                        setActiveTab(item.tab); // Set the active tab
-                        setIsOffCanvasOpen(false); // Close the OffCanvas
-                      }}
+            <div className="mobile-menu-3 fix mb-40 menu-counter mean-container">
+              {dashboardType ? (
+                // ✅ Show dashboard-specific links
+                <ul style={{ listStyleType: "none", padding: 0 }}>
+                  {menuItems.map((item, index) => (
+                    <li
+                      key={index}
+                      className="menu-item"
                       style={{
-                        fontSize: "13px",
-                        fontWeight: "bold",
-                        color: "black",
+                        borderBottom: "1px solid #ccc",
+                        paddingBottom: "10px",
                       }}
                     >
-                      {item.label.toUpperCase()}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                      <Link
+                        href="#"
+                        onClick={() => {
+                          setActiveTab(item.tab);
+                          setIsOffCanvasOpen(false);
+                        }}
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: "bold",
+                          color: "black",
+                        }}
+                      >
+                        {item.label.toUpperCase()}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                // ✅ Show normal website menu
+                <div className="mean-bar">
+                  <MobileMenus setActiveTab={setActiveTab} />
+                </div>
+              )}
             </div>
+
           </div>
         </div>
       </div>

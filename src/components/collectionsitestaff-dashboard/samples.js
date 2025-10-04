@@ -23,8 +23,6 @@ const SampleArea = () => {
   const [locationError, setLocationError] = useState("")
   const [showAddtestResultandUnitModal, setShowAddTestResultandUnitModal] = useState("");
   const [selectedSampleTypeMatrixes, setSelectedSampleTypeMatrixes] = useState([]);
-  const [selectedSamplesData, setSelectedSamplesData] = useState([]);
-
 
   const [showEdittestResultandUnitModal, setShowEditTestResultandUnitModal] = useState("")
   const [mode, setMode] = useState("");
@@ -187,7 +185,7 @@ const SampleArea = () => {
     patientlocation: "",
     locationids: "",
     Analyte: "",
-    AnalyteUniqueKey: "",
+    AnalyteUniqueKey:"",
     age: "",
     phoneNumber: "",
     gender: "",
@@ -578,13 +576,14 @@ const SampleArea = () => {
         .map((sample) => sample.Analyte)
         .filter(Boolean);
 
-     const uniqueAnalytes = [...new Set(selectedAnalytes)];
+      const uniqueAnalytes = [...new Set(selectedAnalytes)];
       setAnalyteOptions(
         uniqueAnalytes.map((name) => ({
           value: name,
           label: name,
         }))
       );
+
 
       const selectedSampleData = samples.filter((s) => selected.includes(s.id));
 
@@ -617,24 +616,17 @@ const SampleArea = () => {
         setSelectedSampleName(uniqueAnalytes[0]);
         setFormData((prev) => ({
           ...prev,
-          Analyte: uniqueAnalytes[0],
-          volume: totalVolume,
-          VolumeUnit: units.length === 1 ? units[0] : "",
+          Analyte: uniqueAnalytes.length === 1 ? uniqueAnalytes[0] : "",
+          volume: totalVolume, // Total volume add kiya
+          VolumeUnit: units.length === 1 ? units[0] : "", // Agar same hai to auto-set, warna user select karega
         }));
-      } 
-      // else if (uniqueAnalytes.length > 1) {
-      //   // Multiple analytes selected — ask user or clear
-      //   alert("⚠️ You have selected samples with different analytes. Please select only one analyte type for pooling.");
-
-      //   // Reset form to prevent mixing
-      //   setSelectedSampleName("");
-      //   setFormData((prev) => ({
-      //     ...prev,
-      //     Analyte: "",
-      //   }));
-
-      //   return; // stop pooling
-      // }
+      } else {
+        setSelectedSampleName("");
+        setFormData((prev) => ({
+          ...prev,
+          Analyte: "",
+        }));
+      }
 
       setMode("Pooled");
       setSelectedOption(e.target.value);
@@ -645,194 +637,148 @@ const SampleArea = () => {
 
 
   };
-const handlePoolButtonClick = () => {
-  if (poolMode) {
-    const selected = [...selectedSamples];
+  const handlePoolButtonClick = () => {
 
-    if (selected.length < 1) {
-      alert("Please select at least one sample to create a pool.");
-      return;
-    }
+    if (poolMode) {
+      const selected = [...selectedSamples];
 
-    const selectedAnalytes = samples
-      .filter((sample) => selected.includes(sample.id))
-      .map((sample) => sample.Analyte)
-      .filter(Boolean);
+      if (selected.length < 1) {
+        alert("Please select at least one sample to create a pool.");
+        return;
+      }
 
-    const uniqueAnalytes = [...new Set(selectedAnalytes)];
-    setAnalyteOptions(uniqueAnalytes);
-    const selectedSampleData = samples.filter((s) => selected.includes(s.id));
+      const selectedAnalytes = samples
+        .filter((sample) => selected.includes(sample.id))
+        .map((sample) => sample.Analyte)
+        .filter(Boolean);
 
-    // ✅ Calculate total volume for NEW pool samples
-    const totalVolume = selectedSampleData.reduce(
-      (acc, sample) => acc + (parseFloat(sample.volume) || 0),
-      0
-    );
+      const uniqueAnalytes = [...new Set(selectedAnalytes)];
+      setAnalyteOptions(uniqueAnalytes);
+      const selectedSampleData = samples.filter((s) => selected.includes(s.id));
 
-    // ✅ Check Units
-    const units = [
-      ...new Set(selectedSampleData.map((s) => s.VolumeUnit).filter(Boolean)),
-    ];
 
-    const selectedMatrixes = samples
-      .filter((s) => selected.includes(s.id))
-      .map((s) => s.SampleTypeMatrix?.trim())
-      .filter(Boolean);
+      // ✅ Corrected this line by using 'selected' instead of 'updated'
+      const selectedMatrixes = samples
+        .filter((s) => selected.includes(s.id))
+        .map((s) => s.SampleTypeMatrix?.trim())
+        .filter(Boolean);
 
-    const uniqueMatrixes = [...new Set(selectedMatrixes)];
-    setSelectedSampleTypeMatrixes(uniqueMatrixes);
+      const uniqueMatrixes = [...new Set(selectedMatrixes)];
 
-    if (uniqueAnalytes.length === 1) {
-      setSelectedSampleName(uniqueAnalytes[0]);
-      setFormData((prev) => ({
-        ...prev,
-        Analyte: uniqueAnalytes[0],
-        volume: totalVolume, // ✅ Set calculated volume
-        VolumeUnit: units.length === 1 ? units[0] : "", // ✅ Set unit
-      }));
+
+
+      setSelectedSampleTypeMatrixes(uniqueMatrixes);
+
+
+      if (uniqueAnalytes.length === 1) {
+        setSelectedSampleName(uniqueAnalytes[0]);
+        setFormData((prev) => ({
+          ...prev,
+          Analyte: uniqueAnalytes[0],
+        }));
+      } else {
+        setSelectedSampleName("");
+        setFormData((prev) => ({
+          ...prev,
+          Analyte: "",
+        }));
+      }
+      setshowOptionModal(false)
+      setMode("Pooled");
+      setshowAddPoolModal(true);
     } else {
-      setSelectedSampleName("");
-      setFormData((prev) => ({
-        ...prev,
-        Analyte: "",
-        volume: totalVolume, // ✅ Still set volume even if multiple analytes
-        VolumeUnit: units.length === 1 ? units[0] : "",
-      }));
+      setPoolMode(true);
     }
-    
-    setshowOptionModal(false)
-    setMode("Pooled");
-    setshowAddPoolModal(true);
-  } else {
-    setPoolMode(true);
-  }
-};
-  
-useEffect(() => {
-  console.log("AnalyteNames:", AnalyteNames);
-  console.log("analyteOptions:", analyteOptions);
-}, [AnalyteNames, analyteOptions]);
-
-const calculateTotalVolume = (analyteName, poolSample) => {
-  let totalVolume = 0;
-  let units = new Set();
-
-  // 1️⃣ Add volume from selected checkbox samples (ALWAYS add these)
-  const selectedSampleData = samples.filter(s => selectedSamples.includes(s.id));
-  console.log("Selected sample data:", selectedSampleData);
-  
-  selectedSampleData.forEach(s => {
-    const sampleVolume = parseFloat(s.volume) || 0;
-    totalVolume += sampleVolume;
-    if (s.VolumeUnit) units.add(s.VolumeUnit);
-    console.log(`Added ${sampleVolume} ${s.VolumeUnit} from sample ${s.id}`);
-  });
-
-  // 2️⃣ Add volume from already pooled sample (if "already" option selected)
-  if (selectedOption === "already" && poolSample) {
-    const poolVolume = parseFloat(poolSample.volume) || 0;
-    totalVolume += poolVolume;
-    if (poolSample.VolumeUnit) units.add(poolSample.VolumeUnit);
-    console.log(`Added ${poolVolume} ${poolSample.VolumeUnit} from pooled sample`);
-  }
-
-  // 3️⃣ Add volume from dropdown analyte (only for "already" option when different analyte)
-  if (selectedOption === "already" && analyteName && (!poolSample || poolSample.Analyte !== analyteName)) {
-    const analyteSample = alreadypooled.find(s => s.Analyte === analyteName);
-    if (analyteSample) {
-      const analyteVolume = parseFloat(analyteSample.volume) || 0;
-      totalVolume += analyteVolume;
-      if (analyteSample.VolumeUnit) units.add(analyteSample.VolumeUnit);
-      console.log(`Added ${analyteVolume} ${analyteSample.VolumeUnit} from analyte ${analyteName}`);
-    }
-  }
-  return {
-    volume: totalVolume,
-    VolumeUnit: units.size === 1 ? [...units][0] : "",
   };
-};
+  const calculateTotalVolume = (analyteName, poolSample) => {
+    let totalVolume = 0;
+    let units = new Set();
+    console.log(poolSample)
+    // 1️⃣ Base pool sample ka volume
+    if (selectedOption === "already" && poolSample) {
+      totalVolume += parseFloat(poolSample.volume) || 0;
+      if (poolSample.VolumeUnit) units.add(poolSample.VolumeUnit);
+    }
 
+    // 2️⃣ Dropdown analyte ka volume
+    if (analyteName) {
+      const analyteSample = alreadypooled.find(
+        (s) => s.Analyte === analyteName
+      );
+      if (analyteSample) {
+        totalVolume += parseFloat(analyteSample.volume) || 0;
+        if (analyteSample.VolumeUnit) units.add(analyteSample.VolumeUnit);
+      }
+    }
+    console.log(totalVolume)
+    return {
+      volume: totalVolume,
+      VolumeUnit: units.size === 1 ? [...units][0] : "",
+    };
+  };
 
 
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (isSubmitting) return;
-  setIsSubmitting(true);
-  
-  const isResultFilled = !!formData.TestResult && !!formData.TestResultUnit;
-  let effectiveMode = mode;
+    e.preventDefault();
+    if (isSubmitting) return; // 🛑 Prevent double submission 
+    setIsSubmitting(true);
+    const isResultFilled = !!formData.TestResult && !!formData.TestResultUnit;
+    let effectiveMode = mode;
 
-  if (mode === "Pooled") { 
-    effectiveMode = isResultFilled ? "Pooled" : "AddtoPool"; 
-  }
+    if (mode === "Pooled") { effectiveMode = isResultFilled ? "Pooled" : "AddtoPool"; }
 
-  const formDataToSend = new FormData();
-  for (let key in formData) {
-    formDataToSend.append(key, formData[key]);
-  }
-  formDataToSend.append("mode", effectiveMode);
+    const formDataToSend = new FormData();
+    for (let key in formData) {
+      formDataToSend.append(key, formData[key]);
+    }
+    formDataToSend.append("mode", effectiveMode);
 
-  if (selectedOption === "already" && selectedPoolSample) {
-    selectedSamples.push(selectedPoolSample.id);
-  }
+    if (selectedOption === "already" && selectedPoolSample) {
+      // formDataToSend.append("analyteObject", JSON.stringify(selectedPoolSample));
+      selectedSamples.push(selectedPoolSample.id)
+    }
 
-  if ((effectiveMode !== "Individual") && Array.isArray(selectedSamples) && selectedSamples.length > 0) {
-    formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
-  }
+    if ((effectiveMode !== "Individual") && Array.isArray(selectedSamples) && selectedSamples.length > 0) {
+      formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
+    }
+    for (let [key, value] of formDataToSend.entries()) {
+      console.log(key, value);
+    }
+    try {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
+        formDataToSend,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
 
-  try {
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
-      formDataToSend,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+          },
+        });
+      fetchSamples(1, itemsPerPage, { searchField, searchValue });
+      setSelectedSamples([]);
+      setSelectedSampleName("");
+      setshowAddPoolModal(false);
+      setPoolMode(false);
+      setShowAddModal(false);
+      setSuccessMessage("Sample added successfully.");
+      setTimeout(() => setSuccessMessage(""), 3000);
+      resetFormData();
+      setLogoPreview(false);
+      setShowAdditionalFields(false);
+    } catch (error) {
+      if (error.response?.status === 409) {
+        notifyError(error.response.data?.error || "Duplicate entry found.");
       }
-    );
-
-    // ✅ POOLED SAMPLES KO REMOVE KARNA
-    if (selectedSamples.length > 0) {
-      // Current samples se pooled samples ko filter out karein
-      const updatedSamples = samples.filter(
-        sample => !selectedSamples.includes(sample.id)
-      );
-      
-      // State update karein
-      setSamples(updatedSamples);
-      setFilteredSamplename(updatedSamples);
+      else {
+        notifyError("Something went wrong while adding the sample.");
+      }
     }
-
-    // ✅ RESET ALL STATES
-    setSelectedSamples([]);
-    setSelectedSamplesData([]);
-    setSelectedSampleName("");
-    setshowAddPoolModal(false);
-    setPoolMode(false);
-    setShowAddModal(false);
-    setSuccessMessage("Sample pool successfully created.");
-    
-    // ✅ SERVER SE LATEST DATA FETCH KAREIN
-    setTimeout(() => {
-      fetchSamples(currentPage, itemsPerPage, filters);
-    }, 500);
-    
-    resetFormData();
-    setLogoPreview(false);
-    setShowAdditionalFields(false);
-    
-    setTimeout(() => setSuccessMessage(""), 3000);
-  } catch (error) {
-    if (error.response?.status === 409) {
-      notifyError(error.response.data?.error || "Duplicate entry found.");
-    } else {
-      notifyError("Something went wrong while adding the sample.");
+    finally {
+      resetFormData()
+      setIsSubmitting(false);
     }
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
+
 
   const handleAddTestResult = async (e) => {
     e.preventDefault();
@@ -1003,84 +949,7 @@ const calculateTotalVolume = (analyteName, poolSample) => {
     setSelectedSampleName(sample.Analyte)
     setShowAddTestResultandUnitModal(true)
   }
-
- const handleCheckboxChange = (sample) => {
-  // Add CSS to prevent flash
-  document.body.style.setProperty('will-change', 'scroll-position', 'important');
-  document.documentElement.style.setProperty('scroll-behavior', 'auto', 'important');
-  
-  const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-  
-  setSelectedSamples((prev) => {
-    let newSelectedSamples;
-    let newSelectedSamplesData;
-    
-    if (prev.includes(sample.id)) {
-      newSelectedSamples = prev.filter((id) => id !== sample.id);
-      newSelectedSamplesData = selectedSamplesData.filter(s => s.id !== sample.id);
-    } else {
-      newSelectedSamples = [...prev, sample.id];
-      newSelectedSamplesData = [...selectedSamplesData, sample];
-    }
-    
-    setSelectedSamplesData(newSelectedSamplesData);
-    return newSelectedSamples;
-  });
-
-  // Use microtask for immediate scroll restoration
-  Promise.resolve().then(() => {
-    window.scrollTo({ top: currentScroll, left: 0, behavior: 'auto' });
-  });
-
-  setTimeout(() => {
-    window.scrollTo({ top: currentScroll, left: 0, behavior: 'auto' });
-    // Remove styles after restoration
-    setTimeout(() => {
-      document.body.style.removeProperty('will-change');
-      document.documentElement.style.removeProperty('scroll-behavior');
-    }, 100);
-  }, 0);
-};
-
-
-// Function to get combined data - Different logic for page 1 vs other pages
-const getCombinedTableData = () => {
-  if (!poolMode) {
-    return currentData; // Normal mode: show only current page data
-  }
-
-  const currentPageIds = new Set(currentData.map(s => s.id));
-  
-  if (currentPage === 1) {
-    // Page 1: Show ALL selected samples from ALL pages
-    const allSelectedSamples = selectedSamplesData;
-    
-    // Separate: samples in current page vs other pages
-    const selectedInCurrentPage = allSelectedSamples.filter(s => currentPageIds.has(s.id));
-    const selectedFromOtherPages = allSelectedSamples.filter(s => !currentPageIds.has(s.id));
-    
-    const nonSelectedCurrentData = currentData.filter(s => !selectedSamples.includes(s.id));
-    
-    return [...selectedFromOtherPages, ...selectedInCurrentPage, ...nonSelectedCurrentData];
-  } else {
-    // Page 2, 3, etc.: Show only current page's selected samples
-    const selectedSamplesInCurrentPage = selectedSamplesData.filter(
-      selectedSample => currentPageIds.has(selectedSample.id)
-    );
-
-    const nonSelectedCurrentData = currentData.filter(
-      sample => !selectedSamples.includes(sample.id)
-    );
-
-    return [...selectedSamplesInCurrentPage, ...nonSelectedCurrentData];
-  }
-};
-  // Reset the display flag when pool mode changes or page changes
- 
-  const combinedData = getCombinedTableData();
-
   const handleEditClick = (sample) => {
-
     setSelectedSampleId(sample.id);
     setEditSample(sample);
 
@@ -1208,7 +1077,7 @@ const getCombinedTableData = () => {
       patientlocation: "",
       locationids: "",
       Analyte: "",
-      AnalyteUniqueKey: "",
+      AnalyteUniqueKey:"",
       age: "",
       volume: "",
       gender: "",
@@ -1674,9 +1543,6 @@ const getCombinedTableData = () => {
                   <th>
                     <div className="d-flex flex-column align-items-center">
                       <span className="fw-bold fs-6 text-wrap">Pool</span>
-                      <span className="small text-muted">
-                        Selected: {selectedSamples.length}
-                      </span>
                     </div>
                   </th>
                 )}
@@ -1718,24 +1584,27 @@ const getCombinedTableData = () => {
 
 
             <tbody className="table-light">
-               {combinedData.length > 0 ? (
-                combinedData.map((sample) => {
-                  const isSelected = selectedSamples.includes(sample.id);
-                  
-                  return (
-                    <tr 
-                      key={sample.id} 
-                      className={isSelected ? "table-warning" : ""}
-                    >
-                      {poolMode && (
-                        <td className="text-center">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => handleCheckboxChange(sample)}
-                          />
-                        </td>
-                      )}
+              {currentData.length > 0 ? (
+                currentData.map((sample) => (
+                  <tr key={sample.id}>
+                    {(poolMode) && (
+                      <td className="text-center">
+
+                        <input
+                          type="checkbox"
+                          checked={selectedSamples.includes(sample.id)}
+                          onChange={() => {
+                            setSelectedSamples((prev) =>
+                              prev.includes(sample.id)
+                                ? prev.filter((id) => id !== sample.id)
+                                : [...prev, sample.id]
+                            );
+                          }}
+                        />
+
+                      </td>
+                    )}
+
                     {tableHeaders.map(({ key }, index) => (
                       <td
                         key={index}
@@ -1946,8 +1815,7 @@ const getCombinedTableData = () => {
 
                       )}
                   </tr>
-                  );
-})
+                ))
               ) : (
                 <tr>
                   <td
@@ -3347,8 +3215,8 @@ const getCombinedTableData = () => {
 
                                 </select>
                               )}
-                           
                             </div>
+
 
                             {/* Location IDs */}
                             <div className="form-group col-md-6">
@@ -3431,7 +3299,10 @@ const getCombinedTableData = () => {
                                   }}
                                   step="0.5"
                                   min="0.5"
-                                  max={unitMaxValues[formData.VolumeUnit] || undefined}
+                                  max={
+                                    unitMaxValues[formData.VolumeUnit] ||
+                                    undefined
+                                  }
                                   required
                                   style={{
                                     height: "45px",
@@ -3446,12 +3317,14 @@ const getCombinedTableData = () => {
                                   name="VolumeUnit"
                                   value={formData.VolumeUnit}
                                   onChange={handleInputChange}
+                                  required
                                   style={{
+                                    height: "45px",
+                                    fontSize: "14px",
                                     backgroundColor: !formData.VolumeUnit
                                       ? "#fdecea"
                                       : "#fff",
                                   }}
-                                  required
                                 >
                                   <option value="" hidden></option>
                                   {volumeunitNames.map((name, index) => (
@@ -3461,6 +3334,20 @@ const getCombinedTableData = () => {
                                   ))}
                                 </select>
                               </div>
+                              {/* Validation message*/}
+                              {formData.volume &&
+                                formData.VolumeUnit &&
+                                parseFloat(formData.volume) >
+                                (unitMaxValues[formData.VolumeUnit] ||
+                                  Infinity) && (
+                                  <small className="text-danger mt-1">
+                                    Value must be less than or equal to{" "}
+                                    {unitMaxValues[
+                                      formData.VolumeUnit
+                                    ].toLocaleString()}
+                                    .
+                                  </small>
+                                )}
                             </div>
 
                             {/* Sample Type Matrix */}
@@ -3587,7 +3474,7 @@ const getCombinedTableData = () => {
                             {/* Show Analyte & Volume ONLY if Final Concentration is selected */}
                             {formData.samplemode && (
                               <>
-                                <div className="form-group col-md-6">
+                                 <div className="form-group col-md-6">
                                   <label>
                                     Analyte <span className="text-danger">*</span>
                                   </label>
@@ -3596,68 +3483,58 @@ const getCombinedTableData = () => {
                                     name="Analyte"
                                     value={formData.AnalyteUniqueKey || ""}
                                     onChange={(e) => {
-                                     const selectedAnalyte = filteredAnalytes.find(
-                                    (sample) =>
-                                    `${sample.Analyte}_${sample.volume}_${sample.VolumeUnit}` === e.target.value
-                                     );
+                                      const selectedAnalyte = filteredAnalytes.find(
+                                        (sample) =>
+                                          `${sample.Analyte}_${sample.volume}_${sample.VolumeUnit}` === e.target.value
+                                      );
 
-                                  if (!selectedAnalyte) return;
+                                      if (!selectedAnalyte) return;
 
-                                 // ✅ Calculate volume including selected samples + this analyte
-                                 const { volume, VolumeUnit } = calculateTotalVolume(
-                                    selectedAnalyte?.Analyte,
-                                    selectedAnalyte
-                                  );
+                                      // const { volume, VolumeUnit } = calculateTotalVolume(
+                                      //   selectedAnalyte?.Analyte,
+                                      //   selectedAnalyte?.id,
+                                      //   selectedAnalyte
+                                      // );
+                                      setSelectedPoolSample(selectedAnalyte);
+                                      const formattedLocationId = `${String(
+                                        selectedAnalyte?.room_number || 0
+                                      ).padStart(3, "0")}-${String(
+                                        selectedAnalyte?.freezer_id || 0
+                                      ).padStart(3, "0")}-${String(
+                                        selectedAnalyte?.box_id || 0
+                                      ).padStart(3, "0")}`;
 
-                                  setSelectedPoolSample(selectedAnalyte);
-
-                                  const formattedLocationId = `${String(
-                                    selectedAnalyte?.room_number || 0
-                                  ).padStart(3, "0")}-${String(
-                                    selectedAnalyte?.freezer_id || 0
-                                  ).padStart(3, "0")}-${String(
-                                    selectedAnalyte?.box_id || 0
-                                  ).padStart(3, "0")}`;
-
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    Analyte: selectedAnalyte.Analyte,
-                                    AnalyteUniqueKey: `${selectedAnalyte.Analyte}_${selectedAnalyte.volume}_${selectedAnalyte.VolumeUnit}`,
-                                    volume: volume, // ✅ Use calculated volume
-                                    VolumeUnit: VolumeUnit, // ✅ Use calculated unit
-                                    SampleTypeMatrix: selectedAnalyte?.SampleTypeMatrix || prev.SampleTypeMatrix,
-                                    ContainerType: selectedAnalyte?.ContainerType || prev.ContainerType,
-                                    finalConcentration: selectedAnalyte?.finalConcentration || prev.finalConcentration,
-                                    locationids: formattedLocationId,
-                                  }));
-
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        Analyte: selectedAnalyte.Analyte, // 👈 keep name for backend
+                                        AnalyteUniqueKey: `${selectedAnalyte.Analyte}_${selectedAnalyte.volume}_${selectedAnalyte.VolumeUnit}`, // 👈 just for select
+                                        // volume,
+                                        // VolumeUnit,
+                                        SampleTypeMatrix: selectedAnalyte?.SampleTypeMatrix || prev.SampleTypeMatrix,
+                                        ContainerType: selectedAnalyte?.ContainerType || prev.ContainerType,
+                                        finalConcentration: selectedAnalyte?.finalConcentration || prev.finalConcentration,
+                                        locationids: formattedLocationId,
+                                      }));
                                     }}
-                                    
                                     required
-                                    disabled={filteredAnalytes.length === 0} // 👈 disable when no analytes
                                   >
-                                    {filteredAnalytes.length === 0 ? (
-                                      <option value="">No Analytes Available</option>
-                                    ) : (
-                                      <>
-                                        <option value="" disabled hidden>
-                                          Select Analyte
-                                        </option>
-                                        {filteredAnalytes.map((sample, index) => (
-                                          <option
-                                            key={index}
-                                            value={`${sample.Analyte}_${sample.volume}_${sample.VolumeUnit}`}
-                                          >
-                                            {sample.Analyte}
-                                            {sample.volume
-                                              ? ` (${sample.volume}${sample.VolumeUnit ? " " + sample.VolumeUnit : ""
-                                              })`
-                                              : ""}
-                                          </option>
-                                        ))}
-                                      </>
-                                    )}
+                                    <option value="" disabled hidden>
+                                      Select Analyte
+                                    </option>
+
+                                    {filteredAnalytes.map((sample, index) => (
+                                      <option
+                                        key={index}
+                                        value={`${sample.Analyte}_${sample.volume}_${sample.VolumeUnit}`}
+                                      >
+                                        {sample.Analyte}
+                                        {sample.volume
+                                          ? ` (${sample.volume}${sample.VolumeUnit ? " " + sample.VolumeUnit : ""})`
+                                          : ""}
+                                      </option>
+                                    ))}
                                   </select>
+
                                 </div>
 
 
@@ -3682,12 +3559,17 @@ const getCombinedTableData = () => {
                                       }}
                                       step="0.5"
                                       min="0.5"
-                                      max={unitMaxValues[formData.VolumeUnit] || undefined}
+                                      max={
+                                        unitMaxValues[formData.VolumeUnit] ||
+                                        undefined
+                                      }
                                       required
                                       style={{
                                         height: "45px",
                                         fontSize: "14px",
-                                        backgroundColor: !formData.volume ? "#fdecea" : "#fff",
+                                        backgroundColor: !formData.volume
+                                          ? "#fdecea"
+                                          : "#fff",
                                       }}
                                     />
                                     <select
@@ -3695,16 +3577,16 @@ const getCombinedTableData = () => {
                                       name="VolumeUnit"
                                       value={formData.VolumeUnit}
                                       onChange={handleInputChange}
+                                      required
                                       style={{
+                                        height: "45px",
+                                        fontSize: "14px",
                                         backgroundColor: !formData.VolumeUnit
                                           ? "#fdecea"
                                           : "#fff",
                                       }}
-                                      required
                                     >
-                                      <option value="" hidden>
-                                        Select Unit
-                                      </option>
+                                      <option value="" hidden></option>
                                       {volumeunitNames.map((name, index) => (
                                         <option key={index} value={name}>
                                           {name}
@@ -3712,6 +3594,20 @@ const getCombinedTableData = () => {
                                       ))}
                                     </select>
                                   </div>
+                                  {/* Validation message*/}
+                                  {formData.volume &&
+                                    formData.VolumeUnit &&
+                                    parseFloat(formData.volume) >
+                                    (unitMaxValues[formData.VolumeUnit] ||
+                                      Infinity) && (
+                                      <small className="text-danger mt-1">
+                                        Value must be less than or equal to{" "}
+                                        {unitMaxValues[
+                                          formData.VolumeUnit
+                                        ].toLocaleString()}
+                                        .
+                                      </small>
+                                    )}
                                 </div>
                               </>
                             )}
@@ -3729,7 +3625,6 @@ const getCombinedTableData = () => {
                         onClick={() => {
                           setshowOptionModal(true);
                           setshowAddPoolModal(false);
-                          resetFormData()
                         }}
                       >
                         Back

@@ -121,6 +121,7 @@ const CartArea = () => {
     freightAmount,
     grandTotal,
   } = calculateCartBreakdown(cart_products);
+
   useEffect(() => {
     // Recalculate cart hash on every cart change
     const newCartHash = getCartHash(unpricedItems);
@@ -128,7 +129,7 @@ const CartArea = () => {
     const stored = sessionStorage.getItem(newQuoteSentKey) === "true";
     setQuoteAlreadySent(stored);
   }, [cart_products, userID]);
-  // ⏱ Refresh prices every 30s
+  
   useEffect(() => {
     if (unpricedItems.length > 0) {
       priceIntervalRef.current = setInterval(() => {
@@ -172,6 +173,33 @@ const CartArea = () => {
       console.error("Error updating prices", err);
     }
   };
+
+  useEffect(() => {
+  const now = new Date();
+
+  cart_products.forEach((item) => {
+    if (!item.addedAt) return; // skip if timestamp missing
+
+    const addedTime = new Date(item.addedAt);
+    const diffHours = (now - addedTime) / (1000 * 60 * 60); // Convert ms to hours
+
+    if (diffHours >= 48) {
+      console.log(`🕒 48 hours passed for item ${item.id}. Unreserving...`);
+      unreserveSample(item.id);
+
+      // Remove from frontend cart
+      dispatch(remove_product(item));
+
+      // Remove any quote session key if needed
+      Object.keys(sessionStorage).forEach((key) => {
+        if (key.startsWith(`quoteSent_${userID}_`)) {
+          sessionStorage.removeItem(key);
+        }
+      });
+    }
+  });
+}, [cart_products]);
+
 
   useEffect(() => {
     const triggerFromQuery = router.query.triggerCheckout === "true";
