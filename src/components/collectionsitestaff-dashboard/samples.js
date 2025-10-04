@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
+import DetailModal from "../../pages/DetailModal";
+
 
 import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -159,7 +161,7 @@ const SampleArea = () => {
   const fieldsToShowInOrder = [
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
     { label: "Container Type", key: "ContainerType" },
-    { label: "Final Concentration", key: "finalConcentration" },
+    // { label: "Final Concentration", key: "finalConcentration" },
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
     { label: "Storage Temperature", key: "storagetemp" },
@@ -4346,98 +4348,24 @@ const SampleArea = () => {
         )}
 
       </div>
-      <Modal show={showModal}
-        onHide={closeModal}
-        size="lg"
-        centered
-        backdrop="static"
-        keyboard={false}>
-        <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold text-danger"> Sample Details</Modal.Title>
-        </Modal.Header>
+    <DetailModal
+      show={showModal}
+      onHide={closeModal}
+      title="Sample Details"
+      data={selectedSample}
+      fieldsToShow={fieldsToShowInOrder}
+    />
 
-        <Modal.Body style={{ maxHeight: "500px", overflowY: "auto" }} className="bg-light rounded">
-          {selectedSample ? (
-            (() => {
-              const validFields = fieldsToShowInOrder.filter(({ key }) => {
-                const value = selectedSample[key];
-                return value !== undefined && value !== null && value !== "";
-              });
-
-              if (validFields.length === 0) {
-                return <div className="text-center text-muted p-3">No sample detail to show</div>;
-              }
-
-              return (
-                <div className="p-3">
-                  <div className="row g-3">
-                    {validFields.map(({ key, label }) => (
-                      <div className="col-md-6" key={key}>
-                        <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                          <span className="text-muted small fw-bold mb-1">{label}</span>
-                          <span className="fs-6 text-dark">{selectedSample[key]?.toString() || "----"}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()
-          ) : (
-            <div className="text-center text-muted p-3">No sample detail to show</div>
-          )}
-        </Modal.Body>
-
-        <Modal.Footer className="border-0"></Modal.Footer>
-      </Modal>
-
-      <Modal
+      <DetailModal
         show={showPatientModal}
         onHide={closeModal}
-        size="lg"
-        centered
-        backdrop="static"
-        keyboard={false}
-      >
-        <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold text-danger">Patient Details</Modal.Title>
-        </Modal.Header>
-
-        <Modal.Body
-          style={{ maxHeight: "500px", overflowY: "auto" }}
-          className="bg-light rounded"
-        >
-          {selectedSample ? (
-            <div className="p-3">
-              <div className="row g-3">
-                {/* MRNumber */}
-                <div className="col-md-6">
-                  <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                    <span className="text-muted small fw-bold mb-1">MRNumber</span>
-                    <span className="fs-6 text-dark">
-                      {selectedSample.MRNumber || "----"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Patient Location */}
-                <div className="col-md-6">
-                  <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                    <span className="text-muted small fw-bold mb-1">Patient Location</span>
-                    <span className="fs-6 text-dark">
-                      {selectedSample.PatientLocation || "----"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center text-muted p-3">No details to show</div>
-          )}
-        </Modal.Body>
-
-        <Modal.Footer className="border-0" />
-      </Modal>
+        title="Patient Details"
+        data={selectedSample}
+        fieldsToShow={[
+          { label: "MRNumber", key: "MRNumber" },
+          { label: "Patient Location", key: "PatientLocation" },
+        ]}
+      />
 
     </section>
   );
