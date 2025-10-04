@@ -4172,189 +4172,39 @@ const SampleArea = () => {
           </>
         )}
 
-        {PoolSampleHistoryModal && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="modal-backdrop fade show"
-              style={{ backdropFilter: "blur(4px)", backgroundColor: "rgba(0,0,0,0.2)" }}
-            ></div>
-
-            {/* Modal */}
-            <div
-              className="modal show d-block"
-              tabIndex="-1"
-              role="dialog"
-              style={{
-                zIndex: 1050,
-                position: "fixed",
-                top: "100px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "90%",
-                maxWidth: "850px",
-              }}
-            >
-              <div className="modal-dialog modal-lg" role="document">
-                <div className="modal-content" style={{ backgroundColor: "#f2f2f2", borderRadius: "10px" }}>
-
-                  {/* Header */}
-                  <div
-                    className="modal-header"
-                    style={{
-                      borderBottom: "1px solid #ddd",
-                      backgroundColor: "#eaeaea",
-                      borderTopLeftRadius: "10px",
-                      borderTopRightRadius: "10px",
-                    }}
-                  >
-                    <h5
-                      className="modal-title"
-                      style={{ fontWeight: "600", color: "#333", fontSize: "18px" }}
-                    >
-                      {selectedSampleName || "Sample History"}
-                    </h5>
-                    <button
-                      type="button"
-                      className="close"
-                      onClick={() => {
-                        setSelectedSampleName("");
-                        setPoolSampleHistoryModal(false);
-                      }}
-                      style={{
-                        fontSize: "1.5rem",
-                        position: "absolute",
-                        right: "10px",
-                        top: "10px",
-                        background: "none",
-                        border: "none",
-                        color: "#555",
-                        cursor: "pointer",
-                      }}
-                      title="Close"
-                    >
-                      &times;
-                    </button>
-                  </div>
-
-                  {/* Body */}
-                  <div
-                    className="modal-body"
-                    style={{
-                      maxHeight: "500px",
-                      overflowY: "auto",
-                      padding: "20px",
-                      backgroundColor: "#fff",
-                      borderBottomLeftRadius: "10px",
-                      borderBottomRightRadius: "10px",
-                    }}
-                  >
-                    {poolhistoryData && poolhistoryData.length > 0 ? (
-                      <div className="table-responsive">
-                        <table className="table table-bordered">
-                          <thead
-                            style={{
-                              backgroundColor: "#444",
-                              color: "#fff",
-                              fontSize: "14px",
-                            }}
-                          >
-                            <tr>
-                              <th>Analyte</th>
-                              <th>Patient Name</th>
-                              <th>Test Result</th>
-                              <th>MR Number</th>
-                              <th>Age</th>
-                              <th>Gender</th>
-                              {/* <th>Phone</th>
-                              <th>Location</th> */}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {poolhistoryData.map((sample, index) => (
-                              <tr
-                                key={index}
-                                style={{
-                                  backgroundColor: index % 2 === 0 ? "#fff" : "#f9f9f9",
-                                  fontSize: "13px",
-                                }}
-                              >
-                                <td>{sample.Analyte || "—"}</td>
-                                <td>{sample.PatientName || "—"}</td>
-                                <td>
-                                  {sample.TestResult || "—"} {sample.TestResultUnit || ""}
-                                </td>
-                                <td>{sample.MRNumber || "—"}</td>
-                                <td>{sample.age ? `${sample.age} yrs` : "—"}</td>
-                                <td>{sample.gender || "—"}</td>
-                                {/* <td>{sample.phoneNumber || "—"}</td>
-                                <td>{sample.PatientLocation || "—"}</td> */}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <p
-                        style={{
-                          textAlign: "center",
-                          fontStyle: "italic",
-                          color: "#777",
-                        }}
-                      >
-                        No patient records found for this pooled sample.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Modal to show Sample Picture */}
-        {showLogoModal && (
-          <div
-            className="modal fade show"
-            style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
-            tabIndex="-1"
-            role="dialog"
-          >
-            <div className="modal-dialog" style={{ marginTop: "80px" }} role="document">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">Sample Picture</h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={() => setShowLogoModal(false)}
-                    aria-label="Close"
-                  ></button>
-                </div>
-                <div className="modal-body text-center">
-                  {selectedLogoUrl ? (
-                    <img
-                      src={selectedLogoUrl}
-                      alt="Sample Logo"
-                      style={{ maxWidth: "100%", maxHeight: "300px" }}
-                    />
-                  ) : (
-                    <p>No logo available.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
+       <DetailModal
+          show={PoolSampleHistoryModal}
+          onHide={() => {
+            setSelectedSampleName("");
+            setPoolSampleHistoryModal(false);
+          }}
+          title={selectedSampleName || "Sample History"}
+          tableData={poolhistoryData}
+          tableColumns={[
+            { label: "Analyte", key: "Analyte" },
+            { label: "Patient Name", key: "PatientName" },
+            { label: "Test Result & Unit", key: "TestResult" },
+            { label: "MR Number", key: "MRNumber" },
+            { label: "Age", key: "age" },
+            { label: "Gender", key: "gender" },
+          ]}
+        />
+       
+      <DetailModal
+          show={showLogoModal}
+          onHide={() => setShowLogoModal(false)}
+          title="Sample Picture"
+          imageUrl={selectedLogoUrl}
+          fallbackText="No logo available."
+        />
       </div>
-    <DetailModal
-      show={showModal}
-      onHide={closeModal}
-      title="Sample Details"
-      data={selectedSample}
-      fieldsToShow={fieldsToShowInOrder}
-    />
+      <DetailModal
+        show={showModal}
+        onHide={closeModal}
+        title="Sample Details"
+        data={selectedSample}
+        fieldsToShow={fieldsToShowInOrder}
+      />
 
       <DetailModal
         show={showPatientModal}
