@@ -1277,7 +1277,7 @@ const BioBankSampleArea = () => {
             </li>
             <li>
               <h6>
-                Click on Location Id's to see Sample Picture.
+                Click on Location Id`s to see Sample Picture.
               </h6>
             </li>
             <li>
