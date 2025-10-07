@@ -499,12 +499,6 @@ const CollectionSiteArea = () => {
   };
 
   useEffect(() => {
-    if (showHistoryModal) {
-      console.log("History Data:", historyData);
-    }
-  }, [showHistoryModal, historyData]);
-
-  useEffect(() => {
     const anyModalOpen =
       showAddModal || showDeleteModal || showEditModal || showHistoryModal;
 

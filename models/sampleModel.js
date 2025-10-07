@@ -565,7 +565,6 @@ const updateReservedSample = (sampleId, status, callback) => {
   const updateQuery = "UPDATE sample SET reserved = ? WHERE id = ?";
   mysqlConnection.query(updateQuery, [status, sampleId], (err, result) => {
     if (err) {
-      console.log("sample error",err)
       return callback(err)};
 
     // If unreserving (status = 0)

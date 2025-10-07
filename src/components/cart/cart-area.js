@@ -184,7 +184,6 @@ const CartArea = () => {
     const diffHours = (now - addedTime) / (1000 * 60 * 60); // Convert ms to hours
 
     if (diffHours >= 48) {
-      console.log(`🕒 48 hours passed for item ${item.id}. Unreserving...`);
       unreserveSample(item.id);
 
       // Remove from frontend cart
@@ -308,8 +307,6 @@ const CartArea = () => {
 
     if (!res.ok) {
       console.error("Failed to unreserve sample. Status:", res.status, data);
-    } else {
-      console.log("Sample unreserved:", id, data);
     }
   } catch (err) {
     console.error("Failed to unreserve sample:", err);

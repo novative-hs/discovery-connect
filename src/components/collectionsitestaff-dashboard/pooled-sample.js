@@ -112,8 +112,6 @@ const fetchSamples = useCallback(async (page = 1, pageSize = 50, filters = {}) =
       }
     });
 
-    console.log("API URL:", url);
-
     const response = await axios.get(url);
     const { samples, totalCount, pageSize: serverPageSize } = response.data;
 

@@ -276,7 +276,6 @@ const ResearcherArea = () => {
         `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/researcher/orderhistory/${id}`
       );
       const data = await response.json();
-      console.log("API Response:", data);
       setOrderHistoryData(data);
     } catch (error) {
       console.error("Error fetching history:", error);

@@ -95,9 +95,7 @@ const unreserveSample = async (id) => {
 
     if (!res.ok) {
       console.error("Failed to unreserve sample. Status:", res.status, data);
-    } else {
-      console.log("Sample unreserved:", id, data);
-    }
+    } 
   } catch (err) {
     console.error("Failed to unreserve sample:", err);
   }
