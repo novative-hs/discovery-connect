@@ -1927,7 +1927,8 @@ const SampleArea = () => {
                 left: "50%",
                 transform: "translateX(-50%)",
                 width: "100%",
-                overflow: "hidden",
+                overflowY: "auto", // ✅ allows scrolling
+                maxHeight: "100vh",
                 transition: "top 0.3s ease-in-out",
               }}
             >
@@ -3123,7 +3124,6 @@ const SampleArea = () => {
                 left: "50%",
                 transform: "translateX(-50%)",
                 width: "100%",
-                overflow: "hidden",
                 transition: "top 0.3s ease-in-out",
               }}
             >
