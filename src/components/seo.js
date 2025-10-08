@@ -72,24 +72,24 @@ const SEO = ({ pageTitle }) => {
           "name": "About",
           "item": "https://discovery-connect.com/about"
         },
-        //   {
-        //   "@type": "ListItem",
-        //   "position": 3,
-        //   "name": "Board of Advisors",
-        //   "item": "https://discovery-connect.com/boardadvisor"
-        // },
-        //   {
-        //   "@type": "ListItem",
-        //   "position": 4,
-        //   "name": "Policy & Privacy",
-        //   "item": "https://discovery-connect.com/policy"
-        // },
-        //   {
-        //   "@type": "ListItem",
-        //   "position": 5,
-        //   "name": "Terms & Condition",
-        //   "item": "https://discovery-connect.com/terms"
-        // }
+          {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "Board of Advisors",
+          "item": "https://discovery-connect.com/boardadvisor"
+        },
+          {
+          "@type": "ListItem",
+          "position": 4,
+          "name": "Policy & Privacy",
+          "item": "https://discovery-connect.com/policy"
+        },
+          {
+          "@type": "ListItem",
+          "position": 5,
+          "name": "Terms & Condition",
+          "item": "https://discovery-connect.com/terms"
+        }
       ]
     })
   }}
