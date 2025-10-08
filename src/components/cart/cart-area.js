@@ -129,7 +129,7 @@ const CartArea = () => {
     const stored = sessionStorage.getItem(newQuoteSentKey) === "true";
     setQuoteAlreadySent(stored);
   }, [cart_products, userID]);
-  
+
   useEffect(() => {
     if (unpricedItems.length > 0) {
       priceIntervalRef.current = setInterval(() => {
@@ -175,30 +175,36 @@ const CartArea = () => {
   };
 
   useEffect(() => {
-  const now = new Date();
+    const now = new Date();
+    let expiredFound = false; // flag to track if any expired items exist
 
-  cart_products.forEach((item) => {
-    if (!item.addedAt) return; // skip if timestamp missing
+    cart_products.forEach((item) => {
+      if (!item.addedAt) return; // skip if timestamp missing
 
-    const addedTime = new Date(item.addedAt);
-    const diffHours = (now - addedTime) / (1000 * 60 * 60); // Convert ms to hours
+      const addedTime = new Date(item.addedAt);
+      const diffHours = (now - addedTime) / (1000 * 60 * 60); // Convert ms to hours
 
-    if (diffHours >= 48) {
-      unreserveSample(item.id);
+      if (diffHours >= 48) {
+        expiredFound = true; // mark that we found an expired item
+        unreserveSample(item.id);
 
-      // Remove from frontend cart
-      dispatch(remove_product(item));
+        // Remove from frontend cart
+        dispatch(remove_product(item));
 
-      // Remove any quote session key if needed
-      Object.keys(sessionStorage).forEach((key) => {
-        if (key.startsWith(`quoteSent_${userID}_`)) {
-          sessionStorage.removeItem(key);
-        }
-      });
+        // Remove any quote session key if needed
+        Object.keys(sessionStorage).forEach((key) => {
+          if (key.startsWith(`quoteSent_${userID}_`)) {
+            sessionStorage.removeItem(key);
+          }
+        });
+      }
+    });
+
+    // Notify **once** if any expired items were removed
+    if (expiredFound) {
+      notifyError(`Some samples have been removed from your cart due to expiration.`);
     }
-  });
-}, [cart_products]);
-
+  }, [cart_products]);
 
   useEffect(() => {
     const triggerFromQuery = router.query.triggerCheckout === "true";
@@ -290,28 +296,28 @@ const CartArea = () => {
     setQuoteAlreadySent(false);
   };
   const unreserveSample = async (id) => {
-  try {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/reserve`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sampleId: id,
-          status: 0,
-        }),
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/reserve`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sampleId: id,
+            status: 0,
+          }),
+        }
+      );
+
+      const data = await res.json(); // optional, to see backend response
+
+      if (!res.ok) {
+        console.error("Failed to unreserve sample. Status:", res.status, data);
       }
-    );
-
-    const data = await res.json(); // optional, to see backend response
-
-    if (!res.ok) {
-      console.error("Failed to unreserve sample. Status:", res.status, data);
+    } catch (err) {
+      console.error("Failed to unreserve sample:", err);
     }
-  } catch (err) {
-    console.error("Failed to unreserve sample:", err);
-  }
-};
+  };
 
 
   return (
