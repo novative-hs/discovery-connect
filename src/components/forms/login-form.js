@@ -23,46 +23,46 @@ const LoginForm = () => {
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
- const onSubmit = async (data) => {
-  try {
-    const result = await loginUser(data);
-    if (result?.error) {
-      const errorData = result.error?.data;
-      const errorMsg =
-        errorData?.message || errorData?.error || result.error?.statusText || "Internal Server Error";
-      notifyError(errorMsg);
-    } else {
-      const { id, accountType, action,committeetype, authToken } = result?.data?.user || {};
-      if (!id) return notifyError("Unexpected error: User ID is missing.");
-
-      sessionStorage.setItem("userID", id);
-      sessionStorage.setItem("accountType", accountType);
-      if (typeof action !== "undefined") {
-        sessionStorage.setItem("staffAction", action);
-      }
-      if (typeof committeetype !== "undefined") {
-        sessionStorage.setItem("committeetype", committeetype);
-      }
-      
-      notifySuccess("Login successfully");
-
-      document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
-
-      const fromPage = router.query.from;
-
-      // ✅ Handle redirect after login based on source
-      if (fromPage === "cart") {
-        router.push("/dashboardheader?tab=Cart"); // ✅ re-run pricing logic in cart
-      } else if (fromPage === "checkout") {
-        router.push("/dashboardheader?tab=Checkout");
+  const onSubmit = async (data) => {
+    try {
+      const result = await loginUser(data);
+      if (result?.error) {
+        const errorData = result.error?.data;
+        const errorMsg =
+          errorData?.message || errorData?.error || result.error?.statusText || "Internal Server Error";
+        notifyError(errorMsg);
       } else {
-        router.push("/dashboardheader");
+        const { id, accountType, action, committeetype, authToken } = result?.data?.user || {};
+        if (!id) return notifyError("Unexpected error: User ID is missing.");
+
+        sessionStorage.setItem("userID", id);
+        sessionStorage.setItem("accountType", accountType);
+        if (typeof action !== "undefined") {
+          sessionStorage.setItem("staffAction", action);
+        }
+        if (typeof committeetype !== "undefined") {
+          sessionStorage.setItem("committeetype", committeetype);
+        }
+
+        notifySuccess("Login successfully");
+
+        document.cookie = `authToken=${authToken}; path=/; Secure; SameSite=Strict;`;
+
+        const fromPage = router.query.from;
+
+        // ✅ Handle redirect after login based on source
+        if (fromPage === "cart") {
+          router.push("/dashboardheader?tab=Cart"); // ✅ re-run pricing logic in cart
+        } else if (fromPage === "checkout") {
+          router.push("/dashboardheader?tab=Checkout");
+        } else {
+          router.push("/dashboardheader");
+        }
       }
+    } catch (error) {
+      notifyError(error?.response?.data?.error || error?.message || "Something went wrong.");
     }
-  } catch (error) {
-    notifyError(error?.response?.data?.error || error?.message || "Something went wrong.");
-  }
-};
+  };
 
 
   return (
@@ -79,24 +79,34 @@ const LoginForm = () => {
         <div className="invalid-feedback">{errors.email?.message}</div>
       </div>
 
-      <div className="mb-3 position-relative">
-        <label htmlFor="password" className="form-label">Password</label>
-        <input
-          {...register("password")}
-          type={showPass ? "text" : "password"}
-          className={`form-control ${errors.password ? "is-invalid" : ""}`}
-          id="password"
-          placeholder="Password"
-        />
-        <span
-          className="position-absolute top-50 end-0 translate-middle-y me-3"
-          style={{ cursor: "pointer" }}
-          onClick={() => setShowPass(!showPass)}
-        >
-          {showPass ? <i className="fa fa-eye-slash text-light"></i> : <i className="fa fa-eye text-light"></i>}
-        </span>
-        <div className="invalid-feedback">{errors.password?.message}</div>
-      </div>
+   <div className="mb-3 position-relative">
+  <label htmlFor="password" className="form-label">Password</label>
+  
+  <div className="position-relative">
+    <input
+      {...register("password")}
+      type={showPass ? "text" : "password"}
+      className={`form-control pe-5 ${errors.password ? "is-invalid" : ""}`}
+      id="password"
+      placeholder="Password"
+    />
+
+    <span
+      className="position-absolute top-50 end-0 translate-middle-y me-3"
+      style={{ cursor: "pointer" }}
+      onClick={() => setShowPass(!showPass)}
+    >
+      {showPass ? (
+        <i className="fa fa-eye-slash text-dark"></i>
+      ) : (
+        <i className="fa fa-eye text-dark"></i>
+      )}
+    </span>
+  </div>
+
+  <div className="invalid-feedback">{errors.password?.message}</div>
+</div>
+
 
       <div className="mb-3 form-check d-flex justify-content-end align-items-center">
         {/* <div>
