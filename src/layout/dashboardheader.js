@@ -234,17 +234,17 @@ const Header = ({ setActiveTab, activeTab }) => {
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
         <div className="container-fluid">
           <Image src={logo} alt="Logo" width={170} height={75} />
-          <button
-            className="navbar-toggler"
-            type="button"
-            data-bs-toggle="collapse"
-            data-bs-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
+        <button
+    className="navbar-toggler ms-auto d-lg-none" // ms-auto pushes to right in mobile
+    type="button"
+    data-bs-toggle="collapse"
+    data-bs-target="#navbarSupportedContent"
+    aria-controls="navbarSupportedContent"
+    aria-expanded="false"
+    aria-label="Toggle navigation"
+  >
+    <span className="navbar-toggler-icon"></span>
+  </button>
           {/* Collapsible Navbar */}
           <div
             className="collapse navbar-collapse w-100"
@@ -325,9 +325,10 @@ const Header = ({ setActiveTab, activeTab }) => {
                 </li>
               ))}
             </ul>
-
-            {/* Right Section */}
-            <div className="d-flex align-items-center gap-2 ms-auto">
+           
+          </div>
+          {/* Right Section */}
+           <div className="d-flex align-items-center gap-2 ms-auto">
               {userType === "technicaladmin" && (
                 <span
                   className="text-primary fw-bold fs-6"
@@ -458,7 +459,6 @@ const Header = ({ setActiveTab, activeTab }) => {
                 )}
               </div>
             </div>
-          </div>
         </div>
       </nav>
 

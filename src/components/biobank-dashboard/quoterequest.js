@@ -167,89 +167,91 @@ const QuoteRequestTable = () => {
   return (
     <div className="container-fluid">
       <h3 className="mb-3">Quote Requests by Researcher</h3>
-      <table className="table table-bordered table-hover">
-        <thead className="table-dark text-white">
-          <tr>
-            <th>Researcher</th>
-            <th>Organization</th>
-            <th>City</th>
-            <th>District</th>
-            <th>Country</th>
-            <th>Quote Request</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(groupedByResearcherStatus).map(([key, samples]) => {
-            const {
-              ResearcherName,
-              OrganizationName,
-              city_name,
-              district_name,
-              country_name,
-            } = samples[0];
+      <div style={{ overflowX: "auto", maxHeight: "70vh" }}>
+        <table className="table table-bordered" style={{ minWidth: "900px" }}>
+          <thead className="table-dark text-white">
+            <tr>
+              <th>Researcher</th>
+              <th>Organization</th>
+              <th>City</th>
+              <th>District</th>
+              <th>Country</th>
+              <th>Quote Request</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.entries(groupedByResearcherStatus).map(([key, samples]) => {
+              const {
+                ResearcherName,
+                OrganizationName,
+                city_name,
+                district_name,
+                country_name,
+              } = samples[0];
 
-            const allPriced = samples.every((s) => s.status === "priced");
+              const allPriced = samples.every((s) => s.status === "priced");
 
-            return (
-              <tr key={key}>
-                <td>{ResearcherName}</td>
-                <td>{OrganizationName}</td>
-                <td>{city_name}</td>
-                <td>{district_name}</td>
-                <td>{country_name}</td>
-                <td>
-                  {allPriced ? (
-                    <button
-                      className="btn btn-sm btn-secondary"
-                      onClick={() => {
-                        setSelectedQuote(samples);
-                        setShowCartModal(true);
-                        setIsReadOnly(true); // or false depending
+              return (
+                <tr key={key}>
+                  <td>{ResearcherName}</td>
+                  <td>{OrganizationName}</td>
+                  <td>{city_name}</td>
+                  <td>{district_name}</td>
+                  <td>{country_name}</td>
+                  <td>
+                    {allPriced ? (
+                      <button
+                        className="btn btn-sm btn-secondary"
+                        onClick={() => {
+                          setSelectedQuote(samples);
+                          setShowCartModal(true);
+                          setIsReadOnly(true); // or false depending
 
-                        setGroupCurrency(samples[0]?.SamplePriceCurrency || "");
+                          setGroupCurrency(samples[0]?.SamplePriceCurrency || "");
 
-                        // ✅ Pre-fill charges if available in API response
-                        setCharges({
-                          tax: {
-                            value: samples[0]?.tax_percent || samples[0]?.tax_amount || "",
-                            type: samples[0]?.tax_percent ? "percent" : (samples[0]?.tax_amount ? "amount" : "amount"),
-                          },
-                          platform: {
-                            value: samples[0]?.platform_percent || samples[0]?.platform_amount || "",
-                            type: samples[0]?.platform_percent ? "percent" : (samples[0]?.platform_amount ? "amount" : "amount"),
-                          },
-                          freight: {
-                            value: samples[0]?.freight_percent || samples[0]?.freight_amount || "",
-                            type: samples[0]?.freight_percent ? "percent" : (samples[0]?.freight_amount ? "amount" : "amount"),
-                          }
-                        });
-                      }}
+                          // ✅ Pre-fill charges if available in API response
+                          setCharges({
+                            tax: {
+                              value: samples[0]?.tax_percent || samples[0]?.tax_amount || "",
+                              type: samples[0]?.tax_percent ? "percent" : (samples[0]?.tax_amount ? "amount" : "amount"),
+                            },
+                            platform: {
+                              value: samples[0]?.platform_percent || samples[0]?.platform_amount || "",
+                              type: samples[0]?.platform_percent ? "percent" : (samples[0]?.platform_amount ? "amount" : "amount"),
+                            },
+                            freight: {
+                              value: samples[0]?.freight_percent || samples[0]?.freight_amount || "",
+                              type: samples[0]?.freight_percent ? "percent" : (samples[0]?.freight_amount ? "amount" : "amount"),
+                            }
+                          });
+                        }}
 
-                    >
-                      View Details
-                    </button>
-                  ) : (
-                    <button
-                      className="btn btn-sm btn-primary"
-                      onClick={() => {
-                        setSelectedQuote(samples);
-                        setShowCartModal(true);
-                        setIsReadOnly(false);
-                        setGroupCurrency("");
-                      }}
-                    >
-                      <FontAwesomeIcon icon={faDollarSign} className="me-1" />
-                      Add Price
-                    </button>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
+                      >
+                        View Details
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-sm btn-primary"
+                        onClick={() => {
+                          setSelectedQuote(samples);
+                          setShowCartModal(true);
+                          setIsReadOnly(false);
+                          setGroupCurrency("");
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faDollarSign} className="me-1" />
+                        Add Price
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
 
-        </tbody>
-      </table>
+          </tbody>
+        </table>
 
+      </div>
       {/* Modal */}
       {showCartModal && selectedQuote && (
         <Modal show={showCartModal} onHide={() => setShowCartModal(false)} size="lg">
@@ -355,7 +357,7 @@ const QuoteRequestTable = () => {
                   <th colSpan=""></th>
                   <th>Charges</th>
                   <th colSpan="3" className="text-center">Values</th>
-                  
+
                 </tr>
               </thead>
               <tbody>

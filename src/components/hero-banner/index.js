@@ -49,7 +49,7 @@ const HeroBanner = () => {
           muted
           playsInline
           loop={false}
-          preload="none"
+          preload="auto"
           className="position-absolute top-0 start-0 w-100 h-100"
           style={{ objectFit: "cover", zIndex: -1 }}  // 👈 force it behind
         >
