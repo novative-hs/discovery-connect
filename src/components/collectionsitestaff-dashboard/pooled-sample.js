@@ -56,7 +56,8 @@ const PooledSampleArea = () => {
   const fieldsToShowInOrder = [
     { label: "Container Type", key: "ContainerType" },
     { label: "Sample Type Matrix", key: "SampleTypeMatrix" },
-    { label: "Status", key: "status" },
+    {label:"Final Concentration",key:"finalConcentration"},
+    // { label: "Status", key: "status" },
     { label: "Sample Visibility", key: "sample_visibility" },
     { label: "Phone Number", key: "phoneNumber" },
     { label: "Sample Condition", key: "samplecondition" },
