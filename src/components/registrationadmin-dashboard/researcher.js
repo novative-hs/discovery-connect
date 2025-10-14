@@ -379,7 +379,7 @@ const ResearcherArea = () => {
         <div className="row justify-content-center">
           <div className="d-flex flex-column w-100">
             {/* Button Container */}
-            <div className="d-flex flex-column justify-content-start justify-content-sm-start align-items-center gap-2 text-center w-100">
+           <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               {/* Success Message */}
               {successMessage && (
                 <div className="alert alert-success w-100 text-start" role="alert">
@@ -390,7 +390,7 @@ const ResearcherArea = () => {
               {/* Status Filter */}
               <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-3 mb-3">
                 {/* Filter Section (left-aligned) */}
-                <div className="d-flex flex-column flex-sm-row align-items-center gap-2">
+                   <div className="d-flex flex-wrap gap-3 align-items-center">
                   <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
                     Status:
                   </label>
@@ -409,7 +409,7 @@ const ResearcherArea = () => {
                 </div>
 
                 {/* Export Button (right-aligned) */}
-                <div>
+              
                   <button
                     onClick={handleExportToExcel}
                     style={{
@@ -428,7 +428,6 @@ const ResearcherArea = () => {
                   >
                     <i className="fas fa-file-excel"></i> Export to Excel
                   </button>
-                </div>
               </div>
             </div>
 

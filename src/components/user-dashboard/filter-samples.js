@@ -242,23 +242,64 @@ const FilterProductArea = ({ selectedProduct, selectedFilters = {} }) => {
               <thead className="table-primary text-dark">
                 <tr>
                   {tableHeaders.map(({ label, key }, index) => (
-                    <th key={index}>
-                      <div className="d-flex flex-column align-items-center">
+                    <th
+                      key={index}
+                      className="text-center align-middle px-2"
+                      style={{
+                        minWidth: "130px",        // keeps columns readable
+                        whiteSpace: "nowrap",
+                        verticalAlign: "middle",
+                      }}
+                    >
+                      <div
+                        className="d-flex flex-column align-items-center justify-content-center w-100"
+                        style={{
+                          gap: "6px",
+                          padding: "4px",
+                        }}
+                      >
+                        {/* ✅ Filter Input */}
                         <input
                           type="text"
                           className="form-control form-control-sm text-center shadow-none"
                           placeholder={`Search ${label}`}
-                          value={filters[key] || ""} // ✅ controlled input
+                          value={filters[key] || ""}
                           onChange={(e) => handleFilterChange(key, e.target.value)}
+                          style={{
+                            fontSize: "12px",
+                            height: "42px",
+                            width: "100%",
+                            maxWidth: "140px",
+                          }}
                         />
 
-                        <span className="fw-bold mt-1 fs-6">{label}</span>
+                        {/* ✅ Header Label */}
+                        <span
+                          className="fw-bold text-dark text-center"
+                          style={{
+                            fontSize: "13px",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {label}
+                        </span>
                       </div>
                     </th>
                   ))}
-                  <th>Action</th>
-                </tr>
 
+                  {/* ✅ Action Column */}
+                  <th
+                    className="text-center align-middle"
+                    style={{
+                      minWidth: "110px",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    Action
+                  </th>
+                </tr>
               </thead>
               <tbody>
                 {filteredSamples.length ? (

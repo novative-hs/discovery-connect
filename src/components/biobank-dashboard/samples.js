@@ -21,7 +21,7 @@ import { notifyError } from "@utils/toast";
 const BioBankSampleArea = () => {
 
   const id = sessionStorage.getItem("userID");
-
+const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
   const [mode, setMode] = useState("Individual");
   const [showActionModal, setShowActionModal] = useState(false);
   const [statusmode, setstatusMode] = useState("");
@@ -224,6 +224,18 @@ const BioBankSampleArea = () => {
     Quantity: 1,
   });
 
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth <= 768);
+    };
+
+    // Add listener
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup on unmount
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const handleQuarantineClick = () => {
     if (!quarantineComment.trim()) {
       setCommentError("Comment is required to quarantine the sample.");
@@ -328,17 +340,17 @@ const BioBankSampleArea = () => {
     setDateTo(today); // auto-select today's date
   }, []);
 
-  useEffect(() => {
-    const filters = {
-      Analyte: analyte?.trim() || undefined,
-      gender: gender?.trim() || undefined,
-      CollectionSiteName: collectionSite?.trim() || undefined,
-      visibility: visibility,
-      priceFilter: priceFilter
-    };
+  // useEffect(() => {
+  //   const filters = {
+  //     Analyte: analyte?.trim() || undefined,
+  //     gender: gender?.trim() || undefined,
+  //     CollectionSiteName: collectionSite?.trim() || undefined,
+  //     visibility: visibility,
+  //     priceFilter: priceFilter
+  //   };
 
-    fetchSamples(currentPage + 1, itemsPerPage, filters);
-  }, [analyte, gender, collectionSite, visibility, priceFilter, currentPage]);
+  //   fetchSamples(currentPage + 1, itemsPerPage, filters);
+  // }, [analyte, gender, collectionSite, visibility, priceFilter, currentPage]);
 
 
   const currentData = filteredSamples;
@@ -373,39 +385,51 @@ const BioBankSampleArea = () => {
     setCurrentPage(selectedPage); // This will trigger the data change based on selected page
   };
 
+  useEffect(() => {
+    if (!appliedFilters) return;
+    fetchSamples(currentPage + 1, itemsPerPage, appliedFilters);
+  }, [currentPage, appliedFilters]);
 
- const handleFilterChange = (field, value) => {
-  const trimmed = value.trim?.() || value;
-  let newFilters = {};
+  // ✅ Optional: Reset to first page whenever filters change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [appliedFilters]);
 
-  if (field === "price") {
-    setPriceFilter(value);
-    setSearchField("");
-    setSearchValue("");
-    newFilters = { priceFilter: value };
-  } else if (field === "visibility") {
-    setVisibility(value);
-    setSearchField("");
-    setSearchValue("");
-    setPriceFilter("");
-    newFilters = { visibility: value };
-  } else if (field === "date_from" || field === "date_to") {
-    if (field === "date_from") setDateFrom(trimmed);
-    if (field === "date_to") setDateTo(trimmed);
-    newFilters = {
-      date_from: field === "date_from" ? trimmed : dateFrom,
-      date_to: field === "date_to" ? trimmed : dateTo
-    };
-  } else {
-    setSearchField(field);
-    setSearchValue(value);
-    setPriceFilter("");
-    newFilters = { searchField: field, searchValue: value };
-  }
+  const handleFilterChange = (field, value) => {
+    const trimmed = value.trim?.() || value;
 
-  setAppliedFilters(newFilters);  // <-- Store latest filters
-  fetchSamples(currentPage, itemsPerPage, newFilters);
-};
+    setAppliedFilters((prev) => {
+      const updated = { ...prev };
+
+      if (field === "price") {
+        setPriceFilter(value);
+        setSearchField("");
+        setSearchValue("");
+        updated.priceFilter = value;
+      } else if (field === "visibility") {
+        setVisibility(value);
+        setSearchField("");
+        setSearchValue("");
+        setPriceFilter("");
+        updated.visibility = value;
+      } else if (field === "date_from" || field === "date_to") {
+        if (field === "date_from") setDateFrom(trimmed);
+        if (field === "date_to") setDateTo(trimmed);
+        updated.date_from = field === "date_from" ? trimmed : dateFrom;
+        updated.date_to = field === "date_to" ? trimmed : dateTo;
+      } else {
+        setSearchField(field);
+        setSearchValue(value);
+        setPriceFilter("");
+        updated.searchField = field;
+        updated.searchValue = value;
+      }
+
+      fetchSamples(1, itemsPerPage, updated); // Always go to first page on filter change
+      return updated;
+    });
+  };
+
 
 
 
@@ -915,7 +939,7 @@ const BioBankSampleArea = () => {
     setShowPriceModal(true);
   };
 
- const handleUpdate = async (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
@@ -1035,7 +1059,7 @@ const BioBankSampleArea = () => {
       setSelectedSamples([]);
 
       // Refresh sample list - consider a more optimized refresh if possible
-      fetchSamples(currentPage, itemsPerPage,appliedFilters );
+      fetchSamples(currentPage, itemsPerPage, appliedFilters);
 
     } catch (error) {
       console.error("Update error:", error);
@@ -1763,14 +1787,14 @@ const BioBankSampleArea = () => {
                               </button>
                             </li>
                           )}
-                          
-                            {/* <button
+
+                          {/* <button
                               className="dropdown-item"
                               onClick={() => handlePriceCurrencyClick(sample)}
                             >
                               <FontAwesomeIcon icon={faDollarSign} className="me-2" /> Set Price & Currency
                             </button> */}
-                         
+
                           <li>
                             <button
                               className="dropdown-item text-danger"
@@ -1846,40 +1870,66 @@ const BioBankSampleArea = () => {
         {/* Modal for Adding and Editing Samples */}
         {(showAddModal || showEditModal) && (
           <>
-            {/* Bootstrap Backdrop with Blur */}
+            {/* Background Blur */}
             <div
               className="modal-backdrop fade show"
               style={{ backdropFilter: "blur(5px)" }}
             ></div>
-            {/* Modal Content */}
+
+            {/* Responsive Modal Wrapper */}
             <div
               className="modal show d-block"
               tabIndex="-1"
               role="dialog"
               style={{
-                zIndex: 1050,
                 position: "fixed",
-                top: "-30px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "100%",
-                overflow: "hidden",
-                transition: "top 0.3s ease-in-out",
+                top: isMobileView ? 40 : -120, // ✅ dynamically updates
+                left: 0,
+                width: "100vw",
+                height: "100vh",
+                zIndex: 1050,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflowY: "auto",
+                transition: "top 0.3s ease", // smooth
               }}
             >
+
               <div
-                className="modal-dialog"
+                className="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down"
                 role="document"
                 style={{
-                  maxWidth: showAdditionalFields ? "70vw" : "40vw",
-                  width: "100%",
-                  transition: "all 0.3s ease-in-out",
+                  width: "100%", // always responsive
+
+                  maxWidth: showAdditionalFields
+                    ? window.innerWidth <= 768
+                      ? "95%" // ✅ Mobile view: full width
+                      : "1050px" // ✅ Desktop expanded width
+                    : "700px", // ✅ Normal width when checkbox unchecked
+
+                  margin: "10px auto",
+                  transition: "max-width 0.3s ease", // smooth animation
                 }}
               >
-                <div className="modal-content">
+
+                <div
+                  className="modal-content"
+                  style={{
+                    borderRadius: "8px",
+                    overflowY: "auto",
+                    maxHeight: "90vh",
+                  }}
+                >
+                  {/* Header */}
                   <div
                     className="modal-header"
-                    style={{ backgroundColor: "#cfe2ff" }}
+                    style={{
+                      backgroundColor: "#cfe2ff",
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 10,
+                    }}
                   >
                     <h5 className="modal-title">
                       {showAddModal ? "Add Sample" : "Edit Sample"}
@@ -3137,8 +3187,8 @@ const BioBankSampleArea = () => {
                                               ...prev,
                                               finalConcentration: e.target.value,
                                             }));
-                                            if(mode!=="Pooled"){
-                                             setMode(e.target.value)
+                                            if (mode !== "Pooled") {
+                                              setMode(e.target.value)
                                             }
                                           }}
                                           required

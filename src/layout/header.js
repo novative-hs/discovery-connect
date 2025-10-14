@@ -90,9 +90,15 @@ const Header = ({ style_2 = false }) => {
                     </div>
                   </div>
                   <div className="col-xxl-3 col-xl-3 col-lg-8 col-md-8 col-sm-7 col-4">
-                    <div className="header__bottom-right-13 d-flex justify-content-end align-items-center pl-30">
+                    <div
+                      className="header__bottom-right-13 d-flex align-items-center justify-content-end pl-30"
+                      style={{ gap: "20px" }}
+                    >
                       <div className="header__action-13">
-                        <ul className="flex items-center gap-4">
+                        <ul
+                          className="d-flex align-items-center justify-content-end mb-0 list-unstyled"
+                          style={{ gap: "15px", marginBottom: 0 }}
+                        >
                           {userInfo?.imageURL ? (
                             <li>
                               <Link href="/user-dashboard">
@@ -111,7 +117,7 @@ const Header = ({ style_2 = false }) => {
                           ) : userInfo?.name ? (
                             <li>
                               <Link href="/user-dashboard">
-                                <h2 className="text-uppercase tp-user-login-avater text-dark">
+                                <h2 className="text-uppercase tp-user-login-avater text-dark m-0">
                                   {userInfo.name[0]}
                                 </h2>
                               </Link>
@@ -120,51 +126,39 @@ const Header = ({ style_2 = false }) => {
                             <li>
                               <Link
                                 href="/login"
-                                className="flex items-center gap-2 no-underline text-black hover:text-blue-600"
+                                className="d-flex align-items-center text-black text-decoration-none"
                               >
-                                <span className="inline-flex">
-                                  <User className="w-4 h-4" />
-                                </span>
-                                {/* <span className="text-sm font-medium">Login</span> */}
+                                <User className="w-6 h-6 text-gray-800" />
                               </Link>
-
-
                             </li>
-
-
                           )}
+
                           <li>
-                            <button className="cartmini-open-btn" onClick={handleProceedToCart}>
-                              <Cart />
+                            <button
+                              className="cartmini-open-btn position-relative d-flex align-items-center justify-content-center border-0 bg-transparent"
+                              onClick={handleProceedToCart}
+                            >
+                              <Cart className="w-6 h-6 text-gray-800" />
                               {Number(sampleCount) > 0 && (
-                                <span className="tp-item-count">{sampleCount}</span>
+                                <span className="tp-item-count position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">
+                                  {sampleCount}
+                                </span>
                               )}
                             </button>
                           </li>
                         </ul>
                       </div>
 
-                      <div className="header__hamburger ml-30 d-xl-none">
+                      {/* Hamburger Menu */}
+                      <div className="header__hamburger d-xl-none d-flex align-items-center">
                         <button
                           onClick={() => setIsOffCanvasOpen(true)}
                           type="button"
                           className="hamburger-btn hamburger-btn-black offcanvas-open-btn"
                         >
-                          <span
-                            style={{
-                              background: isHovered ? "#08048c" : "#08048c",
-                            }}
-                          ></span>
-                          <span
-                            style={{
-                              background: isHovered ? "#08048c" : "##08048c",
-                            }}
-                          ></span>
-                          <span
-                            style={{
-                              background: isHovered ? "#08048c" : "#08048c",
-                            }}
-                          ></span>
+                          <span style={{ background: "#08048c" }}></span>
+                          <span style={{ background: "#08048c" }}></span>
+                          <span style={{ background: "#08048c" }}></span>
                         </button>
                       </div>
                     </div>

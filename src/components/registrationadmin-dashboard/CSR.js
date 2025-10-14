@@ -18,8 +18,8 @@ import moment from "moment";
 import { notifyError, notifySuccess } from "@utils/toast";
 const CSRArea = () => {
   const [selectedCSR, setSelectedCSR] = useState(null);
-  const [registerUser, {}] = useRegisterUserMutation();
-  const [updateUser, {}] = useUpdateProfileMutation();
+  const [registerUser, { }] = useRegisterUserMutation();
+  const [updateUser, { }] = useUpdateProfileMutation();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -73,30 +73,30 @@ const CSRArea = () => {
     setSelectedCSR(null);
     setShowModal(false);
   };
- useEffect(() => {
-  const fetchAll = async () => {
-    try {
-      const [csrRes, collectionsiteRes, cityRes, districtRes, countryRes] = await Promise.all([
-        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/csr/get`),
-        axios.get(`${url}/admin/csr/getCollectionsiteName`),
-        axios.get(`${url}/city/get-city`),
-        axios.get(`${url}/district/get-district`),
-        axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`)
-      ]);
+  useEffect(() => {
+    const fetchAll = async () => {
+      try {
+        const [csrRes, collectionsiteRes, cityRes, districtRes, countryRes] = await Promise.all([
+          axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/admin/csr/get`),
+          axios.get(`${url}/admin/csr/getCollectionsiteName`),
+          axios.get(`${url}/city/get-city`),
+          axios.get(`${url}/district/get-district`),
+          axios.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/country/get-country`)
+        ]);
 
-      setCSR(csrRes.data);
-      setAllCSR(csrRes.data);
-      setcollectionsitename(collectionsiteRes.data);
-      setcityname(cityRes.data);
-      setdistrictname(districtRes.data);
-      setCountryname(countryRes.data);
-    } catch (error) {
-      console.error("Error fetching initial CSR data:", error);
-    }
-  };
+        setCSR(csrRes.data);
+        setAllCSR(csrRes.data);
+        setcollectionsitename(collectionsiteRes.data);
+        setcityname(cityRes.data);
+        setdistrictname(districtRes.data);
+        setCountryname(countryRes.data);
+      } catch (error) {
+        console.error("Error fetching initial CSR data:", error);
+      }
+    };
 
-  fetchAll();
-}, [url]);
+    fetchAll();
+  }, [url]);
 
 
   const fetchCSR = async () => {
@@ -110,7 +110,7 @@ const CSRArea = () => {
       console.error("Error fetching CSR:", error);
     }
   };
- 
+
 
   const handleFilterChange = (field, value) => {
     setSearchTerm(value);
@@ -250,7 +250,7 @@ const CSRArea = () => {
     newformData.append("country", formData.country);
     newformData.append("collectionsitename", formData.collectionsitename);
     newformData.append("permission", formData.permission);
-    
+
     const id = formData.user_account_id;
 
     updateUser({ id, formData: newformData })
@@ -424,731 +424,726 @@ const CSRArea = () => {
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
+          {/* Button Container */}
           <div className="d-flex flex-column w-100">
-            {/* Button Container */}
-            <div className="d-flex flex-column justify-content-start justify-content-sm-start align-items-center gap-2 text-center w-100">
-              {/* Success Message */}
-              {successMessage && (
-                <div
-                  className="alert alert-success w-100 text-start"
-                  role="alert"
-                >
-                  {successMessage}
-                </div>
-              )}
-              <h5 className="m-0 fw-bold ">CSR List</h5>
-              {/* Status Filter */}
-              <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-2">
-                <div className="d-flex align-items-center gap-2">
-                  <label htmlFor="statusFilter" className="mb-0">
-                    Status:
-                  </label>
-                  <select
-                    id="statusFilter"
-                    className="form-control"
-                    style={{ width: "auto" }}
-                    onChange={(e) =>
-                      handleFilterChange("status", e.target.value)
-                    }
-                  >
-                    <option value="">All</option>
-                    <option value="inactive">InActive</option>
-                    <option value="active">Active</option>
-                  </select>
-                </div>
-                <div className="d-flex flex-wrap gap-3 align-items-center">
-                  {/* Add Organization Button */}
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    style={{
-                      backgroundColor: "#4a90e2",
-                      color: "#fff",
-                      border: "none",
-                      padding: "10px 20px",
-                      borderRadius: "6px",
-                      fontWeight: "500",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                      margin: 10,
-                    }}
-                  >
-                    <i className="fas fa-plus"></i> Add CSR
-                  </button>
-                  <button
-                    onClick={handleExportToExcel}
-                    style={{
-                      backgroundColor: "#28a745",
-                      color: "#fff",
-                      border: "none",
-                      padding: "8px 16px",
-                      borderRadius: "6px",
-                      fontWeight: "500",
-                      fontSize: "14px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                    }}
-                  >
-                    <i className="fas fa-file-excel"></i> Export to Excel
-                  </button>
-                </div>
+            {/* Success Message */}
+            {successMessage && (
+              <div className="alert alert-success mb-3" role="alert">
+                {successMessage}
               </div>
-            </div>
-
-            {/* Table */}
-            <div className="table-responsive" style={{ overflowX: "auto" }}>
-              <table className="table table-hover table-bordered text-center align-middle w-100">
-                <thead className="table-primary text-dark">
-                  <tr>
-                    {[
-                      {
-                        label: "Name",
-                        placeholder: "Search Name",
-                        field: "CSRName",
-                      },
-                      {
-                        label: "Email",
-                        placeholder: "Search Email",
-                        field: "useraccount_email",
-                      },
-                      {
-                        label: "Password",
-                        placeholder: "Search Password",
-                        field: "useraccount_password",
-                      },
-                      {
-                        label: "Collectionsite Name",
-                        placeholder: "Search Collectionsite Name",
-                        field: "name",
-                      },
-                      {
-                        label: "Permssion",
-                        placeholder: "Search Permisssion",
-                        field: "permission",
-                      },
-                      {
-                        label: "Status",
-                        placeholder: "Search Status",
-                        field: "status",
-                      },
-                    ].map(({ label, placeholder, field }) => (
-                      <th key={field} className="col-md-1 px-2">
-                        <div className="d-flex flex-column align-items-center">
-                          <input
-                            type="text"
-                            className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                            placeholder={`Search ${label}`}
-                            onChange={(e) =>
-                              handleFilterChange(field, e.target.value)
-                            }
-                            style={{
-                              minWidth: "170px",
-                              maxWidth: "200px",
-                              width: "100px",
-                            }}
-                          />
-                          <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
-                            {label}
-                          </span>
-                        </div>
-                      </th>
-                    ))}
-                    <th
-                      className="p-2 text-center"
-                      style={{ minWidth: "50px" }}
-                    >
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentData.length > 0 ? (
-                    currentData.map((CSR) => (
-                      <tr key={CSR.id}>
-                        <td className="text-end" style={{ maxWidth: "150px" }}>
-                          <span
-                            className="CommitteeMemberName text-primary fw-semibold fs-6 text-decoration-underline"
-                            role="button"
-                            title="Collection Site Details"
-                            onClick={() => openModal(CSR)}
-                            style={{
-                              cursor: "pointer",
-                              transition: "color 0.2s",
-                            }}
-                            onMouseOver={(e) =>
-                              (e.target.style.color = "#0a58ca")
-                            }
-                            onMouseOut={(e) => (e.target.style.color = "")}
-                          >
-                            {CSR.CSRName || "----"}
-                          </span>
-                        </td>
-
-                        <td>{CSR.useraccount_email}</td>
-                        <td>{CSR.useraccount_password}</td>
-                        <td>{CSR.name}</td>
-                        <td>
-                           {CSR.permission === "all_order"
-                          ? "All Order Access"
-                          : CSR.permission === "own_order"
-                          ? "Assigned Collection Site Orders"
-                          : "----"}
-                        </td>
-                       
-
-                        {/* <td>{CSR.phoneNumber}</td> */}
-
-                        <td>{CSR.status}</td>
-                        <td>
-                          <div className="d-flex justify-content-center gap-2">
-                            <button
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleEditClick(CSR)}
-                            >
-                              <FontAwesomeIcon icon={faEdit} />
-                            </button>
-                            <div className="btn-group position-relative">
-                              <button
-                                className="btn btn-primary btn-sm"
-                                onClick={() =>
-                                  handleToggleStatusOptions(CSR.id)
-                                }
-                                title="Edit Status"
-                              >
-                                <FontAwesomeIcon
-                                  icon={faQuestionCircle}
-                                  size="xs"
-                                />
-                              </button>
-
-                              {statusOptionsVisibility[CSR.id] && (
-                                <div
-                                  className="dropdown-menu show position-absolute"
-                                  data-id={CSR.id}
-                                  style={{ zIndex: 1000 }}
-                                >
-                                  <button
-                                    className="dropdown-item"
-                                    onClick={() =>
-                                      handleStatusClick(CSR.id, "active")
-                                    }
-                                  >
-                                    Active
-                                  </button>
-                                  <button
-                                    className="dropdown-item"
-                                    onClick={() =>
-                                      handleStatusClick(CSR.id, "inactive")
-                                    }
-                                  >
-                                    InActive
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                            <button
-                              className="btn btn-info btn-sm"
-                              onClick={() => handleShowHistory("CSR", CSR.id)}
-                              title="History"
-                            >
-                              <FontAwesomeIcon icon={faHistory} size="sm" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="text-center">
-                        No CSR available
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            {filteredCSR.length >= 0 && (
-              <Pagination
-                handlePageClick={handlePageChange}
-                pageCount={Math.max(
-                  1,
-                  Math.ceil(filteredCSR.length / itemsPerPage)
-                )}
-                focusPage={currentPage}
-              />
             )}
+
+            {/* Status Filter and Add Button in Same Row */}
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+              <h5 className="m-0 fw-bold">CSR List</h5>
+              <div className="d-flex flex-wrap gap-3 align-items-center">
+                <label htmlFor="statusFilter" className="mb-0">
+                  Status:
+                </label>
+                <select
+                  id="statusFilter"
+                  className="form-control"
+                  style={{ width: "auto" }}
+                  onChange={(e) =>
+                    handleFilterChange("status", e.target.value)
+                  }
+                >
+                  <option value="">All</option>
+                  <option value="inactive">InActive</option>
+                  <option value="active">Active</option>
+                </select>
+              </div>
+              <div className="d-flex flex-wrap gap-3 align-items-center">
+                {/* Add Organization Button */}
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  style={{
+                    backgroundColor: "#4a90e2",
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-plus"></i> Add CSR
+                </button>
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+              </div>
+            </div>
           </div>
-          {/* Edit CSR Modal */}
-          {(showAddModal || showEditModal) && (
-            <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
 
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog" role="document">
-                  <div className="modal-content">
-                    <div className="modal-header">
-                      <h5 className="modal-title">
-                        {showAddModal ? "Add CSR" : "Edit CSR"}
-                      </h5>
-                      <button
-                        type="button"
-                        className="close"
-                        onClick={() => {
-                          setShowAddModal(false);
-                          setShowEditModal(false);
-                          resetFormData();
-                        }}
-                        style={{
-                          fontSize: "1.5rem",
-                          position: "absolute",
-                          right: "10px",
-                          top: "10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <span>&times;</span>
-                      </button>
-                    </div>
-
-                    <form onSubmit={showAddModal ? onSubmit : handleUpdate}>
-                      <div
-                        className="modal-body"
-                        style={{ maxHeight: "400px", overflowY: "auto" }}
-                      >
-                        <div className="form-group">
-                          <label>Name</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Enter Name"
-                            name="CSRName"
-                            value={formData.CSRName}
-                            onChange={handleInputChange}
-                            pattern="^[A-Za-z\s]+$"
-                            title="Only letters and spaces are allowed."
-                            required
-                          />
-                          {!/^[A-Za-z\s]*$/.test(formData.CSRName) && (
-                            <small className="text-danger">
-                              Only letters and spaces are allowed.
-                            </small>
-                          )}
-                        </div>
-
-                        <div className="form-group">
-                          <label>Email</label>
-                          <input
-                            type="email"
-                            className="form-control"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="Enter Email"
-                            required
-                          />
-                        </div>
-                        <div className="col-md-12">
-                          <label className="form-label">Password</label>
-                          <div className="input-group input-group-sm">
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              className="form-control"
-                              name="password"
-                              placeholder="Enter Password"
-                              value={formData.password}
-                              onChange={handleInputChange}
-                              pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
-                              title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
-                              required
-                            />
-                            <span
-                              className="input-group-text"
-                              style={{ cursor: "pointer" }}
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              <i
-                                className={
-                                  showPassword
-                                    ? "fa-regular fa-eye"
-                                    : "fa-regular fa-eye-slash"
-                                }
-                              ></i>
-                            </span>
-                          </div>
-                        </div>
-                        <div className="form-group">
-                          <label>Phone Number</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="phoneNumber"
-                            value={formData.phoneNumber}
-                            onChange={handleInputChange}
-                            required
-                            pattern="^\d{4}-\d{7}$"
-                            placeholder="0123-4567890"
-                            title="Phone number must be in the format 0123-4567890 and numeric"
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label>Collection site Name</label>
-                          <select
-                            className="form-control p-2"
-                            name="collectionsitename"
-                            value={formData.collectionsitename} // Store the selected city ID in formData
-                            onChange={handleInputChange} // Handle change to update formData
-                            required
-                          >
-                            <option value="" disabled>
-                              Select Collectionsite Name
-                            </option>
-                            {collectionsitename.map((collectionsite) => (
-                              <option
-                                key={collectionsite.id}
-                                value={collectionsite.id}
-                              >
-                                {collectionsite.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label>City</label>
-                          <select
-                            className="form-control p-2"
-                            name="city"
-                            value={formData.city} // Store the selected city ID in formData
-                            onChange={handleInputChange} // Handle change to update formData
-                            required
-                          >
-                            <option value="" disabled>
-                              Select City
-                            </option>
-                            {cityname.map((city) => (
-                              <option key={city.id} value={city.id}>
-                                {city.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label>District</label>
-                          <select
-                            className="form-control  p-2"
-                            name="district"
-                            value={formData.district}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="" disabled>
-                              Select District
-                            </option>
-                            {districtname.map((district) => (
-                              <option key={district.id} value={district.id}>
-                                {district.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label>Country</label>
-                          <select
-                            className="form-control p-2"
-                            name="country"
-                            value={formData.country}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="" disabled>
-                              Select Country
-                            </option>
-                            {countryname.map((country) => (
-                              <option key={country.id} value={country.id}>
-                                {country.name}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="form-group">
-                          <label>Full Address</label>
-                          <input
-                            type="text"
-                            className="form-control"
-                            name="fullAddress"
-                            placeholder="Enter Full Address"
-                            value={formData.fullAddress}
-                            onChange={handleInputChange}
-                            required
-                          />
-                        </div>
-                        <div className="form-group">
-                          <label>Permission</label>
-                          <select
-                            className="form-control p-2"
-                            name="permission"
-                            value={formData.permission}
-                            onChange={handleInputChange}
-                            required
-                          >
-                            <option value="">Select Permission</option>
-                            <option value="all_order">All Orders Access</option>
-                            <option value="own_order">
-                              Assigned CollectionSites Orders Access
-                            </option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="modal-footer">
-                        <button type="submit" className="btn btn-primary">
-                          {showAddModal ? "Save" : "Update"}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {showHistoryModal && (
-            <>
-              {/* Bootstrap Backdrop with Blur */}
-              <div
-                className="modal-backdrop fade show"
-                style={{ backdropFilter: "blur(5px)" }}
-              ></div>
-
-              {/* Modal Content */}
-              <div
-                className="modal show d-block"
-                tabIndex="-1"
-                role="dialog"
-                style={{
-                  zIndex: 1050,
-                  position: "fixed",
-                  top: "100px",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                }}
-              >
-                <div className="modal-dialog modal-md" role="document">
-                  <div className="modal-content">
-                    {/* Modal Header */}
-                    <div className="modal-header">
-                      <h5 className="modal-title">History</h5>
-                      <button
-                        type="button"
-                        className="close"
-                        onClick={() => setShowHistoryModal(false)}
-                        style={{
-                          fontSize: "1.5rem",
-                          position: "absolute",
-                          right: "10px",
-                          top: "10px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <span>&times;</span>
-                      </button>
-                    </div>
-
-                    {/* Chat-style Modal Body */}
-                    <div
-                      className="modal-body"
-                      style={{
-                        maxHeight: "500px",
-                        overflowY: "auto",
-                        backgroundColor: "#e5ddd5", // WhatsApp-style background
-                        padding: "15px",
-                        borderRadius: "10px",
-                      }}
-                    >
-                      {historyData && historyData.length > 0 ? (
-                        historyData.map((log, index) => {
-                          const {
-                            CSRName,
-                            phoneNumber,
-                            fullAddress,
-                            city_name,
-                            country_name,
-                            district_name,
-                            permission,
-                            status,
-                            created_at,
-                            updated_at,
-                          } = log;
-
-                          const formattedDate = moment(
-                            status === "updated" ? updated_at : created_at
-                          ).format("DD MMM YYYY, h:mm A");
-
-                          return (
-                            <div
-                              key={index}
-                              style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "flex-start",
-                                marginBottom: "15px",
-                              }}
-                            >
-                              <div
-                                style={{
-                                  padding: "10px 15px",
-                                  borderRadius: "15px",
-                                  backgroundColor:
-                                    status === "updated" ||
-                                    status === "inactive"
-                                      ? "#dcf8c6"
-                                      : "#ffffff",
-                                  boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
-                                  maxWidth: "100%",
-                                  fontSize: "14px",
-                                  textAlign: "left",
-                                }}
-                              >
-                                {CSRName && (
-                                  <p>
-                                    <b>CSR Name:</b> {CSRName}
-                                  </p>
-                                )}
-                                {status && (
-                                  <p>
-                                    <b>Status:</b> {status}
-                                  </p>
-                                )}
-                                {permission && (
-                                  <p>
-                                    <b>Permission:</b>{" "}
-                                    {permission === "all_order"
-                                      ? "All Order Access"
-                                      : "My Collection Site Orders"}
-                                  </p>
-                                )}
-                                {phoneNumber && (
-                                  <p>
-                                    <b>Phone:</b> {phoneNumber}
-                                  </p>
-                                )}
-                                {fullAddress && (
-                                  <p>
-                                    <b>Address:</b> {fullAddress}
-                                  </p>
-                                )}
-                                {city_name && (
-                                  <p>
-                                    <b>City:</b> {city_name}
-                                  </p>
-                                )}
-                                {district_name && (
-                                  <p>
-                                    <b>District:</b> {district_name}
-                                  </p>
-                                )}
-                                {country_name && (
-                                  <p>
-                                    <b>Country:</b> {country_name}
-                                  </p>
-                                )}
-                                <p>
-                                  <b>
-                                    {status === "updated"
-                                      ? "Updated"
-                                      : status === "active"
-                                      ? "Updated"
-                                      : status === "inactive"
-                                      ? "Updated"
-                                      : "Created"}{" "}
-                                    At:
-                                  </b>{" "}
-                                  {formattedDate}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <p className="text-left">No history available.</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-          {/* Modal for Deleting Researchers */}
-        </div>
-      </div>
-      <Modal
-        show={showModal}
-        onHide={closeModal}
-        size="lg"
-        centered
-        backdrop="static"
-        keyboard={false}
-      >
-        <Modal.Header closeButton className="border-0">
-          <Modal.Title className="fw-bold text-danger">
-            {" "}
-            CSR Details
-          </Modal.Title>
-        </Modal.Header>
-
-        <Modal.Body
-          style={{ maxHeight: "500px", overflowY: "auto" }}
-          className="bg-light rounded"
-        >
-          {selectedCSR ? (
-            <div className="p-3">
-              <div className="row g-3">
-                {fieldsToShowInOrder.map(({ field, label }) => {
-                  const value = selectedCSR[field];
-                  if (value === undefined) return null;
-
-                  return (
-                    <div className="col-md-6" key={field}>
-                      <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
-                        <span className="text-muted small fw-bold mb-1">
+          {/* Table */}
+          <div className="table-responsive" style={{ overflowX: "auto" }}>
+            <table className="table table-hover table-bordered text-center align-middle w-100">
+              <thead className="table-primary text-dark">
+                <tr>
+                  {[
+                    {
+                      label: "Name",
+                      placeholder: "Search Name",
+                      field: "CSRName",
+                    },
+                    {
+                      label: "Email",
+                      placeholder: "Search Email",
+                      field: "useraccount_email",
+                    },
+                    {
+                      label: "Password",
+                      placeholder: "Search Password",
+                      field: "useraccount_password",
+                    },
+                    {
+                      label: "Collectionsite Name",
+                      placeholder: "Search Collectionsite Name",
+                      field: "name",
+                    },
+                    {
+                      label: "Permssion",
+                      placeholder: "Search Permisssion",
+                      field: "permission",
+                    },
+                    {
+                      label: "Status",
+                      placeholder: "Search Status",
+                      field: "status",
+                    },
+                  ].map(({ label, placeholder, field }) => (
+                    <th key={field} className="col-md-1 px-2">
+                      <div className="d-flex flex-column align-items-center">
+                        <input
+                          type="text"
+                          className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                          placeholder={`Search ${label}`}
+                          onChange={(e) =>
+                            handleFilterChange(field, e.target.value)
+                          }
+                          style={{
+                            minWidth: "170px",
+                            maxWidth: "200px",
+                            width: "100px",
+                          }}
+                        />
+                        <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
                           {label}
                         </span>
-                        <span className="fs-6 text-dark">
-                          {value?.toString() || "----"}
+                      </div>
+                    </th>
+                  ))}
+                  <th
+                    className="p-2 text-center"
+                    style={{ minWidth: "50px" }}
+                  >
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {currentData.length > 0 ? (
+                  currentData.map((CSR) => (
+                    <tr key={CSR.id}>
+                      <td className="text-end" style={{ maxWidth: "150px" }}>
+                        <span
+                          className="CommitteeMemberName text-primary fw-semibold fs-6 text-decoration-underline"
+                          role="button"
+                          title="Collection Site Details"
+                          onClick={() => openModal(CSR)}
+                          style={{
+                            cursor: "pointer",
+                            transition: "color 0.2s",
+                          }}
+                          onMouseOver={(e) =>
+                            (e.target.style.color = "#0a58ca")
+                          }
+                          onMouseOut={(e) => (e.target.style.color = "")}
+                        >
+                          {CSR.CSRName || "----"}
+                        </span>
+                      </td>
+
+                      <td>{CSR.useraccount_email}</td>
+                      <td>{CSR.useraccount_password}</td>
+                      <td>{CSR.name}</td>
+                      <td>
+                        {CSR.permission === "all_order"
+                          ? "All Order Access"
+                          : CSR.permission === "own_order"
+                            ? "Assigned Collection Site Orders"
+                            : "----"}
+                      </td>
+
+
+                      {/* <td>{CSR.phoneNumber}</td> */}
+
+                      <td>{CSR.status}</td>
+                      <td>
+                        <div className="d-flex justify-content-center gap-2">
+                          <button
+                            className="btn btn-success btn-sm"
+                            onClick={() => handleEditClick(CSR)}
+                          >
+                            <FontAwesomeIcon icon={faEdit} />
+                          </button>
+                          <div className="btn-group position-relative">
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() =>
+                                handleToggleStatusOptions(CSR.id)
+                              }
+                              title="Edit Status"
+                            >
+                              <FontAwesomeIcon
+                                icon={faQuestionCircle}
+                                size="xs"
+                              />
+                            </button>
+
+                            {statusOptionsVisibility[CSR.id] && (
+                              <div
+                                className="dropdown-menu show position-absolute"
+                                data-id={CSR.id}
+                                style={{ zIndex: 1000 }}
+                              >
+                                <button
+                                  className="dropdown-item"
+                                  onClick={() =>
+                                    handleStatusClick(CSR.id, "active")
+                                  }
+                                >
+                                  Active
+                                </button>
+                                <button
+                                  className="dropdown-item"
+                                  onClick={() =>
+                                    handleStatusClick(CSR.id, "inactive")
+                                  }
+                                >
+                                  InActive
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            className="btn btn-info btn-sm"
+                            onClick={() => handleShowHistory("CSR", CSR.id)}
+                            title="History"
+                          >
+                            <FontAwesomeIcon icon={faHistory} size="sm" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" className="text-center">
+                      No CSR available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {filteredCSR.length >= 0 && (
+            <Pagination
+              handlePageClick={handlePageChange}
+              pageCount={Math.max(
+                1,
+                Math.ceil(filteredCSR.length / itemsPerPage)
+              )}
+              focusPage={currentPage}
+            />
+          )}
+        </div>
+      </div>
+      {/* Edit CSR Modal */}
+      {(showAddModal || showEditModal) && (
+        <>
+          {/* Bootstrap Backdrop with Blur */}
+          <div
+            className="modal-backdrop fade show"
+            style={{ backdropFilter: "blur(5px)" }}
+          ></div>
+
+          {/* Modal Content */}
+          <div
+            className="modal show d-block"
+            tabIndex="-1"
+            role="dialog"
+            style={{
+              zIndex: 1050,
+              position: "fixed",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+          >
+            <div className="modal-dialog" role="document">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    {showAddModal ? "Add CSR" : "Edit CSR"}
+                  </h5>
+                  <button
+                    type="button"
+                    className="close"
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setShowEditModal(false);
+                      resetFormData();
+                    }}
+                    style={{
+                      fontSize: "1.5rem",
+                      position: "absolute",
+                      right: "10px",
+                      top: "10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span>&times;</span>
+                  </button>
+                </div>
+
+                <form onSubmit={showAddModal ? onSubmit : handleUpdate}>
+                  <div
+                    className="modal-body"
+                    style={{ maxHeight: "400px", overflowY: "auto" }}
+                  >
+                    <div className="form-group">
+                      <label>Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="Enter Name"
+                        name="CSRName"
+                        value={formData.CSRName}
+                        onChange={handleInputChange}
+                        pattern="^[A-Za-z\s]+$"
+                        title="Only letters and spaces are allowed."
+                        required
+                      />
+                      {!/^[A-Za-z\s]*$/.test(formData.CSRName) && (
+                        <small className="text-danger">
+                          Only letters and spaces are allowed.
+                        </small>
+                      )}
+                    </div>
+
+                    <div className="form-group">
+                      <label>Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        placeholder="Enter Email"
+                        required
+                      />
+                    </div>
+                    <div className="col-md-12">
+                      <label className="form-label">Password</label>
+                      <div className="input-group input-group-sm">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          className="form-control"
+                          name="password"
+                          placeholder="Enter Password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          pattern="^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{6,}$"
+                          title="Password must be at least 6 characters long and contain at least one letter, one number, and one special character."
+                          required
+                        />
+                        <span
+                          className="input-group-text"
+                          style={{ cursor: "pointer" }}
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          <i
+                            className={
+                              showPassword
+                                ? "fa-regular fa-eye"
+                                : "fa-regular fa-eye-slash"
+                            }
+                          ></i>
                         </span>
                       </div>
                     </div>
-                  );
-                })}
+                    <div className="form-group">
+                      <label>Phone Number</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="phoneNumber"
+                        value={formData.phoneNumber}
+                        onChange={handleInputChange}
+                        required
+                        pattern="^\d{4}-\d{7}$"
+                        placeholder="0123-4567890"
+                        title="Phone number must be in the format 0123-4567890 and numeric"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Collection site Name</label>
+                      <select
+                        className="form-control p-2"
+                        name="collectionsitename"
+                        value={formData.collectionsitename} // Store the selected city ID in formData
+                        onChange={handleInputChange} // Handle change to update formData
+                        required
+                      >
+                        <option value="" disabled>
+                          Select Collectionsite Name
+                        </option>
+                        {collectionsitename.map((collectionsite) => (
+                          <option
+                            key={collectionsite.id}
+                            value={collectionsite.id}
+                          >
+                            {collectionsite.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>City</label>
+                      <select
+                        className="form-control p-2"
+                        name="city"
+                        value={formData.city} // Store the selected city ID in formData
+                        onChange={handleInputChange} // Handle change to update formData
+                        required
+                      >
+                        <option value="" disabled>
+                          Select City
+                        </option>
+                        {cityname.map((city) => (
+                          <option key={city.id} value={city.id}>
+                            {city.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>District</label>
+                      <select
+                        className="form-control  p-2"
+                        name="district"
+                        value={formData.district}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="" disabled>
+                          Select District
+                        </option>
+                        {districtname.map((district) => (
+                          <option key={district.id} value={district.id}>
+                            {district.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Country</label>
+                      <select
+                        className="form-control p-2"
+                        name="country"
+                        value={formData.country}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="" disabled>
+                          Select Country
+                        </option>
+                        {countryname.map((country) => (
+                          <option key={country.id} value={country.id}>
+                            {country.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="form-group">
+                      <label>Full Address</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="fullAddress"
+                        placeholder="Enter Full Address"
+                        value={formData.fullAddress}
+                        onChange={handleInputChange}
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Permission</label>
+                      <select
+                        className="form-control p-2"
+                        name="permission"
+                        value={formData.permission}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="">Select Permission</option>
+                        <option value="all_order">All Orders Access</option>
+                        <option value="own_order">
+                          Assigned CollectionSites Orders Access
+                        </option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="modal-footer">
+                    <button type="submit" className="btn btn-primary">
+                      {showAddModal ? "Save" : "Update"}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
-          ) : (
-            <div className="text-center text-muted p-3">No details to show</div>
-          )}
-        </Modal.Body>
+          </div>
+        </>
+      )}
 
-        <Modal.Footer className="border-0"></Modal.Footer>
-      </Modal>
-    </section>
+      {showHistoryModal && (
+        <>
+          {/* Bootstrap Backdrop with Blur */}
+          <div
+            className="modal-backdrop fade show"
+            style={{ backdropFilter: "blur(5px)" }}
+          ></div>
+
+          {/* Modal Content */}
+          <div
+            className="modal show d-block"
+            tabIndex="-1"
+            role="dialog"
+            style={{
+              zIndex: 1050,
+              position: "fixed",
+              top: "100px",
+              left: "50%",
+              transform: "translateX(-50%)",
+            }}
+          >
+            <div className="modal-dialog modal-md" role="document">
+              <div className="modal-content">
+                {/* Modal Header */}
+                <div className="modal-header">
+                  <h5 className="modal-title">History</h5>
+                  <button
+                    type="button"
+                    className="close"
+                    onClick={() => setShowHistoryModal(false)}
+                    style={{
+                      fontSize: "1.5rem",
+                      position: "absolute",
+                      right: "10px",
+                      top: "10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <span>&times;</span>
+                  </button>
+                </div>
+
+                {/* Chat-style Modal Body */}
+                <div
+                  className="modal-body"
+                  style={{
+                    maxHeight: "500px",
+                    overflowY: "auto",
+                    backgroundColor: "#e5ddd5", // WhatsApp-style background
+                    padding: "15px",
+                    borderRadius: "10px",
+                  }}
+                >
+                  {historyData && historyData.length > 0 ? (
+                    historyData.map((log, index) => {
+                      const {
+                        CSRName,
+                        phoneNumber,
+                        fullAddress,
+                        city_name,
+                        country_name,
+                        district_name,
+                        permission,
+                        status,
+                        created_at,
+                        updated_at,
+                      } = log;
+
+                      const formattedDate = moment(
+                        status === "updated" ? updated_at : created_at
+                      ).format("DD MMM YYYY, h:mm A");
+
+                      return (
+                        <div
+                          key={index}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "flex-start",
+                            marginBottom: "15px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              padding: "10px 15px",
+                              borderRadius: "15px",
+                              backgroundColor:
+                                status === "updated" ||
+                                  status === "inactive"
+                                  ? "#dcf8c6"
+                                  : "#ffffff",
+                              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.2)",
+                              maxWidth: "100%",
+                              fontSize: "14px",
+                              textAlign: "left",
+                            }}
+                          >
+                            {CSRName && (
+                              <p>
+                                <b>CSR Name:</b> {CSRName}
+                              </p>
+                            )}
+                            {status && (
+                              <p>
+                                <b>Status:</b> {status}
+                              </p>
+                            )}
+                            {permission && (
+                              <p>
+                                <b>Permission:</b>{" "}
+                                {permission === "all_order"
+                                  ? "All Order Access"
+                                  : "My Collection Site Orders"}
+                              </p>
+                            )}
+                            {phoneNumber && (
+                              <p>
+                                <b>Phone:</b> {phoneNumber}
+                              </p>
+                            )}
+                            {fullAddress && (
+                              <p>
+                                <b>Address:</b> {fullAddress}
+                              </p>
+                            )}
+                            {city_name && (
+                              <p>
+                                <b>City:</b> {city_name}
+                              </p>
+                            )}
+                            {district_name && (
+                              <p>
+                                <b>District:</b> {district_name}
+                              </p>
+                            )}
+                            {country_name && (
+                              <p>
+                                <b>Country:</b> {country_name}
+                              </p>
+                            )}
+                            <p>
+                              <b>
+                                {status === "updated"
+                                  ? "Updated"
+                                  : status === "active"
+                                    ? "Updated"
+                                    : status === "inactive"
+                                      ? "Updated"
+                                      : "Created"}{" "}
+                                At:
+                              </b>{" "}
+                              {formattedDate}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <p className="text-left">No history available.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      {/* Modal for Deleting Researchers */}
+  <Modal
+    show={showModal}
+    onHide={closeModal}
+    size="lg"
+    centered
+    backdrop="static"
+    keyboard={false}
+  >
+    <Modal.Header closeButton className="border-0">
+      <Modal.Title className="fw-bold text-danger">
+        {" "}
+        CSR Details
+      </Modal.Title>
+    </Modal.Header>
+
+    <Modal.Body
+      style={{ maxHeight: "500px", overflowY: "auto" }}
+      className="bg-light rounded"
+    >
+      {selectedCSR ? (
+        <div className="p-3">
+          <div className="row g-3">
+            {fieldsToShowInOrder.map(({ field, label }) => {
+              const value = selectedCSR[field];
+              if (value === undefined) return null;
+
+              return (
+                <div className="col-md-6" key={field}>
+                  <div className="d-flex flex-column p-3 bg-white rounded shadow-sm h-100 border-start border-4 border-danger">
+                    <span className="text-muted small fw-bold mb-1">
+                      {label}
+                    </span>
+                    <span className="fs-6 text-dark">
+                      {value?.toString() || "----"}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center text-muted p-3">No details to show</div>
+      )}
+    </Modal.Body>
+
+    <Modal.Footer className="border-0"></Modal.Footer>
+  </Modal>
+    </section >
   );
 };
 

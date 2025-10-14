@@ -631,26 +631,22 @@ const CollectionSiteArea = () => {
   };
 
   return (
-    <section className="policy__area pb-40 overflow-hidden p-3">
+    <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
           {/* Button Container */}
-          <div className="d-flex flex-column justify-content-start align-items-center gap-2 text-center w-100">
+          <div className="d-flex flex-column w-100">
             {/* Success Message */}
             {successMessage && (
-              <div
-                className="alert alert-success w-100 text-start"
-                role="alert"
-              >
+              <div className="alert alert-success mb-3" role="alert">
                 {successMessage}
               </div>
             )}
 
-            <h5 className="m-0 fw-bold">Collection Site List</h5>
-
             {/* Status Filter and Add Button in Same Row */}
-            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-2">
-              <div className="d-flex align-items-center gap-2">
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+              <h5 className="m-0 fw-bold">Collection Site's List</h5>
+              <div className="d-flex flex-wrap gap-3 align-items-center">
                 <label htmlFor="statusFilter" className="mb-0">
                   Status:
                 </label>
@@ -681,7 +677,6 @@ const CollectionSiteArea = () => {
                     alignItems: "center",
                     gap: "8px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                    margin: 10,
                   }}
                 >
                   <i className="fas fa-plus"></i> Add Collection Site

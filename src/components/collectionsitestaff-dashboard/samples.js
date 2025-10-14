@@ -21,6 +21,7 @@ import { notifyError } from "@utils/toast";
 import Select from "react-select";
 const SampleArea = () => {
   const id = sessionStorage.getItem("userID");
+  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationError, setLocationError] = useState("")
   const [showAddtestResultandUnitModal, setShowAddTestResultandUnitModal] = useState("");
@@ -187,7 +188,7 @@ const SampleArea = () => {
     patientlocation: "",
     locationids: "",
     Analyte: "",
-    AnalyteUniqueKey:"",
+    AnalyteUniqueKey: "",
     age: "",
     phoneNumber: "",
     gender: "",
@@ -252,7 +253,17 @@ const SampleArea = () => {
       setFilteredSamplename(samples);
     }
   }, [ageFilter, samples]);
+useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth <= 768);
+    };
 
+    // Add listener
+    window.addEventListener("resize", handleResize);
+
+    // Cleanup on unmount
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   // Fetch countries from backend
   useEffect(() => {
 
@@ -742,7 +753,7 @@ const SampleArea = () => {
     if ((effectiveMode !== "Individual") && Array.isArray(selectedSamples) && selectedSamples.length > 0) {
       formDataToSend.append("poolSamples", JSON.stringify(selectedSamples));
     }
-   
+
     try {
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/samples/postsample`,
         formDataToSend,
@@ -1075,7 +1086,7 @@ const SampleArea = () => {
       patientlocation: "",
       locationids: "",
       Analyte: "",
-      AnalyteUniqueKey:"",
+      AnalyteUniqueKey: "",
       age: "",
       volume: "",
       gender: "",
@@ -1198,8 +1209,8 @@ const SampleArea = () => {
     if (
       showAddModal ||
       showAddtestResultandUnitModal ||
-      showAddPoolModal ||
-      showEditPoolModal ||
+      // showAddPoolModal ||
+      // showEditPoolModal ||
       showEditModal ||
       showTransferModal ||
       showHistoryModal
@@ -1215,8 +1226,8 @@ const SampleArea = () => {
   }, [
     showAddModal,
     showAddtestResultandUnitModal,
-    showAddPoolModal,
-    showEditPoolModal,
+    // showAddPoolModal,
+    // showEditPoolModal,
     showEditModal,
     showTransferModal,
     showHistoryModal,
@@ -1507,7 +1518,25 @@ const SampleArea = () => {
                 >
                   {poolMode ? "Make Pool" : "Mark Sample as Pool"}
                 </button>
-
+  {poolMode && (
+                  <button
+                    onClick={() => {
+                      setPoolMode(false);
+                      setSelectedSamples([]);
+                      setAnalyteOptions([]);
+                      setSelectedSampleTypeMatrixes([]);
+                      setSelectedOption(null)
+                      setFormData((prev) => ({
+                        ...prev,
+                        Analyte: "",
+                      }));
+                      setPoolMode(false)
+                    }}
+                    className="btn btn-outline-danger d-flex align-items-center gap-2 shadow-sm"
+                  >
+                    <i className="fas fa-times"></i> Cancel
+                  </button>
+                )}
                 {(actions.includes('add_full') ||
                   actions.includes('add_basic') ||
                   actions.includes('all')) && (
@@ -1544,27 +1573,47 @@ const SampleArea = () => {
                   </th>
                 )}
                 {tableHeaders.map(({ label, key }, index) => (
-                  <th key={index} className="text-center align-middle px-2" style={{
-                    maxWidth: key === "volume" ? "80px" : "150px",
-                    minWidth: key === "volume" ? "60px" : "auto",
-                    wordBreak: "break-word",
-                    whiteSpace: "normal",
-                  }}
+                  <th
+                    key={index}
+                    className="text-center align-middle px-2"
+                    style={{
+                      maxWidth: key === "volume" ? "90px" : "150px",
+                      minWidth: key === "volume" ? "70px" : "110px",
+                      whiteSpace: "nowrap",
+                      verticalAlign: "middle",
+                    }}
                   >
-                    <div className="d-flex flex-column justify-content-between align-items-center" style={{ gap: "4px" }}>
+                    <div
+                      className="d-flex flex-column align-items-center justify-content-center"
+                      style={{ gap: "3px" }}
+                    >
                       <input
                         type="text"
                         className="form-control form-control-sm text-center"
-                        placeholder={`Search ${label}`}
+                        placeholder={`Search ${label}`} // 👈 Dynamic placeholder
                         onChange={(e) => handleFilterChange(key, e.target.value)}
                         style={{
-                          fontSize: "13px",
-                          padding: "2px 6px",
+                          fontSize: "12px",
+                          height: "55px",
+                          lineHeight: "1",
+                          padding: "0 4px",
                           width: "100%",
-                          maxWidth: "120px",
+                          maxWidth: "140px",
                         }}
                       />
-                      <span className="fw-bold fs-6 text-wrap text-center" style={{ fontSize: "13px" }}>
+
+                      <span
+                        className="fw-bold text-center"
+                        style={{
+                          fontSize: "16px",
+                          color: "#0d0d0d", // deeper black tone
+                          textShadow: "0 0 1px rgba(0,0,0,0.2)", // improves contrast slightly
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          letterSpacing: "0.3px",
+                        }}
+                      >
                         {label}
                       </span>
                     </div>
@@ -1910,41 +1959,66 @@ const SampleArea = () => {
         {/* Modal for Adding and Editing Samples */}
         {(showAddModal || showEditModal) && (
           <>
-            {/* Bootstrap Backdrop with Blur */}
+            {/* Background Blur */}
             <div
               className="modal-backdrop fade show"
               style={{ backdropFilter: "blur(5px)" }}
             ></div>
-            {/* Modal Content */}
+
+            {/* Responsive Modal Wrapper */}
             <div
               className="modal show d-block"
               tabIndex="-1"
               role="dialog"
               style={{
-                zIndex: 1050,
                 position: "fixed",
-                top: "-30px",
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "100%",
-                overflowY: "auto", // ✅ allows scrolling
-                maxHeight: "100vh",
-                transition: "top 0.3s ease-in-out",
+                top: isMobileView ? 40 : -120, // ✅ dynamically updates
+                left: 0,
+                width: "100vw",
+                height: "100vh",
+                zIndex: 1050,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflowY: "auto",
+                transition: "top 0.3s ease", // smooth
               }}
             >
+
               <div
-                className="modal-dialog"
+                className="modal-dialog modal-dialog-centered modal-lg modal-fullscreen-sm-down"
                 role="document"
                 style={{
-                  maxWidth: showAdditionalFields ? "70vw" : "40vw",
-                  width: "100%",
-                  transition: "all 0.3s ease-in-out",
+                  width: "100%", // always responsive
+
+                  maxWidth: showAdditionalFields
+                    ? window.innerWidth <= 768
+                      ? "95%" // ✅ Mobile view: full width
+                      : "1050px" // ✅ Desktop expanded width
+                    : "700px", // ✅ Normal width when checkbox unchecked
+
+                  margin: "10px auto",
+                  transition: "max-width 0.3s ease", // smooth animation
                 }}
               >
-                <div className="modal-content">
+
+                <div
+                  className="modal-content"
+                  style={{
+                    borderRadius: "8px",
+                    overflowY: "auto",
+                    maxHeight: "90vh",
+                  }}
+                >
+                  {/* Header */}
                   <div
                     className="modal-header"
-                    style={{ backgroundColor: "#cfe2ff" }}
+                    style={{
+                      backgroundColor: "#cfe2ff",
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 10,
+                    }}
                   >
                     <h5 className="modal-title">
                       {showAddModal ? "Add Sample" : "Edit Sample"}
@@ -3471,7 +3545,7 @@ const SampleArea = () => {
                             {/* Show Analyte & Volume ONLY if Final Concentration is selected */}
                             {formData.samplemode && (
                               <>
-                                 <div className="form-group col-md-6">
+                                <div className="form-group col-md-6">
                                   <label>
                                     Analyte <span className="text-danger">*</span>
                                   </label>
@@ -4167,7 +4241,7 @@ const SampleArea = () => {
           </>
         )}
 
-       <DetailModal
+        <DetailModal
           show={PoolSampleHistoryModal}
           onHide={() => {
             setSelectedSampleName("");
@@ -4184,8 +4258,8 @@ const SampleArea = () => {
             { label: "Gender", key: "gender" },
           ]}
         />
-       
-      <DetailModal
+
+        <DetailModal
           show={showLogoModal}
           onHide={() => setShowLogoModal(false)}
           title="Sample Picture"

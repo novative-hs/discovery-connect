@@ -179,10 +179,16 @@ const Header = ({ setActiveTab, activeTab }) => {
               { label: "Sample Type Matrix", tab: "sample-type-matrix" },
               { label: "Test Method", tab: "test-method" },
               { label: "Test Result Unit", tab: "test-result-unit" },
-              { label: "Concurrent Medical Conditions", tab: "concurrent-medical-conditions" },
+              {
+                label: "Concurrent Medical Conditions",
+                tab: "concurrent-medical-conditions",
+              },
               { label: "Test Kit Manufacturer", tab: "test-kit-manufacturer" },
               { label: "Test System", tab: "test-system" },
-              { label: "Test System Manufacturer", tab: "test-system-manufacturer" },
+              {
+                label: "Test System Manufacturer",
+                tab: "test-system-manufacturer",
+              },
             ],
           },
         ]
@@ -191,7 +197,7 @@ const Header = ({ setActiveTab, activeTab }) => {
             ...(actions?.some(action => ["add_full", "add_basic", "edit", "dispatch", "history", "all"].includes(action))
               ? [{ label: "Sample List", tab: "samples" }]
               : []),
-               ...(actions?.some(action => ["add_full","add_basic", "all"].includes(action))
+            ...(actions?.some(action => ["add_full", "add_basic", "all"].includes(action))
               ? [{ label: "Pooled Samples List", tab: "pooled-sample" }]
               : []),
             ...(actions?.some(action => ["receive", "all"].includes(action))
@@ -234,17 +240,17 @@ const Header = ({ setActiveTab, activeTab }) => {
       <nav className="navbar navbar-expand-lg navbar-light bg-light">
         <div className="container-fluid">
           <Image src={logo} alt="Logo" width={170} height={75} />
-        <button
-    className="navbar-toggler ms-auto d-lg-none" // ms-auto pushes to right in mobile
-    type="button"
-    data-bs-toggle="collapse"
-    data-bs-target="#navbarSupportedContent"
-    aria-controls="navbarSupportedContent"
-    aria-expanded="false"
-    aria-label="Toggle navigation"
-  >
-    <span className="navbar-toggler-icon"></span>
-  </button>
+          <button
+            className="navbar-toggler ms-auto d-lg-none" // ms-auto pushes to right in mobile
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <span className="navbar-toggler-icon"></span>
+          </button>
           {/* Collapsible Navbar */}
           <div
             className="collapse navbar-collapse w-100"
@@ -256,64 +262,93 @@ const Header = ({ setActiveTab, activeTab }) => {
                 <li
                   key={tab}
                   className="nav-item dropdown"
-                  onMouseEnter={() => dropdown && setShowSampleDropdown(index)}
-                  onMouseLeave={() => dropdown && setShowSampleDropdown(null)}
+                  style={{ position: "relative" }}
+                  onMouseEnter={() => {
+                    if (dropdown && window.innerWidth > 991) setShowSampleDropdown(index);
+                  }}
+                  onMouseLeave={() => {
+                    if (dropdown && window.innerWidth > 991) setShowSampleDropdown(null);
+                  }}
                 >
                   <button
-                    className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${activeTab === tab ||
-                      (tab === "staffManagementPage" && (activeTab === "staffManagementPage:committee" || activeTab === "staffManagementPage:csr"))
-
-                      ? "text-primary"
-                      : "text-dark"
+                    className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${activeTab === tab ? "text-primary" : "text-dark"
                       } fs-7`}
-                    onClick={() => {
-                      if (!dropdown) {
+                    onClick={(e) => {
+                      e.stopPropagation();
+
+                      if (dropdown) {
+                        // Handle dropdown toggle (works for both mobile and desktop)
+                        if (window.innerWidth <= 991) {
+                          setShowSampleDropdown(showSampleDropdown === index ? null : index);
+                        } else {
+                          // On desktop, hover already handles this, so no need to toggle again
+                          return;
+                        }
+                      } else {
+                        // Normal tab click (no dropdown)
                         setActiveTab(tab);
+
+                        // ✅ Also close navbar if on mobile
+                        if (window.innerWidth <= 991) {
+                          const navbarToggler = document.querySelector(".navbar-toggler");
+                          const navbarCollapse = document.querySelector("#navbarSupportedContent");
+                          if (navbarCollapse.classList.contains("show")) {
+                            navbarToggler.click();
+                          }
+                        }
                       }
                     }}
+
                   >
-                    <small>{label}</small> {/* Makes text smaller */}
-                    {label === "Sample" && (
+                    <small>{label}</small>
+                    {/* {dropdown && (
                       <i
-                        className={`ms-2 fas ${showSampleDropdown === index
-                          ? "fa-caret-up"
-                          : "fa-caret-down"
-                          } text-black`}
+                        className={`fa ms-1 ${showSampleDropdown === index ? "fa-chevron-up" : "fa-chevron-down"
+                          }`}
                       ></i>
-                    )}
+                    )} */}
                   </button>
+
+                  {/* Dropdown Menu */}
 
                   {dropdown && showSampleDropdown === index && (
                     <ul
                       className="dropdown-menu show p-1"
                       style={{
-                        minWidth: "120px", // Adjust width
-                        fontSize: "0.85rem", // Smaller font size
+                        display: "block",
+                        position: window.innerWidth > 991 ? "absolute" : "static",
+                        minWidth: "200px", // slightly wider for longer text
+                        maxWidth: "260px", // set a limit so it doesn’t stretch too far
+                        zIndex: 1050,
+                        fontSize: "0.85rem",
+                        backgroundColor: "#fff",
+                        border: "1px solid #ddd",
+                        borderRadius: "8px",
+                        marginTop: "4px",
+                        whiteSpace: "normal", // ✅ allow text to wrap instead of staying on one line
+                        wordWrap: "break-word", // ✅ wrap long words
                       }}
                     >
                       {dropdown.map(({ label, tab }) => (
                         <li key={tab}>
                           <button
-                            className="dropdown-item fs-7 px-2 py-1"
+                            className="dropdown-item fs-7 px-2 py-1 text-wrap"
                             style={{
-                              transition:
-                                "background-color 0.3s ease, color 0.3s ease",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.target.classList.add(
-                                "bg-secondary",
-                                "text-white"
-                              );
-                            }}
-                            onMouseLeave={(e) => {
-                              e.target.classList.remove(
-                                "bg-secondary",
-                                "text-white"
-                              );
+                              whiteSpace: "normal", // ✅ wrap inside button too
+                              wordBreak: "break-word", // ✅ prevent overflow
+                              textAlign: "left", // align text neatly
                             }}
                             onClick={() => {
                               setActiveTab(tab);
                               setShowSampleDropdown(null);
+
+                              if (window.innerWidth <= 991) {
+                                const navbarToggler = document.querySelector(".navbar-toggler");
+                                const navbarCollapse = document.querySelector("#navbarSupportedContent");
+                                if (navbarCollapse.classList.contains("show")) {
+                                  navbarToggler.click();
+                                }
+                              }
                             }}
                           >
                             {label}
@@ -322,143 +357,147 @@ const Header = ({ setActiveTab, activeTab }) => {
                       ))}
                     </ul>
                   )}
+
+
                 </li>
+
               ))}
             </ul>
-           
+
+
           </div>
           {/* Right Section */}
-           <div className="d-flex align-items-center gap-2 ms-auto">
-              {userType === "technicaladmin" && (
+          <div className="d-flex align-items-center gap-2 ms-auto">
+            {userType === "technicaladmin" && (
+              <span
+                className="text-primary fw-bold fs-6"
+                style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
+              >
+                Welcome Technical Admin!
+              </span>
+            )}
+            {userType === "registrationadmin" && (
+              <span
+                className="text-primary fw-bold fs-6"
+                style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
+              >
+                Welcome Registration Admin!
+              </span>
+            )}
+            {userType === "committeemember" && (
+              <span
+                className="text-primary fw-bold fs-6"
+                style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
+              >
+                {`Welcome ${committeetype} Committee Member!`}
+              </span>
+
+            )}
+            {userType === "biobank" && (
+              <div
+                className="d-flex align-items-center px-3 py-2 shadow-sm rounded"
+                style={{
+                  backgroundColor: "#f0f8ff",
+                  fontFamily: "Montserrat",
+                  maxWidth: "fit-content",
+                }}
+              >
                 <span
-                  className="text-primary fw-bold fs-6"
-                  style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
+                  className="text-primary fw-bold fs-6 me-3"
+                  style={{ whiteSpace: "nowrap" }}
                 >
-                  Welcome Technical Admin!
-                </span>
-              )}
-              {userType === "registrationadmin" && (
-                <span
-                  className="text-primary fw-bold fs-6"
-                  style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
-                >
-                  Welcome Registration Admin!
-                </span>
-              )}
-              {userType === "committeemember" && (
-                <span
-                  className="text-primary fw-bold fs-6"
-                  style={{ fontFamily: "Montserrat", whiteSpace: "nowrap" }}
-                >
-                  {`Welcome ${committeetype} Committee Member!`}
+                  Welcome BioBank!
                 </span>
 
-              )}
-              {userType === "biobank" && (
-                <div
-                  className="d-flex align-items-center px-3 py-2 shadow-sm rounded"
+
+              </div>
+            )}
+
+
+            <div className="d-flex  align-items-center gap-0">
+              <div className="dropdown me-3" ref={dropdownRef}>
+                <button
+                  className="btn btn-sm dropdown-toggle d-flex align-items-center"
+                  type="button"
+                  id="userDropdown"
+                  data-bs-toggle="dropdown"
+                  aria-expanded={showDropdown}
+                  onClick={handleToggleDropdown}
+                >
+                  {userlogo ? (
+                    <Image
+                      src={userlogo}
+                      alt="User Logo"
+                      width={35}
+                      height={35}
+                      className="rounded-circle border"
+                    />
+                  ) : (
+                    <i className="fa fa-user fs-6 text-dark"></i>
+                  )}
+                </button>
+                <ul
+                  className={`dropdown-menu dropdown-menu-end ${showDropdown ? "show" : ""
+                    }`}
                   style={{
-                    backgroundColor: "#f0f8ff",
-                    fontFamily: "Montserrat",
-                    maxWidth: "fit-content",
+                    right: 0,
+                    left: "auto",
+                    transform: "translateX(0)",
+                    minWidth: "160px",
+                    zIndex: 9999,
                   }}
                 >
-                  <span
-                    className="text-primary fw-bold fs-6 me-3"
-                    style={{ whiteSpace: "nowrap" }}
-                  >
-                    Welcome BioBank!
-                  </span>
-
-
-                </div>
-              )}
-
-
-              <div className="d-flex  align-items-center gap-0">
-                <div className="dropdown me-3" ref={dropdownRef}>
-                  <button
-                    className="btn btn-sm dropdown-toggle d-flex align-items-center"
-                    type="button"
-                    id="userDropdown"
-                    data-bs-toggle="dropdown"
-                    aria-expanded={showDropdown}
-                    onClick={handleToggleDropdown}
-                  >
-                    {userlogo ? (
-                      <Image
-                        src={userlogo}
-                        alt="User Logo"
-                        width={35}
-                        height={35}
-                        className="rounded-circle border"
-                      />
-                    ) : (
-                      <i className="fa fa-user fs-6 text-dark"></i>
+                  {userType !== "technicaladmin" &&
+                    userType !== "biobank" &&
+                    userType !== "csr" &&
+                    userType !== "registrationadmin" &&
+                    userType !== "collectionsitesstaff" && (
+                      <li>
+                        <button
+                          className="dropdown-item fs-7"
+                          onClick={handleUpdateProfile}
+                        >
+                          Update Profile
+                        </button>
+                      </li>
                     )}
-                  </button>
-                  <ul
-                    className={`dropdown-menu dropdown-menu-end ${showDropdown ? "show" : ""
-                      }`}
-                    style={{
-                      right: 0,
-                      left: "auto",
-                      transform: "translateX(0)",
-                      minWidth: "160px",
-                      zIndex: 9999,
-                    }}
-                  >
-                    {userType !== "technicaladmin" &&
-                      userType !== "biobank" &&
-                      userType !== "csr" &&
-                      userType !== "registrationadmin" &&
-                      userType !== "collectionsitesstaff" && (
-                        <li>
-                          <button
-                            className="dropdown-item fs-7"
-                            onClick={handleUpdateProfile}
-                          >
-                            Update Profile
-                          </button>
-                        </li>
-                      )}
-                    <li>
-                      <button
-                        className="dropdown-item fs-7"
-                        onClick={handleChangePassword}
-                      >
-                        Change Password
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        className="dropdown-item fs-7"
-                        onClick={handleLogout}
-                      >
-                        Logout
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-                {userType === "researcher" && (
-                  <Link
-                    href={{
-                      pathname: router.pathname,
-                      query: { ...router.query, tab: "Cart" },
-                    }}
-                    className="btn btn-sm position-relative"
-                  >
-                    <Cart className="fs-7 text-white" />
-                    {sampleCount > 0 && (
-                      <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
-                        {sampleCount}
-                      </span>
-                    )}
-
-                  </Link>
-                )}
+                  <li>
+                    <button
+                      className="dropdown-item fs-7"
+                      onClick={handleChangePassword}
+                    >
+                      Change Password
+                    </button>
+                  </li>
+                  <li>
+                    <button
+                      className="dropdown-item fs-7"
+                      onClick={handleLogout}
+                    >
+                      Logout
+                    </button>
+                  </li>
+                </ul>
               </div>
+              {userType === "researcher" && (
+                <Link
+                  href={{
+                    pathname: router.pathname,
+                    query: { ...router.query, tab: "Cart" },
+                  }}
+                  className="btn btn-sm position-relative"
+                >
+                  <Cart className="fs-7 text-white" />
+                  {sampleCount > 0 && (
+                    <span className="fs-6 badge bg-danger position-absolute top-0 start-100 translate-middle p-1">
+                      {sampleCount}
+                    </span>
+                  )}
+
+                </Link>
+              )}
             </div>
+          </div>
         </div>
       </nav>
 

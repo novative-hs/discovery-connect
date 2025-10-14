@@ -109,6 +109,9 @@ const ContactUS = () => {
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">
       <div className="container">
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+          <h5 className="m-0 fw-bold ">Contact us List</h5>
+        </div>
         <div className="w-100" style={{ overflowX: "auto" }}>
           <table className="table table-striped table-hover table-bordered text-center align-middle shadow-sm">
             <thead className="table-primary text-dark">

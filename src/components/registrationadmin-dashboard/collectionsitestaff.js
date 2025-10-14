@@ -527,235 +527,233 @@ const CollectionSiteStaffArea = () => {
 
 
   return (
-    <section className="policy__area pb-40 overflow-hidden p-3">
-      {/* Button Container */}
-      <div className="d-flex flex-column justify-content-start align-items-center gap-2 text-center w-100">
-        {/* Success Message */}
-        {successMessage && (
-          <div
-            className="alert alert-success w-100 text-start"
-            role="alert"
-          >
-            {successMessage}
+    <section className="policy__area pb-40 overflow-hidden p-4">
+      <div className="container">
+        <div className="row justify-content-center">
+          {/* Button Container */}
+          <div className="d-flex flex-column w-100">
+            {/* Success Message */}
+            {successMessage && (
+              <div className="alert alert-success mb-3" role="alert">
+                {successMessage}
+              </div>
+            )}
+
+            {/* Status Filter and Add Button in Same Row */}
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+              <h5 className="m-0 fw-bold">Collection Site's Satff List</h5>
+              <div className="d-flex flex-wrap gap-3 align-items-center">
+                <label htmlFor="statusFilter" className="mb-0">
+                  Status:
+                </label>
+                <select
+                  id="statusFilter"
+                  className="form-control"
+                  style={{ width: "auto" }}
+                  value={statusFilter} // Yeh line add karein
+                  onChange={(e) => setStatusFilter(e.target.value)} // Yeh line change karein
+                >
+                  <option value="">All</option>
+                  <option value="inactive">InActive</option>
+                  <option value="active">Active</option>
+                </select>
+              </div>
+              <div className="d-flex flex-wrap gap-3 align-items-center">
+                {/* Add collection site Button */}
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  style={{
+                    backgroundColor: "#4a90e2",
+                    color: "#fff",
+                    border: "none",
+                    padding: "10px 20px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-plus"></i> Add Staff
+                </button>
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
+              </div>
+            </div>
           </div>
-        )}
 
-        <h5 className="m-0 fw-bold">Collection Site&apos;s Staff List</h5>
-
-        {/* Status Filter and Add Button in Same Row */}
-        <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-2">
-          <div className="d-flex align-items-center gap-2">
-            <label htmlFor="statusFilter" className="mb-0">
-              Status:
-            </label>
-            <select
-              id="statusFilter"
-              className="form-control"
-              style={{ width: "auto" }}
-              value={statusFilter} // Yeh line add karein
-              onChange={(e) => setStatusFilter(e.target.value)} // Yeh line change karein
-            >
-              <option value="">All</option>
-              <option value="inactive">InActive</option>
-              <option value="active">Active</option>
-            </select>
-          </div>
-          <div className="d-flex flex-wrap gap-3 align-items-center">
-            {/* Add collection site Button */}
-            <button
-              onClick={() => setShowAddModal(true)}
-              style={{
-                backgroundColor: "#4a90e2",
-                color: "#fff",
-                border: "none",
-                padding: "10px 20px",
-                borderRadius: "6px",
-                fontWeight: "500",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                margin: 10,
-              }}
-            >
-              <i className="fas fa-plus"></i> Add Staff
-            </button>
-            <button
-              onClick={handleExportToExcel}
-              style={{
-                backgroundColor: "#28a745",
-                color: "#fff",
-                border: "none",
-                padding: "8px 16px",
-                borderRadius: "6px",
-                fontWeight: "500",
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-              }}
-            >
-              <i className="fas fa-file-excel"></i> Export to Excel
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="table-responsive" style={{ overflowX: "auto" }}>
-        <table className="table table-hover table-bordered text-center align-middle w-100">
-          <thead className="table-primary text-dark">
-            <tr className="text-center">
-              {columns.map(({ label, placeholder, field }) => (
-                <th key={field} className="col-md-1 px-2">
-                  <div className="d-flex flex-column align-items-center">
-                    <input
-                      type="text"
-                      className="form-control bg-light border form-control-sm text-center shadow-none rounded"
-                      placeholder={`Search ${label}`}
-                      value={filters[field] || ""} // Yeh line change karein
-                      onChange={(e) =>
-                        handleFilterChange(field, e.target.value) // Yeh line change karein
-                      }
-                      style={{ minWidth: "160px", maxWidth: "150px", width: "100%" }}
-                    />
-                    <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
-                      {label}
-                    </span>
-                  </div>
-                </th>
-              ))}
-              <th className="p-2 text-center" style={{ minWidth: "50px" }}>Action</th>
-
-            </tr>
-          </thead>
-          <tbody>
-            {currentData.length > 0 ? (
-              currentData.map((collectionsitestaff) => (
-                <tr key={collectionsitestaff.id}>
-                  {columns.map(({ field }) => (
-
-                    <td
-                      key={field}
-                      className={
-                        field === "staffName"
-                          ? "text-start text-wrap"
-                          : "text-center text-truncate"
-                      }
-                      style={{
-                        maxWidth: "150px",
-                        overflowWrap: "break-word",
-                        wordBreak: "break-word",
-                        whiteSpace: "normal",
-                      }}
-                    >
-                      {field === "staffName" ? (
-                        <span
-                          className="staffName text-primary fw-semibold fs-6 text-decoration-underline"
-                          role="button"
-                          title="Collection Site Details"
-                          onClick={() => openModal(collectionsitestaff)}
-                          style={{
-                            cursor: "pointer",
-                            transition: "color 0.2s",
-                          }}
-                          onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
-                          onMouseOut={(e) => (e.target.style.color = "")}
-                        >
-                          {collectionsitestaff[field] || "----"}
+          {/* Table */}
+          <div className="table-responsive" style={{ overflowX: "auto" }}>
+            <table className="table table-hover table-bordered text-center align-middle w-100">
+              <thead className="table-primary text-dark">
+                <tr className="text-center">
+                  {columns.map(({ label, placeholder, field }) => (
+                    <th key={field} className="col-md-1 px-2">
+                      <div className="d-flex flex-column align-items-center">
+                        <input
+                          type="text"
+                          className="form-control bg-light border form-control-sm text-center shadow-none rounded"
+                          placeholder={`Search ${label}`}
+                          value={filters[field] || ""} // Yeh line change karein
+                          onChange={(e) =>
+                            handleFilterChange(field, e.target.value) // Yeh line change karein
+                          }
+                          style={{ minWidth: "160px", maxWidth: "150px", width: "100%" }}
+                        />
+                        <span className="fw-bold mt-1 d-block text-wrap align-items-center fs-6">
+                          {label}
                         </span>
-                      ) : field === "created_at" || field === "updated_at" ? (
-                        moment(collectionsitestaff[field]).format("YYYY-MM-DD")
-                      ) : (
-                        collectionsitestaff[field] || "----"
-                      )}
-                    </td>
-
-                  ))}
-                  <td className="position-relative">
-                    <div className="d-flex justify-content-center gap-2">
-                      <button
-                        className="btn btn-success btn-sm"
-                        onClick={() => handleEditClick(collectionsitestaff)}
-                        title="Edit"
-                      >
-                        <FontAwesomeIcon icon={faEdit} />
-                      </button>
-
-                      <div className="btn-group">
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => handleToggleStatusOptions(collectionsitestaff.id)}
-                          title="Edit Status"
-                        >
-                          <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
-                        </button>
-
-                        {statusOptionsVisibility[collectionsitestaff.id] && (
-                          <div
-                            className="dropdown-menu show"
-                            data-id={collectionsitestaff.id}
-                            style={{
-                              position: "absolute",
-                              top: "100%",
-                              left: "0",
-                              zIndex: 1000,
-                              minWidth: "100px",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            <button
-                              className="dropdown-item"
-                              onClick={() => handleStatusClick(collectionsitestaff.id, "active")}
-                            >
-                              Active
-                            </button>
-                            <button
-                              className="dropdown-item"
-                              onClick={() => handleStatusClick(collectionsitestaff.id, "inactive")}
-                            >
-                              InActive
-                            </button>
-                          </div>
-                        )}
                       </div>
-
-                      <button
-                        className="btn btn-info btn-sm"
-                        onClick={() => handleShowHistory("collectionsitestaff", collectionsitestaff.id)}
-                        title="History"
-                      >
-                        <FontAwesomeIcon icon={faHistory} />
-                      </button>
-                    </div>
-                  </td>
+                    </th>
+                  ))}
+                  <th className="p-2 text-center" style={{ minWidth: "50px" }}>Action</th>
 
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={columns.length + 1} className="text-center">
-                  No collectionsites staff available
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {currentData.length > 0 ? (
+                  currentData.map((collectionsitestaff) => (
+                    <tr key={collectionsitestaff.id}>
+                      {columns.map(({ field }) => (
 
-      {/* Pagination */}
-      {filteredCollectionsitesstaff.length >= 0 && (
-        <Pagination
-          handlePageClick={handlePageChange}
-          pageCount={Math.max(
-            1,
-            Math.ceil(filteredCollectionsitesstaff.length / itemsPerPage)
+                        <td
+                          key={field}
+                          className={
+                            field === "staffName"
+                              ? "text-start text-wrap"
+                              : "text-center text-truncate"
+                          }
+                          style={{
+                            maxWidth: "150px",
+                            overflowWrap: "break-word",
+                            wordBreak: "break-word",
+                            whiteSpace: "normal",
+                          }}
+                        >
+                          {field === "staffName" ? (
+                            <span
+                              className="staffName text-primary fw-semibold fs-6 text-decoration-underline"
+                              role="button"
+                              title="Collection Site Details"
+                              onClick={() => openModal(collectionsitestaff)}
+                              style={{
+                                cursor: "pointer",
+                                transition: "color 0.2s",
+                              }}
+                              onMouseOver={(e) => (e.target.style.color = "#0a58ca")}
+                              onMouseOut={(e) => (e.target.style.color = "")}
+                            >
+                              {collectionsitestaff[field] || "----"}
+                            </span>
+                          ) : field === "created_at" || field === "updated_at" ? (
+                            moment(collectionsitestaff[field]).format("YYYY-MM-DD")
+                          ) : (
+                            collectionsitestaff[field] || "----"
+                          )}
+                        </td>
+
+                      ))}
+                      <td className="position-relative">
+                        <div className="d-flex justify-content-center gap-2">
+                          <button
+                            className="btn btn-success btn-sm"
+                            onClick={() => handleEditClick(collectionsitestaff)}
+                            title="Edit"
+                          >
+                            <FontAwesomeIcon icon={faEdit} />
+                          </button>
+
+                          <div className="btn-group">
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => handleToggleStatusOptions(collectionsitestaff.id)}
+                              title="Edit Status"
+                            >
+                              <FontAwesomeIcon icon={faQuestionCircle} size="xs" />
+                            </button>
+
+                            {statusOptionsVisibility[collectionsitestaff.id] && (
+                              <div
+                                className="dropdown-menu show"
+                                data-id={collectionsitestaff.id}
+                                style={{
+                                  position: "absolute",
+                                  top: "100%",
+                                  left: "0",
+                                  zIndex: 1000,
+                                  minWidth: "100px",
+                                  whiteSpace: "nowrap",
+                                }}
+                              >
+                                <button
+                                  className="dropdown-item"
+                                  onClick={() => handleStatusClick(collectionsitestaff.id, "active")}
+                                >
+                                  Active
+                                </button>
+                                <button
+                                  className="dropdown-item"
+                                  onClick={() => handleStatusClick(collectionsitestaff.id, "inactive")}
+                                >
+                                  InActive
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          <button
+                            className="btn btn-info btn-sm"
+                            onClick={() => handleShowHistory("collectionsitestaff", collectionsitestaff.id)}
+                            title="History"
+                          >
+                            <FontAwesomeIcon icon={faHistory} />
+                          </button>
+                        </div>
+                      </td>
+
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={columns.length + 1} className="text-center">
+                      No collectionsites staff available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {filteredCollectionsitesstaff.length >= 0 && (
+            <Pagination
+              handlePageClick={handlePageChange}
+              pageCount={Math.max(
+                1,
+                Math.ceil(filteredCollectionsitesstaff.length / itemsPerPage)
+              )}
+              focusPage={currentPage}
+            />
           )}
-          focusPage={currentPage}
-        />
-      )}
-
+        </div>
+      </div>
       {(showAddModal || showEditModal) && (
         <>
           {/* Bootstrap Backdrop with Blur */}
