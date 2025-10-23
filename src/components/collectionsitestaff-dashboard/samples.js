@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
 import DetailModal from "../../pages/DetailModal";
-
+import { useMemo } from "react";
 
 import moment from "moment";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -253,7 +253,7 @@ const SampleArea = () => {
       setFilteredSamplename(samples);
     }
   }, [ageFilter, samples]);
-useEffect(() => {
+  useEffect(() => {
     const handleResize = () => {
       setIsMobileView(window.innerWidth <= 768);
     };
@@ -437,11 +437,17 @@ useEffect(() => {
       console.error("Failed to fetch pooled sample names", error);
     }
   };
-  const filteredAnalytes = formData.samplemode
-    ? alreadypooled.filter(
-      (sample) => sample.samplemode === formData.samplemode
-    )
-    : alreadypooled;
+
+  const filteredAnalytes = useMemo(() => {
+    if (!formData.samplemode) return [];
+    return alreadypooled.filter(
+      (sample) =>
+        sample.samplemode === formData.samplemode &&
+        !selectedSamples.includes(sample.id) // compare directly
+    );
+  }, [alreadypooled, formData.samplemode, selectedSamples]);
+
+
 
   useEffect(() => {
     if (currentPage > totalPages && totalPages > 0) {
@@ -601,15 +607,15 @@ useEffect(() => {
       const selectedSampleData = samples.filter((s) => selected.includes(s.id));
 
       // 🔥 Total Volume Calculate
-      const totalVolume = selectedSampleData.reduce(
-        (acc, sample) => acc + (parseFloat(sample.volume) || 0),
-        0
-      );
+      // const totalVolume = selectedSampleData.reduce(
+      //   (acc, sample) => acc + (parseFloat(sample.volume) || 0),
+      //   0
+      // );
 
-      // 🔥 Check Units
-      const units = [
-        ...new Set(selectedSampleData.map((s) => s.VolumeUnit).filter(Boolean)),
-      ];
+      // // 🔥 Check Units
+      // const units = [
+      //   ...new Set(selectedSampleData.map((s) => s.VolumeUnit).filter(Boolean)),
+      // ];
 
 
       // ✅ Corrected this line by using 'selected' instead of 'updated'
@@ -630,8 +636,8 @@ useEffect(() => {
         setFormData((prev) => ({
           ...prev,
           Analyte: uniqueAnalytes.length === 1 ? uniqueAnalytes[0] : "",
-          volume: totalVolume, // Total volume add kiya
-          VolumeUnit: units.length === 1 ? units[0] : "", // Agar same hai to auto-set, warna user select karega
+          // volume: totalVolume, // Total volume add kiya
+          //VolumeUnit: units.length === 1 ? units[0] : "", // Agar same hai to auto-set, warna user select karega
         }));
       } else {
         setSelectedSampleName("");
@@ -985,12 +991,21 @@ useEffect(() => {
       setPoolMode(false);
       setSelectedSampleName(sample.Analyte);
     }
+
     else {
-      // Other cases -> treat as new pool
-      setSelectedOption("new");
-      setShowEditPoolModal(true);
-      setPoolMode(false);
-      setSelectedSampleName(sample.Analyte);
+      if (sample.PatientName) {
+        setSelectedOption("new");
+        setShowEditModal(true);
+        setPoolMode(false);
+        setShowEditModal(true);
+
+      }
+      else {
+        setSelectedOption("new");
+        setShowEditPoolModal(true);
+        setPoolMode(false);
+        setSelectedSampleName(sample.Analyte);
+      }
     }
 
     const sampleValue = (sample.SampleTypeMatrix || "").trim().toLowerCase();
@@ -1078,71 +1093,34 @@ useEffect(() => {
     }
   };
 
-
-  const resetFormData = () => {
-    setFormData({
-      patientname: "",
-      finalConcentration: "",
-      patientlocation: "",
-      locationids: "",
-      Analyte: "",
-      AnalyteUniqueKey: "",
-      age: "",
-      volume: "",
-      gender: "",
-      phoneNumber: "",
-      ethnicity: "",
-      samplecondition: "",
-      storagetemp: "",
-      ContainerType: "",
-      CountryOfCollection: "",
-      quantity: 1,
-      VolumeUnit: "",
-      SampleTypeMatrix: "",
-      SmokingStatus: "",
-      AlcoholOrDrugAbuse: "",
-      InfectiousDiseaseTesting: "",
-      InfectiousDiseaseResult: "",
-      FreezeThawCycles: "",
-      DateOfSampling: "",
-      ConcurrentMedicalConditions: "",
-      ConcurrentMedications: "",
-      Analyte: "",
-      TestSign: "",
-      TestValue: "",
-      TestResult: "",
-      TestResultUnit: "",
-      TestMethod: "",
-      TestKitManufacturer: "",
-      TestSystem: "",
-      TestSystemManufacturer: "",
-      status: "In Stock",
-      user_account_id: id,
-      logo: "",
-      samplepdf: "",
-    });
-    setMode("");
-    setShowAdditionalFields(false);
-    setLogoPreview(null)
-  };
-
   const handleUpdate = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
 
-    const formDataToSend = new FormData();
 
-    // ✅ If mode is AddtoPool and result fields are filled, change to Pooled
+    const formDataToSend = new FormData();
     let updatedMode = mode;
+
+    if (updatedMode === "null" || updatedMode === "undefined") {
+      updatedMode = null;
+    }
+
+    if (!updatedMode && formData.patientname?.trim()) {
+      updatedMode = "Individual";
+    }
+
     if (
-      mode !== "Individual" &&
+      updatedMode !== "Individual" &&
       formData.TestResult?.trim() &&
       formData.TestResultUnit?.trim()
     ) {
       updatedMode = "Pooled";
-      setMode("Pooled"); // optional: update state for consistency
+      setMode("Pooled");
     }
+
+
+
 
     // Append all form fields except logo
     for (const key in formData) {
@@ -1152,7 +1130,7 @@ useEffect(() => {
     }
 
     formDataToSend.append("mode", updatedMode); // 👈 append computed mode
-
+    setMode(updatedMode)
     // Only append logo if it's a new file
     if (formData.logo instanceof File) {
       formDataToSend.append("logo", formData.logo);
@@ -1204,6 +1182,52 @@ useEffect(() => {
     }
   };
 
+  const resetFormData = () => {
+    setFormData({
+      patientname: "",
+      finalConcentration: "",
+      patientlocation: "",
+      locationids: "",
+      Analyte: "",
+      AnalyteUniqueKey: "",
+      age: "",
+      volume: "",
+      gender: "",
+      phoneNumber: "",
+      ethnicity: "",
+      samplecondition: "",
+      storagetemp: "",
+      ContainerType: "",
+      CountryOfCollection: "",
+      quantity: 1,
+      VolumeUnit: "",
+      SampleTypeMatrix: "",
+      SmokingStatus: "",
+      AlcoholOrDrugAbuse: "",
+      InfectiousDiseaseTesting: "",
+      InfectiousDiseaseResult: "",
+      FreezeThawCycles: "",
+      DateOfSampling: "",
+      ConcurrentMedicalConditions: "",
+      ConcurrentMedications: "",
+      Analyte: "",
+      TestSign: "",
+      TestValue: "",
+      TestResult: "",
+      TestResultUnit: "",
+      TestMethod: "",
+      TestKitManufacturer: "",
+      TestSystem: "",
+      TestSystemManufacturer: "",
+      status: "In Stock",
+      user_account_id: id,
+      logo: "",
+      samplepdf: "",
+    });
+    setMode("");
+    setShowAdditionalFields(false);
+    setLogoPreview(null)
+  };
 
   useEffect(() => {
     if (
@@ -1467,23 +1491,6 @@ useEffect(() => {
               </select>
             </div>
 
-            {/* Age Filter - NEW */}
-            {/* <div className="form-group">
-              <label className="form-label fw-semibold mb-1">Age</label>
-              <input
-                type="number"
-                className="form-control border rounded-3"
-                placeholder="Enter age"
-                style={{ width: "200px", height: "42px" }}
-                value={ageFilter}
-                onChange={(e) => {
-                  setAgeFilter(e.target.value);
-                  // handleFilterChange("age", e.target.value);
-                }}
-                min="0"
-              />
-            </div> */}
-
             {/* Clear Button */}
             {(analyte || gender || ageFilter || dateFrom || dateTo || filtersamplemode) && (
               <div className="form-group">
@@ -1491,19 +1498,23 @@ useEffect(() => {
                 <button
                   className="btn btn-outline-danger rounded-pill px-3 shadow-sm"
                   onClick={() => {
+                    // ✅ Reset all individual filter states
                     setAnalyte("");
                     setGender("");
                     setAgeFilter("");
-                    setFilterSampleMode("")
+                    setFilterSampleMode("");
                     setCollectionSite("");
                     setVisibility("");
                     setDateFrom("");
-                    setDateTo(today);
+                    setDateTo("");
+                    setFilters({});
+                    setCurrentPage(1);
                     fetchSamples(1, itemsPerPage, {});
                   }}
                 >
                   Clear Filters
                 </button>
+
               </div>
             )}
           </div>
@@ -1518,7 +1529,7 @@ useEffect(() => {
                 >
                   {poolMode ? "Make Pool" : "Mark Sample as Pool"}
                 </button>
-  {poolMode && (
+                {poolMode && (
                   <button
                     onClick={() => {
                       setPoolMode(false);
@@ -4253,6 +4264,7 @@ useEffect(() => {
             { label: "Analyte", key: "Analyte" },
             { label: "Patient Name", key: "PatientName" },
             { label: "Test Result & Unit", key: "TestResult" },
+            { label: "Volume", key: "volume" },
             { label: "MR Number", key: "MRNumber" },
             { label: "Age", key: "age" },
             { label: "Gender", key: "gender" },

@@ -2,19 +2,19 @@ import React from "react";
 import InputMask from "react-input-mask";
 
 const SamplePoolModal = ({
-    mode, // "add" or "edit"
+    mode,
     show,
     onClose,
     onSubmit,
     formData,
     setFormData,
-    analyteOptions = [],
+    analyteOptions,
     selectedOption,
-    filteredAnalytes = [],
-    selectedSampleTypeMatrixes = [],
-    containertypeNames = [],
-    volumeunitNames = [],
-    unitMaxValues = {},
+    filteredAnalytes ,
+    selectedSampleTypeMatrixes,
+    containertypeNames,
+    volumeunitNames,
+    unitMaxValues,
     logoHandler,
     logoPreview,
     handleInputChange,

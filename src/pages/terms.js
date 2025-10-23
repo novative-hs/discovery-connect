@@ -12,7 +12,6 @@ export default function Terms() {
       <Header style_2={true} />
       <SectionTop
         title="Terms and Conditions"
-        subtitle="Please read our terms carefully"
         backgroundImage="/assets/img/about/aboutus.jpg"
       />
 

@@ -572,12 +572,6 @@ const updateReservedSample = (sampleId, status, callback) => {
       const deleteQuery = "DELETE FROM quote_requests WHERE sample_id = ?";
       mysqlConnection.query(deleteQuery, [sampleId], (deleteErr, deleteResult) => {
         if (deleteErr) return callback(deleteErr);
-
-        // ✅ Handle case when nothing was deleted
-        if (deleteResult.affectedRows === 0) {
-          console.log(`No quote request found for sample ID: ${sampleId}`);
-        }
-
         return callback(null, { updateResult: result, deleteResult });
       });
     } else {
@@ -717,8 +711,6 @@ const createSample = (data, callback) => {
         LOWER(PatientName) = LOWER(?) AND
         age = ? AND
         gender = ? AND
-        MRNumber = ? AND
-        phoneNumber = ? AND
         TestResult = ? AND
         TestResultUnit = ? AND
         VolumeUnit = ? AND

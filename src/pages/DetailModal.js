@@ -92,7 +92,13 @@ const DetailModal = ({
                             // ✅ Show TestResult + Unit together
                             const unit = row?.TestResultUnit ? ` ${row.TestResultUnit}` : "";
                             displayValue = `${val}${unit}`;
-                            } else {
+                            }
+                            else if (col.key === "volume") {
+                            // ✅ Show TestResult + Unit together
+                            const unit = row?.VolumeUnit ? ` ${row.VolumeUnit}` : "";
+                            displayValue = `${val}${unit}`;
+                            }
+                            else {
                             displayValue = val.toString();
                             }
                         }

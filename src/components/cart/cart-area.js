@@ -380,58 +380,68 @@ const CartArea = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {cart_products.map((item, i) => (
-                          <tr
-                            key={i}
-                            style={{
-                              backgroundColor: i % 2 === 0 ? "#fff" : "#fdf6f0",
-                            }}
-                          >
-                            <td>{i + 1}</td>
-                            <td>
-                              <span className="fw-semibold">
-                                {item.masterid}
-                              </span>
-                            </td>
-                            <td className="d-flex align-items-center gap-3">
-                              <div>
-                                <div className="fw-semibold">
-                                  {item.Analyte}
+                        {cart_products.map((item, i) => {
+                          // Prepare small info line
+                          const genderAgePart = [item.gender, item.age ? `${item.age} years` : null]
+                            .filter(Boolean)
+                            .join(", ");
+
+                          const testResultPart =
+                            item.TestResult || item.TestResultUnit
+                              ? `${item.TestResult || ""} ${item.TestResultUnit || ""}`.trim()
+                              : "";
+
+                          // Add "|" only if both sides exist
+                          const infoLine =
+                            genderAgePart && testResultPart
+                              ? `${genderAgePart} | ${testResultPart}`
+                              : genderAgePart || testResultPart;
+
+                          return (
+                            <tr
+                              key={i}
+                              style={{
+                                backgroundColor: i % 2 === 0 ? "#fff" : "#fdf6f0",
+                              }}
+                            >
+                              <td>{i + 1}</td>
+                              <td>
+                                <span className="fw-semibold">{item.masterid}</span>
+                              </td>
+                              <td className="d-flex align-items-center gap-3">
+                                <div>
+                                  <div className="fw-semibold">{item.Analyte}</div>
+                                  <div className="text-muted small">{infoLine}</div>
                                 </div>
-                                <div className="text-muted small">
-                                  {item.gender}, {item.age} years |{" "}
-                                  {item.TestResult} {item.TestResultUnit}
-                                </div>
-                              </div>
-                            </td>
-                            <td>
-                              {item.quantity} x {item.Volume}
-                              {item.VolumeUnit}
-                            </td>
-                            <td>
-                              {item.price && item.price > 0 ? (
-                                <span className="fw-semibold text-dark">
-                                  {Number(item.price).toLocaleString("en-PK", {
-                                    minimumFractionDigits: 2,
-                                  })}
-                                </span>
-                              ) : (
-                                <span className="text-danger fw-semibold">
-                                  Please Quote
-                                </span>
-                              )}
-                            </td>
-                            <td>
-                              <button
-                                className="btn btn-sm btn-outline-danger rounded-circle"
-                                onClick={() => handleRemoveProduct(item)}
-                              >
-                                <i className="fas fa-trash-alt"></i>
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                              </td>
+                              <td>
+                                {item.quantity} x {item.Volume}
+                                {item.VolumeUnit}
+                              </td>
+                              <td>
+                                {item.price && item.price > 0 ? (
+                                  <span className="fw-semibold text-dark">
+                                    {Number(item.price).toLocaleString("en-PK", {
+                                      minimumFractionDigits: 2,
+                                    })}
+                                  </span>
+                                ) : (
+                                  <span className="text-danger fw-semibold">Please Quote</span>
+                                )}
+                              </td>
+                              <td>
+                                <button
+                                  className="btn btn-sm btn-outline-danger rounded-circle"
+                                  onClick={() => handleRemoveProduct(item)}
+                                >
+                                  <i className="fas fa-trash-alt"></i>
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
+
                     </table>
                   </div>
                 </div>

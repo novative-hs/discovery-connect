@@ -133,16 +133,11 @@ const Header = ({ style_2 = false }) => {
                             </li>
                           )}
 
-                          <li>
-                            <button
-                              className="cartmini-open-btn position-relative d-flex align-items-center justify-content-center border-0 bg-transparent"
-                              onClick={handleProceedToCart}
-                            >
-                              <Cart className="w-6 h-6 text-gray-800" />
+                         <li>
+                            <button className="cartmini-open-btn" onClick={handleProceedToCart}>
+                              <Cart />
                               {Number(sampleCount) > 0 && (
-                                <span className="tp-item-count position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger text-white">
-                                  {sampleCount}
-                                </span>
+                                <span className="tp-item-count">{sampleCount}</span>
                               )}
                             </button>
                           </li>

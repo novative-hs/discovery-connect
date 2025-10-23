@@ -114,50 +114,8 @@ const SampleArea = () => {
   // Calculate total pages
   const [totalPages, setTotalPages] = useState(0);
   const [filteredSamples, setFilteredSamples] = useState(samples); // State for filtered samples
-  const incrementQuantity = (sample) => {
-    const updatedQuantity = quantity + 1;
-    setQuantity(updatedQuantity); // Update quantity
 
-    // Use a callback to ensure formData is set before making the API call
-    setFormData((prevData) => {
-      const newFormData = {
-        ...prevData, // Preserve any existing data in formData
-        Analyte: sample.Analyte,
-        age: sample.age,
-        gender: sample.gender,
-        ethnicity: sample.ethnicity,
-        samplecondition: sample.samplecondition,
-        storagetemp: sample.storagetemp,
-        ContainerType: sample.ContainerType,
-        CountryOfCollection: sample.CountryOfCollection,
-        price: sample.price,
-        SamplePriceCurrency: sample.SamplePriceCurrency,
-        quantity: updatedQuantity, // Incremented quantity
-        VolumeUnit: sample.VolumeUnit,
-        SampleTypeMatrix: sample.SampleTypeMatrix,
-        SmokingStatus: sample.SmokingStatus,
-        AlcoholOrDrugAbuse: sample.AlcoholOrDrugAbuse,
-        InfectiousDiseaseTesting: sample.InfectiousDiseaseTesting,
-        InfectiousDiseaseResult: sample.InfectiousDiseaseResult,
-        status: sample.status,
-        FreezeThawCycles: sample.FreezeThawCycles,
-        DateOfSampling: sample.DateOfSampling,
-        ConcurrentMedicalConditions: sample.ConcurrentMedicalConditions,
-        ConcurrentMedications: sample.ConcurrentMedications,
-        
-        TestResult: sample.TestResult,
-        TestResultUnit: sample.TestResultUnit,
-        TestMethod: sample.TestMethod,
-        TestKitManufacturer: sample.TestKitManufacturer,
-        TestSystem: sample.TestSystem,
-        TestSystemManufacturer: sample.TestSystemManufacturer,
-        user_account_id: id,
-      };
 
-      // Make API call directly after updating the form data
-      handleAddClick(newFormData); // Pass updated formData to the API call
-    });
-  };
   const handleAddToCart = (product) => {
    
     dispatch(add_cart_product(product));
@@ -244,31 +202,7 @@ const SampleArea = () => {
   setTotalPages(Math.ceil(filtered.length / itemsPerPage));
   setCurrentPage(0);
 };
-  const handleAddClick = async (e) => {
 
-    try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/cart/post`,
-        e
-      );
-      notifySuccess("Sample added to cart successfully");
-
-
-      const newResponse = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sample/get`
-      );
-      setSamples(newResponse.data);
-      setTimeout(() => {
-        setSuccessMessage("");
-      }, 3000);
-    } catch (error) {
-      notifyError("Error adding Sample to cart successfully");
-      console.error(
-        `Error to add sample cart with ID ${selectedSampleId}:`,
-        error
-      );
-    }
-  };
 
   return (
     <section className="policy__area pb-40 overflow-hidden p-3">

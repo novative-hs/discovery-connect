@@ -65,14 +65,28 @@ const getBiobankSamples = (
         paramsOwn.push(likeValue, likeValue, likeValue);
         break;
 
+      case "volume":
+        baseWhereShared += `
+          AND (
+            LOWER(sample.VolumeUnit) = ? OR
+            LOWER(sample.volume) LIKE ?
+          )`;
+        baseWhereOwn += `
+          AND (
+            LOWER(sample.VolumeUnit) = ? OR
+            LOWER(sample.volume) LIKE ?
+          )`;
+
+        paramsShared.push(value.toLowerCase(), `%${value.toLowerCase()}%`);
+        paramsOwn.push(value.toLowerCase(), `%${value.toLowerCase()}%`);
+        break;
+
       case "price":
         baseWhereShared += ` AND CONCAT_WS(' ', sample.price, sample.SamplePriceCurrency) LIKE ?`;
         baseWhereOwn += ` AND CONCAT_WS(' ', sample.price, sample.SamplePriceCurrency) LIKE ?`;
         paramsShared.push(likeValue);
         paramsOwn.push(likeValue);
         break;
-
-
 
       case "gender":
         if (!isNaN(value)) {
@@ -107,12 +121,23 @@ const getBiobankSamples = (
         paramsOwn.push(value + " 23:59:59");
         break;
 
-      case "Analyte":
-        baseWhereShared += ` AND LOWER(sample.Analyte) LIKE ?`;
-        baseWhereOwn += ` AND LOWER(sample.Analyte) LIKE ?`;
-        paramsShared.push(likeValue);
-        paramsOwn.push(likeValue);
+      case "TestResult":
+        baseWhereShared += `
+        AND (
+          CONCAT(sample.TestResult, ' ', IFNULL(sample.TestResultUnit, '')) LIKE ?
+        )
+      `;
+        baseWhereOwn += `
+        AND (
+          CONCAT(sample.TestResult, ' ', IFNULL(sample.TestResultUnit, '')) LIKE ?
+        )
+      `;
+        paramsShared.push(`%${value}%`);
+        paramsOwn.push(`%${value}%`);
         break;
+
+
+
       case "CollectionSiteName":
         baseWhereShared += ` AND LOWER(collectionsite.CollectionSiteName) LIKE ?`;
         paramsShared.push(likeValue);
@@ -125,111 +150,13 @@ const getBiobankSamples = (
         break;   // <-- missing earlier
 
       default:
-        console.warn("⚠️ Unknown filter field:", field);
+        baseWhereShared += ` AND LOWER(sample.\`${field}\`) LIKE ?`;
+        paramsShared.push(likeValue);
+        baseWhereOwn += ` AND LOWER(sample.\`${field}\`) LIKE ?`;
+        paramsOwn.push(likeValue);
         break;
     }
   });
-
-  // 🔄 Dynamic Search (handled once, outside loop)
-  if (filters.searchField && filters.searchValue) {
-    const field = filters.searchField;
-    const value = filters.searchValue;
-    const likeValue = `%${value.toLowerCase()}%`;
-    if (field === "locationids") {
-      baseWhereShared += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
-      baseWhereOwn += ` AND (LOWER(sample.room_number) LIKE ? OR LOWER(sample.freezer_id) LIKE ? OR LOWER(sample.box_id) LIKE ?)`;
-      paramsShared.push(likeValue, likeValue, likeValue);
-      paramsOwn.push(likeValue, likeValue, likeValue);
-
-    }
-    else if (field === "visibility") {
-      baseWhereShared += ` AND LOWER(sample.sample_visibility) = ?`;
-      paramsShared.push(value.toLowerCase());
-      baseWhereOwn += ` AND LOWER(sample.sample_visibility) = ?`;
-      paramsOwn.push(value.toLowerCase());
-    }
-    else if (field === "price") {
-      baseWhereShared += `
-      AND LOWER(CONCAT_WS(' ', CAST(sample.price AS CHAR), sample.SamplePriceCurrency)) = ?`;
-      baseWhereOwn += `
-      AND LOWER(CONCAT_WS(' ', CAST(sample.price AS CHAR), sample.SamplePriceCurrency)) = ?`;
-
-      const likeValue = `%${String(value).toLowerCase()}%`;
-      paramsShared.push(likeValue);
-      paramsOwn.push(likeValue);
-    }
-
-
-    else if (field === "volume") {
-      baseWhereShared += `
-    AND (
-      LOWER(sample.VolumeUnit) = ? OR
-      LOWER(sample.volume) LIKE ?
-    )`;
-      baseWhereOwn += `
-    AND (
-      LOWER(sample.VolumeUnit) = ? OR
-      LOWER(sample.volume) LIKE ?
-    )`;
-
-      paramsShared.push(value.toLowerCase(), `%${value.toLowerCase()}%`);
-      paramsOwn.push(value.toLowerCase(), `%${value.toLowerCase()}%`);
-    }
-
-    else if (field === "gender") {
-      if (!isNaN(value)) {
-        // Value is a number → treat as age
-        baseWhereShared += ` AND sample.age = ?`;
-        baseWhereOwn += ` AND sample.age = ?`;
-        paramsShared.push(Number(value));
-        paramsOwn.push(Number(value));
-      } else {
-        // Value is a string → treat as gender
-        baseWhereShared += ` AND LOWER(sample.gender) = ?`;
-        baseWhereOwn += ` AND LOWER(sample.gender) = ?`;
-        paramsShared.push(value.toLowerCase());
-        paramsOwn.push(value.toLowerCase());
-
-        // If filters.age is also provided, combine with AND
-        if (filters.age) {
-          baseWhereShared += ` AND sample.age = ?`;
-          baseWhereOwn += ` AND sample.age = ?`;
-          paramsShared.push(Number(filters.age));
-          paramsOwn.push(Number(filters.age));
-        }
-      }
-    }
-
-    else if (field === "TestResult") {
-      baseWhereShared += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
-      baseWhereOwn += ` AND LOWER(CONCAT_WS(' ', sample.TestResult, sample.TestResultUnit)) LIKE ?`;
-      paramsShared.push(likeValue);
-      paramsOwn.push(likeValue);
-    }
-    else if (field === "CollectionSiteName") {
-      baseWhereShared += ` AND LOWER(collectionsite.CollectionSiteName) LIKE ?`;
-      paramsShared.push(likeValue);
-    }
-    else if (field === "date_to") {
-      baseWhereShared += ` AND sample.created_at <= ?`;
-      baseWhereOwn += ` AND sample.created_at <= ?`;
-      paramsShared.push(value + " 23:59:59"); // optional: include full day
-      paramsOwn.push(value + " 23:59:59");
-    }
-    else if (field === "date_from") {
-      baseWhereShared += ` AND sample.created_at >= ?`;
-      baseWhereOwn += ` AND sample.created_at >= ?`;
-      paramsShared.push(value);
-      paramsOwn.push(value);
-    }
-    else {
-      baseWhereShared += ` AND LOWER(sample.\`${field}\`) LIKE ?`;
-      paramsShared.push(likeValue);
-      baseWhereOwn += ` AND LOWER(sample.\`${field}\`) LIKE ?`;
-      paramsOwn.push(likeValue);
-    }
-  }
-
 
 
   const sharedSamplesQuery = `
@@ -252,7 +179,7 @@ const getBiobankSamples = (
       UNION ALL
       ${ownSamplesQuery}
     ) AS merged_samples
-    ORDER BY id DESC
+    ORDER BY created_at DESC
   `;
 
   const finalParams = [...paramsShared, user_account_id, ...paramsOwn, user_account_id];

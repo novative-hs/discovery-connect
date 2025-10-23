@@ -399,40 +399,33 @@ const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
     const trimmed = value.trim?.() || value;
 
     setAppliedFilters((prev) => {
-      const updated = { ...prev };
+      let updated = { ...prev };
 
+      // Handle different filter types
       if (field === "price") {
         setPriceFilter(value);
-        setSearchField("");
-        setSearchValue("");
         updated.priceFilter = value;
       } else if (field === "visibility") {
         setVisibility(value);
-        setSearchField("");
-        setSearchValue("");
-        setPriceFilter("");
         updated.visibility = value;
       } else if (field === "date_from" || field === "date_to") {
         if (field === "date_from") setDateFrom(trimmed);
         if (field === "date_to") setDateTo(trimmed);
-        updated.date_from = field === "date_from" ? trimmed : dateFrom;
-        updated.date_to = field === "date_to" ? trimmed : dateTo;
+        updated[field] = trimmed;
       } else {
-        setSearchField(field);
-        setSearchValue(value);
-        setPriceFilter("");
-        updated.searchField = field;
-        updated.searchValue = value;
+        // ✅ Add or update normal filters (Analyte, PatientName, TestResult, etc.)
+        updated[field] = trimmed;
       }
 
-      fetchSamples(1, itemsPerPage, updated); // Always go to first page on filter change
+      // ✅ Remove empty filters (so old ones don’t persist)
+      Object.keys(updated).forEach((key) => {
+        if (!updated[key]) delete updated[key];
+      });
+
+      fetchSamples(1, itemsPerPage, updated);
       return updated;
     });
   };
-
-
-
-
 
 
   const handleInputChange = (e) => {
@@ -1455,8 +1448,14 @@ const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
                     setPriceFilter("");
                     setDateFrom("");
                     setDateTo(today);
+
+                    // ✅ Clear all applied filters too
+                    setAppliedFilters({});
+
+                    // ✅ Fetch samples without any filters
                     fetchSamples(1, itemsPerPage, {});
                   }}
+
                 >
                   Clear Filters
                 </button>
@@ -1583,6 +1582,7 @@ const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 768);
                         type="text"
                         className="form-control bg-light border form-control-sm text-center shadow-none rounded w-100"
                         placeholder={`Search ${label}`}
+                        value={appliedFilters[key] || ""} 
                         onChange={(e) => handleFilterChange(key, e.target.value)}
                         style={{ minWidth: "110px" }}
                       />
