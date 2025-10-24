@@ -94,10 +94,12 @@ const createAccount = (req, res) => {
 };
 
 const loginAccount = (req, res) => {
-  const { email, password } = req.body;
+ const { email, password } = req.body;
+
   accountModel.loginAccount({ email, password }, (err, result) => {
     if (err) {
-      
+      console.error("Login error details:", err);
+
       if (err.message === "Email and password are required") {
         return res.status(400).json({ status: "fail", error: err.message });
       }
@@ -110,26 +112,26 @@ const loginAccount = (req, res) => {
       ) {
         return res.status(403).json({ status: "fail", error: err.message });
       }
-      
-      return res
-        .status(500)
-        .json({ status: "fail", error: "Internal server error" });
+
+      return res.status(500).json({ status: "fail", error: "Internal server error" });
     }
 
-    res.status(200).json({
+    // ✅ Success Response
+    return res.status(200).json({
       status: "success",
       message: "Login successful",
       user: {
         id: result.id,
-        accountType: result.accountType,
         email: result.email,
-        action: result.action || null, 
-        committeetype:result.committeetype||null,
-        authToken: "mockAuthToken", // Replace with JWT or real token logic
+        accountType: result.accountType,
+        action: result.action || null,
+        collection_id: result.collection_id || null,
+        committeetype: result.committeetype || null,
+        authToken: "mockAuthToken", // Replace with JWT later
       },
     });
   });
-};
+}
 
 const getUserEmail = (req, res) => {
   const { id } = req.params;

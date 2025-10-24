@@ -689,138 +689,77 @@ const updateAccount = (req, callback) => {
 };
 
 // Function to Login Account
-const loginAccount = (data, callback) => {
 
+const loginAccount = (data, callback) => {
   const { email, password } = data;
 
-  // Check if all fields are provided
+  // Basic validation
   if (!email || !password) {
     return callback({ status: "fail", message: "Email and password are required" });
   }
 
-  // Query to verify email and password for any account type
-  const query =
-    `SELECT id, email, accountType 
-     FROM user_account 
-     WHERE email = ? AND password = ?`;
+  const query = `
+    SELECT 
+      ua.id, ua.email, ua.accountType,
+      r.status AS researcher_status,
+      css.status AS collectionsitestaff_status,
+      css.permission AS collectionsitestaff_permission,
+      css.collectionsite_id AS collectionsite_id,
+      csr.status AS csr_status, 
+      csr.permission AS csr_permission,
+      cm.status AS committee_status, 
+      cm.committeetype AS committeetype
+    FROM user_account ua
+    LEFT JOIN researcher r ON ua.id = r.user_account_id
+    LEFT JOIN collectionsitestaff css ON ua.id = css.user_account_id
+    LEFT JOIN csr ON ua.id = csr.user_account_id
+    LEFT JOIN committee_member cm ON ua.id = cm.user_account_id
+    WHERE ua.email = ? AND ua.password = ?;
+  `;
 
   mysqlConnection.query(query, [email, password], (err, results) => {
     if (err) {
-      return callback(err, null); // Pass error to the controller
+      console.error("MySQL error:", err);
+      return callback({ status: "fail", message: "Database query failed" }, null);
     }
 
-    if (results.length > 0) {
-      const user = results[0];
+    if (results.length === 0) {
+      return callback({ status: "fail", message: "Invalid email or password" }, null);
+    }
 
-      // If account type is Researcher, check the status in researcher table
-      if (user.accountType === 'Researcher') {
-        const researcherQuery =
-          `SELECT status FROM researcher WHERE user_account_id = ?`;
+    const user = results[0];
+    const toLower = (v) => (typeof v === "string" ? v.toLowerCase() : v);
 
-        mysqlConnection.query(researcherQuery, [user.id], (err, researcherResults) => {
-          if (err) {
-            return callback(err, null); // Pass error to the controller
-          }
+    // 🔍 Status check per account type
+    switch (user.accountType) {
+      case "Researcher":
+        if (toLower(user.researcher_status) === "approved") return callback(null, user);
+        return callback({ status: "fail", message: "Account is not approved" }, null);
 
-          if (researcherResults.length > 0 && researcherResults[0].status === 'approved') {
-            return callback(null, user); // Return user info if approved
-          } else {
-            return callback({ status: "fail", message: "Account is not approved" }, null);
-          }
-        });
-      }
+      case "CollectionSitesStaff":
+        if (toLower(user.collectionsitestaff_status) === "active") {
+          user.action = user.collectionsitestaff_permission || null;
+          user.collectionsite_id = user.collectionsite_id || null;
+          return callback(null, user);
+        }
+        return callback({ status: "fail", message: "Account is not active" }, null);
 
-      else if (user.accountType === 'Organization') {
-        const OrganizationQuery =
-          `SELECT status FROM organization WHERE user_account_id = ?`;
+      case "Committeemember":
+        if (toLower(user.committee_status) === "active") {
+          user.committeetype = user.committeetype || null;
+          return callback(null, user);
+        }
+        return callback({ status: "fail", message: "Account is not active" }, null);
 
-        mysqlConnection.query(OrganizationQuery, [user.id], (err, OrganizationResults) => {
-          if (err) {
-            return callback(err, null); // Pass error to the controller
-          }
+      case "CSR":
+        if (toLower(user.csr_status) === "active") {
+          user.action = user.csr_permission || null;
+          return callback(null, user);
+        }
+        return callback({ status: "fail", message: "Account is not active" }, null);
 
-          if (OrganizationResults.length > 0 && OrganizationResults[0].status === 'active') {
-            return callback(null, user); // Return user info if approved
-          } else {
-            return callback({ status: "fail", message: "Account is not active" }, null);
-          }
-        });
-      } else if (user.accountType === 'CollectionSites') {
-        const collectionsiteQuery =
-          `SELECT status FROM collectionsite WHERE user_account_id = ?`;
-
-        mysqlConnection.query(collectionsiteQuery, [user.id], (err, collectionsiteResults) => {
-          if (err) {
-            return callback(err, null); // Pass error to the controller
-          }
-
-          if (collectionsiteResults.length > 0 && collectionsiteResults[0].status === 'active') {
-            return callback(null, user); // Return user info if approved
-          } else {
-            return callback({ status: "fail", message: "Account is not active" }, null);
-          }
-        });
-      }
-      else if (user.accountType === 'CollectionSitesStaff') {
-        const collectionsiteQuery =
-          `SELECT status, permission,collectionsite_id AS collection_id FROM collectionsitestaff WHERE user_account_id = ?`;
-
-        mysqlConnection.query(collectionsiteQuery, [user.id], (err, collectionsitestaffResults) => {
-          if (err) {
-            return callback(err, null); // Pass error to the controller
-          }
-
-          if (collectionsitestaffResults.length > 0 && collectionsitestaffResults[0].status === 'active') {
-            // Attach action to the user object
-            user.action = collectionsitestaffResults[0].permission;
-
-            return callback(null, user); // Return user with action included
-          } else {
-            return callback({ status: "fail", message: "Account is not active" }, null);
-          }
-        });
-      }
-
-      else if (user.accountType === 'Committeemember') {
-        const CommitteememberQuery =
-          `SELECT status,committeetype FROM committee_member WHERE user_account_id = ?`;
-
-        mysqlConnection.query(CommitteememberQuery, [user.id], (err, CommitteememberResults) => {
-          if (err) {
-            return callback(err, null); // Pass error to the controller
-          }
-
-          if (CommitteememberResults.length > 0 && CommitteememberResults[0].status.toLowerCase() === "active") {
-
-            user.committeetype = CommitteememberResults[0].committeetype;
-            return callback(null, user); // Return user info if approved
-          } else {
-            return callback({ status: "fail", message: "Account is not approved" }, null);
-          }
-        });
-      }
-      else if (user.accountType === 'CSR') {
-        const CSRQuery =
-          `SELECT permission,status FROM csr WHERE user_account_id = ?`;
-
-        mysqlConnection.query(CSRQuery, [user.id], (err, CSRResults) => {
-          if (err) {
-            return callback(err, null); // Pass error to the controller
-          }
-          if (CSRResults.length > 0 && CSRResults[0].status === 'active') {
-            user.action = CSRResults[0].permission;
-            return callback(null, user); // Return user info if approved
-          } else {
-            return callback({ status: "fail", message: "Account is not active" }, null);
-          }
-        });
-      }
-      else {
-        // For non-researcher accounts, return the user info
-        callback(null, user);
-      }
-    } else {
-      callback({ status: "fail", message: "Invalid email or password" }, null);
+      default:
+        return callback(null, user);
     }
   });
 };

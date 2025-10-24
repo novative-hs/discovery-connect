@@ -1506,7 +1506,7 @@ const SampleArea = () => {
                     setCollectionSite("");
                     setVisibility("");
                     setDateFrom("");
-                    setDateTo("");
+                    setDateTo(today);
                     setFilters({});
                     setCurrentPage(1);
                     fetchSamples(1, itemsPerPage, {});
