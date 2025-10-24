@@ -211,27 +211,36 @@ const SampleArea = () => {
           </thead>
 
           <tbody>
-            {Object.values(grouped).map((group, idx) => (
-              <tr key={idx}>
-                <td>{group[0].tracking_id}</td>
-                <td>{new Date(group[0].created_at).toLocaleDateString()}</td>
-                <td>{group[0].researcher_name}</td>
-                <td>{group[0].organization_name}</td>
-                <td>{group[0].committee_status}</td>
-                <td>
-                  <button
-                    className="btn btn-outline-info btn-sm"
-                    onClick={() => {
-                      setSelectedResearcherSamples(group);
-                      setShowGroupedModal(true);
-                    }}
-                  >
-                    View Details
-                  </button>
+            {grouped && Object.keys(grouped).length > 0 ? (
+              Object.values(grouped).map((group, idx) => (
+                <tr key={idx}>
+                  <td>{group[0].tracking_id}</td>
+                  <td>{new Date(group[0].created_at).toLocaleDateString()}</td>
+                  <td>{group[0].researcher_name}</td>
+                  <td>{group[0].organization_name}</td>
+                  <td>{group[0].committee_status}</td>
+                  <td>
+                    <button
+                      className="btn btn-outline-info btn-sm"
+                      onClick={() => {
+                        setSelectedResearcherSamples(group);
+                        setShowGroupedModal(true);
+                      }}
+                    >
+                      View Details
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="text-center text-muted">
+                  No results
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
+
         </table>
       </div>
 
@@ -317,30 +326,30 @@ const SampleArea = () => {
         </Modal>
       )}
 
-    <DetailModal
-  show={showSampleModal}
-  onHide={() => setShowSampleModal(false)}
-  title={`${selectedSample?.Analyte || "Sample"} Details`}
-  data={selectedSample}
-  fieldsToShow={[
-    { key: "quantity", label: "Order Quantity" },
-    { key: "volume", label: "Volume" },
-    { key: "Volumeunit", label: "Volume Unit" },
-    { key: "age", label: "Age" },
-    { key: "gender", label: "Gender" },
-    { key: "ethnicity", label: "Ethnicity" },
-    { key: "CountryofCollection", label: "Country of Collection" },
-    { key: "storagetemp", label: "Storage Temperature" },
-    { key: "SampleTypeMatrix", label: "Sample Type" },
-    { key: "TestResult", label: "Test Result" },
-    { key: "TestResultUnit", label: "Test Result Unit" },
-    { key: "TestMethod", label: "Test Method" },
-    { key: "TestKitManufacturer", label: "Test Kit Manufacturer" },
-    { key: "ConcurrentMedicalConditions", label: "Concurrent Medical Conditions" },
-    { key: "InfectiousDiseaseTesting", label: "Infectious Disease Testing" },
-    { key: "InfectiousDiseaseResult", label: "Infectious Disease Result" },
-  ]}
-/>
+      <DetailModal
+        show={showSampleModal}
+        onHide={() => setShowSampleModal(false)}
+        title={`${selectedSample?.Analyte || "Sample"} Details`}
+        data={selectedSample}
+        fieldsToShow={[
+          { key: "quantity", label: "Order Quantity" },
+          { key: "volume", label: "Volume" },
+          { key: "Volumeunit", label: "Volume Unit" },
+          { key: "age", label: "Age" },
+          { key: "gender", label: "Gender" },
+          { key: "ethnicity", label: "Ethnicity" },
+          { key: "CountryofCollection", label: "Country of Collection" },
+          { key: "storagetemp", label: "Storage Temperature" },
+          { key: "SampleTypeMatrix", label: "Sample Type" },
+          { key: "TestResult", label: "Test Result" },
+          { key: "TestResultUnit", label: "Test Result Unit" },
+          { key: "TestMethod", label: "Test Method" },
+          { key: "TestKitManufacturer", label: "Test Kit Manufacturer" },
+          { key: "ConcurrentMedicalConditions", label: "Concurrent Medical Conditions" },
+          { key: "InfectiousDiseaseTesting", label: "Infectious Disease Testing" },
+          { key: "InfectiousDiseaseResult", label: "Infectious Disease Result" },
+        ]}
+      />
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton><Modal.Title>{actionType} Sample</Modal.Title></Modal.Header>
