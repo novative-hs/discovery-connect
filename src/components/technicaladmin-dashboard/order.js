@@ -15,7 +15,7 @@ import {
   FaClock,
 } from "react-icons/fa";
 import { notifyError, notifySuccess } from "@utils/toast";
-
+import DetailModal from "src/pages/DetailModal";
 const OrderPage = () => {
   const id = sessionStorage.getItem("userID");
   const [orders, setOrders] = useState([]); // Filtered orders
@@ -1513,174 +1513,31 @@ const OrderPage = () => {
           </Modal>
 
           {/* Sample details Modal */}
-          {showSampleModal && selectedSample && (
-            <>
-              {/* Backdrop */}
-              <div
-                className="modal-backdrop fade show"
-                style={{
-                  backdropFilter: "blur(5px)",
-                  backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  position: "fixed",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  height: "100%",
-                  zIndex: 1040,
-                }}
-              ></div>
+          <DetailModal
+            show={showSampleModal}
+            onHide={() => setSampleShowModal(false)}
+            title={`${selectedSample?.Analyte || "Sample"} Details`}
+            data={selectedSample}
+            fieldsToShow={[
+              { key: "quantity", label: "Order Quantity" },
+              { key: "volume", label: "Volume" },
+              { key: "Volumeunit", label: "Volume Unit" },
+              { key: "age", label: "Age" },
+              { key: "gender", label: "Gender" },
+              { key: "ethnicity", label: "Ethnicity" },
+              { key: "CountryofCollection", label: "Country of Collection" },
+              { key: "storagetemp", label: "Storage Temperature" },
+              { key: "SampleTypeMatrix", label: "Sample Type" },
+              { key: "TestResult", label: "Test Result" },
+              { key: "TestResultUnit", label: "Test Result Unit" },
+              { key: "TestMethod", label: "Test Method" },
+              { key: "TestKitManufacturer", label: "Test Kit Manufacturer" },
+              { key: "ConcurrentMedicalConditions", label: "Concurrent Medical Conditions" },
+              { key: "InfectiousDiseaseTesting", label: "Infectious Disease Testing" },
+              { key: "InfectiousDiseaseResult", label: "Infectious Disease Result" },
+            ]}
+          />
 
-              {/* Modal Container */}
-              <div
-                className="modal show d-block"
-                role="dialog"
-                style={{
-                  zIndex: 1060,
-                  position: "fixed",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  backgroundColor: "#fff",
-                  padding: "20px",
-                  borderRadius: "10px",
-                  boxShadow: "0 4px 10px rgba(0, 0, 0, 0.2)",
-                  width: "90vw",
-                  maxWidth: "700px",
-                  maxHeight: "80vh",
-                  overflow: "auto",
-                }}
-              >
-                {/* Modal Header */}
-                <div
-                  className="modal-header d-flex justify-content-between align-items-center"
-                  style={{ backgroundColor: "#cfe2ff", color: "#000" }}
-                >
-                  <h5 className="fw-bold">{selectedSample.Analyte} Details:</h5>
-                  <button
-                    type="button"
-                    className="close"
-                    onClick={() => setSampleShowModal(false)}
-                    style={{
-                      fontSize: "1.5rem",
-                      border: "none",
-                      background: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    &times;
-                  </button>
-                </div>
-
-                {/* Modal Body */}
-                <div className="modal-body" style={{ maxHeight: "90vh" }}>
-                  <div className="row">
-                    {/* Left Side: Image & Basic Details */}
-                    <div className="col-md-5 text-center">
-                      <div className="mt-3 p-2 bg-light rounded text-start">
-                        {selectedSample.quantity != null && (
-                          <p>
-                            <strong>Order Quantity:</strong> {selectedSample.quantity}
-                          </p>
-                        )}
-
-                        {(selectedSample.volume || selectedSample.Volumeunit) && (
-                          <p>
-                            <strong>Volume:</strong>{" "}
-                            {selectedSample.volume} {selectedSample.Volumeunit}
-                          </p>
-                        )}
-
-                        {(selectedSample.age != null || selectedSample.gender) && (
-                          <p>
-                            {selectedSample.age != null && (
-                              <>
-                                <strong>Age:</strong> {selectedSample.age} years{" "}
-                                {selectedSample.gender && "| "}
-                              </>
-                            )}
-                            {selectedSample.gender && (
-                              <>
-                                <strong>Gender:</strong> {selectedSample.gender}
-                              </>
-                            )}
-                          </p>
-                        )}
-
-                        {selectedSample.ethnicity && (
-                          <p>
-                            <strong>Ethnicity:</strong> {selectedSample.ethnicity}
-                          </p>
-                        )}
-
-                        {selectedSample.CountryofCollection && (
-                          <p>
-                            <strong>Country of Collection:</strong>{" "}
-                            {selectedSample.CountryofCollection}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Right Side: Detailed Information */}
-                    <div className="col-md-7">
-                      {selectedSample.storagetemp && (
-                        <p>
-                          <strong>Storage Temperature:</strong> {selectedSample.storagetemp}
-                        </p>
-                      )}
-
-                      {selectedSample.SampleTypeMatrix && (
-                        <p>
-                          <strong>Sample Type:</strong> {selectedSample.SampleTypeMatrix}
-                        </p>
-                      )}
-
-                      {(selectedSample.TestResult || selectedSample.TestResultUnit) && (
-                        <p>
-                          <strong>Test Result:</strong> {selectedSample.TestResult}{" "}
-                          {selectedSample.TestResultUnit}
-                        </p>
-                      )}
-
-                      {selectedSample.TestMethod && (
-                        <p>
-                          <strong>Test Method:</strong> {selectedSample.TestMethod}
-                        </p>
-                      )}
-
-                      {selectedSample.TestKitManufacturer && (
-                        <p>
-                          <strong>Test Kit Manufacturer:</strong>{" "}
-                          {selectedSample.TestKitManufacturer}
-                        </p>
-                      )}
-
-                      {selectedSample.ConcurrentMedicalConditions && (
-                        <p>
-                          <strong>Concurrent Medical Conditions:</strong>{" "}
-                          {selectedSample.ConcurrentMedicalConditions}
-                        </p>
-                      )}
-
-                      {selectedSample.InfectiousDiseaseTesting && (
-                        <p>
-                          <strong>Infectious Disease Testing:</strong>{" "}
-                          {selectedSample.InfectiousDiseaseTesting}
-                        </p>
-                      )}
-
-                      {selectedSample.InfectiousDiseaseResult && (
-                        <p>
-                          <strong>Infectious Disease Result:</strong>{" "}
-                          {selectedSample.InfectiousDiseaseResult}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
 
         </div>
       </div>

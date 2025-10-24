@@ -7,7 +7,7 @@ import Pagination from "@ui/Pagination";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faDownload, faCheck, faTimes } from "@fortawesome/free-solid-svg-icons";
 import { useQuery } from "@tanstack/react-query";
-
+import DetailModal from "src/pages/DetailModal";
 // Data fetcher
 const fetchSamples = async ({ queryKey: [, id, page, pageSize, field, value] }) => {
   const base = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -317,38 +317,30 @@ const SampleArea = () => {
         </Modal>
       )}
 
-      <Modal show={showSampleModal && !!selectedSample} onHide={() => setShowSampleModal(false)} size="lg" centered>
-        <Modal.Header closeButton><Modal.Title className="fw-bold">{selectedSample?.Analyte}</Modal.Title></Modal.Header>
-        <Modal.Body>
-          <div className="row">
-            <div className="col-md-5 text-start">
-              <div className="mt-3 p-2 bg-light rounded">
-                {selectedSample?.price != null && <p><strong>Price:</strong> {selectedSample.price} {selectedSample.SamplePriceCurrency}</p>}
-                {selectedSample?.volume != null && <p><strong>Volume:</strong> {selectedSample.volume} {selectedSample.VolumeUnit}</p>}
-                {selectedSample?.CountryofCollection && <p><strong>Country of Collection:</strong> {selectedSample.CountryofCollection}</p>}
-              </div>
-            </div>
-            <div className="col-md-7">
-              {(selectedSample?.age != null || selectedSample?.gender) && (
-                <p>
-                  {selectedSample?.age != null && (<><strong>Age:</strong> {selectedSample.age} years {selectedSample?.gender && "| "}</>)}
-                  {selectedSample?.gender && <strong>Gender:</strong>} {selectedSample?.gender}
-                </p>
-              )}
-              {selectedSample?.ethnicity && <p><strong>Ethnicity:</strong> {selectedSample.ethnicity}</p>}
-              {selectedSample?.storagetemp && <p><strong>Storage Temperature:</strong> {selectedSample.storagetemp}</p>}
-              {selectedSample?.SampleTypeMatrix && <p><strong>Sample Type:</strong> {selectedSample.SampleTypeMatrix}</p>}
-              {(selectedSample?.TestResult || selectedSample?.TestResultUnit) && <p><strong>Test Result:</strong> {selectedSample.TestResult} {selectedSample.TestResultUnit}</p>}
-              {selectedSample?.TestMethod && <p><strong>Test Method:</strong> {selectedSample.TestMethod}</p>}
-              {selectedSample?.TestKitManufacturer && <p><strong>Test Kit Manufacturer:</strong> {selectedSample.TestKitManufacturer}</p>}
-              {selectedSample?.ConcurrentMedicalConditions && <p><strong>Concurrent Medical Conditions:</strong> {selectedSample.ConcurrentMedicalConditions}</p>}
-              {(selectedSample?.InfectiousDiseaseTesting || selectedSample?.InfectiousDiseaseResult) && (
-                <p><strong>Infectious Disease Testing:</strong> {selectedSample.InfectiousDiseaseTesting} ({selectedSample.InfectiousDiseaseResult})</p>
-              )}
-            </div>
-          </div>
-        </Modal.Body>
-      </Modal>
+    <DetailModal
+  show={showSampleModal}
+  onHide={() => setShowSampleModal(false)}
+  title={`${selectedSample?.Analyte || "Sample"} Details`}
+  data={selectedSample}
+  fieldsToShow={[
+    { key: "quantity", label: "Order Quantity" },
+    { key: "volume", label: "Volume" },
+    { key: "Volumeunit", label: "Volume Unit" },
+    { key: "age", label: "Age" },
+    { key: "gender", label: "Gender" },
+    { key: "ethnicity", label: "Ethnicity" },
+    { key: "CountryofCollection", label: "Country of Collection" },
+    { key: "storagetemp", label: "Storage Temperature" },
+    { key: "SampleTypeMatrix", label: "Sample Type" },
+    { key: "TestResult", label: "Test Result" },
+    { key: "TestResultUnit", label: "Test Result Unit" },
+    { key: "TestMethod", label: "Test Method" },
+    { key: "TestKitManufacturer", label: "Test Kit Manufacturer" },
+    { key: "ConcurrentMedicalConditions", label: "Concurrent Medical Conditions" },
+    { key: "InfectiousDiseaseTesting", label: "Infectious Disease Testing" },
+    { key: "InfectiousDiseaseResult", label: "Infectious Disease Result" },
+  ]}
+/>
 
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton><Modal.Title>{actionType} Sample</Modal.Title></Modal.Header>

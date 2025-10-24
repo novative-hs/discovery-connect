@@ -4,7 +4,7 @@ import axios from "axios";
 import { Modal } from "react-bootstrap";
 import { notifyError } from "@utils/toast";
 import Pagination from "@ui/Pagination";
-
+import DetailModal from "src/pages/DetailModal";
 const ITEMS_PER_PAGE = 10;
 const COLS = [
   { label: "Order ID", key: "tracking_id" },
@@ -197,26 +197,31 @@ const SampleArea = () => {
         </Modal.Body>
       </Modal>
 
-      <Modal show={showSampleModal && !!selectedSample} onHide={() => setShowSampleModal(false)} size="lg" centered>
-        <Modal.Header closeButton><Modal.Title className="fw-bold">{selectedSample?.Analyte || "Sample Details"}</Modal.Title></Modal.Header>
-        <Modal.Body>
-          <p>
-            {selectedSample?.price != null && <>Price: <strong>{selectedSample.price} {selectedSample.SamplePriceCurrency}</strong>. </>}
-            {selectedSample?.volume != null && <>Volume: <strong>{selectedSample.volume}{selectedSample.VolumeUnit}</strong>. </>}
-            {selectedSample?.CountryofCollection && <>Country of Collection: <strong>{selectedSample.CountryofCollection}</strong>. </>}
-            {selectedSample?.age != null && <>Age: <strong>{selectedSample.age} years</strong>. </>}
-            {selectedSample?.gender && <>Gender: <strong>{selectedSample.gender}</strong>. </>}
-            {selectedSample?.ethnicity && <>Ethnicity: <strong>{selectedSample.ethnicity}</strong>. </>}
-            {selectedSample?.storagetemp && <>Storage Temperature: <strong>{selectedSample.storagetemp}</strong>. </>}
-            {selectedSample?.SampleTypeMatrix && <>Sample Type: <strong>{selectedSample.SampleTypeMatrix}</strong>. </>}
-            {(selectedSample?.TestResult || selectedSample?.TestResultUnit) && <>Test Result: <strong>{selectedSample.TestResult ?? ""} {selectedSample.TestResultUnit ?? ""}</strong>. </>}
-            {selectedSample?.TestMethod && <>Test Method: <strong>{selectedSample.TestMethod}</strong>. </>}
-            {selectedSample?.TestKitManufacturer && <>Test Kit Manufacturer: <strong>{selectedSample.TestKitManufacturer}</strong>. </>}
-            {selectedSample?.ConcurrentMedicalConditions && <>Concurrent Medical Conditions: <strong>{selectedSample.ConcurrentMedicalConditions}</strong>. </>}
-            {(selectedSample?.InfectiousDiseaseTesting || selectedSample?.InfectiousDiseaseResult) && <>Infectious Disease Testing: <strong>{selectedSample.InfectiousDiseaseTesting} {selectedSample?.InfectiousDiseaseResult ? `(${selectedSample.InfectiousDiseaseResult})` : ""}</strong>. </>}
-          </p>
-        </Modal.Body>
-      </Modal>
+      <DetailModal
+  show={showSampleModal}
+  onHide={() => setShowSampleModal(false)}
+  title={`${selectedSample?.Analyte || "Sample"} Details`}
+  data={selectedSample}
+  fieldsToShow={[
+    { key: "quantity", label: "Order Quantity" },
+    { key: "volume", label: "Volume" },
+    { key: "Volumeunit", label: "Volume Unit" },
+    { key: "age", label: "Age" },
+    { key: "gender", label: "Gender" },
+    { key: "ethnicity", label: "Ethnicity" },
+    { key: "CountryofCollection", label: "Country of Collection" },
+    { key: "storagetemp", label: "Storage Temperature" },
+    { key: "SampleTypeMatrix", label: "Sample Type" },
+    { key: "TestResult", label: "Test Result" },
+    { key: "TestResultUnit", label: "Test Result Unit" },
+    { key: "TestMethod", label: "Test Method" },
+    { key: "TestKitManufacturer", label: "Test Kit Manufacturer" },
+    { key: "ConcurrentMedicalConditions", label: "Concurrent Medical Conditions" },
+    { key: "InfectiousDiseaseTesting", label: "Infectious Disease Testing" },
+    { key: "InfectiousDiseaseResult", label: "Infectious Disease Result" },
+  ]}
+/>
+
     </div>
   );
 };
