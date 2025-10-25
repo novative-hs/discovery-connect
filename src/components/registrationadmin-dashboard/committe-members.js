@@ -751,7 +751,7 @@ const CommitteeMemberArea = () => {
                                 <button
                                   className="dropdown-item"
                                   onClick={() =>
-                                    handleStatusClick(committeemember.id, "Active")
+                                    handleStatusClick(committeemember.id, "active")
                                   }
                                 >
                                   Active
@@ -759,7 +759,7 @@ const CommitteeMemberArea = () => {
                                 <button
                                   className="dropdown-item"
                                   onClick={() =>
-                                    handleStatusClick(committeemember.id, "Inactive")
+                                    handleStatusClick(committeemember.id, "inactive")
                                   }
                                 >
                                   Inactive
