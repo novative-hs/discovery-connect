@@ -41,12 +41,29 @@ const fetchCommitteeOrderHistory = (committeeMemberId, callback) => {
       cm.committee_status,
       cm.comments AS committee_comments,
       r.ResearcherName AS researcher_name,
+      ua.email as Email,
       m.CommitteeMemberName AS committee_member_name,
       s.Analyte,
+      s.age,s.gender,
+      s.Volume,
+      s.VolumeUnit,
+      s.TestResult,
+      s.TestResultUnit,
+      s.SamplePriceCurrency,
       c.quantity,
-      sd.study_copy,
-      sd.irb_file,
-      sd.nbc_file,
+      o.tracking_id,
+      o.created_at,
+      o.totalpayment,
+      o.subtotal,
+
+      o.tax_type,
+      o.tax_value,
+      o.platform_type,
+      o.platform_value,
+      o.freight_type,
+      o.freight_value,
+
+      o.order_status,
       sd.reporting_mechanism
     FROM committeesampleapproval cm
     JOIN orders o ON cm.order_id = o.id
@@ -55,7 +72,7 @@ const fetchCommitteeOrderHistory = (committeeMemberId, callback) => {
     JOIN researcher r ON ua.id = r.user_account_id
     JOIN sample s ON c.sample_id = s.id
     LEFT JOIN sampledocuments sd ON o.id = sd.order_id
-    JOIN committee_member m ON m.id = cm.committee_member_id
+    JOIN committee_member m ON m.user_account_id = cm.committee_member_id
     WHERE cm.committee_member_id = ?
     ORDER BY cm.id DESC
   `;

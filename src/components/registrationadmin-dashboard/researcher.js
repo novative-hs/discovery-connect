@@ -11,6 +11,7 @@ import Pagination from "@ui/Pagination";
 import moment from "moment";
 import * as XLSX from "xlsx";
 
+
 const ResearcherArea = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);

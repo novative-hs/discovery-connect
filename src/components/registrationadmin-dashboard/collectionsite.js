@@ -644,26 +644,31 @@ const CollectionSiteArea = () => {
             )}
 
             {/* Status Filter and Add Button in Same Row */}
+              
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold">Collection Site's List</h5>
-              <div className="d-flex flex-wrap gap-3 align-items-center">
-                <label htmlFor="statusFilter" className="mb-0">
-                  Status:
-                </label>
-                <select
+              {/* Left Section: Title and Filter stacked vertically */}
+              <div className="d-flex flex-column">
+                <h5 className="m-0 fw-bold mb-2">Collection Site's List</h5>
+
+                <div className="d-flex align-items-center gap-2">
+                  <label htmlFor="statusFilter" className="mb-0">
+                    Status:
+                  </label>
+                  <select
                   id="statusFilter"
                   className="form-control"
-                  style={{ width: "auto" }}
-                  value={statusFilter} // Yeh line add karein
+                  value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)} // Yeh line change karein
                 >
                   <option value="">All</option>
                   <option value="inactive">InActive</option>
                   <option value="active">Active</option>
                 </select>
+                </div>
               </div>
+
+              {/* Right Section: Action Buttons */}
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add collection site Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
@@ -679,7 +684,7 @@ const CollectionSiteArea = () => {
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Collection Site
+                  <i className="fas fa-plus"></i> Add Collection Site's
                 </button>
                 <button
                   onClick={handleExportToExcel}
@@ -687,13 +692,13 @@ const CollectionSiteArea = () => {
                     backgroundColor: "#28a745",
                     color: "#fff",
                     border: "none",
-                    padding: "8px 16px",
+                    padding: "10px 20px",
                     borderRadius: "6px",
                     fontWeight: "500",
                     fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px",
+                    gap: "8px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >

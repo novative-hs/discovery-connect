@@ -30,44 +30,45 @@ const StaffManagementPage = ({ defaultSection = "collectionsite" }) => {
   }, []);
 
   return (
-    <div className="container mt-3">
-      <div className="d-flex justify-content-end align-items-end mb-2">
-        <div className="position-relative" ref={dropdownRef}>
+    <div className="container-fluid">
+      {/* ✅ Dropdown aligned to top-right corner */}
+      <div className="d-flex justify-content-end mt-3 " style={{ marginRight: "12%" }} ref={dropdownRef}>
+        <div className="position-relative">
           <button
-            className="btn btn-outline-primary"
+            className="btn btn-primary"
             onClick={() => setShowDropdown((prev) => !prev)}
           >
             Select Role ▾
           </button>
+
           {showDropdown && (
-            <div
-              className="position-absolute mt-2 p-2 rounded shadow bg-white"
-              style={{ zIndex: 10, right: 0, minWidth: "200px" }}
-            >
+            <div className="position-absolute mt-2 p-2 rounded shadow bg-white" style={{ zIndex: 10, right: 0, minWidth: "200px" }}>
               <button
-                className="dropdown-item py-2"
+                className={`dropdown-item py-2 ${activeSection === "collectionsite" ? "bg-primary text-white" : ""}`}
                 onClick={() => handleFilterSelect("collectionsite")}
               >
                 Collection Site's Staff
               </button>
               <button
-                className="dropdown-item py-2"
+                className={`dropdown-item py-2 ${activeSection === "committee" ? "bg-primary text-white" : ""}`}
                 onClick={() => handleFilterSelect("committee")}
               >
                 Committee Member
               </button>
               <button
-                className="dropdown-item py-2"
+                className={`dropdown-item py-2 ${activeSection === "csr" ? "bg-primary text-white" : ""}`}
                 onClick={() => handleFilterSelect("csr")}
               >
                 CSR
               </button>
             </div>
+
           )}
         </div>
       </div>
 
-      <div className="p-4 bg-light rounded shadow">
+      {/* ✅ Role section below the dropdown */}
+      <div>
         {activeSection === "collectionsite" && <CollectionSiteStaffArea />}
         {activeSection === "committee" && <CommitteeMemberArea />}
         {activeSection === "csr" && <CSRArea />}

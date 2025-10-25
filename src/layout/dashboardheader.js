@@ -271,8 +271,8 @@ const Header = ({ setActiveTab, activeTab }) => {
                   }}
                 >
                   <button
-                    className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${activeTab === tab ? "text-primary" : "text-dark"
-                      } fs-7`}
+                  className={`nav-link btn btn-sm custom-nav-btn d-flex align-items-center ${activeTab.startsWith(tab) ? "text-primary" : "text-dark"} fs-7`}
+
                     onClick={(e) => {
                       e.stopPropagation();
 

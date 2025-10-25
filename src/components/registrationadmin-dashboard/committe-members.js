@@ -193,11 +193,50 @@ const CommitteeMemberArea = () => {
       );
       const data = await response.json();
 
-      setOrderHistoryData(data);
+      const grouped = data.reduce((acc, item) => {
+        // use order_id to uniquely identify each order
+        if (!acc[item.order_id]) {
+          acc[item.order_id] = {
+            order_id: item.order_id,
+            email: item.Email,
+            researcher_name: item.researcher_name,
+            tracking_id: item.tracking_id,
+            committee_comments: item.committee_comments,
+            created_at: item.created_at,
+            order_status: item.order_status,
+            items: [],
+          };
+        }
+
+        // check if this analyte already exists (to avoid duplicates)
+        const exists = acc[item.order_id].items.some(
+          (i) =>
+            i.analyte === item.Analyte &&
+            i.gender === item.gender &&
+            i.age === item.age
+        );
+
+        if (!exists) {
+          acc[item.order_id].items.push({
+            analyte: item.Analyte,
+            gender: item.gender,
+            age: item.age,
+            quantity: item.quantity,
+            volume: `${item.Volume} ${item.VolumeUnit}`,
+            test_result: `${item.TestResult} ${item.TestResultUnit}`,
+            price: item.SamplePriceCurrency,
+          });
+        }
+
+        return acc;
+      }, {});
+
+      setOrderHistoryData(grouped);
     } catch (error) {
       console.error("Error fetching history:", error);
     }
   };
+
   const handleShowHistory = (filterType, id) => {
     fetchHistory(filterType, id);
     setShowHistoryModal(true);
@@ -469,7 +508,7 @@ const CommitteeMemberArea = () => {
   };
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal) {
+    if (showDeleteModal || showAddModal || showEditModal || showOrderHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -478,7 +517,7 @@ const CommitteeMemberArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal]);
+  }, [showDeleteModal, showAddModal, showEditModal, showOrderHistoryModal]);
 
   const handleExportToExcel = () => {
     const dataToExport = filteredCommitteemembers.map((item) => ({
@@ -520,7 +559,7 @@ const CommitteeMemberArea = () => {
 
 
   return (
- <section className="policy__area pb-40 overflow-hidden p-4">
+    <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
         <div className="row justify-content-center">
           {/* Button Container */}
@@ -534,28 +573,32 @@ const CommitteeMemberArea = () => {
 
             {/* Status Filter and Add Button in Same Row */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold">Committee Members List</h5>
-              <div className="d-flex flex-wrap gap-3 align-items-center">
-                <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
-                  Status:
-                </label>
-                <select
-                  id="statusFilter"
-                  className="form-control mb-2"
-                  style={{ width: "auto" }}
-                  onChange={(e) => handleFilterChange("status", e.target.value)} // Pass "status" as the field
-                >
-                  <option value="">All</option>
-                  <option value="Active">Active</option>
-                  <option value="inactive">inactive</option>
-                </select>
+              {/* Left Section: Title and Filter stacked vertically */}
+              <div className="d-flex flex-column">
+                <h5 className="m-0 fw-bold mb-2">Committee Members List</h5>
+
+                <div className="d-flex align-items-center gap-2">
+                  <label htmlFor="statusFilter" className="mb-0">
+                    Status:
+                  </label>
+                  <select
+                    id="statusFilter"
+                    className="form-control"
+                    onChange={(e) => handleFilterChange("status", e.target.value)}
+                  >
+                    <option value="">All</option>
+                    <option value="inactive">InActive</option>
+                    <option value="active">Active</option>
+                  </select>
+                </div>
               </div>
+
+              {/* Right Section: Action Buttons */}
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add Committee Member Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
-                    backgroundColor: "#4a90e2", // soft blue
+                    backgroundColor: "#4a90e2",
                     color: "#fff",
                     border: "none",
                     padding: "10px 20px",
@@ -567,7 +610,7 @@ const CommitteeMemberArea = () => {
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Committee Member
+                  <i className="fas fa-plus"></i> Add Committee Members
                 </button>
                 <button
                   onClick={handleExportToExcel}
@@ -575,13 +618,13 @@ const CommitteeMemberArea = () => {
                     backgroundColor: "#28a745",
                     color: "#fff",
                     border: "none",
-                    padding: "8px 16px",
+                    padding: "10px 20px",
                     borderRadius: "6px",
                     fontWeight: "500",
                     fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px",
+                    gap: "8px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
@@ -648,9 +691,9 @@ const CommitteeMemberArea = () => {
                       {/* <td>{committeemember.organization_name}</td> */}
                       <td>{committeemember.status}</td>
                       <td>
-                        <div className="d-flex justify-content-around gap-2">
+                        <div className="d-flex justify-content-center gap-2">
                           <button
-                            className="btn btn-success btn-sm py-0 px-1"
+                            className="btn btn-success btn-sm"
                             onClick={() => handleEditClick(committeemember)}
                             title="Edit Committee Member"
                           >
@@ -662,7 +705,7 @@ const CommitteeMemberArea = () => {
                             ref={(el) => (committeeTypeRefs.current[committeemember.id] = el)}
                           >
                             <button
-                              className="btn btn-warning btn-sm py-0 px-1"
+                              className="btn btn-warning btn-sm"
                               onClick={() =>
                                 handleToggleCommitteeTypeOptions(committeemember.id)
                               }
@@ -697,7 +740,7 @@ const CommitteeMemberArea = () => {
                             ref={(el) => (statusRefs.current[committeemember.id] = el)}
                           >
                             <button
-                              className="btn btn-primary btn-sm py-0 px-1"
+                              className="btn btn-primary btn-sm"
                               onClick={() => handleToggleStatusOptions(committeemember.id)}
                               title="Edit Status"
                             >
@@ -727,7 +770,7 @@ const CommitteeMemberArea = () => {
 
 
                           <button
-                            className="btn btn-danger btn-sm py-0 px-1"
+                            className="btn btn-danger btn-sm"
                             onClick={() => {
                               setSelectedCommitteememberId(committeemember.id);
                               setShowDeleteModal(true);
@@ -751,7 +794,10 @@ const CommitteeMemberArea = () => {
                           </button>
                           <button
                             className="btn btn-success btn-sm"
-                            onClick={() => handleShowOrderHistory(committeemember.id)}
+                            onClick={() => {
+                              console.log(committeemember.user_account_id)
+                              handleShowOrderHistory(committeemember.user_account_id)
+                            }}
                             title="Committee Member Order History"
                           >
                             <FontAwesomeIcon icon={faShoppingCart} size="sm" />
@@ -1148,190 +1194,103 @@ const CommitteeMemberArea = () => {
         )}
 
         {showOrderHistoryModal && (
-          <div className="modal show d-block" style={{ zIndex: 1050, left: "50%", transform: "translateX(-50%)" }} role="dialog">
-            <div className="modal-dialog modal-xl" role="document">
-              <div className="modal-content shadow-lg">
-                <div className="modal-header bg-primary text-white">
-                  <h5 className="modal-title">Order History</h5>
-                  <button
-                    type="button"
-                    className="btn-close btn-close-white"
-                    onClick={() => setShowOrderHistoryModal(false)}
-                  ></button>
-                </div>
+          <>
+            <div className="modal-backdrop fade show" style={{ backdropFilter: "blur(5px)" }}></div>
 
-                <div className="modal-body">
-                  {orderhistoryData.length === 0 ? (
-                    <div className="alert alert-info text-center">No order history found.</div>
-                  ) : (
-                    <div className="table-responsive">
-                      <table className="table table-hover table-striped align-middle">
-                        <thead className="table-dark">
-                          <tr>
-                            <th>Researcher Name</th>
-                            <th>Analyte</th>
-                            <th>Quantity</th>
-                            <th>Comments</th>
-                            <th>Study_Copy</th>
-                            <th>IRB_File</th>
-                            <th>Additional Mechanism</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {orderhistoryData.map((order, index) => (
-                            <React.Fragment key={index}>
-                              <tr>
-                                <td>{order.researcher_name}</td>
-                                <td>{order.Analyte}</td>
-                                <td>{order.quantity}</td>
+            <div
+              className="modal show d-block"
+              style={{ zIndex: 1050, left: "50%", transform: "translateX(-50%)" }}
+              role="dialog"
+            >
+              <div className="modal-dialog modal-xl" role="document">
+                <div className="modal-content shadow-lg">
+                  <div className="modal-header bg-light text-black">
+                    <h5 className="modal-title">Order History</h5>
+                    <button
+                      type="button"
+                      className="btn-close btn-close-black"
+                      onClick={() => setShowOrderHistoryModal(false)}
+                    ></button>
+                  </div>
 
-                                <td>
-                                  <button
-                                    className="btn btn-sm btn-outline-info"
-                                    onClick={() =>
-                                      setVisibleCommentIndex(visibleCommentIndex === index ? null : index)
-                                    }
-                                  >
-                                    {visibleCommentIndex === index ? "Hide" : "View"}
-                                  </button>
-                                </td>
-                                 <td>
-                                  {/* IRB File Download Button */}
-                                  {order.study_copy && order.study_copy.data && (
-                                    <button
-                                      className="btn btn-sm btn-outline-success me-1 mb-1"
-                                      onClick={() => {
-                                        const byteArray = new Uint8Array(order.study_copy.data);
-                                        const blob = new Blob([byteArray], { type: 'application/pdf' }); // adjust MIME if needed
-                                        const url = URL.createObjectURL(blob);
+                  <div
+                    className="modal-body"
+                    style={{
+                      maxHeight: "75vh",     // limit modal height
+                      overflowY: "auto",     // enable vertical scroll
+                      overflowX: "hidden",   // hide horizontal scroll
+                    }}
+                  >
+                    {Object.keys(orderhistoryData).length === 0 ? (
+                      <div className="alert alert-info text-center">
+                        No order history found.
+                      </div>
+                    ) : (
+                      Object.values(orderhistoryData).map((order, index) => (
+                        <div key={index} className="border rounded mb-4 p-3 bg-light shadow-sm">
+                          {/* Order Header */}
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div>
+                              <h5 className="mb-0 text-primary">
+                                <strong>Order #{order.tracking_id}</strong>
+                              </h5>
+                                Order Date:  {new Date(order.created_at).
+                                  toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "2-digit" }).replace(/ /g, "-")}
+                              <p>Order Satus: { order.order_status}</p>
+                            </div>
+                          </div>
 
-                                        const link = document.createElement('a');
-                                        link.href = url;
-                                        link.download = 'Study_Copy.pdf'; // or dynamically name it
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
-                                        URL.revokeObjectURL(url);
-                                      }}
-                                    >
-                                      Download study_copy
-                                    </button>
-                                  )}
+                          {/* Basic Info */}
+                          <div className="mt-2">
+                            <p className="mb-1">
+                              <strong>Researcher:</strong> {order.researcher_name}
+                            </p>
+                            <p className="mb-1">
+                              <strong>Email:</strong> {order.email}
+                            </p>
+                            <p className="mb-1">
+                              <strong>Comments:</strong>{" "}
+                              {order.committee_comments || "No comments available."}
+                            </p>
+                          </div>
 
-                                  {/* NBC File (null in your data, so just check if exists) */}
-                                  {order.nbc_file && order.nbc_file.data && (
-                                    <button
-                                      className="btn btn-sm btn-outline-warning me-1 mb-1"
-                                      onClick={() => {
-                                        const byteArray = new Uint8Array(order.nbc_file.data);
-                                        const blob = new Blob([byteArray], { type: 'application/pdf' }); // change if needed
-                                        const url = URL.createObjectURL(blob);
-
-                                        const link = document.createElement('a');
-                                        link.href = url;
-                                        link.download = 'NBC_File.pdf';
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
-                                        URL.revokeObjectURL(url);
-                                      }}
-                                    >
-                                      Download NBC
-                                    </button>
-                                  )}
-                                </td>
-                                <td>
-                                  {/* IRB File Download Button */}
-                                  {order.irb_file && order.irb_file.data && (
-                                    <button
-                                      className="btn btn-sm btn-outline-success me-1 mb-1"
-                                      onClick={() => {
-                                        const byteArray = new Uint8Array(order.irb_file.data);
-                                        const blob = new Blob([byteArray], { type: 'application/pdf' }); // adjust MIME if needed
-                                        const url = URL.createObjectURL(blob);
-
-                                        const link = document.createElement('a');
-                                        link.href = url;
-                                        link.download = 'IRB_File.pdf'; // or dynamically name it
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
-                                        URL.revokeObjectURL(url);
-                                      }}
-                                    >
-                                      Download IRB
-                                    </button>
-                                  )}
-
-                                  {/* NBC File (null in your data, so just check if exists) */}
-                                  {order.nbc_file && order.nbc_file.data && (
-                                    <button
-                                      className="btn btn-sm btn-outline-warning me-1 mb-1"
-                                      onClick={() => {
-                                        const byteArray = new Uint8Array(order.nbc_file.data);
-                                        const blob = new Blob([byteArray], { type: 'application/pdf' }); // change if needed
-                                        const url = URL.createObjectURL(blob);
-
-                                        const link = document.createElement('a');
-                                        link.href = url;
-                                        link.download = 'NBC_File.pdf';
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
-                                        URL.revokeObjectURL(url);
-                                      }}
-                                    >
-                                      Download NBC
-                                    </button>
-                                  )}
-                                </td>
-                                <td>
-                                  <button
-                                    className="btn btn-sm btn-outline-primary mb-2"
-                                    onClick={() =>
-                                      setExpandedRowIndex(expandedRowIndex === index ? null : index)
-                                    }
-                                  >
-                                    {expandedRowIndex === index ? "Hide Reporting" : "View Reporting"}
-                                  </button>
-
-                                  {expandedRowIndex === index && (
-                                    <div
-                                      className="border rounded p-2 bg-light text-dark shadow-sm"
-                                      style={{ whiteSpace: "pre-wrap", maxWidth: "300px", marginTop: "5px" }}
-                                    >
-                                      <strong>Additional Info:</strong>
-                                      <div>{order.reporting_mechanism}</div>
-                                    </div>
-                                  )}
-                                </td>
-
-
-
-                              </tr>
-
-                              {visibleCommentIndex === index && (
+                          {/* Table of Analytes */}
+                          <div className="table-responsive mt-3">
+                            <table className="table table-bordered table-striped align-middle">
+                              <thead className="table-dark">
                                 <tr>
-                                  <td colSpan="6">
-                                    <div className="alert alert-secondary mb-0">
-                                      <strong>Comment:</strong> {order.committee_comments || "No comments available."}
-                                    </div>
-                                  </td>
+                                  <th>Analyte</th>
+                                  <th>Gender</th>
+                                  <th>Age</th>
+                                  <th>Quantity</th>
+                                  <th>Volume</th>
+                                  <th>Test Result & Unit</th>
                                 </tr>
-                              )}
-                            </React.Fragment>
-                          ))}
-
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
+                              </thead>
+                              <tbody>
+                                {order.items.map((item, idx) => (
+                                  <tr key={idx}>
+                                    <td>{item.analyte}</td>
+                                    <td>{item.gender || "---"}</td>
+                                    <td>{item.age || "---"}</td>
+                                    <td>{item.quantity}</td>
+                                    <td>{item.volume}</td>
+                                    <td>{item.test_result}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-
               </div>
             </div>
-          </div>
+          </>
         )}
+
       </div>
 
       <Modal show={showModal}

@@ -529,7 +529,8 @@ const CollectionSiteStaffArea = () => {
   return (
     <section className="policy__area pb-40 overflow-hidden p-4">
       <div className="container">
-        <div className="row justify-content-center">
+        <div className="row justify-content-center"></div>
+ 
           {/* Button Container */}
           <div className="d-flex flex-column w-100">
             {/* Success Message */}
@@ -540,26 +541,30 @@ const CollectionSiteStaffArea = () => {
             )}
 
             {/* Status Filter and Add Button in Same Row */}
-            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-              <h5 className="m-0 fw-bold">Collection Site's Satff List</h5>
-              <div className="d-flex flex-wrap gap-3 align-items-center">
-                <label htmlFor="statusFilter" className="mb-0">
-                  Status:
-                </label>
-                <select
+           <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+              {/* Left Section: Title and Filter stacked vertically */}
+              <div className="d-flex flex-column">
+                <h5 className="m-0 fw-bold mb-2">Collection Site's staff List</h5>
+
+                <div className="d-flex align-items-center gap-2">
+                  <label htmlFor="statusFilter" className="mb-0">
+                    Status:
+                  </label>
+                  <select
                   id="statusFilter"
                   className="form-control"
-                  style={{ width: "auto" }}
-                  value={statusFilter} // Yeh line add karein
+                  value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)} // Yeh line change karein
                 >
                   <option value="">All</option>
                   <option value="inactive">InActive</option>
                   <option value="active">Active</option>
                 </select>
+                </div>
               </div>
+
+              {/* Right Section: Action Buttons */}
               <div className="d-flex flex-wrap gap-3 align-items-center">
-                {/* Add collection site Button */}
                 <button
                   onClick={() => setShowAddModal(true)}
                   style={{
@@ -575,7 +580,7 @@ const CollectionSiteStaffArea = () => {
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
-                  <i className="fas fa-plus"></i> Add Staff
+                  <i className="fas fa-plus"></i> Add Collection Site's Staff
                 </button>
                 <button
                   onClick={handleExportToExcel}
@@ -583,13 +588,13 @@ const CollectionSiteStaffArea = () => {
                     backgroundColor: "#28a745",
                     color: "#fff",
                     border: "none",
-                    padding: "8px 16px",
+                    padding: "10px 20px",
                     borderRadius: "6px",
                     fontWeight: "500",
                     fontSize: "14px",
                     display: "flex",
                     alignItems: "center",
-                    gap: "6px",
+                    gap: "8px",
                     boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
                   }}
                 >
@@ -753,8 +758,7 @@ const CollectionSiteStaffArea = () => {
             />
           )}
         </div>
-      </div>
-      {(showAddModal || showEditModal) && (
+          {(showAddModal || showEditModal) && (
         <>
           {/* Bootstrap Backdrop with Blur */}
           <div
@@ -1174,7 +1178,7 @@ const CollectionSiteStaffArea = () => {
 
         <Modal.Footer className="border-0"></Modal.Footer>
       </Modal>
-    </section>
+</section>
   );
 };
 
