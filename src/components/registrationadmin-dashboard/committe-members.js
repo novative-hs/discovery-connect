@@ -508,7 +508,7 @@ const CommitteeMemberArea = () => {
   };
 
   useEffect(() => {
-    if (showDeleteModal || showAddModal || showEditModal || showOrderHistoryModal) {
+    if (showDeleteModal || showAddModal || showEditModal || showOrderHistoryModal || showHistoryModal) {
       // Prevent background scroll when modal is open
       document.body.style.overflow = "hidden";
       document.body.classList.add("modal-open");
@@ -517,7 +517,7 @@ const CommitteeMemberArea = () => {
       document.body.style.overflow = "auto";
       document.body.classList.remove("modal-open");
     }
-  }, [showDeleteModal, showAddModal, showEditModal, showOrderHistoryModal]);
+  }, [showDeleteModal, showAddModal, showEditModal, showOrderHistoryModal,showHistoryModal]);
 
   const handleExportToExcel = () => {
     const dataToExport = filteredCommitteemembers.map((item) => ({

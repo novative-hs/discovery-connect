@@ -380,7 +380,7 @@ const ResearcherArea = () => {
         <div className="row justify-content-center">
           <div className="d-flex flex-column w-100">
             {/* Button Container */}
-           <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
               {/* Success Message */}
               {successMessage && (
                 <div className="alert alert-success w-100 text-start" role="alert">
@@ -391,7 +391,7 @@ const ResearcherArea = () => {
               {/* Status Filter */}
               <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center w-100 gap-3 mb-3">
                 {/* Filter Section (left-aligned) */}
-                   <div className="d-flex flex-wrap gap-3 align-items-center">
+                <div className="d-flex flex-wrap gap-3 align-items-center">
                   <label htmlFor="statusFilter" className="mb-2 mb-sm-0">
                     Status:
                   </label>
@@ -410,25 +410,25 @@ const ResearcherArea = () => {
                 </div>
 
                 {/* Export Button (right-aligned) */}
-              
-                  <button
-                    onClick={handleExportToExcel}
-                    style={{
-                      backgroundColor: "#28a745",
-                      color: "#fff",
-                      border: "none",
-                      padding: "8px 16px",
-                      borderRadius: "6px",
-                      fontWeight: "500",
-                      fontSize: "14px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
-                    }}
-                  >
-                    <i className="fas fa-file-excel"></i> Export to Excel
-                  </button>
+
+                <button
+                  onClick={handleExportToExcel}
+                  style={{
+                    backgroundColor: "#28a745",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 16px",
+                    borderRadius: "6px",
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  <i className="fas fa-file-excel"></i> Export to Excel
+                </button>
               </div>
             </div>
 
@@ -900,209 +900,215 @@ const ResearcherArea = () => {
           )}
 
           {showOrderHistoryModal && (
-            <div className="modal show d-block" tabIndex="-1" role="dialog">
-              <div className="modal-dialog modal-xl" role="document">
-                <div className="modal-content shadow-lg border-0">
-                  <div className="modal-header bg-primary text-white">
-                    <h5 className="modal-title">Order History</h5>
-                    <button
-                      type="button"
-                      className="btn-close btn-close-white"
-                      onClick={() => setShowOrderHistoryModal(false)}
-                    ></button>
-                  </div>
+            <>
+              <div
+                className="modal-backdrop fade show"
+                style={{ backdropFilter: "blur(5px)" }}
+              ></div>
+              <div className="modal show d-block" tabIndex="-1" role="dialog">
+                <div className="modal-dialog modal-xl" role="document">
+                  <div className="modal-content shadow-lg border-0">
+                    <div className="modal-header bg-primary text-white">
+                      <h5 className="modal-title">Order History</h5>
+                      <button
+                        type="button"
+                        className="btn-close btn-close-white"
+                        onClick={() => setShowOrderHistoryModal(false)}
+                      ></button>
+                    </div>
 
-                  <div className="modal-body">
-                    {orderhistoryData.length === 0 ? (
-                      <div className="alert alert-info text-center py-4">
-                        No order history found.
-                      </div>
-                    ) : (
-                      <>
-                        {/* Researcher Name */}
-                        <div className="mb-4 text-center">
-                          <span className="h5 fw-bold text-primary">Researcher: </span>
-                          <span className="h5 text-dark">{researcherName}</span>
+                    <div className="modal-body">
+                      {orderhistoryData.length === 0 ? (
+                        <div className="alert alert-info text-center py-4">
+                          No order history found.
                         </div>
+                      ) : (
+                        <>
+                          {/* Researcher Name */}
+                          <div className="mb-4 text-center">
+                            <span className="h5 fw-bold text-primary">Researcher: </span>
+                            <span className="h5 text-dark">{researcherName}</span>
+                          </div>
 
-                        {/* Orders Table */}
-                        <div className="table-responsive">
-                          <table className="table table-hover table-striped align-middle">
-                            <thead className="table-dark">
-                              <tr>
-                                <th>Tracking ID</th>
-                                <th>Order Status</th>
-                                <th>Technical Admin</th>
-                                <th>Scientific Committee</th>
-                                <th>Ethical Committee</th>
-                                <th>Action</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {Object.entries(groupedOrders).map(([orderId, order], index) => (
-                                <React.Fragment key={orderId}>
-                                  {/* Parent Row */}
-                                  <tr>
-                                    <td>{order.tracking_id || "---"}</td>
-                                    <td>{order.order_status || "---"}</td>
-                                    <td>{order.technicaladmin_status || "---"}</td>
-                                    <td>{order.scientific_committee_status || "---"}</td>
-                                    <td>{order.ethical_committee_status || "---"}</td>
-                                    <td>
-                                      <button
-                                        className="btn btn-sm btn-primary"
-                                        onClick={() => toggleExpand(index)}
-                                      >
-                                        {expandedOrders.includes(index) ? "Hide" : "View Order"}
-                                      </button>
-                                    </td>
-                                  </tr>
-
-                                  {/* Expanded Details */}
-                                  {expandedOrders.includes(index) && (
+                          {/* Orders Table */}
+                          <div className="table-responsive">
+                            <table className="table table-hover table-striped align-middle">
+                              <thead className="table-dark">
+                                <tr>
+                                  <th>Tracking ID</th>
+                                  <th>Order Status</th>
+                                  <th>Technical Admin</th>
+                                  <th>Scientific Committee</th>
+                                  <th>Ethical Committee</th>
+                                  <th>Action</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {Object.entries(groupedOrders).map(([orderId, order], index) => (
+                                  <React.Fragment key={orderId}>
+                                    {/* Parent Row */}
                                     <tr>
-                                      <td colSpan="6">
-                                        <div className="p-3 bg-light border rounded">
-                                          <h6 className="fw-bold mb-3">Order Details</h6>
-
-                                          <table className="table table-sm table-bordered">
-                                            <thead className="table-light">
-                                              <tr>
-                                                <th>Analyte</th>
-                                                <th>Gender</th>
-                                                <th>Quantity X Volume</th>
-                                                <th>Test Result & Unit</th>
-                                                <th className="text-end">
-                                                  Price ({order.SamplePriceCurrency})
-                                                </th>
-                                              </tr>
-                                            </thead>
-                                            <tbody>
-                                              {order.items.map((item, i) => (
-                                                <tr key={i}>
-                                                  <td>{item.Analyte}</td>
-                                                  <td>
-                                                    {item.age || item.gender ? (
-                                                      <>
-                                                        {item.age && `${item.age} years`}
-                                                        {item.age && item.gender && " | "}
-                                                        {item.gender}
-                                                      </>
-                                                    ) : (
-                                                      "---"
-                                                    )}
-                                                  </td>
-                                                  <td>{`${item.quantity} X ${item.Volume}${item.VolumeUnit}`}</td>
-                                                  <td>
-                                                    {item.TestResult}
-                                                    {item.TestResultUnit}
-                                                  </td>
-                                                  <td className="text-end">
-                                                    {item.price?.toLocaleString()}
-                                                  </td>
-                                                </tr>
-                                              ))}
-                                            </tbody>
-
-                                            {/* Summary Rows */}
-                                            <tfoot>
-                                              <tr>
-                                                <th colSpan="4" className="text-end">Subtotal</th>
-                                                <th className="text-end">
-                                                  {Number(order.subtotal).toLocaleString()}
-                                                </th>
-                                              </tr>
-                                              <tr>
-                                                <th colSpan="4" className="text-end">
-                                                  Tax ({order.tax_value}
-                                                  {order.tax_type === "percent" ? "%" : ""})
-                                                </th>
-                                                <th className="text-end">
-                                                  {order.tax_type === "percent"
-                                                    ? (
-                                                      (order.subtotal * order.tax_value) / 100
-                                                    ).toLocaleString("en-PK", {
-                                                      minimumFractionDigits: 2,
-                                                      maximumFractionDigits: 2,
-                                                    })
-                                                    : Number(order.tax_value || 0).toLocaleString("en-PK", {
-                                                      minimumFractionDigits: 2,
-                                                      maximumFractionDigits: 2,
-                                                    })}
-                                                </th>
-                                              </tr>
-                                              <tr>
-                                                <th colSpan="4" className="text-end">
-                                                  Platform Charges ({order.platform_value}
-                                                  {order.platform_type === "percent" ? "%" : ""})
-                                                </th>
-                                                <th className="text-end">
-                                                  {order.platform_type === "percent"
-                                                    ? (
-                                                      (order.subtotal * order.platform_value) / 100
-                                                    ).toLocaleString("en-PK", {
-                                                      minimumFractionDigits: 2,
-                                                      maximumFractionDigits: 2,
-                                                    })
-                                                    : Number(order.platform_value || 0).toLocaleString(
-                                                      "en-PK",
-                                                      {
-                                                        minimumFractionDigits: 2,
-                                                        maximumFractionDigits: 2,
-                                                      }
-                                                    )}
-                                                </th>
-                                              </tr>
-                                              <tr>
-                                                <th colSpan="4" className="text-end">
-                                                  Freight Charges ({order.freight_value}
-                                                  {order.freight_type === "percent" ? "%" : ""})
-                                                </th>
-                                                <th className="text-end">
-                                                  {order.freight_type === "percent"
-                                                    ? (
-                                                      (order.subtotal * order.freight_value) / 100
-                                                    ).toLocaleString("en-PK", {
-                                                      minimumFractionDigits: 2,
-                                                      maximumFractionDigits: 2,
-                                                    })
-                                                    : Number(order.freight_value || 0).toLocaleString(
-                                                      "en-PK",
-                                                      {
-                                                        minimumFractionDigits: 2,
-                                                        maximumFractionDigits: 2,
-                                                      }
-                                                    )}
-                                                </th>
-                                              </tr>
-                                              <tr className="table-success fw-bold">
-                                                <th colSpan="4" className="text-end">Total</th>
-                                                <th className="text-end">
-                                                  {order.totalpayment
-                                                    ? order.totalpayment.toLocaleString("en-PK", {
-                                                      minimumFractionDigits: 2,
-                                                      maximumFractionDigits: 2,
-                                                    })
-                                                    : ""}
-                                                </th>
-                                              </tr>
-                                            </tfoot>
-                                          </table>
-                                        </div>
+                                      <td>{order.tracking_id || "---"}</td>
+                                      <td>{order.order_status || "---"}</td>
+                                      <td>{order.technicaladmin_status || "---"}</td>
+                                      <td>{order.scientific_committee_status || "---"}</td>
+                                      <td>{order.ethical_committee_status || "---"}</td>
+                                      <td>
+                                        <button
+                                          className="btn btn-sm btn-primary"
+                                          onClick={() => toggleExpand(index)}
+                                        >
+                                          {expandedOrders.includes(index) ? "Hide" : "View Order"}
+                                        </button>
                                       </td>
                                     </tr>
-                                  )}
-                                </React.Fragment>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </>
-                    )}
+
+                                    {/* Expanded Details */}
+                                    {expandedOrders.includes(index) && (
+                                      <tr>
+                                        <td colSpan="6">
+                                          <div className="p-3 bg-light border rounded">
+                                            <h6 className="fw-bold mb-3">Order Details</h6>
+
+                                            <table className="table table-sm table-bordered">
+                                              <thead className="table-light">
+                                                <tr>
+                                                  <th>Analyte</th>
+                                                  <th>Gender</th>
+                                                  <th>Quantity X Volume</th>
+                                                  <th>Test Result & Unit</th>
+                                                  <th className="text-end">
+                                                    Price ({order.SamplePriceCurrency})
+                                                  </th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                {order.items.map((item, i) => (
+                                                  <tr key={i}>
+                                                    <td>{item.Analyte}</td>
+                                                    <td>
+                                                      {item.age || item.gender ? (
+                                                        <>
+                                                          {item.age && `${item.age} years`}
+                                                          {item.age && item.gender && " | "}
+                                                          {item.gender}
+                                                        </>
+                                                      ) : (
+                                                        "---"
+                                                      )}
+                                                    </td>
+                                                    <td>{`${item.quantity} X ${item.Volume}${item.VolumeUnit}`}</td>
+                                                    <td>
+                                                      {item.TestResult}
+                                                      {item.TestResultUnit}
+                                                    </td>
+                                                    <td className="text-end">
+                                                      {item.price?.toLocaleString()}
+                                                    </td>
+                                                  </tr>
+                                                ))}
+                                              </tbody>
+
+                                              {/* Summary Rows */}
+                                              <tfoot>
+                                                <tr>
+                                                  <th colSpan="4" className="text-end">Subtotal</th>
+                                                  <th className="text-end">
+                                                    {Number(order.subtotal).toLocaleString()}
+                                                  </th>
+                                                </tr>
+                                                <tr>
+                                                  <th colSpan="4" className="text-end">
+                                                    Tax ({order.tax_value}
+                                                    {order.tax_type === "percent" ? "%" : ""})
+                                                  </th>
+                                                  <th className="text-end">
+                                                    {order.tax_type === "percent"
+                                                      ? (
+                                                        (order.subtotal * order.tax_value) / 100
+                                                      ).toLocaleString("en-PK", {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2,
+                                                      })
+                                                      : Number(order.tax_value || 0).toLocaleString("en-PK", {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2,
+                                                      })}
+                                                  </th>
+                                                </tr>
+                                                <tr>
+                                                  <th colSpan="4" className="text-end">
+                                                    Platform Charges ({order.platform_value}
+                                                    {order.platform_type === "percent" ? "%" : ""})
+                                                  </th>
+                                                  <th className="text-end">
+                                                    {order.platform_type === "percent"
+                                                      ? (
+                                                        (order.subtotal * order.platform_value) / 100
+                                                      ).toLocaleString("en-PK", {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2,
+                                                      })
+                                                      : Number(order.platform_value || 0).toLocaleString(
+                                                        "en-PK",
+                                                        {
+                                                          minimumFractionDigits: 2,
+                                                          maximumFractionDigits: 2,
+                                                        }
+                                                      )}
+                                                  </th>
+                                                </tr>
+                                                <tr>
+                                                  <th colSpan="4" className="text-end">
+                                                    Freight Charges ({order.freight_value}
+                                                    {order.freight_type === "percent" ? "%" : ""})
+                                                  </th>
+                                                  <th className="text-end">
+                                                    {order.freight_type === "percent"
+                                                      ? (
+                                                        (order.subtotal * order.freight_value) / 100
+                                                      ).toLocaleString("en-PK", {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2,
+                                                      })
+                                                      : Number(order.freight_value || 0).toLocaleString(
+                                                        "en-PK",
+                                                        {
+                                                          minimumFractionDigits: 2,
+                                                          maximumFractionDigits: 2,
+                                                        }
+                                                      )}
+                                                  </th>
+                                                </tr>
+                                                <tr className="table-success fw-bold">
+                                                  <th colSpan="4" className="text-end">Total</th>
+                                                  <th className="text-end">
+                                                    {order.totalpayment
+                                                      ? order.totalpayment.toLocaleString("en-PK", {
+                                                        minimumFractionDigits: 2,
+                                                        maximumFractionDigits: 2,
+                                                      })
+                                                      : ""}
+                                                  </th>
+                                                </tr>
+                                              </tfoot>
+                                            </table>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    )}
+                                  </React.Fragment>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
