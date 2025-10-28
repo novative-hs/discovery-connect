@@ -6,10 +6,10 @@ const cors = require("cors"); // Import CORS
 const app = express();
 const port = process.env.PORT || 5000;
 // const helmet = require("helmet");
-// const compression = require("compression");
+const compression = require("compression");
 
 // app.use(helmet());         // 🔐 Security headers
-// app.use(compression()); 
+app.use(compression()); 
 
 
 app.use(cors());
